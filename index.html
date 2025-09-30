@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Championnat Tennis de Table</title>
+    <link rel="stylesheet"  href="styles.css">
+
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Championnat Tennis de Table</h1>
+            <p>Planté avec ❤️ par Romain</p>
+        </div>
+
+        <!-- ONGLETS -->
+        <div class="tabs-container">
+            <div class="tabs" id="tabs">
+                <button class="tab active" onclick="switchTab(1)" data-day="1">
+                    Journée 1
+                </button>
+                 <button class="add-day-btn" onclick="addNewDay()" title="Ajouter une journée">+</button>
+                <button class="tab general-ranking" onclick="switchToGeneralRanking()" data-tab="general">
+                    🏆 Classement Général
+                </button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- CONTENU JOURNÉE -->
+            <div class="tab-content day-content active" id="day-1">
+                <div class="section">
+                    <h2>👥 Gestion des Joueurs - Journée 1</h2>
+                    <div style="text-align: center; margin: 15px 0; padding: 15px; background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-radius: 8px; border: 3px solid #f39c12;">
+                    <strong style="color: #e67e22; font-size: 18px;">⚠️ CHOISISSEZ D'ABORD LA JOURNÉE DE DESTINATION !</strong>
+                    </div>
+
+                    <div class="input-group" style="align-items: end;">
+                        <input type="text" id="playerName" placeholder="Nom du joueur" style="flex: 1; min-width: 200px;">
+                        <select id="playerDivision">
+                                <option value="1">Division 1</option>
+                                <option value="2">Division 2</option>
+                                <option value="3">Division 3</option>
+                            </select>
+                            <div style="display: flex; flex-direction: column; min-width: 180px;">
+                             <label style="font-size: 14px; color: #e67e22; font-weight: bold; margin-bottom: 5px; text-transform: uppercase;">🎯 Destination :</label>
+                                <select id="targetDay" style="background: #f39c12; color: white; font-weight: bold; border: 3px solid #e67e22; padding: 12px; border-radius: 8px; font-size: 14px;">
+                        <option value="1">→ Journée 1</option>
+        </select>
+    </div>
+    <button class="btn btn-success" onclick="addPlayer()">Ajouter Joueur</button>
+</div>
+
+                    <div class="import-section">
+                        <div class="import-box">
+                            <h4>📁 Import fichier Excel/CSV</h4>
+                            <p style="font-size: 14px; color: #7f8c8d; margin-bottom: 15px;">
+                                Format : Colonne A = Noms, Colonne B = Division (1,2,3)
+                            </p>
+                            <div style="margin-bottom: 10px;">
+                                <label style="font-weight: bold; color: #e67e22; display: block; margin-bottom: 5px; font-size: 12px;">🎯 DESTINATION :</label>
+                                    <select id="fileTargetDay" style="width: 100%; background: #f39c12; color: white; font-weight: bold; border: 2px solid #e67e22; padding: 10px; border-radius: 6px;">
+                                     <option value="1">→ Journée 1</option>
+                              </select>
+                            </div>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+                                <label for="fileInput" class="file-input-label">
+                                    📎 Choisir un fichier
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="import-box">
+                            <h4>📋 Copier-coller par division</h4>
+                            <p style="font-size: 14px; color: #7f8c8d; margin-bottom: 15px;">
+                                Collez une liste de noms (un par ligne)
+                            </p>
+                            <div style="display: flex; gap: 10px; flex-direction: column;">
+                                <select id="bulkDivision" style="width: 100%;">
+                                            <option value="1">Division 1</option>
+                                            <option value="2">Division 2</option>
+                                            <option value="3">Division 3</option>
+                                            </select>
+                                                <div>
+                                            <label style="font-weight: bold; color: #e67e22; display: block; margin-bottom: 5px; font-size: 12px;">🎯 DESTINATION :</label>
+                                            <select id="bulkTargetDay" style="width: 100%; background: #f39c12; color: white; font-weight: bold; border: 2px solid #e67e22; padding: 10px; border-radius: 6px;">
+                            <option value="1">→ Journée 1</option>
+                    </select>
+                    </div>
+                                    <button class="btn" onclick="showBulkInput()" style="width: 100%;">
+                                            📝 Ajouter en masse
+                                        </button>
+                                </div>
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="generateMatchesForDay()" style="font-size: 18px; padding: 15px 25px; display: block; margin: 20px auto;">
+                        🎯 Générer les Matchs (Round-Robin)
+                    </button>
+
+                    <div class="guide-box">
+                        <div class="guide-title">
+                            💡 Guide d'utilisation
+                        </div>
+                        <div class="guide-items">
+                            <div class="guide-item">
+                                <div class="key">TAB</div>
+                                <span>Passer au champ suivant</span>
+                            </div>
+                            <div class="guide-item">
+                                <div class="key">ENTER</div>
+                                <span>Mettre à jour le match</span>
+                            </div>
+                            <div class="guide-item">
+                                <span>🏆 Le match se termine dès qu'un joueur gagne 2 sets</span>
+                            </div>
+                            <div class="guide-item">
+                                <span>💾 Sauvegarde automatique</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-buttons">
+    <button class="btn btn-success" onclick="updateRankings()">
+        🏆 Afficher les Classements
+    </button>
+    <button class="btn" onclick="generateMatchesForDay(1)">
+        🎯 Générer les Matchs
+    </button>
+    <button class="btn" onclick="showByeManagementModal(1)" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+        🎯 Gérer BYE
+    </button>
+    <button class="btn btn-danger" onclick="clearAllData()">
+        🗑️ Réinitialiser TOUT
+    </button>
+    <button class="btn" onclick="exportChampionship()">
+        💾 Exporter Championnat
+    </button>
+    <button class="btn" onclick="showImportModal()">
+        📥 Importer Championnat
+    </button>
+</div>
+                </div>
+
+                <div class="divisions" id="divisions-1">
+                    <!-- Les divisions seront générées dynamiquement -->
+                </div>
+
+                <div class="rankings-section" id="rankings-1" style="display: none;">
+                    <div class="rankings-header">
+                        <div class="rankings-title">🏆 Classements Journée 1</div>
+                        <div class="rankings-toggle">
+                            <button class="toggle-btn active" onclick="showRankings('points')">Par Points</button>
+                            <button class="toggle-btn" onclick="showRankings('winrate')">Par % Victoires</button>
+                        </div>
+                    </div>
+                    <div id="rankingsContent-1"></div>
+                </div>
+
+                <div class="stats" id="stats-1" style="display: none;">
+                    <h3>📊 Statistiques Journée 1</h3>
+                    <div class="stats-grid" id="statsContent-1"></div>
+                </div>
+            </div>
+
+            <!-- CLASSEMENT GÉNÉRAL -->
+            <div class="tab-content general-content" id="general-ranking">
+                <div class="section general-ranking-section">
+                    <h2>🏆 Classement Général du Championnat</h2>
+
+                    <div class="general-stats" id="generalStats">
+                        <!-- Stats générales seront générées ici -->
+                    </div>
+
+                    <div class="control-buttons" style="margin-bottom: 30px;">
+                        <button class="btn btn-warning" onclick="updateGeneralRanking()">
+                            🔄 Mettre à jour Classement Général
+                        </button>
+                         <button class="btn btn-success" onclick="exportGeneralRanking()">
+                            📊 Exporter JSON
+                        </button>
+                        <button class="btn" onclick="exportGeneralRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                            📄 Exporter PDF
+                        </button>
+                        <button class="btn" onclick="exportGeneralRankingToHTML()" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                        📄 Exporter HTML
+                        </button>
+                    </div>
+
+                    <div id="generalRankingContent">
+                        <div class="empty-state">
+                            Terminez au moins un match dans une journée pour voir le classement général
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <h3>Importer un Championnat</h3>
+            <div style="margin-bottom: 20px;">
+                <div class="file-input-wrapper">
+                    <input type="file" id="importFileInput" accept=".json">
+                    <label for="importFileInput" class="file-input-label">
+                        📁 Choisir un fichier JSON
+                    </label>
+                </div>
+            </div>
+            <p style="margin: 15px 0; color: #7f8c8d; font-size: 14px;">
+                ⚠️ L'import remplacera complètement le championnat actuel
+            </p>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="closeImportModal()">Annuler</button>
+                <button class="btn btn-success" onclick="processImport()">Importer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bulkModal" class="modal">
+        <div class="modal-content">
+            <h3>Ajouter plusieurs joueurs</h3>
+            <p style="margin-bottom: 15px; color: #7f8c8d;">
+                Collez la liste des noms (un par ligne) pour la <strong id="selectedDivision">Division 1</strong> :
+            </p>
+            <textarea id="bulkText" placeholder="Joueur 1&#10;Joueur 2&#10;Joueur 3&#10;..."
+                      style="width: 100%; height: 200px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="closeBulkModal()">Annuler</button>
+                <button class="btn btn-success" onclick="addBulkPlayers()">Ajouter tous</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="playerModal" class="player-modal">
+        <div class="player-modal-content">
+            <div class="player-modal-header">
+                <div class="player-name-title" id="playerNameTitle"></div>
+                <button class="close-modal" onclick="closePlayerModal()">×</button>
+            </div>
+            <div class="player-overview" id="playerOverview"></div>
+            <div class="matches-history">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">📋 Historique des matchs</h3>
+                <div id="playerMatches"></div>
+            </div>
+        </div>
+    </div>
+        <script src="script.js"></script>
+
+    </body>
+ </html>
