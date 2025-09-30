@@ -603,11 +603,8 @@ try {
                                 player1: matchPair.player1,
                                 player2: matchPair.player2,
                                 tour: tour,
-                                sets: [
-                                    { player1Score: '', player2Score: '' },
-                                    { player1Score: '', player2Score: '' },
-                                    { player1Score: '', player2Score: '' }
-                                ],
+                                score1: '',
+                                score2: '',
                                 completed: false,
                                 winner: null,
                                 timesPlayedBefore: matchPair.timesPlayed,
@@ -728,86 +725,36 @@ try {
                                     <div class="match-status ${statusClass}">${statusText}</div>
                                 </div>
                                 <div class="sets-container">
-                        `;
-                        
-                        for (let setIndex = 0; setIndex < 3; setIndex++) {
-                            let setClass = 'set';
-                            let setDisabled = '';
-                            
-                            if (match.completed && setIndex === 2) {
-                                let player1Sets = 0;
-                                let player2Sets = 0;
-                                
-                                for (let i = 0; i < 2; i++) {
-                                    if (match.sets[i] && match.sets[i].player1Score !== '' && match.sets[i].player2Score !== '') {
-                                        const score1 = parseInt(match.sets[i].player1Score);
-                                        const score2 = parseInt(match.sets[i].player2Score);
-                                        
-                                        if (score1 > score2) {
-                                            player1Sets++;
-                                        } else if (score2 > score1) {
-                                            player2Sets++;
-                                        }
-                                    }
-                                }
-                                
-                                if (player1Sets >= 2 || player2Sets >= 2) {
-                                    setClass += ' set-disabled';
-                                    setDisabled = 'disabled';
-                                }
-                            }
-                            
-                            html += `
-                                <div class="${setClass}">
-                                    <div class="set-label">Set ${setIndex + 1}</div>
-                                    <div class="set-scores">
-                                        <input type="number" class="score-input" 
-                                               placeholder="" min="0" max="30"
-                                               value="${match.sets[setIndex].player1Score || ''}" 
-                                               ${setDisabled}
-                                               onchange="updateSetScore(${dayNumber}, ${division}, ${globalIndex}, ${setIndex}, 'player1Score', this.value)"
-                                               onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
-                                        <span class="score-separator">-</span>
-                                        <input type="number" class="score-input" 
-                                               placeholder="" min="0" max="30"
-                                               value="${match.sets[setIndex].player2Score || ''}"
-                                               ${setDisabled}
-                                               onchange="updateSetScore(${dayNumber}, ${division}, ${globalIndex}, ${setIndex}, 'player2Score', this.value)"
-                                               onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
+                                    <div class="set">
+                                        <div class="set-label">Score</div>
+                                        <div class="set-scores">
+                                            <input type="number" class="score-input"
+                                                   placeholder="0" min="0"
+                                                   value="${match.score1 || ''}"
+                                                   onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score1', this.value)"
+                                                   onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
+                                            <span class="score-separator">-</span>
+                                            <input type="number" class="score-input"
+                                                   placeholder="0" min="0"
+                                                   value="${match.score2 || ''}"
+                                                   onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score2', this.value)"
+                                                   onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
+                                        </div>
                                     </div>
                                 </div>
-                            `;
-                        }
-                        
+                        `;
+
                         let resultText = 'En attente des résultats';
                         let resultClass = 'result-pending';
-                        
+
                         if (match.completed && match.winner) {
-                            let player1Sets = 0;
-                            let player2Sets = 0;
-                            
-                            match.sets.forEach(set => {
-                                if (set.player1Score !== '' && set.player2Score !== '') {
-                                    const score1 = parseInt(set.player1Score);
-                                    const score2 = parseInt(set.player2Score);
-                                    
-                                    if (score1 > score2) {
-                                        player1Sets++;
-                                    } else if (score2 > score1) {
-                                        player2Sets++;
-                                    }
-                                }
-                            });
-                            
-                            const winnerSets = match.winner === match.player1 ? player1Sets : player2Sets;
-                            const loserSets = match.winner === match.player1 ? player2Sets : player1Sets;
-                            
-                            resultText = `🏆 ${match.winner} remporte le match (${winnerSets}-${loserSets})`;
+                            const score1 = match.score1 || 0;
+                            const score2 = match.score2 || 0;
+                            resultText = `🏆 ${match.winner} remporte le match (${score1}-${score2})`;
                             resultClass = 'result-completed';
                         }
-                        
+
                         html += `
-                                </div>
                                 <div class="match-result ${resultClass}">
                                     ${resultText}
                                 </div>
@@ -845,9 +792,15 @@ try {
 
     function updateSetScore(dayNumber, division, matchIndex, setIndex, scoreField, value) {
         championship.days[dayNumber].matches[division][matchIndex].sets[setIndex][scoreField] = value;
-        saveToLocalStorage(); 
+        saveToLocalStorage();
     }
     window.updateSetScore = updateSetScore;
+
+    function updateMatchScore(dayNumber, division, matchIndex, scoreField, value) {
+        championship.days[dayNumber].matches[division][matchIndex][scoreField] = value;
+        saveToLocalStorage();
+    }
+    window.updateMatchScore = updateMatchScore;
 
     function handleEnterKey(event, dayNumber, division, matchIndex) {
         if (event.key === 'Enter') {
@@ -911,22 +864,10 @@ try {
             let resultClass = 'result-pending';
             
             if (match.completed && match.winner) {
-                let player1Sets = 0;
-                let player2Sets = 0;
-                
-                match.sets.forEach(set => {
-                    if (set.player1Score !== '' && set.player2Score !== '') {
-                        const score1 = parseInt(set.player1Score);
-                        const score2 = parseInt(set.player2Score);
-                        if (score1 > score2) player1Sets++;
-                        else if (score2 > score1) player2Sets++;
-                    }
-                });
-                
-                const winnerSets = match.winner === match.player1 ? player1Sets : player2Sets;
-                const loserSets = match.winner === match.player1 ? player2Sets : player1Sets;
-                
-                resultText = `🏆 ${match.winner} remporte le match (${winnerSets}-${loserSets})`;
+                const score1 = match.score1 || 0;
+                const score2 = match.score2 || 0;
+
+                resultText = `🏆 ${match.winner} remporte le match (${score1}-${score2})`;
                 resultClass = 'result-completed';
             }
             
@@ -934,13 +875,7 @@ try {
             resultElement.textContent = resultText;
         }
         
-        if (match.completed) {
-            const set3Inputs = matchElement.querySelectorAll('.set:nth-child(3) .score-input');
-            set3Inputs.forEach(input => {
-                input.disabled = true;
-                input.parentElement.parentElement.classList.add('set-disabled');
-            });
-        }
+        // Plus besoin de désactiver des sets car il n'y a plus que 2 scores
         
         updateTourProgress(dayNumber, division, match.tour);
     }
@@ -963,31 +898,42 @@ try {
 
     function checkMatchCompletion(dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
-        let player1Sets = 0;
-        let player2Sets = 0;
-        
-        match.sets.forEach((set, index) => {
-            if (set.player1Score !== '' && set.player2Score !== '') {
-                const score1 = parseInt(set.player1Score);
-                const score2 = parseInt(set.player2Score);
-                
-                if (score1 > score2) {
-                    player1Sets++;
-                } else if (score2 > score1) {
-                    player2Sets++;
+
+        // Si l'ancien format avec sets existe, le convertir
+        if (match.sets && !match.hasOwnProperty('score1')) {
+            let player1Sets = 0;
+            let player2Sets = 0;
+            match.sets.forEach((set) => {
+                if (set.player1Score !== '' && set.player2Score !== '') {
+                    const score1 = parseInt(set.player1Score);
+                    const score2 = parseInt(set.player2Score);
+                    if (score1 > score2) player1Sets++;
+                    else if (score2 > score1) player2Sets++;
                 }
-            }
-        });
-        
+            });
+            match.score1 = player1Sets;
+            match.score2 = player2Sets;
+            delete match.sets;
+        }
+
         match.completed = false;
         match.winner = null;
-        
-        if (player1Sets >= 2) {
-            match.completed = true;
-            match.winner = match.player1;
-        } else if (player2Sets >= 2) {
-            match.completed = true;
-            match.winner = match.player2;
+
+        if (match.score1 !== '' && match.score2 !== '') {
+            const score1 = parseInt(match.score1);
+            const score2 = parseInt(match.score2);
+
+            if (score1 > score2) {
+                match.completed = true;
+                match.winner = match.player1;
+            } else if (score2 > score1) {
+                match.completed = true;
+                match.winner = match.player2;
+            } else {
+                // En cas d'égalité, le match est terminé mais sans vainqueur
+                match.completed = true;
+                match.winner = null;
+            }
         }
     }
 
@@ -1240,25 +1186,21 @@ try {
                 } else {
                     losses++;
                 }
-                
-                match.sets.forEach(set => {
-                    if (set.player1Score !== '' && set.player2Score !== '') {
-                        const score1 = parseInt(set.player1Score);
-                        const score2 = parseInt(set.player2Score);
-                        
-                        if (isPlayer1) {
-                            pointsWon += score1;
-                            pointsLost += score2;
-                            if (score1 > score2) setsWon++;
-                            else if (score2 > score1) setsLost++;
-                        } else {
-                            pointsWon += score2;
-                            pointsLost += score1;
-                            if (score2 > score1) setsWon++;
-                            else if (score1 > score2) setsLost++;
-                        }
-                    }
-                });
+
+                const score1 = parseInt(match.score1) || 0;
+                const score2 = parseInt(match.score2) || 0;
+
+                if (isPlayer1) {
+                    pointsWon += score1;
+                    pointsLost += score2;
+                } else {
+                    pointsWon += score2;
+                    pointsLost += score1;
+                }
+
+                // Utiliser les scores comme "sets" pour la compatibilité
+                setsWon = pointsWon;
+                setsLost = pointsLost;
             }
         });
         
@@ -1327,22 +1269,11 @@ try {
             
             let setsScore = '';
             if (match.completed) {
-                let playerSets = 0;
-                let opponentSets = 0;
-                
-                match.sets.forEach(set => {
-                    if (set.player1Score !== '' && set.player2Score !== '') {
-                        const score1 = parseInt(set.player1Score);
-                        const score2 = parseInt(set.player2Score);
-                        
-                        if ((isPlayer1 && score1 > score2) || (!isPlayer1 && score2 > score1)) {
-                            playerSets++;
-                        } else if (score1 !== score2) {
-                            opponentSets++;
-                        }
-                    }
-                });
-                setsScore = `(${playerSets}-${opponentSets})`;
+                const score1 = parseInt(match.score1) || 0;
+                const score2 = parseInt(match.score2) || 0;
+                const playerScore = isPlayer1 ? score1 : score2;
+                const opponentScore = isPlayer1 ? score2 : score1;
+                setsScore = `(${playerScore}-${opponentScore})`;
             }
             
             matchesHtml += `
@@ -2828,11 +2759,8 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             player1: playerName,
             player2: "BYE",
             tour: 4, // Mettre au tour 4 par défaut
-            sets: [
-                { player1Score: 11, player2Score: 0 },
-                { player1Score: 11, player2Score: 0 },
-                { player1Score: '', player2Score: '' }
-            ],
+            score1: 3,
+            score2: 0,
             completed: true,
             winner: playerName,
             isBye: true
@@ -3585,11 +3513,8 @@ function generatePoolMatches(pools, division, dayNumber) {
                     poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`, // A, B, C...
                     division: division,
                     dayNumber: dayNumber,
-                    sets: [
-                        { player1Score: '', player2Score: '' },
-                        { player1Score: '', player2Score: '' },
-                        { player1Score: '', player2Score: '' }
-                    ],
+                    score1: '',
+                    score2: '',
                     completed: false,
                     winner: null,
                     isPoolMatch: true
@@ -3730,40 +3655,40 @@ function generatePoolMatchHTML(match, dayNumber) {
                 ">${statusText}</div>
             </div>
             
-            <div class="sets-container" style="
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
+            <div class="score-container" style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
                 margin-bottom: 10px;
+                padding: 15px;
+                background: #f8f9fa;
+                border: 1px solid #ddd;
+                border-radius: 6px;
             ">
-                ${match.sets.map((set, setIndex) => `
-                    <div class="set" style="
-                        background: #f8f9fa;
-                        border: 1px solid #ddd;
-                        border-radius: 6px;
-                        padding: 10px;
-                        text-align: center;
-                    ">
-                        <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px; font-weight: bold;">
-                            Set ${setIndex + 1}
-                        </div>
-                        <div style="display: flex; justify-content: center; align-items: center; gap: 5px;">
-                            <input type="number" 
-                                   value="${set.player1Score || ''}" 
-                                   placeholder=""
-                                   onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', ${setIndex}, 'player1Score', this.value)"
-                                   onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
-                                   style="width: 50px; height: 40px; text-align: center; padding: 8px; font-weight: bold; font-size: 16px; border: 2px solid #ddd; border-radius: 6px;">
-                            <span style="font-weight: bold; color: #7f8c8d;">-</span>
-                            <input type="number" 
-                                   value="${set.player2Score || ''}" 
-                                   placeholder=""
-                                   onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', ${setIndex}, 'player2Score', this.value)"
-                                   onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
-                                   style="width: 50px; height: 40px; text-align: center; padding: 8px; font-weight: bold; font-size: 16px; border: 2px solid #ddd; border-radius: 6px;">
-                        </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px; font-weight: bold;">
+                        ${match.player1}
                     </div>
-                `).join('')}
+                    <input type="number"
+                           value="${match.score1 || ''}"
+                           placeholder="0"
+                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score1', this.value)"
+                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
+                           style="width: 60px; height: 50px; text-align: center; padding: 8px; font-weight: bold; font-size: 20px; border: 2px solid #007bff; border-radius: 6px;">
+                </div>
+                <span style="font-weight: bold; color: #7f8c8d; font-size: 24px;">-</span>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px; font-weight: bold;">
+                        ${match.player2}
+                    </div>
+                    <input type="number"
+                           value="${match.score2 || ''}"
+                           placeholder="0"
+                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value)"
+                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
+                           style="width: 60px; height: 50px; text-align: center; padding: 8px; font-weight: bold; font-size: 20px; border: 2px solid #007bff; border-radius: 6px;">
+                </div>
             </div>
             
             <div class="match-result" style="
@@ -3786,13 +3711,13 @@ function generatePoolMatchHTML(match, dayNumber) {
 // GESTION DES SCORES DE POULES
 // ======================================
 
-function updatePoolMatchScore(dayNumber, matchId, setIndex, scoreField, value) {
+function updatePoolMatchScore(dayNumber, matchId, scoreField, value) {
     const dayData = championship.days[dayNumber];
-    
+
     for (let division = 1; division <= 3; division++) {
         const match = dayData.pools.divisions[division].matches.find(m => m.id == matchId);
         if (match) {
-            match.sets[setIndex][scoreField] = value;
+            match[scoreField] = value;
             checkPoolMatchCompletion(dayNumber, matchId);
             saveToLocalStorage();
             break;
@@ -3815,29 +3740,25 @@ function checkPoolMatchCompletion(dayNumber, matchId) {
     for (let division = 1; division <= 3; division++) {
         const match = dayData.pools.divisions[division].matches.find(m => m.id == matchId);
         if (match) {
-            let player1Sets = 0;
-            let player2Sets = 0;
-            
-            match.sets.forEach(set => {
-                if (set.player1Score !== '' && set.player2Score !== '') {
-                    const score1 = parseInt(set.player1Score);
-                    const score2 = parseInt(set.player2Score);
-                    if (score1 > score2) player1Sets++;
-                    else if (score2 > score1) player2Sets++;
+            if (match.score1 !== '' && match.score2 !== '') {
+                const score1 = parseInt(match.score1);
+                const score2 = parseInt(match.score2);
+
+                if (score1 > score2) {
+                    match.completed = true;
+                    match.winner = match.player1;
+                } else if (score2 > score1) {
+                    match.completed = true;
+                    match.winner = match.player2;
+                } else {
+                    match.completed = true;
+                    match.winner = null;
                 }
-            });
-            
-            if (player1Sets >= 2) {
-                match.completed = true;
-                match.winner = match.player1;
-            } else if (player2Sets >= 2) {
-                match.completed = true;
-                match.winner = match.player2;
             } else {
                 match.completed = false;
                 match.winner = null;
             }
-            
+
             break;
         }
     }
@@ -3882,25 +3803,20 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex) {
             if (isPlayer1 || isPlayer2) {
                 if (match.winner === player) wins++;
                 else losses++;
-                
-                match.sets.forEach(set => {
-                    if (set.player1Score !== '' && set.player2Score !== '') {
-                        const score1 = parseInt(set.player1Score);
-                        const score2 = parseInt(set.player2Score);
-                        
-                        if (isPlayer1) {
-                            if (score1 > score2) setsWon++;
-                            else if (score2 > score1) setsLost++;
-                            pointsWon += score1;
-                            pointsLost += score2;
-                        } else {
-                            if (score2 > score1) setsWon++;
-                            else if (score1 > score2) setsLost++;
-                            pointsWon += score2;
-                            pointsLost += score1;
-                        }
-                    }
-                });
+
+                const score1 = parseInt(match.score1) || 0;
+                const score2 = parseInt(match.score2) || 0;
+
+                if (isPlayer1) {
+                    pointsWon += score1;
+                    pointsLost += score2;
+                } else {
+                    pointsWon += score2;
+                    pointsLost += score1;
+                }
+
+                setsWon = pointsWon;
+                setsLost = pointsLost;
             }
         });
         
@@ -4083,25 +3999,20 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool) {
                 if (isPlayer1 || isPlayer2) {
                     if (match.winner === player) wins++;
                     else losses++;
-                    
-                    match.sets.forEach(set => {
-                        if (set.player1Score !== '' && set.player2Score !== '') {
-                            const score1 = parseInt(set.player1Score);
-                            const score2 = parseInt(set.player2Score);
-                            
-                            if (isPlayer1) {
-                                if (score1 > score2) setsWon++;
-                                else if (score2 > score1) setsLost++;
-                                pointsWon += score1;
-                                pointsLost += score2;
-                            } else {
-                                if (score2 > score1) setsWon++;
-                                else if (score1 > score2) setsLost++;
-                                pointsWon += score2;
-                                pointsLost += score1;
-                            }
-                        }
-                    });
+
+                    const score1 = parseInt(match.score1) || 0;
+                    const score2 = parseInt(match.score2) || 0;
+
+                    if (isPlayer1) {
+                        pointsWon += score1;
+                        pointsLost += score2;
+                    } else {
+                        pointsWon += score2;
+                        pointsLost += score1;
+                    }
+
+                    setsWon = pointsWon;
+                    setsLost = pointsLost;
                 }
             });
             
@@ -4207,11 +4118,8 @@ function generateFirstRound(dayNumber, division, qualified, roundName) {
             player2: player2.name,
             player1Seed: player1.seed,
             player2Seed: player2.seed || null,
-            sets: [
-                { player1Score: '', player2Score: '' },
-                { player1Score: '', player2Score: '' },
-                { player1Score: '', player2Score: '' }
-            ],
+            score1: player2.isBye ? 3 : '',
+            score2: player2.isBye ? 0 : '',
             completed: player2.isBye || false,
             winner: player2.isBye ? player1.name : null,
             roundName: roundName,
@@ -4491,36 +4399,40 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     Qualifié automatiquement
                 </div>
             ` : `
-                <div class="sets" style="
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 8px;
+                <div class="score-container" style="
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 10px;
                     margin-bottom: 12px;
+                    padding: 12px;
+                    background: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 6px;
                 ">
-                    ${match.sets.map((set, setIndex) => `
-                        <div style="
-                            background: #f8f9fa;
-                            border: 1px solid #dee2e6;
-                            border-radius: 6px;
-                            padding: 8px;
-                            text-align: center;
-                        ">
-                            <div style="font-size: 11px; color: #6c757d; margin-bottom: 3px;">Set ${setIndex + 1}</div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 3px;">
-                                <input type="number" 
-                                       value="${set.player1Score || ''}" 
-                                       onchange="updateManualMatchScore('${match.id}', ${setIndex}, 'player1Score', this.value, ${dayNumber})"
-                                       onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                                       style="width: 35px; height: 30px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
-                                <span style="color: #6c757d;">-</span>
-                                <input type="number" 
-                                       value="${set.player2Score || ''}" 
-                                       onchange="updateManualMatchScore('${match.id}', ${setIndex}, 'player2Score', this.value, ${dayNumber})"
-                                       onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                                       style="width: 35px; height: 30px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
-                            </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; color: #6c757d; margin-bottom: 3px; font-weight: bold;">
+                            ${match.player1}
                         </div>
-                    `).join('')}
+                        <input type="number"
+                               value="${match.score1 || ''}"
+                               placeholder="0"
+                               onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
+                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
+                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
+                    </div>
+                    <span style="color: #6c757d; font-weight: bold; font-size: 18px;">-</span>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; color: #6c757d; margin-bottom: 3px; font-weight: bold;">
+                            ${match.player2}
+                        </div>
+                        <input type="number"
+                               value="${match.score2 || ''}"
+                               placeholder="0"
+                               onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
+                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
+                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
+                    </div>
                 </div>
                 
                 <div class="match-result" style="
@@ -4661,35 +4573,35 @@ function getQualifiedFromRound(round) {
 // FONCTIONS DE GESTION DES MATCHS
 // ======================================
 
-function updateManualMatchScore(matchId, setIndex, scoreField, value, dayNumber) {
-    console.log(`📝 Score manuel: ${matchId} - Set ${setIndex} - ${scoreField} = ${value}`);
-    
+function updateManualMatchScore(matchId, scoreField, value, dayNumber) {
+    console.log(`📝 Score manuel: ${matchId} - ${scoreField} = ${value}`);
+
     const dayData = championship.days[dayNumber];
     let matchFound = false;
-    
+
     // Chercher dans toutes les divisions et tous les tours
     for (let division = 1; division <= 3; division++) {
         const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
-        
+
         for (const roundName in rounds) {
             const round = rounds[roundName];
             const match = round.matches.find(m => m.id === matchId);
-            
+
             if (match && !match.isBye) {
-                match.sets[setIndex][scoreField] = value;
+                match[scoreField] = value;
                 checkManualMatchCompletion(match);
                 matchFound = true;
-                
+
                 // Vérifier si le tour est terminé
                 checkRoundCompletion(dayNumber, division, roundName);
-                
+
                 saveToLocalStorage();
                 break;
             }
         }
         if (matchFound) break;
     }
-    
+
     if (!matchFound) {
         console.error(`❌ Match ${matchId} non trouvé`);
     }
@@ -4704,35 +4616,28 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
 
 function checkManualMatchCompletion(match) {
     if (match.isBye) return;
-    
-    let player1Sets = 0;
-    let player2Sets = 0;
-    
-    match.sets.forEach(set => {
-        if (set.player1Score !== '' && set.player2Score !== '' && 
-            !isNaN(set.player1Score) && !isNaN(set.player2Score)) {
-            
-            const score1 = parseInt(set.player1Score);
-            const score2 = parseInt(set.player2Score);
-            
-            if (score1 > score2) player1Sets++;
-            else if (score2 > score1) player2Sets++;
-        }
-    });
-    
+
     const wasCompleted = match.completed;
-    
-    if (player1Sets >= 2) {
-        match.completed = true;
-        match.winner = match.player1;
-    } else if (player2Sets >= 2) {
-        match.completed = true;
-        match.winner = match.player2;
+
+    if (match.score1 !== '' && match.score2 !== '') {
+        const score1 = parseInt(match.score1);
+        const score2 = parseInt(match.score2);
+
+        if (score1 > score2) {
+            match.completed = true;
+            match.winner = match.player1;
+        } else if (score2 > score1) {
+            match.completed = true;
+            match.winner = match.player2;
+        } else {
+            match.completed = true;
+            match.winner = null;
+        }
     } else {
         match.completed = false;
         match.winner = null;
     }
-    
+
     if (!wasCompleted && match.completed) {
         console.log(`🏆 Match ${match.id} terminé: ${match.winner} gagne`);
         showNotification(`🏆 ${match.winner} remporte le match !`, 'success');
@@ -4823,11 +4728,8 @@ function createManualRound(dayNumber, division, roundName, players) {
                 player2: player2.name,
                 player1Seed: player1.seed,
                 player2Seed: player2.seed,
-                sets: [
-                    { player1Score: '', player2Score: '' },
-                    { player1Score: '', player2Score: '' },
-                    { player1Score: '', player2Score: '' }
-                ],
+                score1: '',
+                score2: '',
                 completed: false,
                 winner: null,
                 roundName: roundName,
@@ -5353,64 +5255,64 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                     Qualifié automatiquement
                 </div>
             ` : `
-                <div class="sets" style="
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 12px;
+                <div class="score-container" style="
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 15px;
                     margin-bottom: 15px;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 8px;
                 ">
-                    ${match.sets.map((set, setIndex) => `
-                        <div style="
-                            background: #f8f9fa;
-                            border: 1px solid #dee2e6;
-                            border-radius: 8px;
-                            padding: 10px 8px;
-                            text-align: center;
-                        ">
-                            <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px; font-weight: bold;">
-                                Set ${setIndex + 1}
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                <input type="number" 
-                                       value="${set.player1Score || ''}" 
-                                       placeholder=""
-                                       min="0"
-                                       max="30"
-                                       onchange="updateManualMatchScore('${match.id}', ${setIndex}, 'player1Score', this.value, ${dayNumber})"
-                                       onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                                       style="
-                                           width: 45px; 
-                                           height: 35px; 
-                                           text-align: center; 
-                                           border: 2px solid #007bff; 
-                                           border-radius: 6px; 
-                                           font-size: 15px;
-                                           font-weight: bold;
-                                           background: white;
-                                           padding: 8px 4px;
-                                       ">
-                                <span style="color: #495057; font-weight: bold; font-size: 16px; margin: 0 2px;">-</span>
-                                <input type="number" 
-                                       value="${set.player2Score || ''}" 
-                                       placeholder=""
-                                       min="0"
-                                       max="30"
-                                       onchange="updateManualMatchScore('${match.id}', ${setIndex}, 'player2Score', this.value, ${dayNumber})"
-                                       onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                                       style="
-                                           width: 45px; 
-                                           height: 35px; 
-                                           text-align: center; 
-                                           border: 2px solid #007bff; 
-                                           border-radius: 6px; 
-                                           font-size: 15px;
-                                           font-weight: bold;
-                                           background: white;
-                                           padding: 8px 4px;
-                                       ">
-                            </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px; font-weight: bold;">
+                            ${match.player1}
                         </div>
-                    `).join('')}
+                        <input type="number"
+                               value="${match.score1 || ''}"
+                               placeholder="0"
+                               min="0"
+                               max="30"
+                               onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
+                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
+                               style="
+                                   width: 55px;
+                                   height: 45px;
+                                   text-align: center;
+                                   border: 2px solid #007bff;
+                                   border-radius: 8px;
+                                   font-size: 18px;
+                                   font-weight: bold;
+                                   background: white;
+                                   padding: 8px 4px;
+                               ">
+                    </div>
+                    <span style="color: #495057; font-weight: bold; font-size: 20px;">-</span>
+                    <div style="text-align: center;">
+                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px; font-weight: bold;">
+                            ${match.player2}
+                        </div>
+                        <input type="number"
+                               value="${match.score2 || ''}"
+                               placeholder="0"
+                               min="0"
+                               max="30"
+                               onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
+                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
+                               style="
+                                   width: 55px;
+                                   height: 45px;
+                                   text-align: center;
+                                   border: 2px solid #007bff;
+                                   border-radius: 8px;
+                                   font-size: 18px;
+                                   font-weight: bold;
+                                   background: white;
+                                   padding: 8px 4px;
+                               ">
+                    </div>
                 </div>
                 
                 <div class="match-result" style="
@@ -5458,25 +5360,20 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool) {
                 if (isPlayer1 || isPlayer2) {
                     if (match.winner === player) wins++;
                     else losses++;
-                    
-                    match.sets.forEach(set => {
-                        if (set.player1Score !== '' && set.player2Score !== '') {
-                            const score1 = parseInt(set.player1Score);
-                            const score2 = parseInt(set.player2Score);
-                            
-                            if (isPlayer1) {
-                                if (score1 > score2) setsWon++;
-                                else if (score2 > score1) setsLost++;
-                                pointsWon += score1;
-                                pointsLost += score2;
-                            } else {
-                                if (score2 > score1) setsWon++;
-                                else if (score1 > score2) setsLost++;
-                                pointsWon += score2;
-                                pointsLost += score1;
-                            }
-                        }
-                    });
+
+                    const score1 = parseInt(match.score1) || 0;
+                    const score2 = parseInt(match.score2) || 0;
+
+                    if (isPlayer1) {
+                        pointsWon += score1;
+                        pointsLost += score2;
+                    } else {
+                        pointsWon += score2;
+                        pointsLost += score1;
+                    }
+
+                    setsWon = pointsWon;
+                    setsLost = pointsLost;
                 }
             });
             
