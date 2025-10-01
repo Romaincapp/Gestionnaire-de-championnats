@@ -29,6 +29,42 @@
         </div>
 
         <div class="content">
+            <!-- CONFIGURATION -->
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; border-radius: 10px; margin-bottom: 20px; color: white;">
+                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: bold;">⚙️ Divisions:</span>
+                        <select id="divisionConfig" onchange="updateDivisionConfig()" style="padding: 8px; border-radius: 5px; border: none; font-size: 14px;">
+                            <option value="1">1 Division</option>
+                            <option value="2">2 Divisions</option>
+                            <option value="3" selected>3 Divisions</option>
+                            <option value="4">4 Divisions</option>
+                            <option value="5">5 Divisions</option>
+                            <option value="6">6 Divisions</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: bold;">🎾 Terrains:</span>
+                        <select id="courtConfig" onchange="updateCourtConfig()" style="padding: 8px; border-radius: 5px; border: none; font-size: 14px;">
+                            <option value="1">1 Terrain</option>
+                            <option value="2">2 Terrains</option>
+                            <option value="3">3 Terrains</option>
+                            <option value="4" selected>4 Terrains</option>
+                            <option value="5">5 Terrains</option>
+                            <option value="6">6 Terrains</option>
+                            <option value="8">8 Terrains</option>
+                            <option value="10">10 Terrains</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="applyConfiguration()" style="background: white; color: #667eea; font-weight: bold; padding: 8px 20px;">
+                        ✅ Appliquer Configuration
+                    </button>
+                </div>
+                <div id="courtAssignmentInfo" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; font-size: 13px; text-align: center;">
+                    <!-- Information sur l'attribution des terrains sera ajoutée ici -->
+                </div>
+            </div>
+
             <!-- CONTENU JOURNÉE -->
             <div class="tab-content day-content active" id="day-1">
                 <div class="section">
@@ -97,9 +133,29 @@
                         </div>
                     </div>
 
-                    <button class="btn" onclick="generateMatchesForDay()" style="font-size: 18px; padding: 15px 25px; display: block; margin: 20px auto;">
-                        🎯 Générer les Matchs (Round-Robin)
-                    </button>
+                    <div style="text-align: center; margin: 20px auto; max-width: 1000px;">
+                        <h3 style="color: #2c3e50; margin-bottom: 15px;">🎯 Choisir le type de génération</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                            <button class="btn" onclick="generateMatchesForDay()" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                                🔄 Round-Robin Classique
+                            </button>
+                            <button class="btn" onclick="generateMatchesOptimized4to10()" style="background: linear-gradient(135deg, #e67e22, #d35400);">
+                                🎲 Optimisé 4-10 joueurs
+                            </button>
+                            <button class="btn" onclick="generateMatchesByCourtOptimized()" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
+                                🎾 Par Terrain (4-10/terrain)
+                            </button>
+                            <button class="btn" onclick="generateMatchesSwissSystem()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                                🏆 Swiss System
+                            </button>
+                        </div>
+                        <div style="margin-top: 10px; padding: 10px; background: #ecf0f1; border-radius: 5px; font-size: 12px; color: #7f8c8d; line-height: 1.6;">
+                            <strong>Round-Robin:</strong> Tous contre tous •
+                            <strong>Optimisé 4-10:</strong> Schéma fixe division entière •
+                            <strong>Par Terrain:</strong> 4-10 joueurs/terrain, 1 match/tour/terrain •
+                            <strong>Swiss:</strong> Appariement par niveau
+                        </div>
+                    </div>
 
                     <div class="guide-box">
                         <div class="guide-title">

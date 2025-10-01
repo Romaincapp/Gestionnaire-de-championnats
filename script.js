@@ -1,13 +1,30 @@
 console.log("Script démarré");
 
 try {
+    // CONFIGURATION GLOBALE
+    let config = {
+        numberOfDivisions: 3,
+        numberOfCourts: 4
+    };
+    window.config = config;
+
+    // Fonction pour initialiser les divisions dynamiquement
+    function initializeDivisions(numberOfDivisions) {
+        const divisions = {};
+        for (let i = 1; i <= numberOfDivisions; i++) {
+            divisions[i] = [];
+        }
+        return divisions;
+    }
+
     // STRUCTURE DE DONNÉES CHAMPIONNAT
     let championship = {
         currentDay: 1,
+        config: { ...config }, // Sauvegarder la config dans le championnat
         days: {
             1: {
-                players: { 1: [], 2: [], 3: [] },
-                matches: { 1: [], 2: [], 3: [] }
+                players: initializeDivisions(config.numberOfDivisions),
+                matches: initializeDivisions(config.numberOfDivisions)
             }
         }
     };
@@ -88,6 +105,11 @@ try {
             const saved = localStorage.getItem('tennisTableChampionship');
             if (saved) {
                 championship = JSON.parse(saved);
+                // Charger la config sauvegardée ou utiliser les valeurs par défaut
+                if (championship.config) {
+                    config.numberOfDivisions = championship.config.numberOfDivisions || 3;
+                    config.numberOfCourts = championship.config.numberOfCourts || 4;
+                }
                 console.log("Données chargées depuis localStorage");
                 return true;
             }
@@ -96,6 +118,88 @@ try {
         }
         return false;
     }
+
+    // GESTION DE LA CONFIGURATION
+    function updateDivisionConfig() {
+        const select = document.getElementById('divisionConfig');
+        config.numberOfDivisions = parseInt(select.value);
+        updateCourtAssignmentInfo();
+    }
+    window.updateDivisionConfig = updateDivisionConfig;
+
+    function updateCourtConfig() {
+        const select = document.getElementById('courtConfig');
+        config.numberOfCourts = parseInt(select.value);
+        updateCourtAssignmentInfo();
+    }
+    window.updateCourtConfig = updateCourtConfig;
+
+    function applyConfiguration() {
+        const newDivisions = config.numberOfDivisions;
+        const newCourts = config.numberOfCourts;
+
+        if (!confirm(`⚙️ Appliquer la nouvelle configuration ?\n\n` +
+            `📊 Divisions: ${newDivisions}\n` +
+            `🎾 Terrains: ${newCourts}\n\n` +
+            `⚠️ Attention: Cela peut affecter l'affichage des joueurs et matchs existants.`)) {
+            return;
+        }
+
+        // Mettre à jour toutes les journées existantes
+        Object.keys(championship.days).forEach(dayKey => {
+            const day = championship.days[dayKey];
+
+            // Ajouter les nouvelles divisions si nécessaire
+            for (let i = 1; i <= newDivisions; i++) {
+                if (!day.players[i]) {
+                    day.players[i] = [];
+                    day.matches[i] = [];
+                }
+            }
+        });
+
+        // Sauvegarder la config dans le championnat
+        championship.config = {
+            numberOfDivisions: newDivisions,
+            numberOfCourts: newCourts
+        };
+
+        saveToLocalStorage();
+
+        // Recharger l'interface
+        location.reload();
+    }
+    window.applyConfiguration = applyConfiguration;
+
+    function getNumberOfDivisions() {
+        return championship.config?.numberOfDivisions || config.numberOfDivisions || 3;
+    }
+    window.getNumberOfDivisions = getNumberOfDivisions;
+
+    function getNumberOfCourts() {
+        return championship.config?.numberOfCourts || config.numberOfCourts || 4;
+    }
+    window.getNumberOfCourts = getNumberOfCourts;
+
+    // Calculer la plage de terrains pour une division donnée
+    function getCourtsForDivision(division) {
+        const numCourts = getNumberOfCourts();
+        const numDivisions = getNumberOfDivisions();
+
+        // Calculer combien de terrains par division
+        const courtsPerDivision = Math.ceil(numCourts / numDivisions);
+
+        // Calculer le premier et dernier terrain pour cette division
+        const firstCourt = (division - 1) * courtsPerDivision + 1;
+        const lastCourt = Math.min(division * courtsPerDivision, numCourts);
+
+        return {
+            first: firstCourt,
+            last: lastCourt,
+            count: lastCourt - firstCourt + 1
+        };
+    }
+    window.getCourtsForDivision = getCourtsForDivision;
 
     // FONCTIONS DE BASE
     function addPlayer() {
@@ -322,7 +426,7 @@ try {
         return `
             <div class="section">
                 <h2>👥 Joueurs Journée ${dayNumber}</h2>
-                
+
                 <div style="text-align: center; margin-bottom: 20px;">
                     <p style="color: #7f8c8d; font-style: italic;">
                         Utilisez la <strong>Journée 1 (Hub Central)</strong> pour ajouter des joueurs à cette journée
@@ -331,11 +435,31 @@ try {
                         ← Retour au Hub Central
                     </button>
                 </div>
-                
-                <button class="btn" onclick="generateMatchesForDay(${dayNumber})" style="font-size: 18px; padding: 15px 25px; display: block; margin: 20px auto;">
-                    🎯 Générer les Matchs Journée ${dayNumber}
-                </button>
-                
+
+                <div style="text-align: center; margin: 20px auto; max-width: 1000px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">🎯 Choisir le type de génération</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                        <button class="btn" onclick="generateMatchesForDay(${dayNumber})" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                            🔄 Round-Robin Classique
+                        </button>
+                        <button class="btn" onclick="generateMatchesOptimized4to10(${dayNumber})" style="background: linear-gradient(135deg, #e67e22, #d35400);">
+                            🎲 Optimisé 4-10 joueurs
+                        </button>
+                        <button class="btn" onclick="generateMatchesByCourtOptimized(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
+                            🎾 Par Terrain (4-10/terrain)
+                        </button>
+                        <button class="btn" onclick="generateMatchesSwissSystem(${dayNumber})" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                            🏆 Swiss System
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px; padding: 10px; background: #ecf0f1; border-radius: 5px; font-size: 12px; color: #7f8c8d; line-height: 1.6;">
+                        <strong>Round-Robin:</strong> Tous contre tous •
+                        <strong>Optimisé 4-10:</strong> Schéma fixe division entière •
+                        <strong>Par Terrain:</strong> 4-10 joueurs/terrain, 1 match/tour/terrain •
+                        <strong>Swiss:</strong> Appariement par niveau
+                    </div>
+                </div>
+
                 <div class="control-buttons">
                     <button class="btn btn-success" onclick="updateRankingsForDay(${dayNumber})">
                         🏆 Classements J${dayNumber}
@@ -514,16 +638,18 @@ try {
             divisions: {}
         };
         
-        for (let division = 1; division <= 3; division++) {
-            const divisionPlayers = [...dayData.players[division]];
-            
+        const numDivisions = getNumberOfDivisions();
+
+        for (let division = 1; division <= numDivisions; division++) {
+            const divisionPlayers = [...(dayData.players[division] || [])];
+
             if (divisionPlayers.length < 2) {
                 if (divisionPlayers.length === 1) {
                     alert(`Journée ${dayNumber} - Division ${division}: Il faut au moins 2 joueurs pour générer des matchs`);
                 }
                 continue;
             }
-            
+
             dayData.matches[division] = [];
             
             const matchHistory = new Map();
@@ -649,8 +775,8 @@ try {
         saveToLocalStorage();
         
         let summary = `✅ Matchs générés pour la Journée ${dayNumber} !\n\n`;
-        
-        for (let division = 1; division <= 3; division++) {
+
+        for (let division = 1; division <= numDivisions; division++) {
             if (reportDetails.divisions[division]) {
                 const divStats = reportDetails.divisions[division];
                 summary += `Division ${division}: ${divStats.players} joueurs\n`;
@@ -673,20 +799,599 @@ try {
     }
     window.generateMatchesForDay = generateMatchesForDay;
 
+    // GÉNÉRATION OPTIMISÉE POUR 4-10 JOUEURS (4 TOURS)
+    function generateMatchesOptimized4to10(dayNumber) {
+        if (!dayNumber) {
+            dayNumber = championship.currentDay;
+        }
+
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return;
+
+        if (dayData.pools && dayData.pools.enabled) {
+            alert('⚠️ Mode Poules activé !\n\nUtilisez les boutons "Générer les Poules" dans la section bleue ci-dessus.');
+            return;
+        }
+
+        let reportDetails = {
+            totalNewMatches: 0,
+            divisions: {}
+        };
+
+        const numDivisions = getNumberOfDivisions();
+
+        for (let division = 1; division <= numDivisions; division++) {
+            const divisionPlayers = [...(dayData.players[division] || [])];
+            const numPlayers = divisionPlayers.length;
+
+            if (numPlayers < 4) {
+                if (numPlayers > 0) {
+                    alert(`Journée ${dayNumber} - Division ${division}: Il faut au moins 4 joueurs pour cette génération optimisée`);
+                }
+                continue;
+            }
+
+            if (numPlayers > 10) {
+                alert(`Journée ${dayNumber} - Division ${division}: Cette génération est optimisée pour 4 à 10 joueurs. Vous avez ${numPlayers} joueurs.`);
+                continue;
+            }
+
+            dayData.matches[division] = [];
+
+            // Schémas prédéfinis pour chaque nombre de joueurs (selon vos spécifications)
+            const schemas = {
+                4: [
+                    [[0,1], [0,2], [1,3]],       // Tour 1: aller - a-b, a-c, b-d
+                    [[0,3], [3,2], [1,2]],       // Tour 2: aller suite - a-d, d-c, b-c
+                    [[0,1], [2,3]]               // Tour 3: retour - a-b, c-d
+                ],
+                5: [
+                    [[0,1], [2,4], [3,4]],       // Tour 1: a-b, c-e, d-e
+                    [[0,2], [1,3], [0,3]],       // Tour 2: a-c, b-d, a-d
+                    [[1,4], [3,2]],              // Tour 3: b-e, d-c
+                    [[0,4], [1,2]]               // Tour 4: a-e, b-c
+                ],
+                6: [
+                    [[0,1], [2,3], [4,5]],    // Tour 1
+                    [[0,2], [1,4], [3,5]],    // Tour 2
+                    [[0,3], [1,5], [4,2]],    // Tour 3
+                    [[0,5], [1,2], [4,3]]     // Tour 4
+                ],
+                7: [
+                    [[0,1], [2,3], [4,5]],       // Tour 1: a-b, c-d, e-f
+                    [[6,5], [0,2], [4,6]],       // Tour 2: g-f, a-c, e-g
+                    [[0,3], [1,3], [1,4], [2,5]], // Tour 3: a-d, b-d, b-e, c-f
+                    [[6,3], [2,6], [0,4], [1,5]]  // Tour 4: g-d, c-g, a-e, b-f
+                ],
+                8: [
+                    [[0,1], [2,3], [4,5], [6,7]], // Tour 1
+                    [[0,3], [1,2], [4,7], [5,6]], // Tour 2
+                    [[0,2], [1,3], [4,6], [5,7]], // Tour 3
+                    [[0,4], [2,6], [1,5], [3,7]]  // Tour 4
+                ],
+                9: [
+                    [[0,1], [2,3], [4,5], [6,7]], // Tour 1 (i=8 BYE)
+                    [[0,2], [1,3], [4,6], [5,8]], // Tour 2 (h=7 BYE)
+                    [[0,3], [1,2], [4,7], [6,8]], // Tour 3 (f=5 BYE)
+                    [[0,5], [1,6], [2,7], [3,8]]  // Tour 4 (e=4 BYE)
+                ],
+                10: [
+                    [[0,1], [2,3], [4,5], [6,7], [8,9]], // Tour 1
+                    [[0,2], [1,3], [4,6], [5,8], [7,9]], // Tour 2
+                    [[0,3], [1,2], [4,7], [5,9], [6,8]], // Tour 3
+                    [[0,5], [1,6], [2,7], [3,8], [4,9]]  // Tour 4
+                ]
+            };
+
+            const schema = schemas[numPlayers];
+            if (!schema) {
+                alert(`Aucun schéma prédéfini pour ${numPlayers} joueurs`);
+                continue;
+            }
+
+            // Générer les matchs selon le schéma
+            // D'abord identifier les joueurs qui ont un BYE (pour 9 joueurs)
+            const byePlayers = [];
+            if (numPlayers === 9) {
+                const byeMap = [8, 7, 5, 4]; // Indices des joueurs qui ont BYE à chaque tour
+                byeMap.forEach((playerIdx, tourIdx) => {
+                    if (!byePlayers[tourIdx]) byePlayers[tourIdx] = [];
+                    byePlayers[tourIdx].push(divisionPlayers[playerIdx]);
+                });
+            }
+
+            schema.forEach((tour, tourIndex) => {
+                tour.forEach(([idx1, idx2]) => {
+                    if (idx1 < divisionPlayers.length && idx2 < divisionPlayers.length) {
+                        const matchData = {
+                            player1: divisionPlayers[idx1],
+                            player2: divisionPlayers[idx2],
+                            tour: tourIndex + 1,
+                            score1: '',
+                            score2: '',
+                            completed: false,
+                            winner: null,
+                            timesPlayedBefore: 0,
+                            isRematch: false
+                        };
+
+                        dayData.matches[division].push(matchData);
+                        reportDetails.totalNewMatches++;
+                    }
+                });
+
+                // Ajouter les BYE pour ce tour (si applicable)
+                if (byePlayers[tourIndex] && byePlayers[tourIndex].length > 0) {
+                    byePlayers[tourIndex].forEach(player => {
+                        const byeMatch = {
+                            player1: player,
+                            player2: 'BYE',
+                            tour: tourIndex + 1,
+                            score1: '',
+                            score2: '',
+                            completed: true,
+                            winner: player,
+                            isBye: true
+                        };
+                        dayData.matches[division].push(byeMatch);
+                    });
+                }
+            });
+
+            reportDetails.divisions[division] = {
+                players: numPlayers,
+                matches: dayData.matches[division].length,
+                tours: 4
+            };
+        }
+
+        updateMatchesDisplay(dayNumber);
+        updateStats(dayNumber);
+        saveToLocalStorage();
+
+        let summary = `✅ Matchs générés (Optimisation 4-10 joueurs) !\n\n`;
+
+        for (let division = 1; division <= numDivisions; division++) {
+            if (reportDetails.divisions[division]) {
+                const divStats = reportDetails.divisions[division];
+                summary += `Division ${division}: ${divStats.players} joueurs\n`;
+                summary += `  → ${divStats.matches} matchs en ${divStats.tours} tours\n`;
+            }
+        }
+
+        summary += `\n📊 Total: ${reportDetails.totalNewMatches} matchs générés`;
+        alert(summary);
+    }
+    window.generateMatchesOptimized4to10 = generateMatchesOptimized4to10;
+
+    // GÉNÉRATION PAR TERRAIN (4-10 JOUEURS PAR TERRAIN)
+    function generateMatchesByCourtOptimized(dayNumber) {
+        if (!dayNumber) {
+            dayNumber = championship.currentDay;
+        }
+
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return;
+
+        if (dayData.pools && dayData.pools.enabled) {
+            alert('⚠️ Mode Poules activé !\n\nUtilisez les boutons "Générer les Poules" dans la section bleue ci-dessus.');
+            return;
+        }
+
+        let reportDetails = {
+            totalMatches: 0,
+            divisions: {}
+        };
+
+        const numDivisions = getNumberOfDivisions();
+
+        // Schémas prédéfinis pour chaque nombre de joueurs
+        const schemas = {
+            4: [
+                [[0,1], [0,2], [1,3]],
+                [[0,3], [3,2], [1,2]],
+                [[0,1], [2,3]]
+            ],
+            5: [
+                [[0,1], [2,4], [3,4]],
+                [[0,2], [1,3], [0,3]],
+                [[1,4], [3,2]],
+                [[0,4], [1,2]]
+            ],
+            6: [
+                [[0,1], [2,3], [4,5]],
+                [[0,2], [1,4], [3,5]],
+                [[0,3], [1,5], [4,2]],
+                [[0,5], [1,2], [4,3]]
+            ],
+            7: [
+                [[0,1], [2,3], [4,5]],
+                [[6,5], [0,2], [4,6]],
+                [[0,3], [1,3], [1,4], [2,5]],
+                [[6,3], [2,6], [0,4], [1,5]]
+            ],
+            8: [
+                [[0,1], [2,3], [4,5], [6,7]],
+                [[0,3], [1,2], [4,7], [5,6]],
+                [[0,2], [1,3], [4,6], [5,7]],
+                [[0,4], [2,6], [1,5], [3,7]]
+            ],
+            9: [
+                [[0,1], [2,3], [4,5], [6,7]],
+                [[0,2], [1,3], [4,6], [5,8]],
+                [[0,3], [1,2], [4,7], [6,8]],
+                [[0,5], [1,6], [2,7], [3,8]]
+            ],
+            10: [
+                [[0,1], [2,3], [4,5], [6,7], [8,9]],
+                [[0,2], [1,3], [4,6], [5,8], [7,9]],
+                [[0,3], [1,2], [4,7], [5,9], [6,8]],
+                [[0,5], [1,6], [2,7], [3,8], [4,9]]
+            ]
+        };
+
+        for (let division = 1; division <= numDivisions; division++) {
+            const divisionPlayers = [...(dayData.players[division] || [])];
+            const numPlayers = divisionPlayers.length;
+
+            if (numPlayers < 4) {
+                if (numPlayers > 0) {
+                    alert(`Division ${division}: Il faut au moins 4 joueurs pour cette génération`);
+                }
+                continue;
+            }
+
+            // Obtenir les terrains de cette division
+            const divisionCourts = getCourtsForDivision(division);
+            const numCourts = divisionCourts.count;
+
+            // Calculer combien de joueurs par terrain (idéalement entre 4 et 10)
+            const playersPerCourt = Math.floor(numPlayers / numCourts);
+
+            if (playersPerCourt < 4) {
+                alert(`Division ${division}: Pas assez de joueurs pour les ${numCourts} terrains.\n\n` +
+                      `Vous avez ${numPlayers} joueurs, il faut au moins ${numCourts * 4} joueurs (4 par terrain).\n\n` +
+                      `Options:\n` +
+                      `- Réduire le nombre de terrains\n` +
+                      `- Ajouter plus de joueurs\n` +
+                      `- Utiliser une autre méthode de génération`);
+                continue;
+            }
+
+            if (playersPerCourt > 10) {
+                alert(`Division ${division}: Trop de joueurs par terrain.\n\n` +
+                      `Avec ${numPlayers} joueurs sur ${numCourts} terrains = ${playersPerCourt} joueurs/terrain.\n\n` +
+                      `Maximum: 10 joueurs par terrain.\n\n` +
+                      `Options:\n` +
+                      `- Augmenter le nombre de terrains\n` +
+                      `- Utiliser une autre méthode de génération`);
+                continue;
+            }
+
+            dayData.matches[division] = [];
+
+            // Mélanger les joueurs pour une répartition équitable
+            const shuffledPlayers = [...divisionPlayers].sort(() => Math.random() - 0.5);
+
+            // Répartir les joueurs sur les terrains
+            const courtAssignments = [];
+            const remainingPlayers = numPlayers % numCourts; // Joueurs en surplus
+            let currentPlayerIndex = 0;
+
+            for (let courtIdx = 0; courtIdx < numCourts; courtIdx++) {
+                // Les premiers terrains reçoivent un joueur supplémentaire si nécessaire
+                const playersForThisCourt = playersPerCourt + (courtIdx < remainingPlayers ? 1 : 0);
+
+                const courtPlayers = shuffledPlayers.slice(currentPlayerIndex, currentPlayerIndex + playersForThisCourt);
+                const actualCourtNumber = divisionCourts.first + courtIdx;
+
+                courtAssignments.push({
+                    court: actualCourtNumber,
+                    players: courtPlayers,
+                    numPlayers: courtPlayers.length
+                });
+
+                currentPlayerIndex += playersForThisCourt;
+            }
+
+            // Vérification : tous les joueurs doivent être assignés
+            const totalAssigned = courtAssignments.reduce((sum, ca) => sum + ca.numPlayers, 0);
+            if (totalAssigned !== numPlayers) {
+                console.error(`⚠️ Erreur: ${totalAssigned}/${numPlayers} joueurs assignés`);
+                alert(`Erreur de répartition dans Division ${division}: seulement ${totalAssigned}/${numPlayers} joueurs assignés!`);
+                continue;
+            }
+
+            // Générer les matchs pour chaque terrain
+            let totalMatchesGenerated = 0;
+
+            courtAssignments.forEach(courtAssignment => {
+                const { court, players, numPlayers: courtNumPlayers } = courtAssignment;
+
+                // Vérifier si on a un schéma pour ce nombre de joueurs
+                const schema = schemas[courtNumPlayers];
+                if (!schema) {
+                    console.warn(`Pas de schéma pour ${courtNumPlayers} joueurs sur terrain ${court}`);
+                    return;
+                }
+
+                // Générer les matchs selon le schéma
+                const byePlayers = [];
+                if (courtNumPlayers === 9) {
+                    const byeMap = [8, 7, 5, 4];
+                    byeMap.forEach((playerIdx, tourIdx) => {
+                        if (!byePlayers[tourIdx]) byePlayers[tourIdx] = [];
+                        byePlayers[tourIdx].push(players[playerIdx]);
+                    });
+                }
+
+                schema.forEach((tour, tourIndex) => {
+                    tour.forEach(([idx1, idx2]) => {
+                        if (idx1 < players.length && idx2 < players.length) {
+                            const matchData = {
+                                player1: players[idx1],
+                                player2: players[idx2],
+                                tour: tourIndex + 1,
+                                court: court,
+                                score1: '',
+                                score2: '',
+                                completed: false,
+                                winner: null,
+                                timesPlayedBefore: 0,
+                                isRematch: false
+                            };
+
+                            dayData.matches[division].push(matchData);
+                            totalMatchesGenerated++;
+                        }
+                    });
+
+                    // Ajouter les BYE pour ce tour (si applicable)
+                    if (byePlayers[tourIndex] && byePlayers[tourIndex].length > 0) {
+                        byePlayers[tourIndex].forEach(player => {
+                            const byeMatch = {
+                                player1: player,
+                                player2: 'BYE',
+                                tour: tourIndex + 1,
+                                court: court,
+                                score1: '',
+                                score2: '',
+                                completed: true,
+                                winner: player,
+                                isBye: true
+                            };
+                            dayData.matches[division].push(byeMatch);
+                        });
+                    }
+                });
+            });
+
+            reportDetails.divisions[division] = {
+                players: numPlayers,
+                courts: numCourts,
+                playersPerCourt: playersPerCourt,
+                matches: totalMatchesGenerated,
+                courtAssignments: courtAssignments
+            };
+
+            reportDetails.totalMatches += totalMatchesGenerated;
+        }
+
+        updateMatchesDisplay(dayNumber);
+        updateStats(dayNumber);
+        saveToLocalStorage();
+
+        let summary = `✅ Matchs générés par terrain (4-10 joueurs/terrain) !\n\n`;
+
+        for (let division = 1; division <= numDivisions; division++) {
+            if (reportDetails.divisions[division]) {
+                const divStats = reportDetails.divisions[division];
+
+                // Vérifier que tous les joueurs sont bien assignés
+                const totalPlayersAssigned = divStats.courtAssignments.reduce((sum, ca) => sum + ca.numPlayers, 0);
+                const allPlayersAssigned = totalPlayersAssigned === divStats.players;
+
+                summary += `Division ${division}:\n`;
+                summary += `  👥 ${divStats.players} joueurs ${allPlayersAssigned ? '✓ TOUS' : '⚠️ ATTENTION'} répartis sur ${divStats.courts} terrains\n`;
+                summary += `  ⚔️ ${divStats.matches} matchs générés\n\n`;
+
+                divStats.courtAssignments.forEach(ca => {
+                    summary += `  • Terrain ${ca.court}: ${ca.numPlayers} joueurs (${ca.players.slice(0, 3).join(', ')}${ca.players.length > 3 ? '...' : ''})\n`;
+                });
+                summary += '\n';
+            }
+        }
+
+        summary += `📊 Total: ${reportDetails.totalMatches} matchs générés\n`;
+        summary += `✅ Tous les joueurs ont été assignés à un terrain !`;
+        alert(summary);
+    }
+    window.generateMatchesByCourtOptimized = generateMatchesByCourtOptimized;
+
+    // SYSTÈME SWISS SYSTEM
+    function generateMatchesSwissSystem(dayNumber) {
+        if (!dayNumber) {
+            dayNumber = championship.currentDay;
+        }
+
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return;
+
+        if (dayData.pools && dayData.pools.enabled) {
+            alert('⚠️ Mode Poules activé !');
+            return;
+        }
+
+        // Vérifier si des matchs existent déjà pour ce jour
+        const numDivisions = getNumberOfDivisions();
+        let hasExistingMatches = false;
+        for (let division = 1; division <= numDivisions; division++) {
+            if (dayData.matches[division] && dayData.matches[division].length > 0) {
+                hasExistingMatches = true;
+                break;
+            }
+        }
+
+        if (!hasExistingMatches) {
+            alert('⚠️ Swiss System nécessite un classement existant.\n\nPour la première journée, utilisez la génération Round-Robin classique.');
+            return;
+        }
+
+        let reportDetails = {
+            totalMatches: 0,
+            divisions: {}
+        };
+
+        for (let division = 1; division <= numDivisions; division++) {
+            const divisionPlayers = [...(dayData.players[division] || [])];
+
+            if (divisionPlayers.length < 2) {
+                continue;
+            }
+
+            // Calculer le classement actuel des joueurs
+            const playerStats = new Map();
+            divisionPlayers.forEach(player => {
+                playerStats.set(player, {
+                    name: player,
+                    points: 0,
+                    wins: 0,
+                    losses: 0,
+                    played: 0,
+                    opponents: new Set()
+                });
+            });
+
+            // Analyser tous les matchs précédents
+            Object.keys(championship.days).forEach(day => {
+                const dayNum = parseInt(day);
+                if (championship.days[dayNum] && championship.days[dayNum].matches[division]) {
+                    championship.days[dayNum].matches[division].forEach(match => {
+                        if (match.completed && divisionPlayers.includes(match.player1) && divisionPlayers.includes(match.player2)) {
+                            const p1Stats = playerStats.get(match.player1);
+                            const p2Stats = playerStats.get(match.player2);
+
+                            if (p1Stats && p2Stats) {
+                                p1Stats.played++;
+                                p2Stats.played++;
+                                p1Stats.opponents.add(match.player2);
+                                p2Stats.opponents.add(match.player1);
+
+                                if (match.winner === match.player1) {
+                                    p1Stats.wins++;
+                                    p1Stats.points += 3;
+                                    p2Stats.losses++;
+                                } else if (match.winner === match.player2) {
+                                    p2Stats.wins++;
+                                    p2Stats.points += 3;
+                                    p1Stats.losses++;
+                                } else {
+                                    // Match nul
+                                    p1Stats.points += 1;
+                                    p2Stats.points += 1;
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Trier les joueurs par points (système Swiss)
+            const sortedPlayers = Array.from(playerStats.values()).sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                return a.played - b.played;
+            });
+
+            // Générer les paires selon le système Swiss (joueurs de niveau similaire)
+            const matches = [];
+            const paired = new Set();
+
+            for (let i = 0; i < sortedPlayers.length; i++) {
+                if (paired.has(sortedPlayers[i].name)) continue;
+
+                // Chercher le meilleur adversaire disponible
+                let opponent = null;
+                for (let j = i + 1; j < sortedPlayers.length; j++) {
+                    if (paired.has(sortedPlayers[j].name)) continue;
+
+                    // Préférer un adversaire qu'on n'a jamais affronté
+                    if (!sortedPlayers[i].opponents.has(sortedPlayers[j].name)) {
+                        opponent = sortedPlayers[j];
+                        break;
+                    }
+                }
+
+                // Si tous les adversaires ont déjà été affrontés, prendre le premier disponible
+                if (!opponent) {
+                    for (let j = i + 1; j < sortedPlayers.length; j++) {
+                        if (!paired.has(sortedPlayers[j].name)) {
+                            opponent = sortedPlayers[j];
+                            break;
+                        }
+                    }
+                }
+
+                if (opponent) {
+                    matches.push({
+                        player1: sortedPlayers[i].name,
+                        player2: opponent.name,
+                        tour: 1,
+                        score1: '',
+                        score2: '',
+                        completed: false,
+                        winner: null,
+                        p1Points: sortedPlayers[i].points,
+                        p2Points: opponent.points
+                    });
+                    paired.add(sortedPlayers[i].name);
+                    paired.add(opponent.name);
+                }
+            }
+
+            dayData.matches[division] = matches;
+            reportDetails.totalMatches += matches.length;
+            reportDetails.divisions[division] = {
+                players: divisionPlayers.length,
+                matches: matches.length
+            };
+        }
+
+        updateMatchesDisplay(dayNumber);
+        updateStats(dayNumber);
+        saveToLocalStorage();
+
+        let summary = `✅ Matchs générés (Swiss System) !\n\n`;
+        summary += `Les joueurs sont appariés selon leur classement actuel.\n\n`;
+
+        for (let division = 1; division <= numDivisions; division++) {
+            if (reportDetails.divisions[division]) {
+                const divStats = reportDetails.divisions[division];
+                summary += `Division ${division}: ${divStats.matches} matchs\n`;
+            }
+        }
+
+        alert(summary);
+    }
+    window.generateMatchesSwissSystem = generateMatchesSwissSystem;
+
     // AFFICHAGE DES MATCHS
     function updateMatchesDisplay(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
-        
-        for (let division = 1; division <= 3; division++) {
+
+        const numDivisions = getNumberOfDivisions();
+        const numCourts = getNumberOfCourts();
+
+        for (let division = 1; division <= numDivisions; division++) {
             const container = document.getElementById(`division${dayNumber}-${division}-matches`);
             if (!container) continue;
-            
-            if (dayData.matches[division].length === 0) {
+
+            if (!dayData.matches[division] || dayData.matches[division].length === 0) {
                 container.innerHTML = '';
                 continue;
             }
-            
+
             const matchsByTour = {};
             dayData.matches[division].forEach(match => {
                 if (!matchsByTour[match.tour]) {
@@ -694,15 +1399,15 @@ try {
                 }
                 matchsByTour[match.tour].push(match);
             });
-            
+
             let html = '';
-            
+
             for (let tour = 1; tour <= 4; tour++) {
                 if (matchsByTour[tour] && matchsByTour[tour].length > 0) {
                     const tourMatches = matchsByTour[tour];
                     const completedMatches = tourMatches.filter(m => m.completed).length;
                     const totalMatches = tourMatches.length;
-                    
+
                     html += `
                         <div class="tour-section">
                             <div class="tour-header" onclick="toggleTour(${dayNumber}, ${division}, ${tour})">
@@ -711,8 +1416,39 @@ try {
                             </div>
                             <div class="tour-matches" id="tour${dayNumber}-${division}-${tour}">
                     `;
-                    
-                    tourMatches.forEach((match, matchIndex) => {
+
+                    // Obtenir la plage de terrains pour cette division
+                    const divisionCourts = getCourtsForDivision(division);
+
+                    // Organiser les matchs par terrain
+                    const matchesByCourt = {};
+                    tourMatches.forEach((match, idx) => {
+                        // Assigner automatiquement un terrain si pas déjà fait
+                        if (!match.court) {
+                            // Calculer le numéro de terrain relatif (0 à count-1)
+                            const relativeCourtIndex = idx % divisionCourts.count;
+                            // Convertir en numéro de terrain absolu
+                            match.court = divisionCourts.first + relativeCourtIndex;
+                        }
+                        if (!matchesByCourt[match.court]) {
+                            matchesByCourt[match.court] = [];
+                        }
+                        matchesByCourt[match.court].push(match);
+                    });
+
+                    // Afficher par terrain (uniquement les terrains de cette division)
+                    for (let court = divisionCourts.first; court <= divisionCourts.last; court++) {
+                        const courtMatches = matchesByCourt[court] || [];
+                        if (courtMatches.length === 0) continue;
+
+                        html += `
+                            <div style="margin-bottom: 15px; padding: 10px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; border-left: 4px solid #3498db;">
+                                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 10px; font-size: 16px;">
+                                    🎾 Terrain ${court}
+                                </div>
+                        `;
+
+                        courtMatches.forEach((match, matchIndex) => {
                         const globalIndex = dayData.matches[division].indexOf(match);
                         const matchStatus = match.completed ? 'completed' : 'pending';
                         const statusClass = match.completed ? 'status-completed' : 'status-pending';
@@ -760,19 +1496,24 @@ try {
                                 </div>
                             </div>
                         `;
-                    });
-                    
+                        });
+
+                        html += `
+                            </div>
+                        `;
+                    }
+
                     html += `
                             </div>
                         </div>
                     `;
                 }
             }
-            
+
             container.innerHTML = html;
             
             setTimeout(() => {
-                for (let div = 1; div <= 3; div++) {
+                for (let div = 1; div <= numDivisions; div++) {
                     const firstTour = document.getElementById(`tour${dayNumber}-${div}-1`);
                     if (firstTour) {
                         firstTour.classList.add('active');
@@ -1129,32 +1870,25 @@ try {
     function initializeDivisionsDisplay(dayNumber = 1) {
         const divisionsContainer = document.getElementById(`divisions-${dayNumber}`);
         if (!divisionsContainer) return;
-        
-        divisionsContainer.innerHTML = `
-            <div class="division division-1">
-                <h3>🥇 Division 1</h3>
-                <div class="players-list" id="division${dayNumber}-1-players">
-                    <div class="empty-state">Aucun joueur</div>
+
+        const numDivisions = getNumberOfDivisions();
+        const medals = ['🥇', '🥈', '🥉', '🏅', '🎖️', '⭐'];
+
+        let html = '';
+        for (let i = 1; i <= numDivisions; i++) {
+            const medal = medals[i - 1] || '📊';
+            html += `
+                <div class="division division-${i}">
+                    <h3>${medal} Division ${i}</h3>
+                    <div class="players-list" id="division${dayNumber}-${i}-players">
+                        <div class="empty-state">Aucun joueur</div>
+                    </div>
+                    <div class="matches-container" id="division${dayNumber}-${i}-matches"></div>
                 </div>
-                <div class="matches-container" id="division${dayNumber}-1-matches"></div>
-            </div>
-            
-            <div class="division division-2">
-                <h3>🥈 Division 2</h3>
-                <div class="players-list" id="division${dayNumber}-2-players">
-                    <div class="empty-state">Aucun joueur</div>
-                </div>
-                <div class="matches-container" id="division${dayNumber}-2-matches"></div>
-            </div>
-            
-            <div class="division division-3">
-                <h3>🥉 Division 3</h3>
-                <div class="players-list" id="division${dayNumber}-3-players">
-                    <div class="empty-state">Aucun joueur</div>
-                </div>
-                <div class="matches-container" id="division${dayNumber}-3-matches"></div>
-            </div>
-        `;
+            `;
+        }
+
+        divisionsContainer.innerHTML = html;
     }
 
     // STATISTIQUES ET CLASSEMENTS
@@ -3244,21 +3978,89 @@ window.exportGeneralRanking = exportGeneralRanking;
 window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
 window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
     // INITIALISATION AU CHARGEMENT
+    // Afficher l'attribution des terrains par division
+    function updateCourtAssignmentInfo() {
+        const infoDiv = document.getElementById('courtAssignmentInfo');
+        if (!infoDiv) return;
+
+        const numDivisions = getNumberOfDivisions();
+        const medals = ['🥇', '🥈', '🥉', '🏅', '🎖️', '⭐'];
+
+        let html = '<div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">';
+
+        for (let div = 1; div <= numDivisions; div++) {
+            const courts = getCourtsForDivision(div);
+            const medal = medals[div - 1] || '📊';
+
+            let courtText = '';
+            if (courts.first === courts.last) {
+                courtText = `Terrain ${courts.first}`;
+            } else {
+                courtText = `Terrains ${courts.first}-${courts.last}`;
+            }
+
+            html += `
+                <div style="padding: 5px 15px; background: white; border-radius: 5px; color: #667eea; font-weight: bold;">
+                    ${medal} Division ${div}: ${courtText}
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        infoDiv.innerHTML = html;
+    }
+    window.updateCourtAssignmentInfo = updateCourtAssignmentInfo;
+
+    // Fonction pour initialiser les selects de division dynamiquement
+    function initializeDivisionSelects() {
+        const numDivisions = getNumberOfDivisions();
+        const selects = ['playerDivision', 'bulkDivision'];
+
+        selects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (select) {
+                select.innerHTML = '';
+                for (let i = 1; i <= numDivisions; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `Division ${i}`;
+                    select.appendChild(option);
+                }
+            }
+        });
+
+        // Mettre à jour les selects de configuration
+        const divisionConfig = document.getElementById('divisionConfig');
+        const courtConfig = document.getElementById('courtConfig');
+        if (divisionConfig && championship.config) {
+            divisionConfig.value = championship.config.numberOfDivisions || 3;
+        }
+        if (courtConfig && championship.config) {
+            courtConfig.value = championship.config.numberOfCourts || 4;
+        }
+
+        // Afficher l'attribution des terrains
+        updateCourtAssignmentInfo();
+    }
+    window.initializeDivisionSelects = initializeDivisionSelects;
+
     document.addEventListener('DOMContentLoaded', function() {
         console.log("DOM chargé, début initialisation");
-        
+
         // Charger les données sauvegardées
         if (loadFromLocalStorage()) {
+            initializeDivisionSelects();
             updateTabsDisplay();
             updateDaySelectors();
             initializeAllDaysContent();
             switchTab(championship.currentDay);
         } else {
+            initializeDivisionSelects();
             initializeDivisionsDisplay(1);
             updatePlayersDisplay(1);
             initializePoolsForDay(1);
         }
-        
+
         setupEventListeners();
         console.log("Initialisation terminée");
     });
@@ -5424,7 +6226,8 @@ function printMatchSheets(dayNumber) {
     let allMatches = [];
     let hasMatches = false;
     
-    for (let division = 1; division <= 3; division++) {
+    const numDivisions = getNumberOfDivisions();
+    for (let division = 1; division <= numDivisions; division++) {
         const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
         if (divisionMatches.length > 0) {
             allMatches.push(...divisionMatches);
@@ -5850,21 +6653,21 @@ function openPrintWindow(htmlContent, filename) {
 function addPrintMatchesButton() {
     // Trouver tous les .control-buttons dans chaque journée
     const allControlButtons = document.querySelectorAll('.control-buttons');
-    
+
     allControlButtons.forEach(controlButtonsContainer => {
-        // Vérifier si le bouton n'existe pas déjà
+        // Vérifier si les boutons n'existent pas déjà
         if (controlButtonsContainer.querySelector('.print-matches-btn')) {
             return;
         }
-        
+
         // Trouver le dayNumber à partir du contexte
         const dayContent = controlButtonsContainer.closest('.day-content');
         if (!dayContent) return;
-        
+
         const dayNumber = parseInt(dayContent.id.replace('day-', ''));
         if (isNaN(dayNumber)) return;
-        
-        // Créer le bouton
+
+        // Créer le bouton d'impression standard
         const printButton = document.createElement('button');
         printButton.className = 'btn print-matches-btn';
         printButton.innerHTML = '📋 Imprimer Matchs';
@@ -5872,30 +6675,413 @@ function addPrintMatchesButton() {
         printButton.style.color = 'white';
         printButton.onclick = () => printMatchSheets(dayNumber);
         printButton.title = 'Imprimer les feuilles de match pour les arbitres';
-        
+
+        // Créer le bouton d'impression Boccia
+        const bocciaButton = document.createElement('button');
+        bocciaButton.className = 'btn print-boccia-btn';
+        bocciaButton.innerHTML = '🎾 Imprimer Boccia';
+        bocciaButton.style.background = 'linear-gradient(135deg, #16a085, #1abc9c)';
+        bocciaButton.style.color = 'white';
+        bocciaButton.onclick = () => printBocciaMatchSheets(dayNumber);
+        bocciaButton.title = 'Imprimer les feuilles de match Boccia (4 par page, 5 manches + barrage)';
+
         // Insérer après le bouton "Classements" s'il existe
         const rankingsButton = controlButtonsContainer.querySelector('button[onclick*="updateRankings"]');
         if (rankingsButton) {
             rankingsButton.insertAdjacentElement('afterend', printButton);
+            printButton.insertAdjacentElement('afterend', bocciaButton);
         } else {
-            // Sinon l'insérer au début
-            controlButtonsContainer.insertBefore(printButton, controlButtonsContainer.firstChild);
+            // Sinon les insérer au début
+            controlButtonsContainer.insertBefore(bocciaButton, controlButtonsContainer.firstChild);
+            controlButtonsContainer.insertBefore(printButton, bocciaButton);
         }
     });
+}
+
+// ===============================================
+// FEUILLES DE MATCH BOCCIA (4 par page A4)
+// ===============================================
+
+function printBocciaMatchSheets(dayNumber) {
+    if (!dayNumber) dayNumber = championship.currentDay;
+
+    console.log(`🎾 Génération des feuilles de match Boccia pour la Journée ${dayNumber}`);
+
+    const dayData = championship.days[dayNumber];
+    if (!dayData) {
+        alert('Aucune donnée trouvée pour cette journée !');
+        return;
+    }
+
+    // Collecter tous les matchs
+    let allMatches = [];
+    const numDivisions = getNumberOfDivisions();
+
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
+        allMatches.push(...divisionMatches);
+    }
+
+    if (allMatches.length === 0) {
+        alert('⚠️ Aucun match généré pour cette journée !');
+        return;
+    }
+
+    // Grouper les matchs par pages (4 matchs par page A4)
+    const matchPages = groupMatchesIntoPages(allMatches, 4);
+
+    // Générer le HTML d'impression Boccia
+    const printHTML = generateBocciaSheetHTML(dayNumber, matchPages);
+
+    // Ouvrir dans une nouvelle fenêtre pour impression
+    openPrintWindow(printHTML, `Feuilles_Boccia_J${dayNumber}`);
+
+    showNotification(`🎾 ${allMatches.length} feuilles de match Boccia générées !`, 'success');
+}
+
+function generateBocciaSheetHTML(dayNumber, matchPages) {
+    const currentDate = new Date().toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Feuilles Boccia - Journée ${dayNumber}</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 10mm;
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 8px;
+                    line-height: 1.1;
+                    color: #000;
+                    background: white;
+                }
+
+                .page {
+                    width: 210mm;
+                    height: 297mm;
+                    page-break-after: always;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    grid-template-rows: 1fr 1fr;
+                    gap: 5mm;
+                    padding: 5mm;
+                }
+
+                .page:last-child {
+                    page-break-after: avoid;
+                }
+
+                .match-card {
+                    border: 2px solid #000;
+                    padding: 3mm;
+                    background: white;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .match-header {
+                    text-align: center;
+                    border-bottom: 1.5px solid #000;
+                    padding-bottom: 2mm;
+                    margin-bottom: 2mm;
+                }
+
+                .match-title {
+                    font-size: 12px;
+                    font-weight: bold;
+                    margin-bottom: 1mm;
+                }
+
+                .match-info {
+                    font-size: 8px;
+                    color: #666;
+                }
+
+                .match-id {
+                    font-size: 9px;
+                    font-weight: bold;
+                    background: #f0f0f0;
+                    padding: 1mm;
+                    margin-top: 1mm;
+                    border: 1px solid #999;
+                }
+
+                .players-section {
+                    margin-bottom: 2mm;
+                }
+
+                .player-row {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 1mm;
+                }
+
+                .player-label {
+                    font-weight: bold;
+                    font-size: 8px;
+                    width: 20mm;
+                }
+
+                .player-name-box {
+                    flex: 1;
+                    border: 1px solid #000;
+                    padding: 1.5mm;
+                    font-size: 10px;
+                    font-weight: bold;
+                    background: #f8f8f8;
+                }
+
+                .score-section {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .score-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 8px;
+                    margin-bottom: 2mm;
+                }
+
+                .score-table th {
+                    background: #000;
+                    color: white;
+                    padding: 1.5mm;
+                    text-align: center;
+                    font-size: 8px;
+                    border: 1px solid #000;
+                    font-weight: bold;
+                }
+
+                .score-table td {
+                    padding: 2mm;
+                    text-align: center;
+                    border: 1px solid #000;
+                    min-height: 8mm;
+                }
+
+                .manche-header {
+                    background: #f0f0f0;
+                    font-weight: bold;
+                    font-size: 8px;
+                    text-align: left;
+                    padding-left: 2mm !important;
+                    width: 25%;
+                }
+
+                .player-score-col {
+                    background: white;
+                    min-width: 10mm;
+                }
+
+                .barrage-col {
+                    background: #fff9e6 !important;
+                }
+
+                .total-row th {
+                    background: #c0392b;
+                }
+
+                .total-cell {
+                    background: #ffe6e6;
+                    font-weight: bold;
+                    font-size: 9px;
+                }
+
+                .result-section {
+                    margin-top: auto;
+                    padding-top: 2mm;
+                    border-top: 1px dashed #999;
+                }
+
+                .result-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 1mm;
+                }
+
+                .result-label {
+                    font-size: 7px;
+                    font-weight: bold;
+                    margin-right: 2mm;
+                }
+
+                .result-line {
+                    flex: 1;
+                    border-bottom: 1px solid #000;
+                    min-height: 4mm;
+                }
+
+                @media print {
+                    body {
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
+                    }
+
+                    .page {
+                        page-break-inside: avoid;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+    `;
+
+    // Générer chaque page (4 matchs par page)
+    matchPages.forEach((pageMatches, pageIndex) => {
+        htmlContent += `<div class="page">`;
+
+        // Compléter avec des cartes vides si moins de 4 matchs
+        const matchesToDisplay = [...pageMatches];
+        while (matchesToDisplay.length < 4) {
+            matchesToDisplay.push(null);
+        }
+
+        matchesToDisplay.forEach((match, index) => {
+            if (match) {
+                htmlContent += generateBocciaMatchCard(match, dayNumber);
+            } else {
+                htmlContent += `<div class="match-card" style="border-style: dashed; opacity: 0.3;"></div>`;
+            }
+        });
+
+        htmlContent += `</div>`;
+    });
+
+    htmlContent += `
+        </body>
+        </html>
+    `;
+
+    return htmlContent;
+}
+
+function generateBocciaMatchCard(match, dayNumber) {
+    return `
+        <div class="match-card">
+            <div class="match-header">
+                <div class="match-title">🎾 FEUILLE DE MATCH BOCCIA</div>
+                <div class="match-info">Journée ${dayNumber} • ${new Date().toLocaleDateString('fr-FR')}</div>
+                <div class="match-id">${match.matchId} • ${match.type}${match.tour ? ` Tour ${match.tour}` : ''}</div>
+            </div>
+
+            <div class="players-section">
+                <div class="player-row">
+                    <div class="player-label">JOUEUR 1:</div>
+                    <div class="player-name-box">${match.player1}</div>
+                </div>
+                <div class="player-row">
+                    <div class="player-label">JOUEUR 2:</div>
+                    <div class="player-name-box">${match.player2}</div>
+                </div>
+            </div>
+
+            <div class="score-section">
+                <table class="score-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 28%;">MANCHE</th>
+                            <th style="width: 36%;">${match.player1.substring(0, 12)}</th>
+                            <th style="width: 36%;">${match.player2.substring(0, 12)}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th class="manche-header">Manche 1</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr>
+                            <th class="manche-header">Manche 2</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr>
+                            <th class="manche-header">Manche 3</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr>
+                            <th class="manche-header">Manche 4</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr>
+                            <th class="manche-header">Manche 5</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr style="background: #fff9e6;">
+                            <th class="manche-header" style="background: #f9e79f;">Barrage (M6)*</th>
+                            <td class="player-score-col barrage-col"></td>
+                            <td class="player-score-col barrage-col"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <th>TOTAL</th>
+                            <td class="total-cell"></td>
+                            <td class="total-cell"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="font-size: 6px; color: #666; font-style: italic; margin-top: 1mm;">
+                    * Manche de barrage uniquement si nécessaire (égalité après 5 manches)
+                </div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-row">
+                    <div class="result-label">VAINQUEUR:</div>
+                    <div class="result-line"></div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label">ARBITRE:</div>
+                    <div class="result-line"></div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label">TERRAIN N°:</div>
+                    <div class="result-line" style="max-width: 15mm;"></div>
+                    <div class="result-label" style="margin-left: 3mm;">HEURE:</div>
+                    <div class="result-line" style="max-width: 15mm;"></div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // ===============================================
 // EXPORT EXPLICITE VERS WINDOW - TRÈS IMPORTANT
 // ===============================================
 window.printMatchSheets = printMatchSheets;
+window.printBocciaMatchSheets = printBocciaMatchSheets;
 window.addPrintMatchesButton = addPrintMatchesButton;
 window.getDivisionMatches = getDivisionMatches;
 window.groupMatchesIntoPages = groupMatchesIntoPages;
 window.generateMatchSheetHTML = generateMatchSheetHTML;
 window.generateCompactMatchSheet = generateCompactMatchSheet;
+window.generateBocciaSheetHTML = generateBocciaSheetHTML;
+window.generateBocciaMatchCard = generateBocciaMatchCard;
 window.openPrintWindow = openPrintWindow;
 
 console.log('✅ Système d\'impression des feuilles de match installé !');
+console.log('✅ Système Boccia installé !');
 console.log('📋 Fonctions exportées vers window:', Object.keys(window).filter(k => k.includes('print')));
 
 // Ajouter automatiquement les boutons au chargement et lors de la création de nouvelles journées
