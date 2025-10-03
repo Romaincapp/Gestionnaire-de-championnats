@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(start index.html)"
+      "Bash(start index.html)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
