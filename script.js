@@ -1902,19 +1902,17 @@ try {
         
         let wins = 0;
         let losses = 0;
-        let setsWon = 0;
-        let setsLost = 0;
         let pointsWon = 0;
         let pointsLost = 0;
         let matchesPlayed = 0;
-        
+
         playerMatches.forEach(match => {
             checkMatchCompletion(dayNumber, division, dayData.matches[division].indexOf(match));
-            
+
             if (match.completed) {
                 matchesPlayed++;
                 const isPlayer1 = match.player1 === playerName;
-                
+
                 if (match.winner === playerName) {
                     wins++;
                 } else {
@@ -1931,22 +1929,16 @@ try {
                     pointsWon += score2;
                     pointsLost += score1;
                 }
-
-                // Utiliser les scores comme "sets" pour la compatibilité
-                setsWon = pointsWon;
-                setsLost = pointsLost;
             }
         });
-        
+
         const winRate = matchesPlayed > 0 ? Math.round((wins / matchesPlayed) * 100) : 0;
         const totalPoints = wins * 3 + losses * 1;
-        
+
         return {
             matchesPlayed,
             wins,
             losses,
-            setsWon,
-            setsLost,
             pointsWon,
             pointsLost,
             winRate,
@@ -1980,12 +1972,12 @@ try {
                     <div class="overview-label">% Victoires</div>
                 </div>
                 <div class="overview-card">
-                    <div class="overview-number">${stats.setsWon}/${stats.setsLost}</div>
-                    <div class="overview-label">Sets G/P</div>
+                    <div class="overview-number">${stats.pointsWon}/${stats.pointsLost}</div>
+                    <div class="overview-label">Points Pour/Contre</div>
                 </div>
                 <div class="overview-card">
-                    <div class="overview-number">${stats.pointsWon}/${stats.pointsLost}</div>
-                    <div class="overview-label">Points G/P</div>
+                    <div class="overview-number">${stats.pointsWon - stats.pointsLost > 0 ? '+' : ''}${stats.pointsWon - stats.pointsLost}</div>
+                    <div class="overview-label">Différence</div>
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${stats.totalPoints}</div>
@@ -2167,26 +2159,25 @@ try {
     return {
         name: player,
         ...stats,
-        goalAverageSets: stats.setsWon - stats.setsLost,
         goalAveragePoints: stats.pointsWon - stats.pointsLost
     };
 });
 
 if (sortBy === 'points') {
-    // Tri standard tennis de table par points
+    // Tri standard par points
     playerStats.sort((a, b) => {
         // 1. Points totaux
         if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-        
-        // 2. Goal-average de sets (différentiel)
-        if (b.goalAverageSets !== a.goalAverageSets) return b.goalAverageSets - a.goalAverageSets;
-        
-        // 3. Goal-average de points (différentiel)
-        if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
-        
-        // 4. Nombre de victoires
+
+        // 2. Nombre de victoires
         if (b.wins !== a.wins) return b.wins - a.wins;
-        
+
+        // 3. Différence de points (PP - PC)
+        if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
+
+        // 4. Points Pour
+        if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
+
         // 5. Ordre alphabétique
         return a.name.localeCompare(b.name);
     });
@@ -2195,16 +2186,16 @@ if (sortBy === 'points') {
     playerStats.sort((a, b) => {
         // 1. % de victoires
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        
+
         // 2. Nombre de matchs joués (favorise qui a joué plus)
         if (b.matchesPlayed !== a.matchesPlayed) return b.matchesPlayed - a.matchesPlayed;
-        
-        // 3. Goal-average de sets
-        if (b.goalAverageSets !== a.goalAverageSets) return b.goalAverageSets - a.goalAverageSets;
-        
-        // 4. Goal-average de points
+
+        // 3. Différence de points
         if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
-        
+
+        // 4. Points Pour
+        if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
+
         // 5. Ordre alphabétique
         return a.name.localeCompare(b.name);
     });
@@ -2223,9 +2214,8 @@ if (sortBy === 'points') {
                     <th>Points</th>
                     <th>V/D</th>
                     <th>% Vict.</th>
-                    <th>Sets (G/P)</th>
-                    <th>GA Sets</th>
-                    <th>GA Points</th>
+                    <th>PP/PC</th>
+                    <th>Diff</th>
                     <th>Matchs</th>
                 </tr>
             </thead>
@@ -2234,11 +2224,9 @@ if (sortBy === 'points') {
 
 playerStats.forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
-    const gaSetStyle = player.goalAverageSets > 0 ? 'color: #27ae60; font-weight: bold;' : 
-                      player.goalAverageSets < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
-    const gaPointStyle = player.goalAveragePoints > 0 ? 'color: #27ae60;' : 
-                        player.goalAveragePoints < 0 ? 'color: #e74c3c;' : '';
-    
+    const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
+                      player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+
     rankingsHtml += `
         <tr style="cursor: pointer;" onclick="showPlayerDetails(${dayNumber}, ${division}, '${player.name}')">
             <td class="rank-position ${rankClass}">${index + 1}</td>
@@ -2246,9 +2234,8 @@ playerStats.forEach((player, index) => {
             <td class="stat-value">${player.totalPoints}</td>
             <td>${player.wins}/${player.losses}</td>
             <td>${player.winRate}%</td>
-            <td>${player.setsWon}/${player.setsLost}</td>
-            <td style="${gaSetStyle}">${player.goalAverageSets > 0 ? '+' : ''}${player.goalAverageSets}</td>
-            <td style="${gaPointStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
+            <td>${player.pointsWon}/${player.pointsLost}</td>
+            <td style="${diffStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
             <td>${player.matchesPlayed}</td>
         </tr>
     `;
@@ -2331,9 +2318,8 @@ playerStats.forEach((player, index) => {
                     <th>Journées</th>
                     <th>V/D Global</th>
                     <th>% Vict. Moy.</th>
-                    <th>Sets (G/P)</th>
-                    <th>GA Sets</th>
-                    <th>GA Points</th>
+                    <th>PP/PC</th>
+                    <th>Diff</th>
                 </tr>
             </thead>
             <tbody>
@@ -2341,11 +2327,9 @@ playerStats.forEach((player, index) => {
 
 generalRanking.divisions[division].forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
-    const gaSetStyle = player.goalAverageSets > 0 ? 'color: #27ae60; font-weight: bold;' : 
-                      player.goalAverageSets < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
-    const gaPointStyle = player.goalAveragePoints > 0 ? 'color: #27ae60;' : 
-                        player.goalAveragePoints < 0 ? 'color: #e74c3c;' : '';
-    
+    const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
+                      player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+
     rankingHtml += `
         <tr style="cursor: pointer;" onclick="showGeneralPlayerDetails('${player.name}', ${division})">
             <td class="rank-position ${rankClass}">${index + 1}</td>
@@ -2354,9 +2338,8 @@ generalRanking.divisions[division].forEach((player, index) => {
             <td>${player.daysPlayed}</td>
             <td>${player.totalWins}/${player.totalLosses}</td>
             <td>${player.avgWinRate}%</td>
-            <td>${player.totalSetsWon}/${player.totalSetsLost}</td>
-            <td style="${gaSetStyle}">${player.goalAverageSets > 0 ? '+' : ''}${player.goalAverageSets}</td>
-            <td style="${gaPointStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
+            <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
+            <td style="${diffStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
         </tr>
     `;
 });
@@ -2418,8 +2401,6 @@ generalRanking.divisions[division].forEach((player, index) => {
         totalPoints: 0,
         totalWins: 0,
         totalLosses: 0,
-        totalSetsWon: 0,
-        totalSetsLost: 0,
         totalPointsWon: 0,
         totalPointsLost: 0,
         totalMatchesPlayed: 0,
@@ -2433,13 +2414,11 @@ if (dayStats && dayStats.matchesPlayed > 0) {
     playersData[playerName].totalPoints += dayStats.totalPoints;
     playersData[playerName].totalWins += dayStats.wins;
     playersData[playerName].totalLosses += dayStats.losses;
-    playersData[playerName].totalSetsWon += dayStats.setsWon;
-    playersData[playerName].totalSetsLost += dayStats.setsLost;
     playersData[playerName].totalPointsWon += dayStats.pointsWon;
     playersData[playerName].totalPointsLost += dayStats.pointsLost;
     playersData[playerName].totalMatchesPlayed += dayStats.matchesPlayed;
     playersData[playerName].winRates.push(dayStats.winRate);
-    
+
     generalRanking.hasData = true;
 }
                 });
@@ -2449,25 +2428,27 @@ if (dayStats && dayStats.matchesPlayed > 0) {
     .filter(player => player.daysPlayed > 0)
     .map(player => ({
         ...player,
-        avgWinRate: player.winRates.length > 0 ? 
+        avgWinRate: player.winRates.length > 0 ?
             Math.round(player.winRates.reduce((a, b) => a + b, 0) / player.winRates.length) : 0,
-        goalAverageSets: player.totalSetsWon - player.totalSetsLost,
         goalAveragePoints: player.totalPointsWon - player.totalPointsLost
     }))
     .sort((a, b) => {
         // 1. Points totaux
         if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-        
-        // 2. Goal-average de sets
-        if (b.goalAverageSets !== a.goalAverageSets) return b.goalAverageSets - a.goalAverageSets;
-        
-        // 3. Goal-average de points
+
+        // 2. Nombre de victoires
+        if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+
+        // 3. Différence de points (PP - PC)
         if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
-        
-        // 4. % victoires moyen
+
+        // 4. Points Pour
+        if (b.totalPointsWon !== a.totalPointsWon) return b.totalPointsWon - a.totalPointsWon;
+
+        // 5. % victoires moyen
         if (b.avgWinRate !== a.avgWinRate) return b.avgWinRate - a.avgWinRate;
-        
-        // 5. Ordre alphabétique
+
+        // 6. Ordre alphabétique
         return a.name.localeCompare(b.name);
     });
             
@@ -2504,26 +2485,27 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             totalPoints: acc.totalPoints + day.totalPoints,
             totalWins: acc.totalWins + day.wins,
             totalLosses: acc.totalLosses + day.losses,
-            totalSetsWon: acc.totalSetsWon + day.setsWon,
-            totalSetsLost: acc.totalSetsLost + day.setsLost,
+            totalPointsWon: acc.totalPointsWon + day.pointsWon,
+            totalPointsLost: acc.totalPointsLost + day.pointsLost,
             totalMatchesPlayed: acc.totalMatchesPlayed + day.matchesPlayed
         }), {
             totalPoints: 0,
             totalWins: 0,
             totalLosses: 0,
-            totalSetsWon: 0,
-            totalSetsLost: 0,
+            totalPointsWon: 0,
+            totalPointsLost: 0,
             totalMatchesPlayed: 0
         });
-        
-        const avgWinRate = totals.totalMatchesPlayed > 0 ? 
+
+        const avgWinRate = totals.totalMatchesPlayed > 0 ?
             Math.round((totals.totalWins / totals.totalMatchesPlayed) * 100) : 0;
-        
+        const diff = totals.totalPointsWon - totals.totalPointsLost;
+
         const playerNameTitle = document.getElementById('playerNameTitle');
         if (playerNameTitle) {
             playerNameTitle.textContent = `${playerName} - Division ${division} - Vue Générale`;
         }
-        
+
         const playerOverview = document.getElementById('playerOverview');
         if (playerOverview) {
             playerOverview.innerHTML = `
@@ -2544,12 +2526,12 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     <div class="overview-label">% Victoires</div>
                 </div>
                 <div class="overview-card">
-                    <div class="overview-number">${totals.totalSetsWon}/${totals.totalSetsLost}</div>
-                    <div class="overview-label">Sets Global</div>
+                    <div class="overview-number">${totals.totalPointsWon}/${totals.totalPointsLost}</div>
+                    <div class="overview-label">Points Pour/Contre</div>
                 </div>
                 <div class="overview-card">
-                    <div class="overview-number">${totals.totalMatchesPlayed}</div>
-                    <div class="overview-label">Matchs total</div>
+                    <div class="overview-number">${diff > 0 ? '+' : ''}${diff}</div>
+                    <div class="overview-label">Différence</div>
                 </div>
             `;
         }
@@ -3117,7 +3099,8 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                             <th>Journées</th>
                             <th>V/D</th>
                             <th>% Vict.</th>
-                            <th>Sets G/P</th>
+                            <th>PP/PC</th>
+                            <th>Diff</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3128,7 +3111,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             if (index === 0) rankClass = 'rank-gold';
             else if (index === 1) rankClass = 'rank-silver';
             else if (index === 2) rankClass = 'rank-bronze';
-            
+
             htmlContent += `
                 <tr>
                     <td class="rank-position ${rankClass}">${index + 1}</td>
@@ -3137,7 +3120,8 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     <td style="text-align: center;">${player.daysPlayed}</td>
                     <td style="text-align: center;">${player.totalWins}/${player.totalLosses}</td>
                     <td style="text-align: center;">${player.avgWinRate}%</td>
-                    <td style="text-align: center;">${player.totalSetsWon}/${player.totalSetsLost}</td>
+                    <td style="text-align: center;">${player.totalPointsWon}/${player.totalPointsLost}</td>
+                    <td style="text-align: center;">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
                 </tr>
             `;
         });
@@ -3916,7 +3900,8 @@ function exportGeneralRankingToHTML() {
                             <th>Journées</th>
                             <th>V/D</th>
                             <th>% Vict.</th>
-                            <th>Sets</th>
+                            <th>PP/PC</th>
+                            <th>Diff</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3932,7 +3917,8 @@ function exportGeneralRankingToHTML() {
                     <td>${player.daysPlayed}</td>
                     <td>${player.totalWins}/${player.totalLosses}</td>
                     <td>${player.avgWinRate}%</td>
-                    <td>${player.totalSetsWon}/${player.totalSetsLost}</td>
+                    <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
+                    <td>${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
                 </tr>
             `;
         });
@@ -4594,14 +4580,14 @@ function checkPoolsCompletion(dayNumber) {
 
 function generatePoolRankingHTML(pool, poolMatches, poolIndex) {
     const playerStats = pool.map(player => {
-        let wins = 0, losses = 0, setsWon = 0, setsLost = 0, pointsWon = 0, pointsLost = 0;
-        
+        let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+
         poolMatches.forEach(match => {
             if (!match.completed) return;
-            
+
             const isPlayer1 = match.player1 === player;
             const isPlayer2 = match.player2 === player;
-            
+
             if (isPlayer1 || isPlayer2) {
                 if (match.winner === player) wins++;
                 else losses++;
@@ -4616,28 +4602,24 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex) {
                     pointsWon += score2;
                     pointsLost += score1;
                 }
-
-                setsWon = pointsWon;
-                setsLost = pointsLost;
             }
         });
-        
+
         return {
             name: player,
             wins,
             losses,
-            setsWon,
-            setsLost,
             pointsWon,
             pointsLost,
+            diff: pointsWon - pointsLost,
             points: wins * 3 + losses * 1
         };
     });
-    
-    // Trier par points puis par sets puis par points de jeu
+
+    // Trier par points puis par différence puis par points Pour
     playerStats.sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
-        if (b.setsWon !== a.setsWon) return b.setsWon - a.setsWon;
+        if (b.diff !== a.diff) return b.diff - a.diff;
         return b.pointsWon - a.pointsWon;
     });
     
@@ -4658,7 +4640,8 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex) {
                         <th style="padding: 8px; text-align: left;">Joueur</th>
                         <th style="padding: 8px; text-align: center;">Pts</th>
                         <th style="padding: 8px; text-align: center;">V/D</th>
-                        <th style="padding: 8px; text-align: center;">Sets</th>
+                        <th style="padding: 8px; text-align: center;">PP/PC</th>
+                        <th style="padding: 8px; text-align: center;">Diff</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -4673,7 +4656,8 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex) {
                             <td style="padding: 8px; font-weight: 600;">${player.name}</td>
                             <td style="padding: 8px; text-align: center; font-weight: bold;">${player.points}</td>
                             <td style="padding: 8px; text-align: center;">${player.wins}/${player.losses}</td>
-                            <td style="padding: 8px; text-align: center;">${player.setsWon}/${player.setsLost}</td>
+                            <td style="padding: 8px; text-align: center;">${player.pointsWon}/${player.pointsLost}</td>
+                            <td style="padding: 8px; text-align: center;">${player.diff > 0 ? '+' : ''}${player.diff}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -4790,14 +4774,14 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool) {
     pools.forEach((pool, poolIndex) => {
         // Calculer le classement de cette poule
         const playerStats = pool.map(player => {
-            let wins = 0, losses = 0, setsWon = 0, setsLost = 0, pointsWon = 0, pointsLost = 0;
-            
+            let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+
             const poolMatches = matches.filter(m => m.poolIndex === poolIndex && m.completed);
-            
+
             poolMatches.forEach(match => {
                 const isPlayer1 = match.player1 === player;
                 const isPlayer2 = match.player2 === player;
-                
+
                 if (isPlayer1 || isPlayer2) {
                     if (match.winner === player) wins++;
                     else losses++;
@@ -4812,25 +4796,23 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool) {
                         pointsWon += score2;
                         pointsLost += score1;
                     }
-
-                    setsWon = pointsWon;
-                    setsLost = pointsLost;
                 }
             });
-            
+
             return {
                 name: player,
-                wins, losses, setsWon, setsLost, pointsWon, pointsLost,
+                wins, losses, pointsWon, pointsLost,
+                diff: pointsWon - pointsLost,
                 points: wins * 3 + losses * 1,
                 poolIndex: poolIndex,
                 poolName: String.fromCharCode(65 + poolIndex)
             };
         });
-        
+
         // Trier et prendre les N premiers
         playerStats.sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
-            if (b.setsWon !== a.setsWon) return b.setsWon - a.setsWon;
+            if (b.diff !== a.diff) return b.diff - a.diff;
             return b.pointsWon - a.pointsWon;
         });
         
@@ -6151,14 +6133,14 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool) {
     pools.forEach((pool, poolIndex) => {
         // Calculer le classement de cette poule
         const playerStats = pool.map(player => {
-            let wins = 0, losses = 0, setsWon = 0, setsLost = 0, pointsWon = 0, pointsLost = 0;
-            
+            let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+
             const poolMatches = matches.filter(m => m.poolIndex === poolIndex && m.completed);
-            
+
             poolMatches.forEach(match => {
                 const isPlayer1 = match.player1 === player;
                 const isPlayer2 = match.player2 === player;
-                
+
                 if (isPlayer1 || isPlayer2) {
                     if (match.winner === player) wins++;
                     else losses++;
@@ -6173,25 +6155,23 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool) {
                         pointsWon += score2;
                         pointsLost += score1;
                     }
-
-                    setsWon = pointsWon;
-                    setsLost = pointsLost;
                 }
             });
-            
+
             return {
                 name: player,
-                wins, losses, setsWon, setsLost, pointsWon, pointsLost,
+                wins, losses, pointsWon, pointsLost,
+                diff: pointsWon - pointsLost,
                 points: wins * 3 + losses * 1,
                 poolIndex: poolIndex,
                 poolName: String.fromCharCode(65 + poolIndex)
             };
         });
-        
+
         // Trier et prendre les N premiers
         playerStats.sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
-            if (b.setsWon !== a.setsWon) return b.setsWon - a.setsWon;
+            if (b.diff !== a.diff) return b.diff - a.diff;
             return b.pointsWon - a.pointsWon;
         });
         
