@@ -3207,7 +3207,7 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
         
         const link = document.createElement('a');
         link.href = URL.createObjectURL(dataBlob);
-        link.download = `championnat_tennis_table_${new Date().toISOString().slice(0,10)}.json`;
+        link.download = `championnat_${new Date().toISOString().slice(0,10)}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
