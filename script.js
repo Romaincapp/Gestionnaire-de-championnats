@@ -2628,7 +2628,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Classement Général - Championnat Tennis de Table</title>
+            <title>Classement Général - Championnat Sportif</title>
             <style>
                 * {
                     margin: 0;
@@ -3148,7 +3148,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
     // Ajouter le pied de page
     htmlContent += `
             <div class="footer">
-                <p>Championnat Tennis de Table - Gestion Esenca Sport</p>
+                <p>Championnat Sportif - Gestion Esenca Sport</p>
                 <p>Système de points: Victoire = 3pts, Défaite = 1pt</p>
                 <p>Document généré automatiquement le ${currentDate}</p>
             </div>
@@ -3945,7 +3945,7 @@ function exportGeneralRankingToHTML() {
     // Ajouter le pied de page
     htmlContent += `
                 <div class="footer">
-                    <p>Championnat Tennis de Table - Gestion Esenca Sport</p>
+                    <p>Championnat Sportif - Gestion Esenca Sport</p>
                     <p>Système de points: Victoire = 3pts, Défaite = 1pt</p>
                 </div>
             </div>
