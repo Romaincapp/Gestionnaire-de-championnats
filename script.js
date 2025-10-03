@@ -2648,7 +2648,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 .container {
                     background: white;
                     border-radius: 15px;
-                    padding: 30px;
+                    padding: 20px;
                     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
                     max-width: 1000px;
                     margin: 0 auto;
@@ -2656,8 +2656,8 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 
                 .header {
                     text-align: center;
-                    margin-bottom: 35px;
-                    padding: 25px;
+                    margin-bottom: 15px;
+                    padding: 20px;
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
                     border-radius: 12px;
@@ -2698,8 +2698,8 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 
                 .stats-section {
                     background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-                    padding: 25px;
-                    margin-bottom: 35px;
+                    padding: 20px;
+                    margin-bottom: 15px;
                     border-radius: 12px;
                     border: 2px solid #f39c12;
                     position: relative;
@@ -2709,7 +2709,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     font-size: 18px;
                     font-weight: bold;
                     color: #e67e22;
-                    margin-bottom: 20px;
+                    margin-bottom: 12px;
                     text-align: center;
                     text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
                 }
@@ -2717,12 +2717,12 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 .stats-grid {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
-                    gap: 20px;
+                    gap: 12px;
                 }
                 
                 .stat-item {
                     text-align: center;
-                    padding: 15px;
+                    padding: 12px;
                     background: rgba(255,255,255,0.9);
                     border-radius: 10px;
                     border: 2px solid #f39c12;
@@ -2752,7 +2752,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 }
                 
                 .division {
-                    margin-bottom: 45px;
+                    margin-bottom: 20px;
                     page-break-inside: avoid;
                     background: white;
                     border-radius: 12px;
@@ -2761,11 +2761,11 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 }
                 
                 .division-title {
-                    font-size: 20px;
+                    font-size: 18px;
                     font-weight: bold;
                     color: white;
                     margin-bottom: 0;
-                    padding: 18px;
+                    padding: 12px;
                     text-align: center;
                     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
                     letter-spacing: 1px;
@@ -2793,7 +2793,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 .ranking-table th {
                     background: linear-gradient(135deg, #34495e, #2c3e50);
                     color: white;
-                    padding: 15px 10px;
+                    padding: 10px 8px;
                     text-align: center;
                     font-weight: bold;
                     font-size: 11px;
@@ -2804,7 +2804,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 }
                 
                 .ranking-table td {
-                    padding: 12px 10px;
+                    padding: 8px 8px;
                     border: 1px solid #ecf0f1;
                     font-size: 12px;
                     text-align: center;
@@ -2863,8 +2863,8 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 }
                 
                 .footer {
-                    margin-top: 40px;
-                    padding: 25px;
+                    margin-top: 20px;
+                    padding: 15px;
                     background: linear-gradient(135deg, #34495e, #2c3e50);
                     color: white;
                     text-align: center;
@@ -2873,13 +2873,17 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 }
                 
                 .footer p {
-                    margin-bottom: 8px;
-                    font-size: 12px;
+                    margin-bottom: 5px;
+                    font-size: 11px;
                 }
-                
+
+                .footer p:last-child {
+                    margin-bottom: 0;
+                }
+
                 .footer p:first-child {
                     font-weight: bold;
-                    font-size: 14px;
+                    font-size: 13px;
                     color: #3498db;
                     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
                 }
@@ -2943,7 +2947,8 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                         border-radius: 0 !important;
-                        margin-bottom: 25px;
+                        margin-bottom: 10px;
+                        padding: 12px !important;
                     }
                     
                     .header::before {
@@ -2956,7 +2961,8 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                         border-radius: 0 !important;
-                        margin-bottom: 25px;
+                        margin-bottom: 10px;
+                        padding: 12px !important;
                     }
                     
                     .stat-item {
@@ -2968,7 +2974,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     
                     .division {
                         page-break-inside: avoid;
-                        margin-bottom: 25px;
+                        margin-bottom: 12px;
                         box-shadow: none !important;
                         border: 1px solid #dee2e6 !important;
                         border-radius: 0 !important;
@@ -2980,6 +2986,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         border: 2px solid #dee2e6 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
+                        padding: 10px !important;
                     }
                     
                     .division-1 .division-title {
@@ -3023,7 +3030,11 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     
                     .stats-grid {
                         grid-template-columns: repeat(2, 1fr);
-                        gap: 10px;
+                        gap: 8px;
+                    }
+
+                    .stats-title {
+                        margin-bottom: 8px !important;
                     }
                     
                     .footer {
@@ -3032,12 +3043,13 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                         border-radius: 0 !important;
-                        margin-top: 30px;
+                        margin-top: 15px;
+                        padding: 15px !important;
                     }
                 }
                 
                 @page {
-                    margin: 1.5cm;
+                    margin: 1cm;
                     size: A4 portrait;
                 }
             </style>
