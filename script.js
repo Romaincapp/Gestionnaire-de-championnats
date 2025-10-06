@@ -2385,14 +2385,28 @@ generalRanking.divisions[division].forEach((player, index) => {
             hasData: false,
             divisions: { 1: [], 2: [], 3: [] }
         };
-        
+
         for (let division = 1; division <= 3; division++) {
             const playersData = {};
-            
+            const playerFirstAppearance = {}; // Première journée où chaque joueur apparaît
+
+            // Étape 1: Déterminer la première apparition de chaque joueur
             Object.keys(championship.days).forEach(dayNumber => {
                 const dayNum = parseInt(dayNumber);
                 const dayData = championship.days[dayNum];
-                
+
+                dayData.players[division].forEach(playerName => {
+                    if (!playerFirstAppearance[playerName] || dayNum < playerFirstAppearance[playerName]) {
+                        playerFirstAppearance[playerName] = dayNum;
+                    }
+                });
+            });
+
+            // Étape 2: Calculer les stats pour chaque joueur
+            Object.keys(championship.days).forEach(dayNumber => {
+                const dayNum = parseInt(dayNumber);
+                const dayData = championship.days[dayNum];
+
                 dayData.players[division].forEach(playerName => {
                    if (!playersData[playerName]) {
     playersData[playerName] = {
@@ -2404,8 +2418,21 @@ generalRanking.divisions[division].forEach((player, index) => {
         totalPointsWon: 0,
         totalPointsLost: 0,
         totalMatchesPlayed: 0,
-        winRates: []
+        winRates: [],
+        firstDay: playerFirstAppearance[playerName]
     };
+
+    // Ajouter des forfaits pour les journées manquées AVANT la première apparition
+    const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
+    const missedDays = allDays.filter(d => d < playerFirstAppearance[playerName]);
+
+    missedDays.forEach(() => {
+        // 4 forfaits par journée manquée = 4 défaites (4 points)
+        playersData[playerName].totalLosses += 4;
+        playersData[playerName].totalPoints += 4; // 4 défaites × 1 point
+        playersData[playerName].totalMatchesPlayed += 4;
+        playersData[playerName].winRates.push(0); // 0% de victoire pour une journée forfait
+    });
 }
 
 const dayStats = calculatePlayerStats(dayNum, division, playerName);
@@ -2460,27 +2487,64 @@ if (dayStats && dayStats.matchesPlayed > 0) {
 
     function showGeneralPlayerDetails(playerName, division) {
         const playerHistory = [];
-        
+
+        // Déterminer la première journée où le joueur apparaît
+        let firstAppearance = null;
+        Object.keys(championship.days).forEach(dayNumber => {
+            const dayNum = parseInt(dayNumber);
+            const dayData = championship.days[dayNum];
+
+            if (dayData.players[division].includes(playerName)) {
+                if (firstAppearance === null || dayNum < firstAppearance) {
+                    firstAppearance = dayNum;
+                }
+            }
+        });
+
+        const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
+
+        // Ajouter des journées forfait pour les journées manquées avant la première apparition
+        allDays.forEach(dayNum => {
+            if (dayNum < firstAppearance) {
+                playerHistory.push({
+                    day: dayNum,
+                    totalPoints: 4,
+                    wins: 0,
+                    losses: 4,
+                    pointsWon: 0,
+                    pointsLost: 0,
+                    matchesPlayed: 4,
+                    winRate: 0,
+                    isForfeit: true
+                });
+            }
+        });
+
+        // Ajouter les journées réellement jouées
         Object.keys(championship.days).sort((a, b) => Number(a) - Number(b)).forEach(dayNumber => {
             const dayNum = parseInt(dayNumber);
             const dayData = championship.days[dayNum];
-            
+
             if (dayData.players[division].includes(playerName)) {
                 const dayStats = calculatePlayerStats(dayNum, division, playerName);
                 if (dayStats && dayStats.matchesPlayed > 0) {
                     playerHistory.push({
                         day: dayNum,
-                        ...dayStats
+                        ...dayStats,
+                        isForfeit: false
                     });
                 }
             }
         });
-        
+
+        // Trier par journée
+        playerHistory.sort((a, b) => a.day - b.day);
+
         if (playerHistory.length === 0) {
             alert('Aucun match joué par ce joueur');
             return;
         }
-        
+
         const totals = playerHistory.reduce((acc, day) => ({
             totalPoints: acc.totalPoints + day.totalPoints,
             totalWins: acc.totalWins + day.wins,
@@ -2538,22 +2602,40 @@ if (dayStats && dayStats.matchesPlayed > 0) {
         
         let historyHtml = '<h4 style="color: #2c3e50; margin-bottom: 15px;">📈 Performance par journée</h4>';
         playerHistory.forEach(dayStats => {
-            const performanceClass = dayStats.winRate >= 60 ? 'win' : dayStats.winRate >= 40 ? '' : 'loss';
-            
-            historyHtml += `
-                <div class="history-match ${performanceClass}">
-                    <div>
-                        <div class="history-opponent">Journée ${dayStats.day}</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">
-                            ${dayStats.wins}V/${dayStats.losses}D - ${dayStats.matchesPlayed} matchs
+            if (dayStats.isForfeit) {
+                // Affichage spécial pour les journées forfaitées
+                historyHtml += `
+                    <div class="history-match" style="background: #fee; border-left: 4px solid #e74c3c; opacity: 0.7;">
+                        <div>
+                            <div class="history-opponent">Journée ${dayStats.day} ⚠️ FORFAIT</div>
+                            <div style="font-size: 12px; color: #c0392b;">
+                                Équipe absente - 4 défaites automatiques
+                            </div>
+                        </div>
+                        <div class="history-score">
+                            <div style="font-weight: bold; color: #e74c3c;">${dayStats.totalPoints} pts</div>
+                            <div style="font-size: 12px;">0V/4D</div>
                         </div>
                     </div>
-                    <div class="history-score">
-                        <div style="font-weight: bold;">${dayStats.totalPoints} pts</div>
-                        <div style="font-size: 12px;">${dayStats.winRate}% vict.</div>
+                `;
+            } else {
+                const performanceClass = dayStats.winRate >= 60 ? 'win' : dayStats.winRate >= 40 ? '' : 'loss';
+
+                historyHtml += `
+                    <div class="history-match ${performanceClass}">
+                        <div>
+                            <div class="history-opponent">Journée ${dayStats.day}</div>
+                            <div style="font-size: 12px; color: #7f8c8d;">
+                                ${dayStats.wins}V/${dayStats.losses}D - ${dayStats.matchesPlayed} matchs
+                            </div>
+                        </div>
+                        <div class="history-score">
+                            <div style="font-weight: bold;">${dayStats.totalPoints} pts</div>
+                            <div style="font-size: 12px;">${dayStats.winRate}% vict.</div>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         });
         
         const playerMatches = document.getElementById('playerMatches');
