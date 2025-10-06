@@ -6660,15 +6660,6 @@ function addPrintMatchesButton() {
         const dayNumber = parseInt(dayContent.id.replace('day-', ''));
         if (isNaN(dayNumber)) return;
 
-        // Créer le bouton d'impression standard
-        const printButton = document.createElement('button');
-        printButton.className = 'btn print-matches-btn';
-        printButton.innerHTML = '📋 Imprimer Matchs';
-        printButton.style.background = 'linear-gradient(135deg, #8e44ad, #9b59b6)';
-        printButton.style.color = 'white';
-        printButton.onclick = () => printMatchSheets(dayNumber);
-        printButton.title = 'Imprimer les feuilles de match pour les arbitres';
-
         // Créer le bouton d'impression Boccia
         const bocciaButton = document.createElement('button');
         bocciaButton.className = 'btn print-boccia-btn';
@@ -6676,17 +6667,15 @@ function addPrintMatchesButton() {
         bocciaButton.style.background = 'linear-gradient(135deg, #16a085, #1abc9c)';
         bocciaButton.style.color = 'white';
         bocciaButton.onclick = () => printBocciaMatchSheets(dayNumber);
-        bocciaButton.title = 'Imprimer les feuilles de match Boccia (4 par page, 5 manches + barrage)';
+        bocciaButton.title = 'Imprimer les feuilles de match Boccia (4 par page, 4 manches + manche en or)';
 
         // Insérer après le bouton "Classements" s'il existe
         const rankingsButton = controlButtonsContainer.querySelector('button[onclick*="updateRankings"]');
         if (rankingsButton) {
-            rankingsButton.insertAdjacentElement('afterend', printButton);
-            printButton.insertAdjacentElement('afterend', bocciaButton);
+            rankingsButton.insertAdjacentElement('afterend', bocciaButton);
         } else {
-            // Sinon les insérer au début
+            // Sinon l'insérer au début
             controlButtonsContainer.insertBefore(bocciaButton, controlButtonsContainer.firstChild);
-            controlButtonsContainer.insertBefore(printButton, bocciaButton);
         }
     });
 }
@@ -6968,11 +6957,14 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
 }
 
 function generateBocciaMatchCard(match, dayNumber) {
+    // Afficher le numéro de terrain si disponible
+    const terrainInfo = match.court ? ` • Terrain ${match.court}` : '';
+
     return `
         <div class="match-card">
             <div class="match-header">
                 <div class="match-title">🎾 FEUILLE DE MATCH BOCCIA</div>
-                <div class="match-info">Journée ${dayNumber} • ${new Date().toLocaleDateString('fr-FR')}</div>
+                <div class="match-info">Journée ${dayNumber} • ${new Date().toLocaleDateString('fr-FR')}${terrainInfo}</div>
                 <div class="match-id">${match.matchId} • ${match.type}${match.tour ? ` Tour ${match.tour}` : ''}</div>
             </div>
 
@@ -7017,13 +7009,8 @@ function generateBocciaMatchCard(match, dayNumber) {
                             <td class="player-score-col"></td>
                             <td class="player-score-col"></td>
                         </tr>
-                        <tr>
-                            <th class="manche-header">Manche 5</th>
-                            <td class="player-score-col"></td>
-                            <td class="player-score-col"></td>
-                        </tr>
                         <tr style="background: #fff9e6;">
-                            <th class="manche-header" style="background: #f9e79f;">Barrage (M6)*</th>
+                            <th class="manche-header" style="background: #f9e79f;">Manche en Or*</th>
                             <td class="player-score-col barrage-col"></td>
                             <td class="player-score-col barrage-col"></td>
                         </tr>
@@ -7035,7 +7022,7 @@ function generateBocciaMatchCard(match, dayNumber) {
                     </tbody>
                 </table>
                 <div style="font-size: 6px; color: #666; font-style: italic; margin-top: 1mm;">
-                    * Manche de barrage uniquement si nécessaire (égalité après 5 manches)
+                    * Manche en Or uniquement si nécessaire (égalité après 4 manches)
                 </div>
             </div>
 
