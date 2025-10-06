@@ -7177,6 +7177,805 @@ if (document.readyState === 'loading') {
 }
     console.log("=== SCRIPT CHARGÉ AVEC SUCCÈS ===");
     
+    // ============================================
+    // MODE CHRONO - GESTION DE COURSES MULTIPLES
+    // ============================================
+
+    let raceData = {
+        series: [], // Liste de toutes les séries
+        currentSerie: null, // Série en cours d'exécution
+        editingSerieId: null, // ID de la série en cours d'édition
+        nextSerieId: 1
+    };
+
+    window.raceData = raceData;
+
+    // Toggle Mode Chrono
+    window.toggleChronoMode = function() {
+        const checkbox = document.getElementById('chronoModeCheckbox');
+        const chronoSection = document.getElementById('chronoModeSection');
+        const dayContent = document.querySelector('.day-content.active');
+
+        if (checkbox.checked) {
+            chronoSection.style.display = 'block';
+            if (dayContent) dayContent.style.display = 'none';
+            displaySeriesList();
+        } else {
+            chronoSection.style.display = 'none';
+            if (dayContent) dayContent.style.display = 'block';
+        }
+    };
+
+    // Afficher la liste des séries
+    function displaySeriesList() {
+        const seriesList = document.getElementById('seriesList');
+        const noSeriesMessage = document.getElementById('noSeriesMessage');
+
+        if (raceData.series.length === 0) {
+            seriesList.style.display = 'none';
+            noSeriesMessage.style.display = 'block';
+            return;
+        }
+
+        seriesList.style.display = 'grid';
+        noSeriesMessage.style.display = 'none';
+
+        const sportEmoji = {
+            running: '🏃',
+            cycling: '🚴',
+            swimming: '🏊'
+        };
+
+        seriesList.innerHTML = raceData.series.map(serie => {
+            const statusColor = serie.status === 'completed' ? '#27ae60' :
+                               serie.status === 'running' ? '#3498db' : '#95a5a6';
+            const statusText = serie.status === 'completed' ? '✅ Terminée' :
+                              serie.status === 'running' ? '▶️ En cours' : '⏸️ En attente';
+
+            return `
+                <div style="border: 2px solid ${statusColor}; border-radius: 10px; padding: 15px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #2c3e50;">
+                                ${sportEmoji[serie.sportType]} ${serie.name}
+                            </h4>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #7f8c8d;">
+                                <span>📏 ${serie.distance}m</span>
+                                <span>👥 ${serie.participants.length} participants</span>
+                                ${serie.raceType === 'relay' ? `<span>⏰ ${serie.relayDuration} min</span>` : ''}
+                            </div>
+                        </div>
+                        <span style="background: ${statusColor}; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; white-space: nowrap;">
+                            ${statusText}
+                        </span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                        ${serie.status === 'pending' ? `
+                            <button class="btn btn-success" onclick="startSerie(${serie.id})" style="flex: 1; min-width: 120px;">
+                                ▶️ Lancer
+                            </button>
+                            <button class="btn" onclick="editSerie(${serie.id})" style="background: #3498db; flex: 1; min-width: 120px;">
+                                ✏️ Modifier
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteSerie(${serie.id})" style="flex: 1; min-width: 120px;">
+                                🗑️ Supprimer
+                            </button>
+                        ` : serie.status === 'running' ? `
+                            <button class="btn" onclick="continueSerie(${serie.id})" style="background: #3498db; flex: 1;">
+                                📊 Gérer
+                            </button>
+                        ` : `
+                            <button class="btn" onclick="viewSerieResults(${serie.id})" style="background: #27ae60; flex: 1;">
+                                🏆 Résultats
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteSerie(${serie.id})" style="flex: 1; min-width: 120px;">
+                                🗑️ Supprimer
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Afficher la modale d'ajout de série
+    window.showAddSerieModal = function() {
+        raceData.editingSerieId = null;
+        document.getElementById('serieModalTitle').textContent = 'Nouvelle Série';
+
+        // Réinitialiser le formulaire
+        document.getElementById('serieName').value = '';
+        document.getElementById('serieSportType').value = 'running';
+        document.getElementById('serieDistance').value = '400';
+        document.getElementById('serieRaceType').value = 'individual';
+        document.getElementById('serieRelayDuration').value = '60';
+        document.getElementById('serieRelayDurationSection').style.display = 'none';
+
+        // Charger la liste des participants
+        loadParticipantsList();
+
+        document.getElementById('serieModal').style.display = 'block';
+    };
+
+    // Charger la liste des participants avec checkboxes
+    function loadParticipantsList(selectedParticipants = []) {
+        const currentDay = championship.currentDay;
+        const dayData = championship.days[currentDay];
+        const participantsCheckboxList = document.getElementById('participantsCheckboxList');
+
+        const allPlayers = [];
+        Object.keys(dayData.players).forEach(division => {
+            dayData.players[division].forEach(player => {
+                allPlayers.push({
+                    name: player,
+                    division: division
+                });
+            });
+        });
+
+        if (allPlayers.length === 0) {
+            participantsCheckboxList.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Aucun participant disponible. Ajoutez des joueurs d\'abord.</p>';
+            return;
+        }
+
+        participantsCheckboxList.innerHTML = allPlayers.map((player, index) => {
+            const isChecked = selectedParticipants.some(p => p.name === player.name && p.division === player.division);
+            return `
+                <label style="display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 5px; transition: background 0.2s;">
+                    <input type="checkbox"
+                           class="participant-checkbox"
+                           data-name="${player.name}"
+                           data-division="${player.division}"
+                           ${isChecked ? 'checked' : ''}
+                           style="width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-weight: bold;">${player.name}</span>
+                    <span style="font-size: 12px; color: #7f8c8d;">(Division ${player.division})</span>
+                </label>
+            `;
+        }).join('');
+    }
+
+    // Mise à jour options relais dans modal série
+    window.updateSerieRelayOptions = function() {
+        const raceType = document.getElementById('serieRaceType').value;
+        const relaySection = document.getElementById('serieRelayDurationSection');
+
+        if (raceType === 'relay') {
+            relaySection.style.display = 'block';
+        } else {
+            relaySection.style.display = 'none';
+        }
+    };
+
+    // Fermer modal série
+    window.closeSerieModal = function() {
+        document.getElementById('serieModal').style.display = 'none';
+        raceData.editingSerieId = null;
+    };
+
+    // Sauvegarder une série
+    window.saveSerie = function() {
+        const name = document.getElementById('serieName').value.trim();
+        const sportType = document.getElementById('serieSportType').value;
+        const distance = parseInt(document.getElementById('serieDistance').value);
+        const raceType = document.getElementById('serieRaceType').value;
+        const relayDuration = raceType === 'relay' ? parseInt(document.getElementById('serieRelayDuration').value) : null;
+
+        if (!name) {
+            showNotification('Veuillez entrer un nom pour la série', 'warning');
+            return;
+        }
+
+        if (!distance || distance <= 0) {
+            showNotification('Veuillez entrer une distance valide', 'warning');
+            return;
+        }
+
+        // Récupérer les participants sélectionnés
+        const checkboxes = document.querySelectorAll('.participant-checkbox:checked');
+        const participants = Array.from(checkboxes).map((cb, index) => ({
+            bib: index + 1,
+            name: cb.dataset.name,
+            division: cb.dataset.division,
+            laps: [],
+            status: 'ready',
+            totalTime: 0,
+            totalDistance: 0,
+            bestLap: null,
+            finishTime: null
+        }));
+
+        if (participants.length === 0) {
+            showNotification('Sélectionnez au moins un participant', 'warning');
+            return;
+        }
+
+        const serieData = {
+            name,
+            sportType,
+            distance,
+            raceType,
+            relayDuration,
+            participants,
+            status: 'pending',
+            startTime: null,
+            isRunning: false,
+            timerInterval: null,
+            currentTime: 0
+        };
+
+        if (raceData.editingSerieId !== null) {
+            // Modification
+            const index = raceData.series.findIndex(s => s.id === raceData.editingSerieId);
+            if (index !== -1) {
+                serieData.id = raceData.editingSerieId;
+                raceData.series[index] = serieData;
+                showNotification('Série modifiée avec succès', 'success');
+            }
+        } else {
+            // Nouvelle série
+            serieData.id = raceData.nextSerieId++;
+            raceData.series.push(serieData);
+            showNotification('Série créée avec succès', 'success');
+        }
+
+        closeSerieModal();
+        displaySeriesList();
+    };
+
+    // Éditer une série
+    window.editSerie = function(serieId) {
+        const serie = raceData.series.find(s => s.id === serieId);
+        if (!serie) return;
+
+        raceData.editingSerieId = serieId;
+        document.getElementById('serieModalTitle').textContent = 'Modifier la Série';
+
+        document.getElementById('serieName').value = serie.name;
+        document.getElementById('serieSportType').value = serie.sportType;
+        document.getElementById('serieDistance').value = serie.distance;
+        document.getElementById('serieRaceType').value = serie.raceType;
+
+        if (serie.raceType === 'relay') {
+            document.getElementById('serieRelayDuration').value = serie.relayDuration;
+            document.getElementById('serieRelayDurationSection').style.display = 'block';
+        } else {
+            document.getElementById('serieRelayDurationSection').style.display = 'none';
+        }
+
+        loadParticipantsList(serie.participants);
+
+        document.getElementById('serieModal').style.display = 'block';
+    };
+
+    // Supprimer une série
+    window.deleteSerie = function(serieId) {
+        if (!confirm('Voulez-vous vraiment supprimer cette série?')) return;
+
+        const index = raceData.series.findIndex(s => s.id === serieId);
+        if (index !== -1) {
+            raceData.series.splice(index, 1);
+            showNotification('Série supprimée', 'info');
+            displaySeriesList();
+        }
+    };
+
+    // Démarrer une série
+    window.startSerie = function(serieId) {
+        const serie = raceData.series.find(s => s.id === serieId);
+        if (!serie) return;
+
+        raceData.currentSerie = serie;
+        serie.status = 'running';
+
+        displayRaceInterface(serie);
+        displaySeriesList();
+    };
+
+    // Continuer une série en cours
+    window.continueSerie = function(serieId) {
+        const serie = raceData.series.find(s => s.id === serieId);
+        if (!serie) return;
+
+        raceData.currentSerie = serie;
+        displayRaceInterface(serie);
+    };
+
+    // Voir les résultats d'une série terminée
+    window.viewSerieResults = function(serieId) {
+        const serie = raceData.series.find(s => s.id === serieId);
+        if (!serie) return;
+
+        raceData.currentSerie = serie;
+        displayRaceInterface(serie);
+        showRaceRanking();
+    };
+
+    // Adapter les anciennes fonctions pour la série courante
+    // Mise à jour options relais
+    window.updateRelayOptions = function() {
+        const raceType = document.getElementById('raceType').value;
+        const relaySection = document.getElementById('relayDurationSection');
+
+        if (raceType === 'relay') {
+            relaySection.style.display = 'block';
+        } else {
+            relaySection.style.display = 'none';
+        }
+    };
+
+    // Afficher l'interface de course pour une série
+    function displayRaceInterface(serie) {
+        if (!serie) serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const raceInterface = document.getElementById('raceInterface');
+        const seriesList = document.getElementById('seriesList').parentElement;
+
+        seriesList.style.display = 'none';
+        raceInterface.style.display = 'block';
+
+        const sportEmoji = {
+            running: '🏃',
+            cycling: '🚴',
+            swimming: '🏊'
+        };
+
+        let html = `
+            <div style="background: white; padding: 20px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h3 style="margin: 0;">
+                            ${sportEmoji[serie.sportType]} ${serie.name}
+                        </h3>
+                        <p style="color: #7f8c8d; margin: 5px 0 0 0;">
+                            Distance: ${serie.distance}m | ${serie.raceType === 'relay' ? `Relais ${serie.relayDuration} min` : 'Course individuelle'}
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div id="mainChronoDisplay" style="font-size: 48px; font-weight: bold; color: #2c3e50; font-family: monospace;">
+                            ${formatTime(serie.currentTime || 0)}
+                        </div>
+                        <button id="startStopBtn" class="btn ${serie.isRunning ? 'btn-warning' : 'btn-success'}" onclick="toggleRaceTimer()" style="font-size: 18px; padding: 12px 30px;">
+                            ${serie.isRunning ? '⏸️ Pause' : '▶️ Démarrer'}
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="backToSeriesList()" style="background: #95a5a6; margin-right: 10px;">
+                        ⬅️ Retour aux séries
+                    </button>
+                    <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #667eea, #764ba2); margin-right: 10px;">
+                        🏆 Voir Classement
+                    </button>
+                    <button class="btn btn-danger" onclick="endSerie()">
+                        🏁 Terminer la Série
+                    </button>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                                <th style="padding: 12px; text-align: center;">Dossard</th>
+                                <th style="padding: 12px; text-align: left;">Participant</th>
+                                <th style="padding: 12px; text-align: center;">Tours</th>
+                                <th style="padding: 12px; text-align: center;">Distance</th>
+                                <th style="padding: 12px; text-align: center;">Temps Total</th>
+                                <th style="padding: 12px; text-align: center;">Meilleur Tour</th>
+                                <th style="padding: 12px; text-align: center;">Statut</th>
+                                <th style="padding: 12px; text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="participantsTableBody">
+                            ${generateParticipantsRows(serie)}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="raceRankingSection" style="display: none; margin-top: 30px;">
+                    <!-- Classement sera affiché ici -->
+                </div>
+            </div>
+        `;
+
+        raceInterface.innerHTML = html;
+    }
+
+    // Retour à la liste des séries
+    window.backToSeriesList = function() {
+        const raceInterface = document.getElementById('raceInterface');
+        const seriesList = document.getElementById('seriesList').parentElement;
+
+        raceInterface.style.display = 'none';
+        seriesList.style.display = 'block';
+
+        displaySeriesList();
+    };
+
+    // Terminer la série
+    window.endSerie = function() {
+        if (!raceData.currentSerie) return;
+
+        if (!confirm('Voulez-vous vraiment terminer cette série? Elle ne pourra plus être modifiée.')) return;
+
+        if (raceData.currentSerie.isRunning) {
+            clearInterval(raceData.currentSerie.timerInterval);
+        }
+
+        raceData.currentSerie.status = 'completed';
+        raceData.currentSerie.isRunning = false;
+
+        showNotification('Série terminée!', 'success');
+        backToSeriesList();
+    };
+
+    // Générer les lignes de participants
+    function generateParticipantsRows(serie) {
+        if (!serie) serie = raceData.currentSerie;
+        if (!serie) return '';
+
+        return serie.participants.map(p => {
+            const statusColor = {
+                ready: '#95a5a6',
+                running: '#3498db',
+                finished: '#27ae60'
+            };
+
+            const statusText = {
+                ready: '⏸️ Prêt',
+                running: '▶️ En course',
+                finished: '🏁 Terminé'
+            };
+
+            return `
+                <tr id="participant-${p.bib}" style="border-bottom: 1px solid #ecf0f1;">
+                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: ${statusColor[p.status]};">
+                        #${p.bib}
+                    </td>
+                    <td style="padding: 12px;">
+                        <div style="font-weight: bold;">${p.name}</div>
+                        <div style="font-size: 12px; color: #7f8c8d;">Division ${p.division}</div>
+                    </td>
+                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
+                        ${p.laps.length}
+                    </td>
+                    <td style="padding: 12px; text-align: center; font-weight: bold;">
+                        ${(p.totalDistance / 1000).toFixed(2)} km
+                    </td>
+                    <td id="time-${p.bib}" style="padding: 12px; text-align: center; font-family: monospace; font-weight: bold;">
+                        ${formatTime(p.totalTime)}
+                    </td>
+                    <td style="padding: 12px; text-align: center; font-family: monospace;">
+                        ${p.bestLap ? formatTime(p.bestLap) : '-'}
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="background: ${statusColor[p.status]}; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">
+                            ${statusText[p.status]}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        ${p.status !== 'finished' ? `
+                            <button class="btn" onclick="recordLap(${p.bib})" style="background: #3498db; margin-right: 5px; padding: 8px 15px;">
+                                ⏱️ LAP
+                            </button>
+                            <button class="btn btn-success" onclick="finishParticipant(${p.bib})" style="padding: 8px 15px;">
+                                🏁 FINISH
+                            </button>
+                        ` : `
+                            <span style="color: #27ae60; font-weight: bold;">✅ Terminé</span>
+                        `}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Démarrer/Arrêter le chrono
+    window.toggleRaceTimer = function() {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const btn = document.getElementById('startStopBtn');
+
+        if (!serie.isRunning) {
+            // Démarrer
+            serie.isRunning = true;
+            serie.startTime = Date.now() - (serie.currentTime || 0);
+
+            serie.timerInterval = setInterval(() => {
+                serie.currentTime = Date.now() - serie.startTime;
+                updateMainChronoDisplay();
+                updateParticipantsTimes();
+            }, 100);
+
+            btn.textContent = '⏸️ Pause';
+            btn.className = 'btn btn-warning';
+            showNotification('Course démarrée!', 'success');
+        } else {
+            // Pause
+            serie.isRunning = false;
+            clearInterval(serie.timerInterval);
+
+            btn.textContent = '▶️ Reprendre';
+            btn.className = 'btn btn-success';
+            showNotification('Course en pause', 'warning');
+        }
+    };
+
+    // Mettre à jour l'affichage du chrono principal
+    function updateMainChronoDisplay() {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const display = document.getElementById('mainChronoDisplay');
+        if (display) {
+            display.textContent = formatTime(serie.currentTime || 0);
+        }
+    }
+
+    // Mettre à jour les temps des participants en cours
+    function updateParticipantsTimes() {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        serie.participants.forEach(p => {
+            if (p.status === 'running') {
+                const timeDisplay = document.getElementById(`time-${p.bib}`);
+                if (timeDisplay) {
+                    timeDisplay.textContent = formatTime(serie.currentTime - p.lastLapStartTime + p.totalTime);
+                }
+            }
+        });
+    }
+
+    // Enregistrer un tour
+    window.recordLap = function(bib) {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        if (!serie.isRunning) {
+            showNotification('Démarrez la course d\'abord!', 'warning');
+            return;
+        }
+
+        const participant = serie.participants.find(p => p.bib === bib);
+        if (!participant) return;
+
+        const currentTime = serie.currentTime;
+
+        if (participant.status === 'ready') {
+            // Premier tour
+            participant.status = 'running';
+            participant.lastLapStartTime = currentTime;
+        } else if (participant.status === 'running') {
+            // Tour suivant
+            const lapTime = currentTime - participant.lastLapStartTime;
+
+            participant.laps.push({
+                lapNumber: participant.laps.length + 1,
+                time: lapTime,
+                timestamp: currentTime
+            });
+
+            participant.totalTime += lapTime;
+            participant.totalDistance += serie.distance;
+
+            // Meilleur tour
+            if (!participant.bestLap || lapTime < participant.bestLap) {
+                participant.bestLap = lapTime;
+            }
+
+            participant.lastLapStartTime = currentTime;
+
+            showNotification(`${participant.name} - Tour ${participant.laps.length}: ${formatTime(lapTime)}`, 'info');
+        }
+
+        // Rafraîchir l'affichage
+        updateParticipantRow(participant);
+    };
+
+    // Terminer un participant
+    window.finishParticipant = function(bib) {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        if (!serie.isRunning) {
+            showNotification('Démarrez la course d\'abord!', 'warning');
+            return;
+        }
+
+        const participant = serie.participants.find(p => p.bib === bib);
+        if (!participant || participant.status === 'finished') return;
+
+        // Enregistrer le dernier tour si en cours
+        if (participant.status === 'running') {
+            const lapTime = serie.currentTime - participant.lastLapStartTime;
+
+            participant.laps.push({
+                lapNumber: participant.laps.length + 1,
+                time: lapTime,
+                timestamp: serie.currentTime
+            });
+
+            participant.totalTime += lapTime;
+            participant.totalDistance += serie.distance;
+
+            if (!participant.bestLap || lapTime < participant.bestLap) {
+                participant.bestLap = lapTime;
+            }
+        }
+
+        participant.status = 'finished';
+        participant.finishTime = serie.currentTime;
+
+        showNotification(`${participant.name} a terminé! 🏁`, 'success');
+
+        // Rafraîchir l'affichage
+        updateParticipantRow(participant);
+
+        // Vérifier si tous ont terminé
+        const allFinished = serie.participants.every(p => p.status === 'finished');
+        if (allFinished) {
+            toggleRaceTimer(); // Arrêter le chrono
+            showNotification('Tous les participants ont terminé! 🎉', 'success');
+        }
+    };
+
+    // Mettre à jour une ligne de participant
+    function updateParticipantRow(participant) {
+        const row = document.getElementById(`participant-${participant.bib}`);
+        if (!row) return;
+
+        const tbody = document.getElementById('participantsTableBody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = generateParticipantsRows().split('</tr>')[participant.bib - 1];
+
+        tbody.replaceChild(newRow.firstChild, row);
+    }
+
+    // Afficher le classement
+    window.showRaceRanking = function() {
+        const rankingSection = document.getElementById('raceRankingSection');
+
+        if (rankingSection.style.display === 'none') {
+            rankingSection.style.display = 'block';
+            generateRaceRanking();
+        } else {
+            rankingSection.style.display = 'none';
+        }
+    };
+
+    // Générer le classement
+    function generateRaceRanking() {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const rankingSection = document.getElementById('raceRankingSection');
+
+        // Trier les participants
+        const ranked = [...serie.participants].sort((a, b) => {
+            // Les terminés d'abord
+            if (a.status === 'finished' && b.status !== 'finished') return -1;
+            if (b.status === 'finished' && a.status !== 'finished') return 1;
+
+            // Parmi les terminés, trier par temps
+            if (a.status === 'finished' && b.status === 'finished') {
+                return a.finishTime - b.finishTime;
+            }
+
+            // Parmi les non-terminés, trier par distance puis temps
+            if (a.totalDistance !== b.totalDistance) {
+                return b.totalDistance - a.totalDistance;
+            }
+            return a.totalTime - b.totalTime;
+        });
+
+        const medals = ['🥇', '🥈', '🥉'];
+
+        let html = `
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px;">
+                <h3 style="color: white; text-align: center; margin-bottom: 20px;">🏆 Classement Général</h3>
+                <div style="background: white; border-radius: 10px; padding: 20px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 12px; text-align: center;">Pos.</th>
+                                <th style="padding: 12px; text-align: center;">Dossard</th>
+                                <th style="padding: 12px; text-align: left;">Participant</th>
+                                <th style="padding: 12px; text-align: center;">Tours</th>
+                                <th style="padding: 12px; text-align: center;">Distance Totale</th>
+                                <th style="padding: 12px; text-align: center;">Temps Total</th>
+                                <th style="padding: 12px; text-align: center;">Meilleur Tour</th>
+                                <th style="padding: 12px; text-align: center;">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ranked.map((p, index) => {
+                                const position = index + 1;
+                                const medal = position <= 3 ? medals[position - 1] : position;
+                                const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : '';
+
+                                return `
+                                    <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
+                                        <td style="padding: 12px; text-align: center; font-size: 24px; font-weight: bold;">
+                                            ${medal}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: #3498db;">
+                                            #${p.bib}
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            <div style="font-weight: bold; font-size: 16px;">${p.name}</div>
+                                            <div style="font-size: 12px; color: #7f8c8d;">Division ${p.division}</div>
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
+                                            ${p.laps.length}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 16px;">
+                                            ${(p.totalDistance / 1000).toFixed(2)} km
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-family: monospace; font-weight: bold; font-size: 16px;">
+                                            ${p.status === 'finished' ? formatTime(p.finishTime) : formatTime(p.totalTime)}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-family: monospace; font-size: 14px;">
+                                            ${p.bestLap ? formatTime(p.bestLap) : '-'}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            ${p.status === 'finished' ?
+                                                '<span style="color: #27ae60; font-weight: bold;">✅ Terminé</span>' :
+                                                '<span style="color: #e67e22; font-weight: bold;">⏳ En cours</span>'
+                                            }
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 14px; opacity: 0.9;">Participants Totaux</div>
+                            <div style="font-size: 32px; font-weight: bold;">${serie.participants.length}</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 14px; opacity: 0.9;">Terminés</div>
+                            <div style="font-size: 32px; font-weight: bold;">
+                                ${serie.participants.filter(p => p.status === 'finished').length}
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #fa709a, #fee140); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 14px; opacity: 0.9;">Distance Totale</div>
+                            <div style="font-size: 32px; font-weight: bold;">
+                                ${(serie.participants.reduce((sum, p) => sum + p.totalDistance, 0) / 1000).toFixed(2)} km
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #30cfd0, #330867); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 14px; opacity: 0.9;">Tours Totaux</div>
+                            <div style="font-size: 32px; font-weight: bold;">
+                                ${serie.participants.reduce((sum, p) => sum + p.laps.length, 0)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        rankingSection.innerHTML = html;
+    }
+
+    // Formater le temps en HH:MM:SS.ms
+    function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const milliseconds = Math.floor((ms % 1000) / 10);
+
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+    }
+
 } catch (error) {
 
     console.error("❌ ERREUR DANS LE SCRIPT:", error);
