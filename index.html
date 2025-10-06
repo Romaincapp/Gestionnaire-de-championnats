@@ -133,27 +133,27 @@
                         </div>
                     </div>
 
-                    <div style="text-align: center; margin: 20px auto; max-width: 1000px;">
-                        <h3 style="color: #2c3e50; margin-bottom: 15px;">🎯 Choisir le type de génération</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
-                            <button class="btn" onclick="generateMatchesForDay()" style="background: linear-gradient(135deg, #3498db, #2980b9);">
-                                🔄 Round-Robin Classique
+                    <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 900px; border: 2px solid #dee2e6;">
+                        <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 18px; text-align: center;">🎯 Type de Génération</h3>
+
+                        <!-- Modes standards -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
+                            <button class="btn" onclick="generateMatchesForDay()" style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 10px 12px; font-size: 13px;">
+                                🔄 Round-Robin
                             </button>
-                            <button class="btn" onclick="generateMatchesOptimized4to10()" style="background: linear-gradient(135deg, #e67e22, #d35400);">
-                                🎲 Optimisé 4-10 joueurs
+                            <button class="btn" onclick="generateMatchesOptimized4to10()" style="background: linear-gradient(135deg, #e67e22, #d35400); padding: 10px 12px; font-size: 13px;">
+                                🎲 Optimisé 4-10
                             </button>
-                            <button class="btn" onclick="generateMatchesByCourtOptimized()" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
-                                🎾 Par Terrain (4-10/terrain)
+                            <button class="btn" onclick="generateMatchesByCourtOptimized()" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 10px 12px; font-size: 13px;">
+                                🎾 Par Terrain
                             </button>
-                            <button class="btn" onclick="generateMatchesSwissSystem()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                            <button class="btn" onclick="generateMatchesSwissSystem()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 10px 12px; font-size: 13px;">
                                 🏆 Swiss System
                             </button>
                         </div>
-                        <div style="margin-top: 10px; padding: 10px; background: #ecf0f1; border-radius: 5px; font-size: 12px; color: #7f8c8d; line-height: 1.6;">
-                            <strong>Round-Robin:</strong> Tous contre tous •
-                            <strong>Optimisé 4-10:</strong> Schéma fixe division entière •
-                            <strong>Par Terrain:</strong> 4-10 joueurs/terrain, 1 match/tour/terrain •
-                            <strong>Swiss:</strong> Appariement par niveau
+
+                        <div style="padding: 8px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; font-size: 11px; color: #6c757d; line-height: 1.5; text-align: center;">
+                            <strong>Round-Robin:</strong> Tous contre tous • <strong>Optimisé:</strong> Schéma fixe 4-10 joueurs • <strong>Par Terrain:</strong> 4-10/terrain • <strong>Swiss:</strong> Par niveau
                         </div>
                     </div>
 

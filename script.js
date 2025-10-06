@@ -436,27 +436,27 @@ try {
                     </button>
                 </div>
 
-                <div style="text-align: center; margin: 20px auto; max-width: 1000px;">
-                    <h3 style="color: #2c3e50; margin-bottom: 15px;">🎯 Choisir le type de génération</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
-                        <button class="btn" onclick="generateMatchesForDay(${dayNumber})" style="background: linear-gradient(135deg, #3498db, #2980b9);">
-                            🔄 Round-Robin Classique
+                <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 900px; border: 2px solid #dee2e6;">
+                    <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 18px; text-align: center;">🎯 Type de Génération</h3>
+
+                    <!-- Modes standards -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
+                        <button class="btn" onclick="generateMatchesForDay(${dayNumber})" style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 10px 12px; font-size: 13px;">
+                            🔄 Round-Robin
                         </button>
-                        <button class="btn" onclick="generateMatchesOptimized4to10(${dayNumber})" style="background: linear-gradient(135deg, #e67e22, #d35400);">
-                            🎲 Optimisé 4-10 joueurs
+                        <button class="btn" onclick="generateMatchesOptimized4to10(${dayNumber})" style="background: linear-gradient(135deg, #e67e22, #d35400); padding: 10px 12px; font-size: 13px;">
+                            🎲 Optimisé 4-10
                         </button>
-                        <button class="btn" onclick="generateMatchesByCourtOptimized(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
-                            🎾 Par Terrain (4-10/terrain)
+                        <button class="btn" onclick="generateMatchesByCourtOptimized(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 10px 12px; font-size: 13px;">
+                            🎾 Par Terrain
                         </button>
-                        <button class="btn" onclick="generateMatchesSwissSystem(${dayNumber})" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                        <button class="btn" onclick="generateMatchesSwissSystem(${dayNumber})" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 10px 12px; font-size: 13px;">
                             🏆 Swiss System
                         </button>
                     </div>
-                    <div style="margin-top: 10px; padding: 10px; background: #ecf0f1; border-radius: 5px; font-size: 12px; color: #7f8c8d; line-height: 1.6;">
-                        <strong>Round-Robin:</strong> Tous contre tous •
-                        <strong>Optimisé 4-10:</strong> Schéma fixe division entière •
-                        <strong>Par Terrain:</strong> 4-10 joueurs/terrain, 1 match/tour/terrain •
-                        <strong>Swiss:</strong> Appariement par niveau
+
+                    <div style="padding: 8px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; font-size: 11px; color: #6c757d; line-height: 1.5; text-align: center;">
+                        <strong>Round-Robin:</strong> Tous contre tous • <strong>Optimisé:</strong> Schéma fixe 4-10 joueurs • <strong>Par Terrain:</strong> 4-10/terrain • <strong>Swiss:</strong> Par niveau
                     </div>
                 </div>
 
@@ -4096,33 +4096,34 @@ function initializePoolSystem(dayNumber) {
 function addPoolToggleToInterface(dayNumber) {
     const section = document.querySelector(`#day-${dayNumber} .section`);
     if (!section) return;
-    
-    // Créer le toggle poules après le bouton génération matchs
-    const generateButton = section.querySelector('button[onclick*="generateMatchesForDay"]');
-    if (!generateButton) return;
-    
+
+    // Chercher la div qui contient les boutons de type de génération
+    const generationTypeDiv = section.querySelector('div[style*="background: linear-gradient(135deg, #f8f9fa, #e9ecef)"]');
+    if (!generationTypeDiv) return;
+
     const poolToggleHTML = `
         <div class="pool-toggle-section" id="pool-toggle-${dayNumber}" style="
-            background: linear-gradient(135deg, #e8f4fd, #b3d9ff);
-            border: 2px solid #3498db;
+            background: linear-gradient(135deg, #fff8e1, #ffe082);
+            border: 2px solid #f39c12;
             border-radius: 12px;
             padding: 20px;
-            margin: 20px 0;
+            margin: 20px auto;
+            max-width: 900px;
             text-align: center;
         ">
-            <h3 style="color: #2980b9; margin-bottom: 15px;">
-                🎯 Mode Poules de Qualification (Optionnel)
+            <h3 style="color: #e67e22; margin-bottom: 15px; font-size: 18px;">
+                🏊 Mode Poules de Qualification
             </h3>
-            <p style="color: #34495e; margin-bottom: 15px; font-size: 14px;">
-                Les poules permettent de faire jouer tous les joueurs puis organiser des phases finales
+            <p style="color: #856404; margin-bottom: 15px; font-size: 13px;">
+                Créez des groupes, puis organisez des phases finales avec les meilleurs joueurs
             </p>
-            
+
             <div class="toggle-container" style="margin-bottom: 15px;">
                 <label class="toggle-switch" style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer;">
                     <input type="checkbox" id="pool-enabled-${dayNumber}" onchange="togglePoolMode(${dayNumber})" style="
-                        width: 20px; height: 20px; cursor: pointer;
+                        width: 20px; height: 20px; cursor: pointer; accent-color: #f39c12;
                     ">
-                    <span style="font-weight: bold; color: #2c3e50;">Activer le mode Poules</span>
+                    <span style="font-weight: bold; color: #e67e22; font-size: 14px;">✓ Activer le mode Poules</span>
                 </label>
             </div>
             
@@ -4181,8 +4182,8 @@ function addPoolToggleToInterface(dayNumber) {
             </div>
         </div>
     `;
-    
-    generateButton.insertAdjacentHTML('afterend', poolToggleHTML);
+
+    generationTypeDiv.insertAdjacentHTML('afterend', poolToggleHTML);
 }
 
 // ======================================
