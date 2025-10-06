@@ -7543,6 +7543,26 @@ if (document.readyState === 'loading') {
                     </div>
                 </div>
 
+                <!-- Saisie rapide dossard (visible uniquement si course lancée) -->
+                ${serie.isRunning ? `
+                    <div style="background: linear-gradient(135deg, #f093fb, #f5576c); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold; font-size: 16px;">⚡ Saisie Rapide:</label>
+                            <input
+                                type="text"
+                                id="quickFinishInput"
+                                placeholder="Dossard + Enter (ou L+Dossard pour LAP)"
+                                style="padding: 12px; border-radius: 8px; border: 3px solid white; font-size: 18px; font-weight: bold; width: 350px; text-align: center;"
+                                onkeypress="if(event.key === 'Enter') quickAction()"
+                            >
+                            <div style="color: white; font-size: 13px; line-height: 1.5;">
+                                <div>✅ <strong>Dossard + Enter</strong> = FINISH</div>
+                                <div>⏱️ <strong>L + Dossard + Enter</strong> = LAP</div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+
                 <div style="margin-bottom: 20px;">
                     <button class="btn" onclick="backToSeriesList()" style="background: #95a5a6; margin-right: 10px;">
                         ⬅️ Retour aux séries
@@ -7685,6 +7705,15 @@ if (document.readyState === 'loading') {
             serie.isRunning = true;
             serie.startTime = Date.now() - (serie.currentTime || 0);
 
+            // Démarrer tous les participants automatiquement s'ils sont en statut 'ready'
+            const currentTime = serie.currentTime;
+            serie.participants.forEach(p => {
+                if (p.status === 'ready') {
+                    p.status = 'running';
+                    p.lastLapStartTime = currentTime;
+                }
+            });
+
             serie.timerInterval = setInterval(() => {
                 serie.currentTime = Date.now() - serie.startTime;
                 updateMainChronoDisplay();
@@ -7693,7 +7722,16 @@ if (document.readyState === 'loading') {
 
             btn.textContent = '⏸️ Pause';
             btn.className = 'btn btn-warning';
-            showNotification('Course démarrée!', 'success');
+            showNotification('Course démarrée! Tous les participants sont lancés!', 'success');
+
+            // Rafraîchir l'affichage de tous les participants
+            displayRaceInterface(serie);
+
+            // Focus automatique sur le champ de saisie rapide
+            setTimeout(() => {
+                const quickInput = document.getElementById('quickFinishInput');
+                if (quickInput) quickInput.focus();
+            }, 100);
         } else {
             // Pause
             serie.isRunning = false;
@@ -7747,11 +7785,12 @@ if (document.readyState === 'loading') {
         const currentTime = serie.currentTime;
 
         if (participant.status === 'ready') {
-            // Premier tour
+            // Si le participant n'est pas encore démarré (cas rare), le démarrer
             participant.status = 'running';
             participant.lastLapStartTime = currentTime;
+            showNotification(`${participant.name} démarré!`, 'info');
         } else if (participant.status === 'running') {
-            // Tour suivant
+            // Enregistrer le tour : calculer le temps depuis le dernier LAP (ou depuis le départ)
             const lapTime = currentTime - participant.lastLapStartTime;
 
             participant.laps.push({
@@ -7768,6 +7807,7 @@ if (document.readyState === 'loading') {
                 participant.bestLap = lapTime;
             }
 
+            // Réinitialiser le chrono pour le prochain tour
             participant.lastLapStartTime = currentTime;
 
             showNotification(`${participant.name} - Tour ${participant.laps.length}: ${formatTime(lapTime)}`, 'info');
@@ -7824,16 +7864,127 @@ if (document.readyState === 'loading') {
         }
     };
 
+    // Saisie rapide pour LAP ou FINISH via dossard
+    window.quickAction = function() {
+        const input = document.getElementById('quickFinishInput');
+        if (!input) return;
+
+        const value = input.value.trim().toUpperCase();
+
+        if (!value) {
+            input.value = '';
+            input.focus();
+            return;
+        }
+
+        let isLap = false;
+        let bibNumber;
+
+        // Vérifier si c'est un LAP (commence par L)
+        if (value.startsWith('L')) {
+            isLap = true;
+            bibNumber = parseInt(value.substring(1));
+        } else {
+            bibNumber = parseInt(value);
+        }
+
+        if (isNaN(bibNumber) || bibNumber <= 0) {
+            showNotification('Format invalide. Utilisez: Dossard ou L+Dossard', 'warning');
+            input.value = '';
+            input.focus();
+            return;
+        }
+
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const participant = serie.participants.find(p => p.bib === bibNumber);
+
+        if (!participant) {
+            showNotification(`Dossard #${bibNumber} introuvable`, 'error');
+            input.value = '';
+            input.focus();
+            return;
+        }
+
+        if (participant.status === 'finished') {
+            showNotification(`${participant.name} (#${bibNumber}) a déjà terminé`, 'warning');
+            input.value = '';
+            input.focus();
+            return;
+        }
+
+        // Exécuter l'action
+        if (isLap) {
+            recordLap(bibNumber);
+        } else {
+            finishParticipant(bibNumber);
+        }
+
+        // Réinitialiser et refocus sur l'input pour saisie suivante
+        input.value = '';
+        input.focus();
+    };
+
     // Mettre à jour une ligne de participant
     function updateParticipantRow(participant) {
         const row = document.getElementById(`participant-${participant.bib}`);
         if (!row) return;
 
-        const tbody = document.getElementById('participantsTableBody');
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = generateParticipantsRows().split('</tr>')[participant.bib - 1];
+        const serie = raceData.currentSerie;
+        if (!serie) return;
 
-        tbody.replaceChild(newRow.firstChild, row);
+        const statusColor = {
+            ready: '#95a5a6',
+            running: '#3498db',
+            finished: '#27ae60'
+        };
+
+        const statusText = {
+            ready: '⏸️ Prêt',
+            running: '▶️ En course',
+            finished: '🏁 Terminé'
+        };
+
+        // Reconstruire la ligne complète du participant
+        row.innerHTML = `
+            <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: ${statusColor[participant.status]};">
+                #${participant.bib}
+            </td>
+            <td style="padding: 12px;">
+                <div style="font-weight: bold;">${participant.name}</div>
+                <div style="font-size: 12px; color: #7f8c8d;">Division ${participant.division}</div>
+            </td>
+            <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
+                ${participant.laps.length}
+            </td>
+            <td style="padding: 12px; text-align: center; font-weight: bold;">
+                ${(participant.totalDistance / 1000).toFixed(2)} km
+            </td>
+            <td id="time-${participant.bib}" style="padding: 12px; text-align: center; font-family: monospace; font-weight: bold;">
+                ${formatTime(participant.totalTime)}
+            </td>
+            <td style="padding: 12px; text-align: center; font-family: monospace;">
+                ${participant.bestLap ? formatTime(participant.bestLap) : '-'}
+            </td>
+            <td style="padding: 12px; text-align: center;">
+                <span style="background: ${statusColor[participant.status]}; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">
+                    ${statusText[participant.status]}
+                </span>
+            </td>
+            <td style="padding: 12px; text-align: center;">
+                ${participant.status !== 'finished' ? `
+                    <button class="btn" onclick="recordLap(${participant.bib})" style="background: #3498db; margin-right: 5px; padding: 8px 15px;">
+                        ⏱️ LAP
+                    </button>
+                    <button class="btn btn-success" onclick="finishParticipant(${participant.bib})" style="padding: 8px 15px;">
+                        🏁 FINISH
+                    </button>
+                ` : `
+                    <span style="color: #27ae60; font-weight: bold;">✅ Terminé</span>
+                `}
+            </td>
+        `;
     }
 
     // Afficher le classement
@@ -7964,6 +8115,287 @@ if (document.readyState === 'loading') {
 
         rankingSection.innerHTML = html;
     }
+
+    // Afficher le classement général de toutes les séries
+    window.showOverallChronoRanking = function() {
+        const rankingSection = document.getElementById('overallChronoRanking');
+        const seriesList = document.getElementById('seriesList').parentElement;
+
+        if (rankingSection.style.display === 'none') {
+            seriesList.style.display = 'none';
+            rankingSection.style.display = 'block';
+            generateOverallChronoRanking();
+        } else {
+            rankingSection.style.display = 'none';
+            seriesList.style.display = 'block';
+        }
+    };
+
+    // Générer le classement général de toutes les séries
+    function generateOverallChronoRanking() {
+        const rankingSection = document.getElementById('overallChronoRanking');
+
+        // Collecter tous les participants de toutes les séries terminées
+        const allParticipants = [];
+
+        raceData.series.forEach(serie => {
+            if (serie.status === 'completed') {
+                serie.participants.forEach(participant => {
+                    // Vérifier si le participant existe déjà dans le classement général
+                    const existingIndex = allParticipants.findIndex(
+                        p => p.name === participant.name && p.division === participant.division
+                    );
+
+                    if (existingIndex !== -1) {
+                        // Ajouter les performances de cette série
+                        allParticipants[existingIndex].series.push({
+                            serieName: serie.name,
+                            distance: participant.totalDistance,
+                            time: participant.finishTime || participant.totalTime,
+                            laps: participant.laps.length,
+                            bestLap: participant.bestLap
+                        });
+                        allParticipants[existingIndex].totalDistance += participant.totalDistance;
+                        allParticipants[existingIndex].totalTime += (participant.finishTime || participant.totalTime);
+                        allParticipants[existingIndex].totalLaps += participant.laps.length;
+                    } else {
+                        // Nouveau participant dans le classement général
+                        allParticipants.push({
+                            name: participant.name,
+                            division: participant.division,
+                            series: [{
+                                serieName: serie.name,
+                                distance: participant.totalDistance,
+                                time: participant.finishTime || participant.totalTime,
+                                laps: participant.laps.length,
+                                bestLap: participant.bestLap
+                            }],
+                            totalDistance: participant.totalDistance,
+                            totalTime: participant.finishTime || participant.totalTime,
+                            totalLaps: participant.laps.length
+                        });
+                    }
+                });
+            }
+        });
+
+        if (allParticipants.length === 0) {
+            rankingSection.innerHTML = `
+                <div style="background: white; padding: 40px; border-radius: 10px; text-align: center;">
+                    <h3 style="color: #7f8c8d;">Aucune série terminée</h3>
+                    <p style="color: #95a5a6;">Terminez au moins une série pour voir le classement général.</p>
+                    <button class="btn" onclick="showOverallChronoRanking()" style="margin-top: 20px; background: #95a5a6;">
+                        ⬅️ Retour aux séries
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Trier par distance totale, puis par temps total
+        const ranked = allParticipants.sort((a, b) => {
+            if (a.totalDistance !== b.totalDistance) {
+                return b.totalDistance - a.totalDistance;
+            }
+            return a.totalTime - b.totalTime;
+        });
+
+        const medals = ['🥇', '🥈', '🥉'];
+        const sportEmoji = {
+            running: '🏃',
+            cycling: '🚴',
+            swimming: '🏊'
+        };
+
+        rankingSection.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #2c3e50;">🏆 Classement Général de la Journée</h3>
+                    <button class="btn" onclick="showOverallChronoRanking()" style="background: #95a5a6;">
+                        ⬅️ Retour aux séries
+                    </button>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        <div>
+                            <div style="font-size: 14px; opacity: 0.9;">Participants</div>
+                            <div style="font-size: 28px; font-weight: bold;">${ranked.length}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 14px; opacity: 0.9;">Séries Terminées</div>
+                            <div style="font-size: 28px; font-weight: bold;">${raceData.series.filter(s => s.status === 'completed').length}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 14px; opacity: 0.9;">Distance Totale</div>
+                            <div style="font-size: 28px; font-weight: bold;">
+                                ${(ranked.reduce((sum, p) => sum + p.totalDistance, 0) / 1000).toFixed(2)} km
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                                <th style="padding: 15px; text-align: center;">Pos.</th>
+                                <th style="padding: 15px; text-align: left;">Participant</th>
+                                <th style="padding: 15px; text-align: center;">Séries</th>
+                                <th style="padding: 15px; text-align: center;">Tours Total</th>
+                                <th style="padding: 15px; text-align: center;">Distance Totale</th>
+                                <th style="padding: 15px; text-align: center;">Temps Total</th>
+                                <th style="padding: 15px; text-align: center;">Détails</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ranked.map((participant, index) => {
+                                const position = index + 1;
+                                const medal = position <= 3 ? medals[position - 1] : position;
+                                const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' :
+                                              index % 2 === 0 ? 'background: #f8f9fa;' : '';
+
+                                return `
+                                    <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
+                                        <td style="padding: 15px; text-align: center; font-size: 28px; font-weight: bold;">
+                                            ${medal}
+                                        </td>
+                                        <td style="padding: 15px;">
+                                            <div style="font-weight: bold; font-size: 18px; color: #2c3e50;">${participant.name}</div>
+                                            <div style="font-size: 13px; color: #7f8c8d; margin-top: 3px;">Division ${participant.division}</div>
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-weight: bold; font-size: 16px; color: #3498db;">
+                                            ${participant.series.length}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-weight: bold; font-size: 18px;">
+                                            ${participant.totalLaps}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-weight: bold; font-size: 18px; color: #27ae60;">
+                                            ${(participant.totalDistance / 1000).toFixed(2)} km
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-family: monospace; font-weight: bold; font-size: 16px;">
+                                            ${formatTime(participant.totalTime)}
+                                        </td>
+                                        <td style="padding: 15px;">
+                                            <details style="cursor: pointer;">
+                                                <summary style="font-weight: bold; color: #667eea; user-select: none;">Voir détails</summary>
+                                                <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                                                    ${participant.series.map((serie, idx) => {
+                                                        const serieInfo = raceData.series.find(s => s.name === serie.serieName);
+                                                        const emoji = serieInfo ? sportEmoji[serieInfo.sportType] : '🏃';
+                                                        return `
+                                                            <div style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                                <div style="font-weight: bold; color: #2c3e50;">${emoji} ${serie.serieName}</div>
+                                                                <div style="font-size: 12px; color: #7f8c8d; margin-top: 3px;">
+                                                                    ${serie.laps} tours • ${(serie.distance / 1000).toFixed(2)} km • ${formatTime(serie.time)}
+                                                                    ${serie.bestLap ? ` • Meilleur tour: ${formatTime(serie.bestLap)}` : ''}
+                                                                </div>
+                                                            </div>
+                                                        `;
+                                                    }).join('')}
+                                                </div>
+                                            </details>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-success" onclick="exportOverallChronoRanking()" style="margin-right: 10px;">
+                        📊 Exporter JSON
+                    </button>
+                    <button class="btn" onclick="printOverallChronoRanking()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+                        🖨️ Imprimer
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Exporter le classement général en JSON
+    window.exportOverallChronoRanking = function() {
+        const allParticipants = [];
+
+        raceData.series.forEach(serie => {
+            if (serie.status === 'completed') {
+                serie.participants.forEach(participant => {
+                    const existingIndex = allParticipants.findIndex(
+                        p => p.name === participant.name && p.division === participant.division
+                    );
+
+                    if (existingIndex !== -1) {
+                        allParticipants[existingIndex].series.push({
+                            serieName: serie.name,
+                            distance: participant.totalDistance,
+                            time: participant.finishTime || participant.totalTime,
+                            laps: participant.laps.length,
+                            bestLap: participant.bestLap
+                        });
+                        allParticipants[existingIndex].totalDistance += participant.totalDistance;
+                        allParticipants[existingIndex].totalTime += (participant.finishTime || participant.totalTime);
+                        allParticipants[existingIndex].totalLaps += participant.laps.length;
+                    } else {
+                        allParticipants.push({
+                            name: participant.name,
+                            division: participant.division,
+                            series: [{
+                                serieName: serie.name,
+                                distance: participant.totalDistance,
+                                time: participant.finishTime || participant.totalTime,
+                                laps: participant.laps.length,
+                                bestLap: participant.bestLap
+                            }],
+                            totalDistance: participant.totalDistance,
+                            totalTime: participant.finishTime || participant.totalTime,
+                            totalLaps: participant.laps.length
+                        });
+                    }
+                });
+            }
+        });
+
+        const ranked = allParticipants.sort((a, b) => {
+            if (a.totalDistance !== b.totalDistance) {
+                return b.totalDistance - a.totalDistance;
+            }
+            return a.totalTime - b.totalTime;
+        });
+
+        const exportData = {
+            exportDate: new Date().toISOString(),
+            totalParticipants: ranked.length,
+            totalSeriesCompleted: raceData.series.filter(s => s.status === 'completed').length,
+            ranking: ranked.map((p, index) => ({
+                position: index + 1,
+                name: p.name,
+                division: p.division,
+                totalDistance: p.totalDistance,
+                totalTime: p.totalTime,
+                totalLaps: p.totalLaps,
+                seriesCount: p.series.length,
+                series: p.series
+            }))
+        };
+
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `classement-general-chrono-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showNotification('Classement général exporté avec succès!', 'success');
+    };
+
+    // Imprimer le classement général
+    window.printOverallChronoRanking = function() {
+        window.print();
+    };
 
     // Formater le temps en HH:MM:SS.ms
     function formatTime(ms) {
