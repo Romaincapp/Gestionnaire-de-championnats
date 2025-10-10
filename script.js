@@ -100,6 +100,17 @@ try {
         }
     }
 
+    // SAUVEGARDE DONNÉES CHRONO
+    function saveChronoToLocalStorage() {
+        try {
+            localStorage.setItem('chronoRaceData', JSON.stringify(raceData));
+            console.log("Données chrono sauvegardées");
+        } catch (error) {
+            console.warn("Erreur sauvegarde chrono:", error);
+        }
+    }
+    window.saveChronoToLocalStorage = saveChronoToLocalStorage;
+
     function loadFromLocalStorage() {
         try {
             const saved = localStorage.getItem('tennisTableChampionship');
@@ -118,6 +129,28 @@ try {
         }
         return false;
     }
+
+    // CHARGEMENT DONNÉES CHRONO
+    function loadChronoFromLocalStorage() {
+        try {
+            const saved = localStorage.getItem('chronoRaceData');
+            if (saved) {
+                const loadedData = JSON.parse(saved);
+                // Fusionner les données chargées avec la structure par défaut
+                raceData.events = loadedData.events || [];
+                raceData.participants = loadedData.participants || [];
+                raceData.nextEventId = loadedData.nextEventId || 1;
+                raceData.nextSerieId = loadedData.nextSerieId || 1;
+                raceData.nextParticipantId = loadedData.nextParticipantId || 1;
+                console.log("Données chrono chargées depuis localStorage");
+                return true;
+            }
+        } catch (error) {
+            console.warn("Erreur chargement chrono:", error);
+        }
+        return false;
+    }
+    window.loadChronoFromLocalStorage = loadChronoFromLocalStorage;
 
     // GESTION DE LA CONFIGURATION
     function updateDivisionConfig() {
@@ -7182,10 +7215,16 @@ if (document.readyState === 'loading') {
     // ============================================
 
     let raceData = {
-        series: [], // Liste de toutes les séries
+        events: [], // Liste de toutes les épreuves (ex: 400m Dames)
+        currentEvent: null, // Épreuve actuellement affichée
+        editingEventId: null, // ID de l'épreuve en cours d'édition
+        nextEventId: 1,
+        series: [], // Liste de toutes les séries (DEPRECATED - sera migré vers events[].series)
         currentSerie: null, // Série en cours d'exécution
         editingSerieId: null, // ID de la série en cours d'édition
-        nextSerieId: 1
+        nextSerieId: 1,
+        participants: [], // Liste des participants du mode chrono (athlètes ou équipes)
+        nextParticipantId: 1
     };
 
     window.raceData = raceData;
@@ -7197,9 +7236,12 @@ if (document.readyState === 'loading') {
         const dayContent = document.querySelector('.day-content.active');
 
         if (checkbox.checked) {
+            // Charger les données chrono depuis localStorage au premier affichage
+            loadChronoFromLocalStorage();
             chronoSection.style.display = 'block';
             if (dayContent) dayContent.style.display = 'none';
-            displaySeriesList();
+            displayEventsList();
+            displayParticipantsList();
         } else {
             chronoSection.style.display = 'none';
             if (dayContent) dayContent.style.display = 'block';
@@ -7269,6 +7311,9 @@ if (document.readyState === 'loading') {
                             <button class="btn" onclick="viewSerieResults(${serie.id})" style="background: #27ae60; flex: 1;">
                                 🏆 Résultats
                             </button>
+                            <button class="btn" onclick="editSerie(${serie.id})" style="background: #3498db; flex: 1; min-width: 120px;">
+                                ✏️ Modifier
+                            </button>
                             <button class="btn btn-danger" onclick="deleteSerie(${serie.id})" style="flex: 1; min-width: 120px;">
                                 🗑️ Supprimer
                             </button>
@@ -7279,18 +7324,574 @@ if (document.readyState === 'loading') {
         }).join('');
     }
 
+    // Gestion des participants du mode chrono
+    window.showParticipantsManager = function() {
+        displayParticipantsList();
+        document.getElementById('participantsManagerModal').style.display = 'block';
+    };
+
+    window.closeParticipantsManager = function() {
+        document.getElementById('participantsManagerModal').style.display = 'none';
+    };
+
+    window.addParticipantToChrono = function() {
+        const name = document.getElementById('participantName').value.trim();
+        const category = document.getElementById('participantCategory').value.trim();
+        const bib = document.getElementById('participantBib').value.trim();
+
+        if (!name) {
+            showNotification('Veuillez entrer un nom ou une équipe', 'warning');
+            return;
+        }
+
+        if (!category) {
+            showNotification('Veuillez entrer une catégorie', 'warning');
+            return;
+        }
+
+        if (!bib) {
+            showNotification('Veuillez entrer un dossard', 'warning');
+            return;
+        }
+
+        // Vérifier si le dossard existe déjà
+        const existingBib = raceData.participants.find(p => p.bib === bib);
+        if (existingBib) {
+            showNotification('Ce numéro de dossard est déjà utilisé', 'error');
+            return;
+        }
+
+        const participant = {
+            id: raceData.nextParticipantId++,
+            name: name,
+            category: category,
+            bib: bib
+        };
+
+        raceData.participants.push(participant);
+
+        // Réinitialiser le formulaire
+        document.getElementById('participantName').value = '';
+        document.getElementById('participantCategory').value = '';
+        document.getElementById('participantBib').value = '';
+
+        displayParticipantsList();
+        saveChronoToLocalStorage();
+        showNotification('Participant ajouté avec succès', 'success');
+    };
+
+    function displayParticipantsList() {
+        const participantsList = document.getElementById('participantsList');
+
+        if (raceData.participants.length === 0) {
+            participantsList.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">Aucun participant ajouté.</p>';
+            return;
+        }
+
+        // Trier par dossard
+        const sortedParticipants = [...raceData.participants].sort((a, b) => {
+            const bibA = parseInt(a.bib) || a.bib;
+            const bibB = parseInt(b.bib) || b.bib;
+            if (typeof bibA === 'number' && typeof bibB === 'number') {
+                return bibA - bibB;
+            }
+            return String(a.bib).localeCompare(String(b.bib));
+        });
+
+        participantsList.innerHTML = `
+            <div style="display: grid; gap: 10px;">
+                ${sortedParticipants.map(participant => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 2px solid #ddd; transition: all 0.3s;">
+                        <div style="display: flex; gap: 20px; align-items: center; flex: 1;">
+                            <div style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; min-width: 60px; text-align: center;">
+                                ${participant.bib}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: bold; font-size: 16px; color: #2c3e50; margin-bottom: 5px;">
+                                    🏃 ${participant.name}
+                                </div>
+                                <div style="font-size: 14px; color: #7f8c8d;">
+                                    📋 ${participant.category}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn" onclick="editParticipant(${participant.id})" style="background: #3498db; padding: 8px 15px;">
+                                ✏️ Éditer
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteParticipant(${participant.id})" style="padding: 8px 15px;">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    window.editParticipant = function(id) {
+        const participant = raceData.participants.find(p => p.id === id);
+        if (!participant) return;
+
+        raceData.editingParticipantId = id;
+        document.getElementById('editParticipantName').value = participant.name;
+        document.getElementById('editParticipantCategory').value = participant.category;
+        document.getElementById('editParticipantBib').value = participant.bib;
+
+        document.getElementById('editParticipantModal').style.display = 'block';
+    };
+
+    window.closeEditParticipantModal = function() {
+        document.getElementById('editParticipantModal').style.display = 'none';
+        raceData.editingParticipantId = null;
+    };
+
+    window.saveParticipantEdit = function() {
+        const name = document.getElementById('editParticipantName').value.trim();
+        const category = document.getElementById('editParticipantCategory').value.trim();
+        const bib = document.getElementById('editParticipantBib').value.trim();
+
+        if (!name || !category || !bib) {
+            showNotification('Tous les champs sont obligatoires', 'warning');
+            return;
+        }
+
+        const participant = raceData.participants.find(p => p.id === raceData.editingParticipantId);
+        if (!participant) return;
+
+        // Vérifier si le dossard existe déjà (sauf pour le participant actuel)
+        const existingBib = raceData.participants.find(p => p.bib === bib && p.id !== raceData.editingParticipantId);
+        if (existingBib) {
+            showNotification('Ce numéro de dossard est déjà utilisé', 'error');
+            return;
+        }
+
+        participant.name = name;
+        participant.category = category;
+        participant.bib = bib;
+
+        displayParticipantsList();
+        closeEditParticipantModal();
+        saveChronoToLocalStorage();
+        showNotification('Participant modifié avec succès', 'success');
+    };
+
+    window.deleteParticipant = function(id) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce participant ?')) {
+            return;
+        }
+
+        const index = raceData.participants.findIndex(p => p.id === id);
+        if (index !== -1) {
+            raceData.participants.splice(index, 1);
+            displayParticipantsList();
+            saveChronoToLocalStorage();
+            showNotification('Participant supprimé', 'success');
+        }
+    };
+
+    // Ajout en masse de participants
+    let bulkParticipantsData = [];
+
+    window.showBulkParticipantsModal = function() {
+        document.getElementById('bulkParticipantsText').value = '';
+        document.getElementById('bulkParticipantsPreview').style.display = 'none';
+        bulkParticipantsData = [];
+        document.getElementById('bulkParticipantsModal').style.display = 'block';
+    };
+
+    window.closeBulkParticipantsModal = function() {
+        document.getElementById('bulkParticipantsModal').style.display = 'none';
+        bulkParticipantsData = [];
+    };
+
+    window.previewBulkParticipants = function() {
+        const text = document.getElementById('bulkParticipantsText').value.trim();
+
+        if (!text) {
+            showNotification('Veuillez coller des données', 'warning');
+            return;
+        }
+
+        const lines = text.split('\n').filter(line => line.trim());
+        bulkParticipantsData = [];
+        const errors = [];
+
+        lines.forEach((line, index) => {
+            const lineNum = index + 1;
+            let parts;
+
+            // Détecter le format (tabulation ou virgule)
+            if (line.includes('\t')) {
+                parts = line.split('\t').map(p => p.trim()).filter(p => p);
+            } else if (line.includes(',')) {
+                parts = line.split(',').map(p => p.trim()).filter(p => p);
+            } else {
+                // Essayer de split par espaces multiples
+                parts = line.split(/\s{2,}/).map(p => p.trim()).filter(p => p);
+            }
+
+            if (parts.length < 3) {
+                errors.push(`Ligne ${lineNum}: format invalide (3 colonnes requises: dossard, nom, catégorie)`);
+                return;
+            }
+
+            const [bib, name, category] = parts;
+
+            if (!bib || !name || !category) {
+                errors.push(`Ligne ${lineNum}: colonnes vides détectées`);
+                return;
+            }
+
+            // Vérifier si le dossard existe déjà
+            const existingBib = raceData.participants.find(p => p.bib === bib);
+            const duplicateBib = bulkParticipantsData.find(p => p.bib === bib);
+
+            if (existingBib) {
+                errors.push(`Ligne ${lineNum}: dossard ${bib} déjà utilisé`);
+                return;
+            }
+
+            if (duplicateBib) {
+                errors.push(`Ligne ${lineNum}: dossard ${bib} dupliqué dans l'import`);
+                return;
+            }
+
+            bulkParticipantsData.push({
+                bib: bib,
+                name: name,
+                category: category
+            });
+        });
+
+        // Afficher l'aperçu
+        const previewContent = document.getElementById('bulkParticipantsPreviewContent');
+        const previewCount = document.getElementById('bulkPreviewCount');
+
+        if (bulkParticipantsData.length === 0) {
+            previewContent.innerHTML = '<p style="color: #e74c3c; font-weight: bold;">❌ Aucun participant valide trouvé</p>';
+        } else {
+            previewContent.innerHTML = `
+                <div style="display: grid; gap: 8px;">
+                    ${bulkParticipantsData.map((p, i) => `
+                        <div style="display: flex; gap: 15px; padding: 10px; background: white; border-radius: 5px; border: 2px solid #27ae60;">
+                            <div style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; min-width: 50px; text-align: center;">
+                                ${p.bib}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: bold;">${p.name}</div>
+                                <div style="font-size: 12px; color: #7f8c8d;">${p.category}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        if (errors.length > 0) {
+            previewContent.innerHTML += `
+                <div style="margin-top: 15px; padding: 10px; background: #ffe6e6; border-radius: 5px; border: 2px solid #e74c3c;">
+                    <h5 style="color: #e74c3c; margin: 0 0 10px 0;">⚠️ Erreurs détectées (${errors.length}) :</h5>
+                    ${errors.map(err => `<div style="font-size: 12px; color: #c0392b; margin: 3px 0;">• ${err}</div>`).join('')}
+                </div>
+            `;
+        }
+
+        previewCount.textContent = bulkParticipantsData.length;
+        document.getElementById('bulkParticipantsPreview').style.display = 'block';
+
+        if (bulkParticipantsData.length > 0) {
+            showNotification(`${bulkParticipantsData.length} participant(s) prêt(s) à être ajouté(s)`, 'success');
+        }
+    };
+
+    window.saveBulkParticipants = function() {
+        if (bulkParticipantsData.length === 0) {
+            showNotification('Veuillez d\'abord prévisualiser les données', 'warning');
+            return;
+        }
+
+        let addedCount = 0;
+        bulkParticipantsData.forEach(participant => {
+            raceData.participants.push({
+                id: raceData.nextParticipantId++,
+                name: participant.name,
+                category: participant.category,
+                bib: participant.bib
+            });
+            addedCount++;
+        });
+
+        displayParticipantsList();
+        closeBulkParticipantsModal();
+        saveChronoToLocalStorage();
+        showNotification(`${addedCount} participant(s) ajouté(s) avec succès`, 'success');
+    };
+
+    // ============================================
+    // GESTION DES ÉPREUVES
+    // ============================================
+
+    window.showAddEventModal = function() {
+        raceData.editingEventId = null;
+        document.getElementById('eventModalTitle').textContent = '🏅 Nouvelle Épreuve';
+
+        // Réinitialiser le formulaire
+        document.getElementById('eventName').value = '';
+        document.getElementById('eventSportType').value = 'running';
+        document.getElementById('eventDistance').value = '400';
+        document.getElementById('eventRaceType').value = 'individual';
+        document.getElementById('eventRelayDuration').value = '60';
+        document.getElementById('eventRelayDurationSection').style.display = 'none';
+
+        document.getElementById('eventModal').style.display = 'block';
+    };
+
+    window.closeEventModal = function() {
+        document.getElementById('eventModal').style.display = 'none';
+        raceData.editingEventId = null;
+    };
+
+    window.updateEventRelayOptions = function() {
+        const raceType = document.getElementById('eventRaceType').value;
+        const relaySection = document.getElementById('eventRelayDurationSection');
+
+        if (raceType === 'relay') {
+            relaySection.style.display = 'block';
+        } else {
+            relaySection.style.display = 'none';
+        }
+    };
+
+    window.saveEvent = function() {
+        const name = document.getElementById('eventName').value.trim();
+        const sportType = document.getElementById('eventSportType').value;
+        const distance = parseInt(document.getElementById('eventDistance').value);
+        const raceType = document.getElementById('eventRaceType').value;
+        const relayDuration = raceType === 'relay' ? parseInt(document.getElementById('eventRelayDuration').value) : null;
+
+        if (!name) {
+            showNotification('Veuillez entrer un nom pour l\'épreuve', 'warning');
+            return;
+        }
+
+        if (!distance || distance <= 0) {
+            showNotification('Veuillez entrer une distance valide', 'warning');
+            return;
+        }
+
+        const eventData = {
+            id: raceData.editingEventId || raceData.nextEventId++,
+            name,
+            sportType,
+            distance,
+            raceType,
+            relayDuration,
+            series: [] // Chaque épreuve contient plusieurs séries
+        };
+
+        if (raceData.editingEventId !== null) {
+            // Modification
+            const index = raceData.events.findIndex(e => e.id === raceData.editingEventId);
+            if (index !== -1) {
+                // Garder les séries existantes
+                eventData.series = raceData.events[index].series;
+                raceData.events[index] = eventData;
+                showNotification('Épreuve modifiée avec succès', 'success');
+            }
+        } else {
+            // Nouvelle épreuve
+            raceData.events.push(eventData);
+            showNotification('Épreuve créée avec succès', 'success');
+        }
+
+        closeEventModal();
+        displayEventsList();
+        saveChronoToLocalStorage();
+    };
+
+    window.editEvent = function(eventId) {
+        const event = raceData.events.find(e => e.id === eventId);
+        if (!event) return;
+
+        raceData.editingEventId = eventId;
+        document.getElementById('eventModalTitle').textContent = '✏️ Modifier l\'Épreuve';
+
+        document.getElementById('eventName').value = event.name;
+        document.getElementById('eventSportType').value = event.sportType;
+        document.getElementById('eventDistance').value = event.distance;
+        document.getElementById('eventRaceType').value = event.raceType;
+
+        if (event.raceType === 'relay') {
+            document.getElementById('eventRelayDuration').value = event.relayDuration;
+            document.getElementById('eventRelayDurationSection').style.display = 'block';
+        } else {
+            document.getElementById('eventRelayDurationSection').style.display = 'none';
+        }
+
+        document.getElementById('eventModal').style.display = 'block';
+    };
+
+    window.deleteEvent = function(eventId) {
+        const event = raceData.events.find(e => e.id === eventId);
+        if (!event) return;
+
+        const seriesCount = event.series.length;
+        const confirmMessage = seriesCount > 0
+            ? `Êtes-vous sûr de vouloir supprimer "${event.name}" et ses ${seriesCount} série(s) ?`
+            : `Êtes-vous sûr de vouloir supprimer "${event.name}" ?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        const index = raceData.events.findIndex(e => e.id === eventId);
+        if (index !== -1) {
+            raceData.events.splice(index, 1);
+            displayEventsList();
+            saveChronoToLocalStorage();
+            showNotification('Épreuve supprimée', 'success');
+        }
+    };
+
+    function displayEventsList() {
+        const eventsList = document.getElementById('eventsList');
+        const noEventsMessage = document.getElementById('noEventsMessage');
+
+        if (raceData.events.length === 0) {
+            eventsList.style.display = 'none';
+            noEventsMessage.style.display = 'block';
+            return;
+        }
+
+        eventsList.style.display = 'grid';
+        noEventsMessage.style.display = 'none';
+
+        const sportEmoji = {
+            running: '🏃',
+            cycling: '🚴',
+            swimming: '🏊'
+        };
+
+        eventsList.innerHTML = raceData.events.map(event => {
+            const totalParticipants = event.series.reduce((sum, s) => sum + s.participants.length, 0);
+            const completedSeries = event.series.filter(s => s.status === 'completed').length;
+
+            return `
+                <div style="border: 3px solid #e67e22; border-radius: 12px; padding: 20px; background: linear-gradient(135deg, #fff5f0, #ffffff); box-shadow: 0 4px 12px rgba(230, 126, 34, 0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 10px 0; color: #e67e22; font-size: 22px;">
+                                🏅 ${event.name}
+                            </h3>
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px; color: #7f8c8d;">
+                                <span>${sportEmoji[event.sportType]} ${event.distance}m</span>
+                                <span>📊 ${event.series.length} série(s)</span>
+                                <span>👥 ${totalParticipants} participants au total</span>
+                                ${completedSeries > 0 ? `<span style="color: #27ae60;">✅ ${completedSeries} terminée(s)</span>` : ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn" onclick="showAddSerieModalForEvent(${event.id})" style="background: #27ae60; color: white; padding: 8px 15px;">
+                                ➕ Série
+                            </button>
+                            <button class="btn" onclick="editEvent(${event.id})" style="background: #3498db; padding: 8px 15px;">
+                                ✏️
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteEvent(${event.id})" style="padding: 8px 15px;">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+
+                    ${event.series.length > 0 ? `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #f39c12;">
+                            <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">Séries de cette épreuve:</h4>
+                            <div style="display: grid; gap: 10px;">
+                                ${event.series.map(serie => {
+                                    const statusColor = serie.status === 'completed' ? '#27ae60' :
+                                                       serie.status === 'running' ? '#3498db' : '#95a5a6';
+                                    const statusText = serie.status === 'completed' ? '✅ Terminée' :
+                                                      serie.status === 'running' ? '▶️ En cours' : '⏸️ En attente';
+
+                                    return `
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px; border-left: 4px solid ${statusColor};">
+                                            <div style="flex: 1;">
+                                                <span style="font-weight: bold; color: #2c3e50;">${serie.name}</span>
+                                                <span style="margin-left: 15px; font-size: 13px; color: #7f8c8d;">
+                                                    👥 ${serie.participants.length} participants
+                                                </span>
+                                                <span style="margin-left: 10px; background: ${statusColor}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
+                                                    ${statusText}
+                                                </span>
+                                            </div>
+                                            <div style="display: flex; gap: 5px;">
+                                                ${serie.status === 'pending' ? `
+                                                    <button class="btn btn-success" onclick="startSerie(${serie.id})" style="padding: 6px 12px; font-size: 13px;">
+                                                        ▶️ Lancer
+                                                    </button>
+                                                    <button class="btn" onclick="editSerie(${serie.id})" style="background: #3498db; padding: 6px 12px; font-size: 13px;">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-danger" onclick="deleteSerie(${serie.id})" style="padding: 6px 12px; font-size: 13px;">
+                                                        🗑️
+                                                    </button>
+                                                ` : serie.status === 'running' ? `
+                                                    <button class="btn" onclick="continueSerie(${serie.id})" style="background: #3498db; padding: 6px 12px; font-size: 13px;">
+                                                        📊 Gérer
+                                                    </button>
+                                                ` : `
+                                                    <button class="btn" onclick="viewSerieResults(${serie.id})" style="background: #27ae60; padding: 6px 12px; font-size: 13px;">
+                                                        🏆 Résultats
+                                                    </button>
+                                                    <button class="btn" onclick="editSerie(${serie.id})" style="background: #3498db; padding: 6px 12px; font-size: 13px;">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-danger" onclick="deleteSerie(${serie.id})" style="padding: 6px 12px; font-size: 13px;">
+                                                        🗑️
+                                                    </button>
+                                                `}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="margin-top: 10px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center; color: #7f8c8d; font-size: 13px;">
+                            Aucune série créée pour cette épreuve. Cliquez sur "➕ Série" pour en ajouter une.
+                        </div>
+                    `}
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ============================================
+    // GESTION DES SÉRIES
+    // ============================================
+
+    // Afficher la modale d'ajout de série pour une épreuve spécifique
+    window.showAddSerieModalForEvent = function(eventId) {
+        raceData.currentEventId = eventId;
+        showAddSerieModal();
+
+        // Pré-sélectionner l'épreuve
+        document.getElementById('serieEventId').value = eventId;
+        updateSerieFromEvent();
+    };
+
     // Afficher la modale d'ajout de série
     window.showAddSerieModal = function() {
         raceData.editingSerieId = null;
+        raceData.currentEventId = null;
         document.getElementById('serieModalTitle').textContent = 'Nouvelle Série';
 
         // Réinitialiser le formulaire
         document.getElementById('serieName').value = '';
-        document.getElementById('serieSportType').value = 'running';
-        document.getElementById('serieDistance').value = '400';
-        document.getElementById('serieRaceType').value = 'individual';
-        document.getElementById('serieRelayDuration').value = '60';
-        document.getElementById('serieRelayDurationSection').style.display = 'none';
+
+        // Charger la liste des épreuves dans le select
+        loadEventsListInSelect();
 
         // Charger la liste des participants
         loadParticipantsList();
@@ -7298,39 +7899,67 @@ if (document.readyState === 'loading') {
         document.getElementById('serieModal').style.display = 'block';
     };
 
-    // Charger la liste des participants avec checkboxes
-    function loadParticipantsList(selectedParticipants = []) {
-        const currentDay = championship.currentDay;
-        const dayData = championship.days[currentDay];
-        const participantsCheckboxList = document.getElementById('participantsCheckboxList');
+    function loadEventsListInSelect() {
+        const selectElement = document.getElementById('serieEventId');
 
-        const allPlayers = [];
-        Object.keys(dayData.players).forEach(division => {
-            dayData.players[division].forEach(player => {
-                allPlayers.push({
-                    name: player,
-                    division: division
-                });
-            });
-        });
-
-        if (allPlayers.length === 0) {
-            participantsCheckboxList.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Aucun participant disponible. Ajoutez des joueurs d\'abord.</p>';
+        if (raceData.events.length === 0) {
+            selectElement.innerHTML = '<option value="">Aucune épreuve disponible - Créez-en une d\'abord</option>';
             return;
         }
 
-        participantsCheckboxList.innerHTML = allPlayers.map((player, index) => {
-            const isChecked = selectedParticipants.some(p => p.name === player.name && p.division === player.division);
+        selectElement.innerHTML = '<option value="">-- Sélectionnez une épreuve --</option>' +
+            raceData.events.map(event => `<option value="${event.id}">${event.name} (${event.distance}m)</option>`).join('');
+    }
+
+    window.updateSerieFromEvent = function() {
+        const eventId = parseInt(document.getElementById('serieEventId').value);
+        if (!eventId) return;
+
+        const event = raceData.events.find(e => e.id === eventId);
+        if (!event) return;
+
+        // Suggérer un nom de série basé sur le nombre de séries existantes
+        const serieNumber = event.series.length + 1;
+        document.getElementById('serieName').value = `Série ${serieNumber}`;
+    };
+
+    // Charger la liste des participants avec checkboxes
+    function loadParticipantsList(selectedParticipants = []) {
+        const participantsCheckboxList = document.getElementById('participantsCheckboxList');
+
+        // Utiliser les participants du mode chrono
+        if (raceData.participants.length === 0) {
+            participantsCheckboxList.innerHTML = '<p style="color: #7f8c8d; text-align: center;">Aucun participant disponible. Cliquez sur "Ajouter des participants" pour en créer.</p>';
+            return;
+        }
+
+        // Trier par dossard
+        const sortedParticipants = [...raceData.participants].sort((a, b) => {
+            const bibA = parseInt(a.bib) || a.bib;
+            const bibB = parseInt(b.bib) || b.bib;
+            if (typeof bibA === 'number' && typeof bibB === 'number') {
+                return bibA - bibB;
+            }
+            return String(a.bib).localeCompare(String(b.bib));
+        });
+
+        participantsCheckboxList.innerHTML = sortedParticipants.map(participant => {
+            const isChecked = selectedParticipants.some(p => p.id === participant.id);
             return `
-                <label style="display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 5px; transition: background 0.2s;">
+                <label style="display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 5px; transition: background 0.2s; hover:background: #f0f0f0;">
                     <input type="checkbox"
                            class="participant-checkbox"
-                           data-name="${player.name}"
-                           data-division="${player.division}"
+                           data-id="${participant.id}"
+                           data-name="${participant.name}"
+                           data-category="${participant.category}"
+                           data-bib="${participant.bib}"
                            ${isChecked ? 'checked' : ''}
                            style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-weight: bold;">${player.name}</span>
-                    <span style="font-size: 12px; color: #7f8c8d;">(Division ${player.division})</span>
+                    <div style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 4px 8px; border-radius: 5px; font-weight: bold; min-width: 45px; text-align: center; font-size: 12px;">
+                        ${participant.bib}
+                    </div>
+                    <span style="font-weight: bold;">${participant.name}</span>
+                    <span style="font-size: 12px; color: #7f8c8d;">(${participant.category})</span>
                 </label>
             `;
         }).join('');
@@ -7357,34 +7986,68 @@ if (document.readyState === 'loading') {
     // Sauvegarder une série
     window.saveSerie = function() {
         const name = document.getElementById('serieName').value.trim();
-        const sportType = document.getElementById('serieSportType').value;
-        const distance = parseInt(document.getElementById('serieDistance').value);
-        const raceType = document.getElementById('serieRaceType').value;
-        const relayDuration = raceType === 'relay' ? parseInt(document.getElementById('serieRelayDuration').value) : null;
+        const eventId = parseInt(document.getElementById('serieEventId').value);
 
         if (!name) {
             showNotification('Veuillez entrer un nom pour la série', 'warning');
             return;
         }
 
-        if (!distance || distance <= 0) {
-            showNotification('Veuillez entrer une distance valide', 'warning');
+        if (!eventId) {
+            showNotification('Veuillez sélectionner une épreuve', 'warning');
+            return;
+        }
+
+        const event = raceData.events.find(e => e.id === eventId);
+        if (!event) {
+            showNotification('Épreuve introuvable', 'error');
             return;
         }
 
         // Récupérer les participants sélectionnés
         const checkboxes = document.querySelectorAll('.participant-checkbox:checked');
-        const participants = Array.from(checkboxes).map((cb, index) => ({
-            bib: index + 1,
-            name: cb.dataset.name,
-            division: cb.dataset.division,
-            laps: [],
-            status: 'ready',
-            totalTime: 0,
-            totalDistance: 0,
-            bestLap: null,
-            finishTime: null
-        }));
+
+        // Si on édite une série existante, récupérer les données actuelles des participants
+        let existingSerieParticipants = [];
+        if (raceData.editingSerieId !== null) {
+            const result = findSerieById(raceData.editingSerieId);
+            if (result && result.serie) {
+                existingSerieParticipants = result.serie.participants;
+            }
+        }
+
+        const participants = Array.from(checkboxes).map(cb => {
+            const participantId = parseInt(cb.dataset.id);
+
+            // Chercher si ce participant existait déjà dans la série
+            const existingParticipant = existingSerieParticipants.find(p => p.id === participantId);
+
+            if (existingParticipant) {
+                // Conserver toutes les données existantes du participant
+                return {
+                    ...existingParticipant,
+                    // Mettre à jour les infos de base au cas où elles auraient changé
+                    bib: cb.dataset.bib,
+                    name: cb.dataset.name,
+                    category: cb.dataset.category
+                };
+            } else {
+                // Nouveau participant : créer avec des données vides
+                return {
+                    id: participantId,
+                    bib: cb.dataset.bib,
+                    name: cb.dataset.name,
+                    category: cb.dataset.category,
+                    laps: [],
+                    status: 'ready',
+                    totalTime: 0,
+                    totalDistance: 0,
+                    bestLap: null,
+                    finishTime: null,
+                    lastLapStartTime: 0
+                };
+            }
+        });
 
         if (participants.length === 0) {
             showNotification('Sélectionnez au moins un participant', 'warning');
@@ -7393,10 +8056,11 @@ if (document.readyState === 'loading') {
 
         const serieData = {
             name,
-            sportType,
-            distance,
-            raceType,
-            relayDuration,
+            eventId,  // Lier la série à l'épreuve
+            sportType: event.sportType,
+            distance: event.distance,
+            raceType: event.raceType,
+            relayDuration: event.relayDuration,
             participants,
             status: 'pending',
             startTime: null,
@@ -7407,42 +8071,78 @@ if (document.readyState === 'loading') {
 
         if (raceData.editingSerieId !== null) {
             // Modification
-            const index = raceData.series.findIndex(s => s.id === raceData.editingSerieId);
-            if (index !== -1) {
-                serieData.id = raceData.editingSerieId;
-                raceData.series[index] = serieData;
+            // Trouver la série dans toutes les épreuves
+            let found = false;
+            raceData.events.forEach(evt => {
+                const index = evt.series.findIndex(s => s.id === raceData.editingSerieId);
+                if (index !== -1) {
+                    serieData.id = raceData.editingSerieId;
+                    // Si l'épreuve a changé, déplacer la série
+                    if (evt.id !== eventId) {
+                        evt.series.splice(index, 1);
+                        event.series.push(serieData);
+                    } else {
+                        evt.series[index] = serieData;
+                    }
+                    found = true;
+                }
+            });
+            if (found) {
                 showNotification('Série modifiée avec succès', 'success');
             }
         } else {
             // Nouvelle série
             serieData.id = raceData.nextSerieId++;
-            raceData.series.push(serieData);
+            event.series.push(serieData);
             showNotification('Série créée avec succès', 'success');
         }
 
         closeSerieModal();
-        displaySeriesList();
+        displayEventsList();
+        saveChronoToLocalStorage();
     };
+
+    // Fonction utilitaire pour trouver une série dans toutes les épreuves
+    function findSerieById(serieId) {
+        for (const event of raceData.events) {
+            const serie = event.series.find(s => s.id === serieId);
+            if (serie) {
+                return { serie, event };
+            }
+        }
+        return null;
+    }
 
     // Éditer une série
     window.editSerie = function(serieId) {
-        const serie = raceData.series.find(s => s.id === serieId);
-        if (!serie) return;
+        const result = findSerieById(serieId);
+        if (!result) return;
+
+        const { serie, event } = result;
+
+        // Avertissement si la série est terminée
+        if (serie.status === 'completed') {
+            if (!confirm('⚠️ Cette série est terminée.\n\nVous pouvez modifier les participants et le nom, mais les résultats chronométrés seront perdus si vous changez les participants.\n\nVoulez-vous continuer ?')) {
+                return;
+            }
+        }
+
+        // Avertissement si la série est en cours
+        if (serie.status === 'running') {
+            if (!confirm('⚠️ Cette série est en cours d\'exécution.\n\nLa modification peut affecter le déroulement de la course.\n\nVoulez-vous continuer ?')) {
+                return;
+            }
+        }
 
         raceData.editingSerieId = serieId;
-        document.getElementById('serieModalTitle').textContent = 'Modifier la Série';
+        document.getElementById('serieModalTitle').textContent = serie.status === 'completed' ? '✏️ Modifier la Série (Terminée)' : 'Modifier la Série';
 
+        // Charger la liste des épreuves
+        loadEventsListInSelect();
+
+        // Pré-sélectionner l'épreuve
+        document.getElementById('serieEventId').value = event.id;
         document.getElementById('serieName').value = serie.name;
-        document.getElementById('serieSportType').value = serie.sportType;
-        document.getElementById('serieDistance').value = serie.distance;
-        document.getElementById('serieRaceType').value = serie.raceType;
-
-        if (serie.raceType === 'relay') {
-            document.getElementById('serieRelayDuration').value = serie.relayDuration;
-            document.getElementById('serieRelayDurationSection').style.display = 'block';
-        } else {
-            document.getElementById('serieRelayDurationSection').style.display = 'none';
-        }
 
         loadParticipantsList(serie.participants);
 
@@ -7453,29 +8153,37 @@ if (document.readyState === 'loading') {
     window.deleteSerie = function(serieId) {
         if (!confirm('Voulez-vous vraiment supprimer cette série?')) return;
 
-        const index = raceData.series.findIndex(s => s.id === serieId);
-        if (index !== -1) {
-            raceData.series.splice(index, 1);
-            showNotification('Série supprimée', 'info');
-            displaySeriesList();
-        }
+        raceData.events.forEach(event => {
+            const index = event.series.findIndex(s => s.id === serieId);
+            if (index !== -1) {
+                event.series.splice(index, 1);
+                showNotification('Série supprimée', 'info');
+                displayEventsList();
+                saveChronoToLocalStorage();
+            }
+        });
     };
 
     // Démarrer une série
     window.startSerie = function(serieId) {
-        const serie = raceData.series.find(s => s.id === serieId);
-        if (!serie) return;
+        const result = findSerieById(serieId);
+        if (!result) return;
 
+        const { serie, event } = result;
         raceData.currentSerie = serie;
         serie.status = 'running';
 
         displayRaceInterface(serie);
-        displaySeriesList();
+        displayEventsList();
+        saveChronoToLocalStorage();
     };
 
     // Continuer une série en cours
     window.continueSerie = function(serieId) {
-        const serie = raceData.series.find(s => s.id === serieId);
+        const result = findSerieById(serieId);
+        if (!result) return;
+
+        const { serie } = result;
         if (!serie) return;
 
         raceData.currentSerie = serie;
@@ -7484,9 +8192,10 @@ if (document.readyState === 'loading') {
 
     // Voir les résultats d'une série terminée
     window.viewSerieResults = function(serieId) {
-        const serie = raceData.series.find(s => s.id === serieId);
-        if (!serie) return;
+        const result = findSerieById(serieId);
+        if (!result) return;
 
+        const { serie } = result;
         raceData.currentSerie = serie;
         displayRaceInterface(serie);
         showRaceRanking();
@@ -7511,9 +8220,9 @@ if (document.readyState === 'loading') {
         if (!serie) return;
 
         const raceInterface = document.getElementById('raceInterface');
-        const seriesList = document.getElementById('seriesList').parentElement;
+        const eventsList = document.getElementById('eventsList').parentElement;
 
-        seriesList.style.display = 'none';
+        eventsList.style.display = 'none';
         raceInterface.style.display = 'block';
 
         const sportEmoji = {
@@ -7604,15 +8313,15 @@ if (document.readyState === 'loading') {
         raceInterface.innerHTML = html;
     }
 
-    // Retour à la liste des séries
+    // Retour à la liste des épreuves
     window.backToSeriesList = function() {
         const raceInterface = document.getElementById('raceInterface');
-        const seriesList = document.getElementById('seriesList').parentElement;
+        const eventsList = document.getElementById('eventsList').parentElement;
 
         raceInterface.style.display = 'none';
-        seriesList.style.display = 'block';
+        eventsList.style.display = 'block';
 
-        displaySeriesList();
+        displayEventsList();
     };
 
     // Terminer la série
@@ -7628,6 +8337,7 @@ if (document.readyState === 'loading') {
         raceData.currentSerie.status = 'completed';
         raceData.currentSerie.isRunning = false;
 
+        saveChronoToLocalStorage();
         showNotification('Série terminée!', 'success');
         backToSeriesList();
     };
@@ -7657,7 +8367,7 @@ if (document.readyState === 'loading') {
                     </td>
                     <td style="padding: 12px;">
                         <div style="font-weight: bold;">${p.name}</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Division ${p.division}</div>
+                        <div style="font-size: 12px; color: #7f8c8d;">${p.category || 'Division ' + (p.division || '-')}</div>
                     </td>
                     <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
                         ${p.laps.length}
@@ -7678,14 +8388,22 @@ if (document.readyState === 'loading') {
                     </td>
                     <td style="padding: 12px; text-align: center;">
                         ${p.status !== 'finished' ? `
-                            <button class="btn" onclick="recordLap(${p.bib})" style="background: #3498db; margin-right: 5px; padding: 8px 15px;">
+                            <button class="btn" onclick="recordLap('${p.bib}')" style="background: #3498db; margin-right: 5px; padding: 8px 15px;">
                                 ⏱️ LAP
                             </button>
-                            <button class="btn btn-success" onclick="finishParticipant(${p.bib})" style="padding: 8px 15px;">
+                            <button class="btn btn-success" onclick="finishParticipant('${p.bib}')" style="padding: 8px 15px;">
                                 🏁 FINISH
                             </button>
                         ` : `
-                            <span style="color: #27ae60; font-weight: bold;">✅ Terminé</span>
+                            <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                                <span style="color: #27ae60; font-weight: bold; padding: 8px; white-space: nowrap;">✅ Terminé</span>
+                                <button class="btn" onclick="editParticipantTime('${p.bib}')" style="background: #f39c12; padding: 6px 12px; font-size: 13px;">
+                                    ✏️ Éditer
+                                </button>
+                                <button class="btn" onclick="restartParticipant('${p.bib}')" style="background: #e74c3c; color: white; padding: 6px 12px; font-size: 13px;">
+                                    🔄 Relancer
+                                </button>
+                            </div>
                         `}
                     </td>
                 </tr>
@@ -7779,7 +8497,8 @@ if (document.readyState === 'loading') {
             return;
         }
 
-        const participant = serie.participants.find(p => p.bib === bib);
+        // Comparer en string pour supporter les dossards alphanumériques
+        const participant = serie.participants.find(p => String(p.bib) === String(bib));
         if (!participant) return;
 
         const currentTime = serie.currentTime;
@@ -7815,6 +8534,7 @@ if (document.readyState === 'loading') {
 
         // Rafraîchir l'affichage
         updateParticipantRow(participant);
+        saveChronoToLocalStorage();
     };
 
     // Terminer un participant
@@ -7827,7 +8547,8 @@ if (document.readyState === 'loading') {
             return;
         }
 
-        const participant = serie.participants.find(p => p.bib === bib);
+        // Comparer en string pour supporter les dossards alphanumériques
+        const participant = serie.participants.find(p => String(p.bib) === String(bib));
         if (!participant || participant.status === 'finished') return;
 
         // Enregistrer le dernier tour si en cours
@@ -7855,13 +8576,181 @@ if (document.readyState === 'loading') {
 
         // Rafraîchir l'affichage
         updateParticipantRow(participant);
+        saveChronoToLocalStorage();
 
         // Vérifier si tous ont terminé
         const allFinished = serie.participants.every(p => p.status === 'finished');
         if (allFinished) {
             toggleRaceTimer(); // Arrêter le chrono
+            saveChronoToLocalStorage();
             showNotification('Tous les participants ont terminé! 🎉', 'success');
         }
+    };
+
+    // Relancer un participant (annuler son finish)
+    window.restartParticipant = function(bib) {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const participant = serie.participants.find(p => String(p.bib) === String(bib));
+        if (!participant) return;
+
+        if (!confirm(`Voulez-vous vraiment relancer ${participant.name} ?\n\nCela annulera son temps actuel et le remettra en course.`)) {
+            return;
+        }
+
+        // Remettre le participant en course
+        participant.status = 'running';
+        participant.finishTime = null;
+        participant.lastLapStartTime = serie.currentTime;
+
+        showNotification(`${participant.name} a été relancé! 🔄`, 'info');
+        updateParticipantRow(participant);
+    };
+
+    // Éditer le temps d'un participant
+    let editingParticipantBib = null;
+
+    window.editParticipantTime = function(bib) {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const participant = serie.participants.find(p => String(p.bib) === String(bib));
+        if (!participant) return;
+
+        editingParticipantBib = bib;
+
+        // Afficher les infos du participant
+        document.getElementById('editTimeParticipantName').textContent = participant.name;
+        document.getElementById('editTimeParticipantBib').textContent = `#${participant.bib}`;
+        document.getElementById('editTimeCurrentTime').textContent = formatTime(participant.totalTime);
+        document.getElementById('editTimeCurrentLaps').textContent = participant.laps.length;
+        document.getElementById('editTimeDistancePerLap').textContent = `${(serie.distance / 1000).toFixed(2)} km`;
+
+        // Remplir le nombre de tours actuel
+        document.getElementById('editTimeLaps').value = participant.laps.length;
+
+        // Convertir le temps actuel en heures/minutes/secondes/centièmes
+        const totalMs = participant.totalTime;
+        const hours = Math.floor(totalMs / 3600000);
+        const minutes = Math.floor((totalMs % 3600000) / 60000);
+        const seconds = Math.floor((totalMs % 60000) / 1000);
+        const centiseconds = Math.floor((totalMs % 1000) / 10);
+
+        document.getElementById('editTimeHours').value = hours;
+        document.getElementById('editTimeMinutes').value = minutes;
+        document.getElementById('editTimeSeconds').value = seconds;
+        document.getElementById('editTimeCentiseconds').value = centiseconds;
+
+        updateTimePreview();
+
+        // Ajouter les listeners pour la prévisualisation en temps réel
+        ['editTimeHours', 'editTimeMinutes', 'editTimeSeconds', 'editTimeCentiseconds'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateTimePreview);
+        });
+
+        // Ajouter listener pour le nombre de tours
+        document.getElementById('editTimeLaps').addEventListener('input', updateDistancePreview);
+        updateDistancePreview();
+
+        document.getElementById('editTimeModal').style.display = 'block';
+    };
+
+    function updateTimePreview() {
+        const hours = parseInt(document.getElementById('editTimeHours').value) || 0;
+        const minutes = parseInt(document.getElementById('editTimeMinutes').value) || 0;
+        const seconds = parseInt(document.getElementById('editTimeSeconds').value) || 0;
+        const centiseconds = parseInt(document.getElementById('editTimeCentiseconds').value) || 0;
+
+        const totalMs = (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + (centiseconds * 10);
+        document.getElementById('editTimePreview').textContent = formatTime(totalMs);
+    }
+
+    function updateDistancePreview() {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const laps = parseInt(document.getElementById('editTimeLaps').value) || 0;
+        const totalDistance = (laps * serie.distance) / 1000;
+        document.getElementById('editTimeTotalDistance').textContent = `${totalDistance.toFixed(2)} km`;
+    }
+
+    window.closeEditTimeModal = function() {
+        document.getElementById('editTimeModal').style.display = 'none';
+        editingParticipantBib = null;
+    };
+
+    window.saveEditedTime = function() {
+        if (!editingParticipantBib) return;
+
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const participant = serie.participants.find(p => String(p.bib) === String(editingParticipantBib));
+        if (!participant) return;
+
+        const hours = parseInt(document.getElementById('editTimeHours').value) || 0;
+        const minutes = parseInt(document.getElementById('editTimeMinutes').value) || 0;
+        const seconds = parseInt(document.getElementById('editTimeSeconds').value) || 0;
+        const centiseconds = parseInt(document.getElementById('editTimeCentiseconds').value) || 0;
+        const newLaps = parseInt(document.getElementById('editTimeLaps').value) || 0;
+
+        const newTotalTime = (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + (centiseconds * 10);
+
+        if (newTotalTime <= 0) {
+            showNotification('Le temps doit être supérieur à 0', 'error');
+            return;
+        }
+
+        // Sauvegarder les anciennes valeurs pour l'historique
+        const oldTime = participant.totalTime;
+        const oldLaps = participant.laps.length;
+        const oldDistance = participant.totalDistance;
+
+        // Mettre à jour le temps
+        participant.totalTime = newTotalTime;
+        participant.finishTime = newTotalTime; // Mettre à jour aussi le finish time
+
+        // Mettre à jour le nombre de tours et la distance
+        const newDistance = newLaps * serie.distance;
+        participant.totalDistance = newDistance;
+
+        // Recréer les tours avec le nouveau nombre
+        if (newLaps > 0) {
+            const avgLapTime = newTotalTime / newLaps;
+            participant.laps = [];
+
+            for (let i = 0; i < newLaps; i++) {
+                participant.laps.push({
+                    lapNumber: i + 1,
+                    time: avgLapTime,
+                    timestamp: avgLapTime * (i + 1)
+                });
+            }
+
+            // Recalculer le meilleur tour
+            participant.bestLap = avgLapTime;
+        } else {
+            participant.laps = [];
+            participant.bestLap = null;
+        }
+
+        // Message de notification détaillé
+        let message = `Modifications enregistrées:\n`;
+        if (oldTime !== newTotalTime) {
+            message += `Temps: ${formatTime(oldTime)} → ${formatTime(newTotalTime)}\n`;
+        }
+        if (oldLaps !== newLaps) {
+            message += `Tours: ${oldLaps} → ${newLaps}\n`;
+        }
+        if (oldDistance !== newDistance) {
+            message += `Distance: ${(oldDistance / 1000).toFixed(2)} km → ${(newDistance / 1000).toFixed(2)} km`;
+        }
+
+        showNotification(message.trim(), 'success');
+        updateParticipantRow(participant);
+        closeEditTimeModal();
+        saveChronoToLocalStorage();
     };
 
     // Saisie rapide pour LAP ou FINISH via dossard
@@ -7883,12 +8772,12 @@ if (document.readyState === 'loading') {
         // Vérifier si c'est un LAP (commence par L)
         if (value.startsWith('L')) {
             isLap = true;
-            bibNumber = parseInt(value.substring(1));
+            bibNumber = value.substring(1).trim();
         } else {
-            bibNumber = parseInt(value);
+            bibNumber = value.trim();
         }
 
-        if (isNaN(bibNumber) || bibNumber <= 0) {
+        if (!bibNumber) {
             showNotification('Format invalide. Utilisez: Dossard ou L+Dossard', 'warning');
             input.value = '';
             input.focus();
@@ -7898,7 +8787,8 @@ if (document.readyState === 'loading') {
         const serie = raceData.currentSerie;
         if (!serie) return;
 
-        const participant = serie.participants.find(p => p.bib === bibNumber);
+        // Comparer en string pour supporter les dossards alphanumériques
+        const participant = serie.participants.find(p => String(p.bib).toUpperCase() === bibNumber.toUpperCase());
 
         if (!participant) {
             showNotification(`Dossard #${bibNumber} introuvable`, 'error');
@@ -7916,9 +8806,9 @@ if (document.readyState === 'loading') {
 
         // Exécuter l'action
         if (isLap) {
-            recordLap(bibNumber);
+            recordLap(participant.bib);
         } else {
-            finishParticipant(bibNumber);
+            finishParticipant(participant.bib);
         }
 
         // Réinitialiser et refocus sur l'input pour saisie suivante
@@ -7953,7 +8843,7 @@ if (document.readyState === 'loading') {
             </td>
             <td style="padding: 12px;">
                 <div style="font-weight: bold;">${participant.name}</div>
-                <div style="font-size: 12px; color: #7f8c8d;">Division ${participant.division}</div>
+                <div style="font-size: 12px; color: #7f8c8d;">${participant.category || 'Division ' + (participant.division || '-')}</div>
             </td>
             <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
                 ${participant.laps.length}
@@ -7974,14 +8864,22 @@ if (document.readyState === 'loading') {
             </td>
             <td style="padding: 12px; text-align: center;">
                 ${participant.status !== 'finished' ? `
-                    <button class="btn" onclick="recordLap(${participant.bib})" style="background: #3498db; margin-right: 5px; padding: 8px 15px;">
+                    <button class="btn" onclick="recordLap('${participant.bib}')" style="background: #3498db; margin-right: 5px; padding: 8px 15px;">
                         ⏱️ LAP
                     </button>
-                    <button class="btn btn-success" onclick="finishParticipant(${participant.bib})" style="padding: 8px 15px;">
+                    <button class="btn btn-success" onclick="finishParticipant('${participant.bib}')" style="padding: 8px 15px;">
                         🏁 FINISH
                     </button>
                 ` : `
-                    <span style="color: #27ae60; font-weight: bold;">✅ Terminé</span>
+                    <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                        <span style="color: #27ae60; font-weight: bold; padding: 8px; white-space: nowrap;">✅ Terminé</span>
+                        <button class="btn" onclick="editParticipantTime('${participant.bib}')" style="background: #f39c12; padding: 6px 12px; font-size: 13px;">
+                            ✏️ Éditer
+                        </button>
+                        <button class="btn" onclick="restartParticipant('${participant.bib}')" style="background: #e74c3c; color: white; padding: 6px 12px; font-size: 13px;">
+                            🔄 Relancer
+                        </button>
+                    </div>
                 `}
             </td>
         `;
@@ -8012,16 +8910,22 @@ if (document.readyState === 'loading') {
             if (a.status === 'finished' && b.status !== 'finished') return -1;
             if (b.status === 'finished' && a.status !== 'finished') return 1;
 
-            // Parmi les terminés, trier par temps
-            if (a.status === 'finished' && b.status === 'finished') {
-                return a.finishTime - b.finishTime;
+            // Pour les courses relais (durée limitée), trier par distance puis temps
+            // Pour les courses individuelles (distance fixe), trier par temps
+            if (serie.raceType === 'relay') {
+                // Course relais : priorité à la distance (plus c'est grand, mieux c'est)
+                if (a.totalDistance !== b.totalDistance) {
+                    return b.totalDistance - a.totalDistance;
+                }
+                return a.totalTime - b.totalTime; // En cas d'égalité, temps le plus court
+            } else {
+                // Course individuelle : priorité au temps (le plus rapide gagne)
+                // Mais si distances différentes, priorité à la distance quand même
+                if (a.totalDistance !== b.totalDistance) {
+                    return b.totalDistance - a.totalDistance;
+                }
+                return a.totalTime - b.totalTime;
             }
-
-            // Parmi les non-terminés, trier par distance puis temps
-            if (a.totalDistance !== b.totalDistance) {
-                return b.totalDistance - a.totalDistance;
-            }
-            return a.totalTime - b.totalTime;
         });
 
         const medals = ['🥇', '🥈', '🥉'];
@@ -8138,45 +9042,51 @@ if (document.readyState === 'loading') {
         // Collecter tous les participants de toutes les séries terminées
         const allParticipants = [];
 
-        raceData.series.forEach(serie => {
-            if (serie.status === 'completed') {
-                serie.participants.forEach(participant => {
-                    // Vérifier si le participant existe déjà dans le classement général
-                    const existingIndex = allParticipants.findIndex(
-                        p => p.name === participant.name && p.division === participant.division
-                    );
+        // Parcourir toutes les épreuves et leurs séries
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    serie.participants.forEach(participant => {
+                        // Vérifier si le participant existe déjà dans le classement général
+                        const existingIndex = allParticipants.findIndex(
+                            p => p.bib === participant.bib
+                        );
 
-                    if (existingIndex !== -1) {
-                        // Ajouter les performances de cette série
-                        allParticipants[existingIndex].series.push({
-                            serieName: serie.name,
-                            distance: participant.totalDistance,
-                            time: participant.finishTime || participant.totalTime,
-                            laps: participant.laps.length,
-                            bestLap: participant.bestLap
-                        });
-                        allParticipants[existingIndex].totalDistance += participant.totalDistance;
-                        allParticipants[existingIndex].totalTime += (participant.finishTime || participant.totalTime);
-                        allParticipants[existingIndex].totalLaps += participant.laps.length;
-                    } else {
-                        // Nouveau participant dans le classement général
-                        allParticipants.push({
-                            name: participant.name,
-                            division: participant.division,
-                            series: [{
+                        if (existingIndex !== -1) {
+                            // Ajouter les performances de cette série
+                            allParticipants[existingIndex].series.push({
+                                eventName: event.name,
                                 serieName: serie.name,
                                 distance: participant.totalDistance,
                                 time: participant.finishTime || participant.totalTime,
                                 laps: participant.laps.length,
                                 bestLap: participant.bestLap
-                            }],
-                            totalDistance: participant.totalDistance,
-                            totalTime: participant.finishTime || participant.totalTime,
-                            totalLaps: participant.laps.length
-                        });
-                    }
-                });
-            }
+                            });
+                            allParticipants[existingIndex].totalDistance += participant.totalDistance;
+                            allParticipants[existingIndex].totalTime += (participant.finishTime || participant.totalTime);
+                            allParticipants[existingIndex].totalLaps += participant.laps.length;
+                        } else {
+                            // Nouveau participant dans le classement général
+                            allParticipants.push({
+                                name: participant.name,
+                                bib: participant.bib,
+                                category: participant.category,
+                                series: [{
+                                    eventName: event.name,
+                                    serieName: serie.name,
+                                    distance: participant.totalDistance,
+                                    time: participant.finishTime || participant.totalTime,
+                                    laps: participant.laps.length,
+                                    bestLap: participant.bestLap
+                                }],
+                                totalDistance: participant.totalDistance,
+                                totalTime: participant.finishTime || participant.totalTime,
+                                totalLaps: participant.laps.length
+                            });
+                        }
+                    });
+                }
+            });
         });
 
         if (allParticipants.length === 0) {
@@ -8224,7 +9134,7 @@ if (document.readyState === 'loading') {
                         </div>
                         <div>
                             <div style="font-size: 14px; opacity: 0.9;">Séries Terminées</div>
-                            <div style="font-size: 28px; font-weight: bold;">${raceData.series.filter(s => s.status === 'completed').length}</div>
+                            <div style="font-size: 28px; font-weight: bold;">${raceData.events.reduce((count, event) => count + event.series.filter(s => s.status === 'completed').length, 0)}</div>
                         </div>
                         <div>
                             <div style="font-size: 14px; opacity: 0.9;">Distance Totale</div>
@@ -8262,7 +9172,7 @@ if (document.readyState === 'loading') {
                                         </td>
                                         <td style="padding: 15px;">
                                             <div style="font-weight: bold; font-size: 18px; color: #2c3e50;">${participant.name}</div>
-                                            <div style="font-size: 13px; color: #7f8c8d; margin-top: 3px;">Division ${participant.division}</div>
+                                            <div style="font-size: 13px; color: #7f8c8d; margin-top: 3px;">Dossard ${participant.bib} • ${participant.category}</div>
                                         </td>
                                         <td style="padding: 15px; text-align: center; font-weight: bold; font-size: 16px; color: #3498db;">
                                             ${participant.series.length}
@@ -8281,11 +9191,17 @@ if (document.readyState === 'loading') {
                                                 <summary style="font-weight: bold; color: #667eea; user-select: none;">Voir détails</summary>
                                                 <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
                                                     ${participant.series.map((serie, idx) => {
-                                                        const serieInfo = raceData.series.find(s => s.name === serie.serieName);
-                                                        const emoji = serieInfo ? sportEmoji[serieInfo.sportType] : '🏃';
+                                                        // Trouver l'épreuve correspondante pour obtenir le type de sport
+                                                        let emoji = '🏃';
+                                                        for (const event of raceData.events) {
+                                                            if (event.name === serie.eventName) {
+                                                                emoji = sportEmoji[event.sportType] || '🏃';
+                                                                break;
+                                                            }
+                                                        }
                                                         return `
                                                             <div style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
-                                                                <div style="font-weight: bold; color: #2c3e50;">${emoji} ${serie.serieName}</div>
+                                                                <div style="font-weight: bold; color: #2c3e50;">${emoji} ${serie.eventName} - ${serie.serieName}</div>
                                                                 <div style="font-size: 12px; color: #7f8c8d; margin-top: 3px;">
                                                                     ${serie.laps} tours • ${(serie.distance / 1000).toFixed(2)} km • ${formatTime(serie.time)}
                                                                     ${serie.bestLap ? ` • Meilleur tour: ${formatTime(serie.bestLap)}` : ''}
@@ -8307,7 +9223,10 @@ if (document.readyState === 'loading') {
                     <button class="btn btn-success" onclick="exportOverallChronoRanking()" style="margin-right: 10px;">
                         📊 Exporter JSON
                     </button>
-                    <button class="btn" onclick="printOverallChronoRanking()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+                    <button class="btn" onclick="exportOverallChronoRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-right: 10px;">
+                        📄 Exporter PDF
+                    </button>
+                    <button class="btn" onclick="printOverallChronoRanking()" style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white;">
                         🖨️ Imprimer
                     </button>
                 </div>
@@ -8319,42 +9238,48 @@ if (document.readyState === 'loading') {
     window.exportOverallChronoRanking = function() {
         const allParticipants = [];
 
-        raceData.series.forEach(serie => {
-            if (serie.status === 'completed') {
-                serie.participants.forEach(participant => {
-                    const existingIndex = allParticipants.findIndex(
-                        p => p.name === participant.name && p.division === participant.division
-                    );
+        // Parcourir toutes les épreuves et leurs séries
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    serie.participants.forEach(participant => {
+                        const existingIndex = allParticipants.findIndex(
+                            p => p.bib === participant.bib
+                        );
 
-                    if (existingIndex !== -1) {
-                        allParticipants[existingIndex].series.push({
-                            serieName: serie.name,
-                            distance: participant.totalDistance,
-                            time: participant.finishTime || participant.totalTime,
-                            laps: participant.laps.length,
-                            bestLap: participant.bestLap
-                        });
-                        allParticipants[existingIndex].totalDistance += participant.totalDistance;
-                        allParticipants[existingIndex].totalTime += (participant.finishTime || participant.totalTime);
-                        allParticipants[existingIndex].totalLaps += participant.laps.length;
-                    } else {
-                        allParticipants.push({
-                            name: participant.name,
-                            division: participant.division,
-                            series: [{
+                        if (existingIndex !== -1) {
+                            allParticipants[existingIndex].series.push({
+                                eventName: event.name,
                                 serieName: serie.name,
                                 distance: participant.totalDistance,
                                 time: participant.finishTime || participant.totalTime,
                                 laps: participant.laps.length,
                                 bestLap: participant.bestLap
-                            }],
-                            totalDistance: participant.totalDistance,
-                            totalTime: participant.finishTime || participant.totalTime,
-                            totalLaps: participant.laps.length
-                        });
-                    }
-                });
-            }
+                            });
+                            allParticipants[existingIndex].totalDistance += participant.totalDistance;
+                            allParticipants[existingIndex].totalTime += (participant.finishTime || participant.totalTime);
+                            allParticipants[existingIndex].totalLaps += participant.laps.length;
+                        } else {
+                            allParticipants.push({
+                                name: participant.name,
+                                bib: participant.bib,
+                                category: participant.category,
+                                series: [{
+                                    eventName: event.name,
+                                    serieName: serie.name,
+                                    distance: participant.totalDistance,
+                                    time: participant.finishTime || participant.totalTime,
+                                    laps: participant.laps.length,
+                                    bestLap: participant.bestLap
+                                }],
+                                totalDistance: participant.totalDistance,
+                                totalTime: participant.finishTime || participant.totalTime,
+                                totalLaps: participant.laps.length
+                            });
+                        }
+                    });
+                }
+            });
         });
 
         const ranked = allParticipants.sort((a, b) => {
@@ -8367,11 +9292,12 @@ if (document.readyState === 'loading') {
         const exportData = {
             exportDate: new Date().toISOString(),
             totalParticipants: ranked.length,
-            totalSeriesCompleted: raceData.series.filter(s => s.status === 'completed').length,
+            totalSeriesCompleted: raceData.events.reduce((count, event) => count + event.series.filter(s => s.status === 'completed').length, 0),
             ranking: ranked.map((p, index) => ({
                 position: index + 1,
                 name: p.name,
-                division: p.division,
+                bib: p.bib,
+                category: p.category,
                 totalDistance: p.totalDistance,
                 totalTime: p.totalTime,
                 totalLaps: p.totalLaps,
@@ -8395,6 +9321,352 @@ if (document.readyState === 'loading') {
     // Imprimer le classement général
     window.printOverallChronoRanking = function() {
         window.print();
+    };
+
+    // ============================================
+    // EXPORT / IMPORT COMPÉTITION CHRONO
+    // ============================================
+
+    // Exporter toute la compétition chrono en JSON
+    window.exportChronoCompetition = function() {
+        const exportData = {
+            version: "1.0",
+            exportDate: new Date().toISOString(),
+            competitionName: `Competition_Chrono_${new Date().toISOString().slice(0,10)}`,
+            raceData: {
+                events: raceData.events,
+                participants: raceData.participants,
+                nextEventId: raceData.nextEventId,
+                nextSerieId: raceData.nextSerieId,
+                nextParticipantId: raceData.nextParticipantId
+            },
+            stats: {
+                totalEvents: raceData.events.length,
+                totalParticipants: raceData.participants.length,
+                totalSeries: raceData.events.reduce((count, event) => count + event.series.length, 0),
+                completedSeries: raceData.events.reduce((count, event) => count + event.series.filter(s => s.status === 'completed').length, 0)
+            }
+        };
+
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `competition-chrono-${new Date().toISOString().slice(0,10)}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showNotification('Compétition chrono exportée avec succès !', 'success');
+    };
+
+    // Importer une compétition chrono depuis JSON
+    window.importChronoCompetition = function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+
+                    // Vérifier la version
+                    if (!importedData.version) {
+                        throw new Error('Fichier non valide : version manquante');
+                    }
+
+                    // Demander confirmation
+                    const stats = importedData.stats || {};
+                    const confirmMsg = `Voulez-vous importer cette compétition ?\n\n` +
+                                      `📅 Date d'export : ${new Date(importedData.exportDate).toLocaleDateString()}\n` +
+                                      `🏅 Épreuves : ${stats.totalEvents || 0}\n` +
+                                      `👥 Participants : ${stats.totalParticipants || 0}\n` +
+                                      `📊 Séries : ${stats.totalSeries || 0} (dont ${stats.completedSeries || 0} terminées)\n\n` +
+                                      `⚠️ Attention : Cela remplacera toutes les données actuelles du mode chrono !`;
+
+                    if (!confirm(confirmMsg)) {
+                        return;
+                    }
+
+                    // Importer les données
+                    if (importedData.raceData) {
+                        raceData.events = importedData.raceData.events || [];
+                        raceData.participants = importedData.raceData.participants || [];
+                        raceData.nextEventId = importedData.raceData.nextEventId || 1;
+                        raceData.nextSerieId = importedData.raceData.nextSerieId || 1;
+                        raceData.nextParticipantId = importedData.raceData.nextParticipantId || 1;
+                    }
+
+                    // Sauvegarder et rafraîchir l'affichage
+                    saveChronoToLocalStorage();
+                    displayEventsList();
+                    displayParticipantsList();
+
+                    showNotification('Compétition chrono importée avec succès !', 'success');
+                } catch (error) {
+                    console.error('Erreur import:', error);
+                    showNotification('Erreur lors de l\'import : ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        input.click();
+    };
+
+    // Exporter le classement général chrono en PDF
+    window.exportOverallChronoRankingToPDF = function() {
+        console.log("Début de l'export PDF du classement chrono");
+
+        // Collecter tous les participants de toutes les séries terminées
+        const allParticipants = [];
+
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    serie.participants.forEach(participant => {
+                        const existingIndex = allParticipants.findIndex(
+                            p => p.bib === participant.bib
+                        );
+
+                        if (existingIndex !== -1) {
+                            allParticipants[existingIndex].series.push({
+                                eventName: event.name,
+                                serieName: serie.name,
+                                distance: participant.totalDistance,
+                                time: participant.finishTime || participant.totalTime,
+                                laps: participant.laps.length,
+                                bestLap: participant.bestLap
+                            });
+                            allParticipants[existingIndex].totalDistance += participant.totalDistance;
+                            allParticipants[existingIndex].totalTime += (participant.finishTime || participant.totalTime);
+                            allParticipants[existingIndex].totalLaps += participant.laps.length;
+                        } else {
+                            allParticipants.push({
+                                name: participant.name,
+                                bib: participant.bib,
+                                category: participant.category,
+                                series: [{
+                                    eventName: event.name,
+                                    serieName: serie.name,
+                                    distance: participant.totalDistance,
+                                    time: participant.finishTime || participant.totalTime,
+                                    laps: participant.laps.length,
+                                    bestLap: participant.bestLap
+                                }],
+                                totalDistance: participant.totalDistance,
+                                totalTime: participant.finishTime || participant.totalTime,
+                                totalLaps: participant.laps.length
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        if (allParticipants.length === 0) {
+            showNotification('Aucune série terminée à exporter', 'warning');
+            return;
+        }
+
+        // Trier par distance totale, puis par temps total
+        const ranked = allParticipants.sort((a, b) => {
+            if (a.totalDistance !== b.totalDistance) {
+                return b.totalDistance - a.totalDistance;
+            }
+            return a.totalTime - b.totalTime;
+        });
+
+        const medals = ['🥇', '🥈', '🥉'];
+        const totalSeriesCompleted = raceData.events.reduce((count, event) =>
+            count + event.series.filter(s => s.status === 'completed').length, 0);
+
+        // Créer la page HTML pour l'impression
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Classement Général Chrono - ${new Date().toLocaleDateString()}</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            @page { margin: 1cm; }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: white;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .stats-box {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 8px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        th.center, td.center {
+            text-align: center;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .podium {
+            background: linear-gradient(135deg, #fff9e6, #ffe9b3) !important;
+            font-weight: bold;
+        }
+        .medal {
+            font-size: 24px;
+        }
+        .participant-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        .participant-info {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 3px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #95a5a6;
+            font-size: 12px;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 Classement Général de la Journée</h1>
+        <div class="subtitle">Compétition Chrono - ${new Date().toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })}</div>
+    </div>
+
+    <div class="stats-box">
+        <div class="stat-item">
+            <div class="stat-label">Participants</div>
+            <div class="stat-value">${ranked.length}</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Séries Terminées</div>
+            <div class="stat-value">${totalSeriesCompleted}</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Distance Totale</div>
+            <div class="stat-value">${(ranked.reduce((sum, p) => sum + p.totalDistance, 0) / 1000).toFixed(2)} km</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="center">Position</th>
+                <th>Participant</th>
+                <th class="center">Séries</th>
+                <th class="center">Tours Total</th>
+                <th class="center">Distance Totale</th>
+                <th class="center">Temps Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${ranked.map((participant, index) => {
+                const position = index + 1;
+                const medal = position <= 3 ? medals[position - 1] : position;
+                const rowClass = position <= 3 ? 'podium' : '';
+
+                return `
+                    <tr class="${rowClass}">
+                        <td class="center medal">${medal}</td>
+                        <td>
+                            <div class="participant-name">${participant.name}</div>
+                            <div class="participant-info">Dossard ${participant.bib} • ${participant.category}</div>
+                        </td>
+                        <td class="center" style="font-weight: bold; color: #3498db;">${participant.series.length}</td>
+                        <td class="center" style="font-weight: bold;">${participant.totalLaps}</td>
+                        <td class="center" style="font-weight: bold; color: #27ae60;">${(participant.totalDistance / 1000).toFixed(2)} km</td>
+                        <td class="center" style="font-family: monospace; font-weight: bold;">${formatTime(participant.totalTime)}</td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Document généré le ${new Date().toLocaleString('fr-FR')} par le Gestionnaire de Championnats
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
+        `);
+        printWindow.document.close();
+
+        showNotification('Page d\'export PDF ouverte dans un nouvel onglet !', 'success');
     };
 
     // Formater le temps en HH:MM:SS.ms

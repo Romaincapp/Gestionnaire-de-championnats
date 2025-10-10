@@ -12,7 +12,7 @@
     <div class="container">
         <div class="header">
             <h1>🏆 Gestionnaire de Championnats</h1>
-            <p>Planté avec ❤️ par Romain</p>
+            <p>Planté !!! avec ❤️ par Romain</p>
         </div>
 
         <!-- ONGLETS -->
@@ -77,23 +77,35 @@
                     <!-- Gestion des séries -->
                     <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3 style="margin: 0; color: #2c3e50;">🏃 Séries de Course</h3>
-                            <div style="display: flex; gap: 10px;">
+                            <h3 style="margin: 0; color: #2c3e50;">🏃 Épreuves et Séries</h3>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button class="btn" onclick="showParticipantsManager()" style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white;">
+                                    👥 Ajouter des participants
+                                </button>
+                                <button class="btn" onclick="showAddEventModal()" style="background: linear-gradient(135deg, #e67e22, #d35400); color: white;">
+                                    🏅 Nouvelle Épreuve
+                                </button>
                                 <button class="btn btn-success" onclick="showAddSerieModal()">
                                     ➕ Nouvelle Série
                                 </button>
                                 <button class="btn" onclick="showOverallChronoRanking()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
                                     🏆 Classement Général
                                 </button>
+                                <button class="btn" onclick="exportChronoCompetition()" style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white;">
+                                    💾 Exporter Compétition
+                                </button>
+                                <button class="btn" onclick="importChronoCompetition()" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white;">
+                                    📥 Importer Compétition
+                                </button>
                             </div>
                         </div>
 
-                        <div id="seriesList" style="display: grid; gap: 15px;">
-                            <!-- Les séries seront affichées ici -->
+                        <div id="eventsList" style="display: grid; gap: 20px;">
+                            <!-- Les épreuves et séries seront affichées ici -->
                         </div>
 
-                        <div id="noSeriesMessage" style="text-align: center; padding: 40px; color: #7f8c8d;">
-                            Aucune série créée. Cliquez sur "Nouvelle Série" pour commencer.
+                        <div id="noEventsMessage" style="text-align: center; padding: 40px; color: #7f8c8d;">
+                            Aucune épreuve créée. Cliquez sur "🏅 Nouvelle Épreuve" pour commencer.
                         </div>
                     </div>
 
@@ -350,43 +362,76 @@
         </div>
     </div>
 
-    <!-- Modal Série -->
-    <div id="serieModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
-            <h3 id="serieModalTitle">Nouvelle Série</h3>
+    <!-- Modal Épreuve -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h3 id="eventModalTitle">🏅 Nouvelle Épreuve</h3>
             <div style="display: grid; gap: 15px;">
                 <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📝 Nom de la série:</label>
-                    <input type="text" id="serieName" placeholder="Ex: 100m Hommes, 400m Dames, Relais 4x100..." style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📝 Nom de l'épreuve:</label>
+                    <input type="text" id="eventName" placeholder="Ex: 400m Dames, 1500m Hommes, Relais 4x100..." style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
                 </div>
 
                 <div>
                     <label style="font-weight: bold; display: block; margin-bottom: 5px;">🏃 Type de sport:</label>
-                    <select id="serieSportType" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                    <select id="eventSportType" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
                         <option value="running">Course à pied</option>
                         <option value="cycling">Vélo</option>
                         <option value="swimming">Natation</option>
                     </select>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div>
-                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">📏 Distance (en mètres):</label>
-                        <input type="number" id="serieDistance" value="400" min="1" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                    </div>
-
-                    <div>
-                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">🔄 Type de course:</label>
-                        <select id="serieRaceType" onchange="updateSerieRelayOptions()" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                            <option value="individual">Individuelle</option>
-                            <option value="relay">Relais</option>
-                        </select>
-                    </div>
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📏 Distance (en mètres):</label>
+                    <input type="number" id="eventDistance" value="400" min="1" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
                 </div>
 
-                <div id="serieRelayDurationSection" style="display: none;">
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🔄 Type de course:</label>
+                    <select id="eventRaceType" onchange="updateEventRelayOptions()" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                        <option value="individual">Individuelle</option>
+                        <option value="relay">Relais</option>
+                    </select>
+                </div>
+
+                <div id="eventRelayDurationSection" style="display: none;">
                     <label style="font-weight: bold; display: block; margin-bottom: 5px;">⏰ Durée du relais (minutes):</label>
-                    <input type="number" id="serieRelayDuration" value="60" min="1" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                    <input type="number" id="eventRelayDuration" value="60" min="1" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                </div>
+
+                <div style="background: #e8f4f8; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
+                    <p style="margin: 0; font-size: 14px; color: #2c3e50;">
+                        <strong>ℹ️ Info:</strong> Une épreuve peut contenir plusieurs séries. Par exemple, "400m Dames" peut avoir 3 séries de 8 coureuses chacune.
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="closeEventModal()">Annuler</button>
+                <button class="btn btn-success" onclick="saveEvent()">Créer l'épreuve</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Série -->
+    <div id="serieModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <h3 id="serieModalTitle">Nouvelle Série</h3>
+            <div style="display: grid; gap: 15px;">
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🏅 Épreuve:</label>
+                    <select id="serieEventId" onchange="updateSerieFromEvent()" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; background: #e8f4f8; font-weight: bold;">
+                        <option value="">-- Sélectionnez une épreuve --</option>
+                        <!-- Les épreuves seront chargées ici -->
+                    </select>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #7f8c8d;">
+                        Sélectionnez l'épreuve à laquelle cette série appartient (ex: 400m Dames - Série 1)
+                    </p>
+                </div>
+
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📝 Nom de la série:</label>
+                    <input type="text" id="serieName" placeholder="Ex: Série 1, Série A, Finale..." style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
                 </div>
 
                 <div>
@@ -397,11 +442,200 @@
                         </div>
                     </div>
                 </div>
+
+                <div style="background: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #f39c12;">
+                    <p style="margin: 0; font-size: 13px; color: #856404;">
+                        <strong>💡 Astuce:</strong> Les paramètres (distance, type de sport) sont hérités de l'épreuve sélectionnée.
+                    </p>
+                </div>
             </div>
 
             <div class="modal-buttons">
                 <button class="btn btn-danger" onclick="closeSerieModal()">Annuler</button>
                 <button class="btn btn-success" onclick="saveSerie()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gestion des Participants -->
+    <div id="participantsManagerModal" class="modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <h3>👥 Gestion des Participants</h3>
+
+            <!-- Formulaire d'ajout de participant -->
+            <div style="background: linear-gradient(135deg, #f093fb, #f5576c); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="color: white; margin: 0;">➕ Ajouter un participant</h4>
+                    <button class="btn" onclick="showBulkParticipantsModal()" style="background: white; color: #f5576c; font-weight: bold;">
+                        📋 Ajout en masse
+                    </button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="color: white; font-weight: bold; display: block; margin-bottom: 5px;">🏃 Prénom / Équipe:</label>
+                        <input type="text" id="participantName" placeholder="Ex: Jean Dupont ou Équipe A" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                    </div>
+                    <div>
+                        <label style="color: white; font-weight: bold; display: block; margin-bottom: 5px;">📋 Catégorie:</label>
+                        <input type="text" id="participantCategory" placeholder="Ex: U18, Senior, Dames..." style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                    </div>
+                    <div>
+                        <label style="color: white; font-weight: bold; display: block; margin-bottom: 5px;">🔢 Dossard:</label>
+                        <input type="text" id="participantBib" placeholder="Ex: 42" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="addParticipantToChrono()" style="margin-top: 15px; width: 100%;">
+                    ✅ Ajouter
+                </button>
+            </div>
+
+            <!-- Liste des participants -->
+            <div style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #ddd;">
+                <h4 style="margin: 0 0 15px 0; color: #2c3e50;">📋 Liste des participants</h4>
+                <div id="participantsList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- La liste des participants sera affichée ici -->
+                </div>
+            </div>
+
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="btn" onclick="closeParticipantsManager()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                    ✅ Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Édition Participant -->
+    <div id="editParticipantModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3>✏️ Éditer le participant</h3>
+            <div style="display: grid; gap: 15px;">
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🏃 Prénom / Équipe:</label>
+                    <input type="text" id="editParticipantName" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                </div>
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📋 Catégorie:</label>
+                    <input type="text" id="editParticipantCategory" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                </div>
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🔢 Dossard:</label>
+                    <input type="text" id="editParticipantBib" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="closeEditParticipantModal()">Annuler</button>
+                <button class="btn btn-success" onclick="saveParticipantEdit()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Édition Temps Participant -->
+    <div id="editTimeModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h3>✏️ Éditer les performances</h3>
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f39c12;">
+                <p style="margin: 0; font-size: 14px; color: #856404;">
+                    <strong>⚠️ Attention:</strong> Vous modifiez manuellement les données de performance. Ces changements remplaceront les valeurs chronométrées automatiquement.
+                </p>
+            </div>
+            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <div style="margin-bottom: 10px;">
+                    <strong>Participant:</strong> <span id="editTimeParticipantName" style="color: #2c3e50;"></span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Dossard:</strong> <span id="editTimeParticipantBib" style="color: #e67e22; font-weight: bold;"></span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Temps actuel:</strong> <span id="editTimeCurrentTime" style="color: #27ae60; font-family: monospace; font-weight: bold;"></span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Tours actuels:</strong> <span id="editTimeCurrentLaps" style="color: #3498db; font-weight: bold;"></span>
+                </div>
+                <div>
+                    <strong>Distance par tour:</strong> <span id="editTimeDistancePerLap" style="color: #9b59b6; font-weight: bold;"></span>
+                </div>
+            </div>
+            <div style="display: grid; gap: 15px;">
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🔄 Nombre de tours:</label>
+                    <input type="number" id="editTimeLaps" min="0" value="0" style="width: 100%; padding: 12px; border-radius: 5px; border: 2px solid #3498db; text-align: center; font-size: 20px; font-weight: bold;">
+                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px; text-align: center;">
+                        Distance totale: <span id="editTimeTotalDistance" style="font-weight: bold; color: #27ae60;">0 km</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">⏱️ Nouveau temps:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">Heures</label>
+                            <input type="number" id="editTimeHours" min="0" max="23" value="0" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; text-align: center; font-size: 18px; font-weight: bold;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">Minutes</label>
+                            <input type="number" id="editTimeMinutes" min="0" max="59" value="0" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; text-align: center; font-size: 18px; font-weight: bold;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">Secondes</label>
+                            <input type="number" id="editTimeSeconds" min="0" max="59" value="0" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; text-align: center; font-size: 18px; font-weight: bold;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">Centièmes</label>
+                            <input type="number" id="editTimeCentiseconds" min="0" max="99" value="0" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; text-align: center; font-size: 18px; font-weight: bold;">
+                        </div>
+                    </div>
+                </div>
+                <div style="background: #e8f4f8; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px;">Aperçu du nouveau temps:</div>
+                    <div id="editTimePreview" style="font-size: 32px; font-weight: bold; color: #2c3e50; font-family: monospace;">00:00:00.00</div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="closeEditTimeModal()">Annuler</button>
+                <button class="btn btn-success" onclick="saveEditedTime()">✅ Enregistrer les modifications</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ajout en masse Participants -->
+    <div id="bulkParticipantsModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <h3>📋 Ajout en masse de participants</h3>
+
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; border-radius: 10px; margin-bottom: 20px; color: white;">
+                <h4 style="margin: 0 0 10px 0;">📝 Format d'importation</h4>
+                <p style="margin: 5px 0; font-size: 14px;">Collez vos données avec <strong>une ligne par participant</strong> dans l'un des formats suivants :</p>
+                <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px; margin-top: 10px; font-family: monospace; font-size: 13px;">
+                    <div style="margin-bottom: 5px;"><strong>Format 1 (avec tabulations) :</strong> Dossard &nbsp;&nbsp;&nbsp; Nom &nbsp;&nbsp;&nbsp; Catégorie</div>
+                    <div style="margin-bottom: 5px;">Exemple: 42 &nbsp;&nbsp;&nbsp; Jean Dupont &nbsp;&nbsp;&nbsp; Senior</div>
+                    <div style="margin: 10px 0;"><strong>Format 2 (avec virgules) :</strong> Dossard,Nom,Catégorie</div>
+                    <div>Exemple: 42,Jean Dupont,Senior</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Collez vos données ici :</label>
+                <textarea id="bulkParticipantsText"
+                          placeholder="Exemple:&#10;42&#9;Jean Dupont&#9;Senior&#10;43&#9;Marie Martin&#9;U18&#10;44&#9;Équipe A&#9;Relais&#10;&#10;ou avec virgules:&#10;42,Jean Dupont,Senior&#10;43,Marie Martin,U18"
+                          style="width: 100%; height: 300px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical;"></textarea>
+            </div>
+
+            <div id="bulkParticipantsPreview" style="display: none; margin-bottom: 20px;">
+                <h4 style="color: #2c3e50; margin-bottom: 10px;">👀 Aperçu (<span id="bulkPreviewCount">0</span> participants)</h4>
+                <div style="max-height: 200px; overflow-y: auto; border: 2px solid #ddd; border-radius: 8px; padding: 15px; background: #f8f9fa;">
+                    <div id="bulkParticipantsPreviewContent"></div>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn" onclick="previewBulkParticipants()" style="background: #3498db; color: white;">
+                    👁️ Prévisualiser
+                </button>
+                <button class="btn btn-danger" onclick="closeBulkParticipantsModal()">Annuler</button>
+                <button class="btn btn-success" onclick="saveBulkParticipants()">
+                    ✅ Ajouter tous les participants
+                </button>
             </div>
         </div>
     </div>
