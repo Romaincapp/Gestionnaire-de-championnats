@@ -9916,6 +9916,26 @@ if (document.readyState === 'loading') {
         const rankingSection = document.getElementById('overallChronoRanking');
         const medals = ['🥇', '🥈', '🥉'];
 
+        // Calculer les places par catégorie
+        const categoryRankings = {};
+        ranked.forEach((participant, index) => {
+            const category = participant.category || 'Non catégorisé';
+            if (!categoryRankings[category]) {
+                categoryRankings[category] = [];
+            }
+            categoryRankings[category].push({ ...participant, scratchPosition: index + 1 });
+        });
+
+        // Assigner les places par catégorie
+        Object.keys(categoryRankings).forEach(category => {
+            categoryRankings[category].forEach((p, idx) => {
+                const participantInRanked = ranked.find(rp => rp.bib === p.bib);
+                if (participantInRanked) {
+                    participantInRanked.categoryPosition = idx + 1;
+                }
+            });
+        });
+
         // Stocker les données pour l'export PDF
         lastChronoRankingData = {
             title: title,
@@ -9950,19 +9970,21 @@ if (document.readyState === 'loading') {
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
-                                <th style="padding: 15px; text-align: center;">Pos.</th>
+                                <th style="padding: 15px; text-align: center;">Pos. Scratch</th>
                                 <th style="padding: 15px; text-align: left;">Participant</th>
                                 <th style="padding: 15px; text-align: center;">Dossard</th>
                                 <th style="padding: 15px; text-align: center;">Catégorie</th>
+                                <th style="padding: 15px; text-align: center;">Pos. Cat.</th>
                                 <th style="padding: 15px; text-align: center;">Séries</th>
-                                <th style="padding: 15px; text-align: center;">Distance Totale</th>
-                                <th style="padding: 15px; text-align: center;">Temps Total</th>
+                                <th style="padding: 15px; text-align: center;">Distance</th>
+                                <th style="padding: 15px; text-align: center;">Temps</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${ranked.map((participant, index) => {
                                 const position = index + 1;
                                 const medal = position <= 3 ? medals[position - 1] : position;
+                                const catMedal = participant.categoryPosition <= 3 ? medals[participant.categoryPosition - 1] : participant.categoryPosition;
                                 const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' :
                                               index % 2 === 0 ? 'background: #f8f9fa;' : '';
 
@@ -9981,6 +10003,9 @@ if (document.readyState === 'loading') {
                                         </td>
                                         <td style="padding: 15px; text-align: center; color: #7f8c8d;">
                                             ${participant.category || '-'}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-size: 18px; font-weight: bold; color: #f39c12;">
+                                            ${catMedal}
                                         </td>
                                         <td style="padding: 15px; text-align: center; font-weight: bold; color: #e67e22;">
                                             ${participant.series ? participant.series.length : 1}
