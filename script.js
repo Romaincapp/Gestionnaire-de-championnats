@@ -3491,47 +3491,95 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
 
     function clearAllData() {
         const stats = calculateChampionshipStats();
+
+        // Compter aussi les données du mode chrono si disponibles
+        let chronoInfo = '';
+        if (typeof raceData !== 'undefined' && raceData.events) {
+            const chronoEvents = raceData.events.length;
+            const chronoParticipants = raceData.participants.length;
+            if (chronoEvents > 0 || chronoParticipants > 0) {
+                chronoInfo = `\n🏃 MODE CHRONO :\n` +
+                            `• ${chronoEvents} épreuve(s)\n` +
+                            `• ${chronoParticipants} participant(s)\n`;
+            }
+        }
+
         const confirmMsg = `⚠️ ATTENTION ⚠️\n\n` +
-                          `Cette action va SUPPRIMER DÉFINITIVEMENT :\n` +
-                          `• ${stats.totalDays} journées\n` +
-                          `• ${stats.totalPlayers} joueurs uniques\n` +
-                          `• ${stats.totalMatches} matchs\n` +
+                          `Cette action va SUPPRIMER DÉFINITIVEMENT :\n\n` +
+                          `🏓 MODE CHAMPIONNAT :\n` +
+                          `• ${stats.totalDays} journée(s)\n` +
+                          `• ${stats.totalPlayers} joueur(s) unique(s)\n` +
+                          `• ${stats.totalMatches} match(s)\n` +
                           `• Tous les scores et classements\n` +
-                          `• Toutes les données en cache (localStorage)\n\n` +
+                          chronoInfo +
+                          `\n• Toutes les données en cache (localStorage)\n\n` +
                           `Cette action est IRRÉVERSIBLE !\n\n` +
                           `Êtes-vous vraiment sûr ?`;
-        
+
         if (confirm(confirmMsg)) {
-            const doubleConfirm = confirm('Dernière confirmation :\n\nSupprimer TOUT le championnat ET vider le cache ?');
-            
+            const doubleConfirm = confirm('Dernière confirmation :\n\nSupprimer TOUT (championnat + mode chrono) ET vider le cache ?');
+
             if (doubleConfirm) {
-                // Réinitialiser les données en mémoire
+                // Réinitialiser les données en mémoire du championnat
                 championship = {
                     currentDay: 1,
+                    config: { ...config },
                     days: {
                         1: {
-                            players: { 1: [], 2: [], 3: [] },
-                            matches: { 1: [], 2: [], 3: [] }
+                            players: initializeDivisions(config.numberOfDivisions),
+                            matches: initializeDivisions(config.numberOfDivisions)
                         }
                     }
                 };
+
+                // Réinitialiser les données en mémoire du mode chrono
+                if (typeof raceData !== 'undefined') {
+                    raceData.events = [];
+                    raceData.participants = [];
+                    raceData.currentEvent = null;
+                    raceData.editingEventId = null;
+                    raceData.nextEventId = 1;
+                    raceData.series = [];
+                    raceData.currentSerie = null;
+                    raceData.editingSerieId = null;
+                    raceData.nextSerieId = 1;
+                    raceData.nextParticipantId = 1;
+
+                    // Réinitialiser l'affichage du mode chrono si actif
+                    const chronoSection = document.getElementById('chronoModeSection');
+                    if (chronoSection && chronoSection.style.display !== 'none') {
+                        const eventsList = document.getElementById('eventsList');
+                        const noEventsMessage = document.getElementById('noEventsMessage');
+                        if (eventsList) eventsList.innerHTML = '';
+                        if (noEventsMessage) noEventsMessage.style.display = 'block';
+
+                        const participantsList = document.getElementById('participantsList');
+                        if (participantsList) participantsList.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Aucun participant ajouté.</p>';
+
+                        const overallChronoRanking = document.getElementById('overallChronoRanking');
+                        if (overallChronoRanking) overallChronoRanking.style.display = 'none';
+                    }
+                }
                 
                 // NETTOYER COMPLÈTEMENT LE LOCALSTORAGE
                 try {
-                    // Supprimer la clé principale
+                    // Supprimer la clé principale du championnat
                     localStorage.removeItem('tennisTableChampionship');
-                    
+
+                    // Supprimer les données du mode chrono
+                    localStorage.removeItem('chronoRaceData');
+
                     // Supprimer toutes les clés liées au tennis de table (au cas où)
                     const keysToRemove = [];
                     for (let i = 0; i < localStorage.length; i++) {
                         const key = localStorage.key(i);
-                        if (key && (key.includes('tennis') || key.includes('championship') || key.includes('tournoi'))) {
+                        if (key && (key.includes('tennis') || key.includes('championship') || key.includes('tournoi') || key.includes('chrono') || key.includes('race'))) {
                             keysToRemove.push(key);
                         }
                     }
                     keysToRemove.forEach(key => localStorage.removeItem(key));
-                    
-                    console.log("✅ LocalStorage complètement nettoyé");
+
+                    console.log("✅ LocalStorage complètement nettoyé (championnat + mode chrono)");
                 } catch (error) {
                     console.warn("⚠️ Erreur lors du nettoyage du localStorage:", error);
                 }
@@ -3573,9 +3621,9 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                 // Cacher les classements
                 const rankingsEl = document.getElementById('rankings-1');
                 if (rankingsEl) rankingsEl.style.display = 'none';
-                
-                showNotification('Championnat complètement réinitialisé - Cache vidé !', 'success');
-                
+
+                showNotification('Tout réinitialisé : Championnat + Mode Chrono - Cache vidé !', 'success');
+
                 // Option pour recharger la page complètement
                 setTimeout(() => {
                     if (confirm('Voulez-vous recharger la page pour une remise à zéro complète ?')) {
@@ -8054,6 +8102,22 @@ if (document.readyState === 'loading') {
             return;
         }
 
+        // Fonction helper pour fusionner les données sans perdre les chronos
+        function mergeSerieData(oldSerie, newData) {
+            // Si la série a déjà des données chronométrées (running ou completed), les préserver
+            if (oldSerie && (oldSerie.status === 'running' || oldSerie.status === 'completed')) {
+                return {
+                    ...oldSerie,  // Conserver toutes les données existantes
+                    name: newData.name,  // Mettre à jour le nom
+                    participants: newData.participants,  // Mettre à jour les participants (déjà fusionnés ci-dessus)
+                    eventId: newData.eventId,  // Mettre à jour l'épreuve parente si changée
+                    // Ne PAS écraser: status, startTime, isRunning, currentTime, timerInterval
+                };
+            }
+            // Si la série n'a pas encore de chronos (status: pending), on peut tout remplacer
+            return { ...newData };
+        }
+
         const serieData = {
             name,
             eventId,  // Lier la série à l'épreuve
@@ -8076,19 +8140,24 @@ if (document.readyState === 'loading') {
             raceData.events.forEach(evt => {
                 const index = evt.series.findIndex(s => s.id === raceData.editingSerieId);
                 if (index !== -1) {
+                    const oldSerie = evt.series[index];
                     serieData.id = raceData.editingSerieId;
+
+                    // Fusionner intelligemment pour préserver les chronos
+                    const mergedSerie = mergeSerieData(oldSerie, serieData);
+
                     // Si l'épreuve a changé, déplacer la série
                     if (evt.id !== eventId) {
                         evt.series.splice(index, 1);
-                        event.series.push(serieData);
+                        event.series.push(mergedSerie);
                     } else {
-                        evt.series[index] = serieData;
+                        evt.series[index] = mergedSerie;
                     }
                     found = true;
                 }
             });
             if (found) {
-                showNotification('Série modifiée avec succès', 'success');
+                showNotification('Série modifiée avec succès (chronos préservés)', 'success');
             }
         } else {
             // Nouvelle série
@@ -8122,14 +8191,14 @@ if (document.readyState === 'loading') {
 
         // Avertissement si la série est terminée
         if (serie.status === 'completed') {
-            if (!confirm('⚠️ Cette série est terminée.\n\nVous pouvez modifier les participants et le nom, mais les résultats chronométrés seront perdus si vous changez les participants.\n\nVoulez-vous continuer ?')) {
+            if (!confirm('✅ Cette série est terminée.\n\n✨ NOUVEAU: Les temps chronométrés seront PRÉSERVÉS !\n\n📝 Vous pouvez:\n- Modifier le nom de la série\n- Ajouter de nouveaux participants (initialisés sans chrono)\n- Retirer des participants (leurs chronos restent archivés)\n\n⏱️ Les participants conservés gardent leurs temps et tours enregistrés.\n\nVoulez-vous continuer ?')) {
                 return;
             }
         }
 
         // Avertissement si la série est en cours
         if (serie.status === 'running') {
-            if (!confirm('⚠️ Cette série est en cours d\'exécution.\n\nLa modification peut affecter le déroulement de la course.\n\nVoulez-vous continuer ?')) {
+            if (!confirm('⚠️ Cette série est en cours d\'exécution.\n\n✨ Les temps chronométrés seront préservés.\n\n⚠️ Attention: Ajouter/retirer des participants pendant une course peut affecter le déroulement.\n\nVoulez-vous continuer ?')) {
                 return;
             }
         }
@@ -8265,8 +8334,17 @@ if (document.readyState === 'loading') {
                                 onkeypress="if(event.key === 'Enter') quickAction()"
                             >
                             <div style="color: white; font-size: 13px; line-height: 1.5;">
-                                <div>✅ <strong>Dossard + Enter</strong> = FINISH</div>
-                                <div>⏱️ <strong>L + Dossard + Enter</strong> = LAP</div>
+                                ${serie.raceType === 'relay' ? `
+                                    <div style="margin-bottom: 8px; background: rgba(255,255,255,0.2); padding: 8px; border-radius: 5px;">
+                                        <strong>🤖 MODE RELAIS - DÉTECTION AUTOMATIQUE</strong>
+                                    </div>
+                                    <div>⏱️ <strong>Dossard + Enter</strong> = LAP (si temps &lt; ${serie.relayDuration} min)</div>
+                                    <div>🏁 <strong>Dossard + Enter</strong> = FINISH (si temps ≥ ${serie.relayDuration} min)</div>
+                                    <div style="margin-top: 5px; opacity: 0.8; font-size: 11px;">💡 Plus besoin de taper "L" !</div>
+                                ` : `
+                                    <div>✅ <strong>Dossard + Enter</strong> = FINISH</div>
+                                    <div>⏱️ <strong>L + Dossard + Enter</strong> = LAP</div>
+                                `}
                             </div>
                         </div>
                     </div>
@@ -8804,6 +8882,23 @@ if (document.readyState === 'loading') {
             return;
         }
 
+        // LOGIQUE AUTOMATIQUE POUR LES RELAIS
+        // Si c'est un relais ET que l'utilisateur n'a pas tapé "L", on détecte automatiquement
+        if (serie.raceType === 'relay' && !value.startsWith('L')) {
+            const relayDurationMs = serie.relayDuration * 60 * 1000; // Durée du relais en millisecondes
+            const currentTime = serie.currentTime;
+
+            // Si le temps actuel est inférieur à la durée du relais → c'est un LAP
+            // Si le temps actuel est >= à la durée du relais → c'est un FINISH
+            if (currentTime < relayDurationMs) {
+                isLap = true;
+                showNotification(`⏱️ Détection auto: LAP pour ${participant.name}`, 'info');
+            } else {
+                isLap = false;
+                showNotification(`🏁 Détection auto: FINISH pour ${participant.name}`, 'info');
+            }
+        }
+
         // Exécuter l'action
         if (isLap) {
             recordLap(participant.bib);
@@ -9020,19 +9115,1151 @@ if (document.readyState === 'loading') {
         rankingSection.innerHTML = html;
     }
 
-    // Afficher le classement général de toutes les séries
+    // Afficher le classement général de toutes les séries avec sélection intelligente
     window.showOverallChronoRanking = function() {
-        const rankingSection = document.getElementById('overallChronoRanking');
-        const seriesList = document.getElementById('seriesList').parentElement;
+        // Vérifier s'il y a des séries terminées
+        const completedSeriesCount = raceData.events.reduce((count, event) =>
+            count + event.series.filter(s => s.status === 'completed').length, 0);
 
-        if (rankingSection.style.display === 'none') {
-            seriesList.style.display = 'none';
-            rankingSection.style.display = 'block';
-            generateOverallChronoRanking();
-        } else {
-            rankingSection.style.display = 'none';
-            seriesList.style.display = 'block';
+        if (completedSeriesCount === 0) {
+            showNotification('Aucune série terminée. Terminez au moins une série pour voir le classement.', 'warning');
+            return;
         }
+
+        // Ouvrir le modal de sélection du type de classement
+        showChronoRankingTypeModal();
+    };
+
+    // Afficher le modal de sélection du type de classement
+    function showChronoRankingTypeModal() {
+        const modal = document.getElementById('chronoRankingTypeModal');
+        const optionsContainer = document.getElementById('rankingTypeOptions');
+
+        // Analyser les épreuves pour proposer les options pertinentes
+        const analysis = analyzeCompletedEvents();
+
+        // Générer les options de classement
+        let optionsHTML = '';
+
+        // Option 1: Classement Global (toujours disponible)
+        optionsHTML += createRankingOption(
+            '🌍 Classement Global',
+            'Tous les participants, toutes épreuves confondues',
+            'global',
+            '#667eea',
+            `${analysis.totalParticipants} participants • ${analysis.totalSeries} séries`
+        );
+
+        // Option 2: Par Sport (si plusieurs sports)
+        if (analysis.sports.length > 1) {
+            const sportIcons = { running: '🏃', cycling: '🚴', swimming: '🏊', multisport: '🏅' };
+            analysis.sports.forEach(sport => {
+                optionsHTML += createRankingOption(
+                    `${sportIcons[sport] || '🏃'} Classement ${sport === 'running' ? 'Course' : sport === 'cycling' ? 'Vélo' : sport === 'swimming' ? 'Natation' : 'Multisport'}`,
+                    `Uniquement les épreuves de ${sport === 'running' ? 'course' : sport === 'cycling' ? 'vélo' : sport === 'swimming' ? 'natation' : 'multisport'}`,
+                    `sport-${sport}`,
+                    sport === 'running' ? '#e67e22' : sport === 'cycling' ? '#3498db' : sport === 'swimming' ? '#1abc9c' : '#9b59b6',
+                    `${analysis.sportCounts[sport]} série(s)`
+                );
+            });
+        }
+
+        // Option 3: Par Type (Individuel vs Relais)
+        if (analysis.hasIndividual && analysis.hasRelay) {
+            optionsHTML += createRankingOption(
+                '👤 Classement Individuel',
+                'Uniquement les épreuves individuelles',
+                'type-individual',
+                '#27ae60',
+                `${analysis.individualCount} série(s)`
+            );
+            optionsHTML += createRankingOption(
+                '👥 Classement Relais',
+                'Uniquement les épreuves en relais',
+                'type-relay',
+                '#e74c3c',
+                `${analysis.relayCount} série(s)`
+            );
+        }
+
+        // Option 4: Multi-épreuves (même participants dans plusieurs épreuves)
+        if (analysis.hasMultiEvents) {
+            optionsHTML += createRankingOption(
+                '🎯 Classement Multi-Épreuves',
+                'Participants ayant effectué plusieurs épreuves (cumul des performances)',
+                'multi-events',
+                '#8e44ad',
+                `${analysis.multiEventsParticipants} participant(s) concerné(s)`
+            );
+        }
+
+        // Option 5: Par Distance (si plusieurs épreuves avec même distance)
+        if (analysis.commonDistances.length > 0) {
+            analysis.commonDistances.forEach(distance => {
+                optionsHTML += createRankingOption(
+                    `📏 Classement ${distance}m`,
+                    `Toutes les épreuves de ${distance}m (meilleur temps)`,
+                    `distance-${distance}`,
+                    '#16a085',
+                    `${analysis.distanceCounts[distance]} série(s)`
+                );
+            });
+        }
+
+        // Option 6: Par Catégorie (si plusieurs catégories détectées)
+        if (analysis.categories.length > 1) {
+            optionsHTML += createRankingOption(
+                '📋 Classements par Catégorie',
+                'Classements séparés pour chaque catégorie',
+                'by-category',
+                '#f39c12',
+                `${analysis.categories.length} catégorie(s)`
+            );
+        }
+
+        optionsContainer.innerHTML = optionsHTML;
+        modal.style.display = 'block';
+    }
+
+    // Créer une option de classement
+    function createRankingOption(title, description, type, color, info) {
+        return `
+            <div onclick="selectRankingType('${type}')"
+                 style="background: linear-gradient(135deg, ${color}, ${adjustColor(color, -20)});
+                        color: white;
+                        padding: 20px;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        transition: transform 0.2s, box-shadow 0.2s;
+                        border: 3px solid transparent;"
+                 onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.3)'; this.style.borderColor='white';"
+                 onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'; this.style.borderColor='transparent';">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <h4 style="margin: 0; font-size: 18px;">${title}</h4>
+                    <span style="background: rgba(255,255,255,0.3); padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;">
+                        ${info}
+                    </span>
+                </div>
+                <p style="margin: 0; font-size: 14px; opacity: 0.95;">${description}</p>
+            </div>
+        `;
+    }
+
+    // Fonction helper pour ajuster la couleur
+    function adjustColor(color, amount) {
+        const clamp = (num) => Math.min(255, Math.max(0, num));
+        const num = parseInt(color.replace('#', ''), 16);
+        const r = clamp((num >> 16) + amount);
+        const g = clamp(((num >> 8) & 0x00FF) + amount);
+        const b = clamp((num & 0x0000FF) + amount);
+        return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+    }
+
+    // Analyser les épreuves terminées pour proposer des options pertinentes
+    function analyzeCompletedEvents() {
+        const analysis = {
+            totalParticipants: 0,
+            totalSeries: 0,
+            sports: new Set(),
+            sportCounts: {},
+            hasIndividual: false,
+            hasRelay: false,
+            individualCount: 0,
+            relayCount: 0,
+            commonDistances: [],
+            distanceCounts: {},
+            hasMultiEvents: false,
+            multiEventsParticipants: 0,
+            categories: new Set(),
+            participantBibMap: {} // Pour détecter les participants multi-épreuves
+        };
+
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    analysis.totalSeries++;
+
+                    // Analyser le sport
+                    const sport = serie.sportType || event.sportType || 'running';
+                    analysis.sports.add(sport);
+                    analysis.sportCounts[sport] = (analysis.sportCounts[sport] || 0) + 1;
+
+                    // Analyser le type (individuel/relais)
+                    const raceType = serie.raceType || event.raceType || 'individual';
+                    if (raceType === 'individual') {
+                        analysis.hasIndividual = true;
+                        analysis.individualCount++;
+                    } else {
+                        analysis.hasRelay = true;
+                        analysis.relayCount++;
+                    }
+
+                    // Analyser les distances
+                    const distance = serie.distance || event.distance || 0;
+                    if (distance > 0) {
+                        analysis.distanceCounts[distance] = (analysis.distanceCounts[distance] || 0) + 1;
+                    }
+
+                    // Analyser les participants et catégories
+                    serie.participants.forEach(participant => {
+                        if (participant.status === 'finished') {
+                            // Catégories
+                            if (participant.category) {
+                                analysis.categories.add(participant.category);
+                            }
+
+                            // Multi-épreuves
+                            const bib = participant.bib;
+                            if (!analysis.participantBibMap[bib]) {
+                                analysis.participantBibMap[bib] = {
+                                    name: participant.name,
+                                    count: 0
+                                };
+                            }
+                            analysis.participantBibMap[bib].count++;
+                        }
+                    });
+                }
+            });
+        });
+
+        // Détecter les distances communes (au moins 2 séries)
+        analysis.commonDistances = Object.keys(analysis.distanceCounts)
+            .filter(d => analysis.distanceCounts[d] >= 2)
+            .map(d => parseInt(d))
+            .sort((a, b) => a - b);
+
+        // Détecter les participants multi-épreuves
+        const multiEventsParticipants = Object.values(analysis.participantBibMap)
+            .filter(p => p.count > 1);
+        analysis.hasMultiEvents = multiEventsParticipants.length > 0;
+        analysis.multiEventsParticipants = multiEventsParticipants.length;
+
+        // Compter les participants uniques
+        analysis.totalParticipants = Object.keys(analysis.participantBibMap).length;
+
+        // Convertir Sets en Arrays
+        analysis.sports = Array.from(analysis.sports);
+        analysis.categories = Array.from(analysis.categories);
+
+        return analysis;
+    }
+
+    // Fermer le modal de sélection
+    window.closeChronoRankingTypeModal = function() {
+        document.getElementById('chronoRankingTypeModal').style.display = 'none';
+    };
+
+    // Sélectionner un type de classement et le générer
+    window.selectRankingType = function(type) {
+        closeChronoRankingTypeModal();
+
+        const rankingSection = document.getElementById('overallChronoRanking');
+        const eventsList = document.getElementById('eventsList');
+
+        // Masquer la liste des épreuves et afficher le classement
+        if (eventsList && eventsList.parentElement) {
+            eventsList.parentElement.style.display = 'none';
+        }
+
+        if (rankingSection) {
+            rankingSection.style.display = 'block';
+        }
+
+        // Générer le classement selon le type sélectionné
+        if (type === 'global') {
+            generateOverallChronoRanking();
+        } else if (type.startsWith('sport-')) {
+            const sport = type.replace('sport-', '');
+            generateRankingBySport(sport);
+        } else if (type.startsWith('type-')) {
+            const raceType = type.replace('type-', '');
+            generateRankingByType(raceType);
+        } else if (type === 'multi-events') {
+            generateMultiEventsRanking();
+        } else if (type.startsWith('distance-')) {
+            const distance = parseInt(type.replace('distance-', ''));
+            generateRankingByDistance(distance);
+        } else if (type === 'by-category') {
+            generateRankingByCategory();
+        }
+    };
+
+    // ========================================
+    // FONCTIONS DE CLASSEMENT SPÉCIALISÉES
+    // ========================================
+
+    // Classement par sport
+    function generateRankingBySport(sport) {
+        const sportNames = { running: 'Course', cycling: 'Vélo', swimming: 'Natation', multisport: 'Multisport' };
+        const sportIcons = { running: '🏃', cycling: '🚴', swimming: '🏊', multisport: '🏅' };
+
+        generateFilteredRanking(
+            (event, serie) => (serie.sportType || event.sportType || 'running') === sport,
+            `${sportIcons[sport]} Classement ${sportNames[sport]}`,
+            sport
+        );
+    }
+
+    // Classement par type (individuel/relais)
+    function generateRankingByType(raceType) {
+        const typeNames = { individual: 'Individuel', relay: 'Relais' };
+        const typeIcons = { individual: '👤', relay: '👥' };
+
+        generateFilteredRanking(
+            (event, serie) => (serie.raceType || event.raceType || 'individual') === raceType,
+            `${typeIcons[raceType]} Classement ${typeNames[raceType]}`,
+            raceType
+        );
+    }
+
+    // Classement Multi-Épreuves (participants avec plusieurs épreuves)
+    function generateMultiEventsRanking() {
+        const allParticipants = [];
+        const participantMap = {};
+
+        // Collecter tous les participants et leurs performances
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    serie.participants.forEach(participant => {
+                        if (participant.status === 'finished') {
+                            const bib = participant.bib;
+
+                            if (!participantMap[bib]) {
+                                participantMap[bib] = {
+                                    name: participant.name,
+                                    bib: participant.bib,
+                                    category: participant.category,
+                                    series: [],
+                                    totalDistance: 0,
+                                    totalTime: 0,
+                                    totalLaps: 0,
+                                    eventsCount: 0
+                                };
+                            }
+
+                            participantMap[bib].series.push({
+                                eventName: event.name,
+                                serieName: serie.name,
+                                sportType: serie.sportType || event.sportType,
+                                distance: participant.totalDistance,
+                                time: participant.finishTime || participant.totalTime,
+                                laps: participant.laps.length
+                            });
+                            participantMap[bib].totalDistance += participant.totalDistance;
+                            participantMap[bib].totalTime += (participant.finishTime || participant.totalTime);
+                            participantMap[bib].totalLaps += participant.laps.length;
+                            participantMap[bib].eventsCount++;
+                        }
+                    });
+                }
+            });
+        });
+
+        // Ne garder que ceux avec plusieurs épreuves
+        Object.values(participantMap).forEach(p => {
+            if (p.eventsCount > 1) {
+                allParticipants.push(p);
+            }
+        });
+
+        if (allParticipants.length === 0) {
+            displayEmptyRanking('🎯 Classement Multi-Épreuves', 'Aucun participant n\'a effectué plusieurs épreuves.');
+            return;
+        }
+
+        // Trier par distance totale puis temps
+        const ranked = allParticipants.sort((a, b) => {
+            if (a.totalDistance !== b.totalDistance) {
+                return b.totalDistance - a.totalDistance;
+            }
+            return a.totalTime - b.totalTime;
+        });
+
+        displayRanking(ranked, '🎯 Classement Multi-Épreuves', 'multi-events');
+    }
+
+    // Classement par distance fixe
+    function generateRankingByDistance(targetDistance) {
+        const allParticipants = [];
+
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    const distance = serie.distance || event.distance || 0;
+
+                    // Filtrer uniquement les séries avec la distance cible
+                    if (distance === targetDistance) {
+                        serie.participants.forEach(participant => {
+                            if (participant.status === 'finished') {
+                                allParticipants.push({
+                                    name: participant.name,
+                                    bib: participant.bib,
+                                    category: participant.category,
+                                    eventName: event.name,
+                                    serieName: serie.name,
+                                    time: participant.finishTime || participant.totalTime,
+                                    distance: participant.totalDistance,
+                                    laps: participant.laps.length,
+                                    sportType: serie.sportType || event.sportType
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
+        if (allParticipants.length === 0) {
+            displayEmptyRanking(`📏 Classement ${targetDistance}m`, `Aucune épreuve de ${targetDistance}m terminée.`);
+            return;
+        }
+
+        // Trier par meilleur temps
+        const ranked = allParticipants.sort((a, b) => a.time - b.time);
+
+        displayRankingByTime(ranked, `📏 Classement ${targetDistance}m`, targetDistance);
+    }
+
+    // Classement par catégorie
+    function generateRankingByCategory() {
+        const categoriesMap = {};
+
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    serie.participants.forEach(participant => {
+                        if (participant.status === 'finished') {
+                            const category = participant.category || 'Non catégorisé';
+
+                            if (!categoriesMap[category]) {
+                                categoriesMap[category] = [];
+                            }
+
+                            categoriesMap[category].push({
+                                name: participant.name,
+                                bib: participant.bib,
+                                category: participant.category,
+                                eventName: event.name,
+                                serieName: serie.name,
+                                totalDistance: participant.totalDistance,
+                                totalTime: participant.finishTime || participant.totalTime,
+                                totalLaps: participant.laps.length
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        displayRankingByCategories(categoriesMap);
+    }
+
+    // Fonction générique pour générer un classement filtré
+    function generateFilteredRanking(filterFunc, title, type) {
+        const allParticipants = [];
+
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed' && filterFunc(event, serie)) {
+                    serie.participants.forEach(participant => {
+                        if (participant.status === 'finished') {
+                            const existingIndex = allParticipants.findIndex(p => p.bib === participant.bib);
+
+                            if (existingIndex !== -1) {
+                                allParticipants[existingIndex].series.push({
+                                    eventName: event.name,
+                                    serieName: serie.name,
+                                    distance: participant.totalDistance,
+                                    time: participant.finishTime || participant.totalTime,
+                                    laps: participant.laps.length
+                                });
+                                allParticipants[existingIndex].totalDistance += participant.totalDistance;
+                                allParticipants[existingIndex].totalTime += (participant.finishTime || participant.totalTime);
+                                allParticipants[existingIndex].totalLaps += participant.laps.length;
+                            } else {
+                                allParticipants.push({
+                                    name: participant.name,
+                                    bib: participant.bib,
+                                    category: participant.category,
+                                    series: [{
+                                        eventName: event.name,
+                                        serieName: serie.name,
+                                        distance: participant.totalDistance,
+                                        time: participant.finishTime || participant.totalTime,
+                                        laps: participant.laps.length
+                                    }],
+                                    totalDistance: participant.totalDistance,
+                                    totalTime: participant.finishTime || participant.totalTime,
+                                    totalLaps: participant.laps.length
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        if (allParticipants.length === 0) {
+            displayEmptyRanking(title, 'Aucune série terminée pour ce type.');
+            return;
+        }
+
+        // Trier par distance puis temps
+        const ranked = allParticipants.sort((a, b) => {
+            if (a.totalDistance !== b.totalDistance) {
+                return b.totalDistance - a.totalDistance;
+            }
+            return a.totalTime - b.totalTime;
+        });
+
+        displayRanking(ranked, title, type);
+    }
+
+    // Fonction pour fermer le classement et retourner aux séries
+    window.hideChronoRanking = function() {
+        const rankingSection = document.getElementById('overallChronoRanking');
+        const eventsList = document.getElementById('eventsList');
+
+        // Masquer le classement
+        if (rankingSection) {
+            rankingSection.style.display = 'none';
+        }
+
+        // Afficher la liste des épreuves
+        if (eventsList && eventsList.parentElement) {
+            eventsList.parentElement.style.display = 'block';
+        }
+    };
+
+    // Afficher un classement vide
+    function displayEmptyRanking(title, message) {
+        const rankingSection = document.getElementById('overallChronoRanking');
+        rankingSection.innerHTML = `
+            <div style="background: white; padding: 40px; border-radius: 10px; text-align: center;">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">${title}</h3>
+                <p style="color: #7f8c8d; margin-bottom: 30px;">${message}</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
+                        ⬅️ Retour aux séries
+                    </button>
+                    <button class="btn" onclick="showOverallChronoRanking()" style="background: #667eea;">
+                        🔄 Choisir un type de classement
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Afficher un classement standard
+    function displayRanking(ranked, title, type) {
+        const rankingSection = document.getElementById('overallChronoRanking');
+        const medals = ['🥇', '🥈', '🥉'];
+
+        // Stocker les données pour l'export PDF
+        lastChronoRankingData = {
+            title: title,
+            type: type,
+            participants: ranked,
+            categoriesMap: null
+        };
+
+        rankingSection.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0; color: #2c3e50;">${title}</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
+                            ⬅️ Retour aux séries
+                        </button>
+                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #667eea;">
+                            🔄 Changer de type
+                        </button>
+                        <button class="btn" onclick="exportChronoRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+                            📄 Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <div style="font-size: 14px; opacity: 0.9;">Participants</div>
+                    <div style="font-size: 28px; font-weight: bold;">${ranked.length}</div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                                <th style="padding: 15px; text-align: center;">Pos.</th>
+                                <th style="padding: 15px; text-align: left;">Participant</th>
+                                <th style="padding: 15px; text-align: center;">Dossard</th>
+                                <th style="padding: 15px; text-align: center;">Catégorie</th>
+                                <th style="padding: 15px; text-align: center;">Séries</th>
+                                <th style="padding: 15px; text-align: center;">Distance Totale</th>
+                                <th style="padding: 15px; text-align: center;">Temps Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ranked.map((participant, index) => {
+                                const position = index + 1;
+                                const medal = position <= 3 ? medals[position - 1] : position;
+                                const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' :
+                                              index % 2 === 0 ? 'background: #f8f9fa;' : '';
+
+                                return `
+                                    <tr style="${rowBg}">
+                                        <td style="padding: 15px; text-align: center; font-size: 20px; font-weight: bold;">
+                                            ${medal}
+                                        </td>
+                                        <td style="padding: 15px;">
+                                            <div style="font-weight: bold; color: #2c3e50;">${participant.name}</div>
+                                        </td>
+                                        <td style="padding: 15px; text-align: center;">
+                                            <span style="background: #3498db; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold;">
+                                                ${participant.bib}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; color: #7f8c8d;">
+                                            ${participant.category || '-'}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-weight: bold; color: #e67e22;">
+                                            ${participant.series ? participant.series.length : 1}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-weight: bold; color: #27ae60;">
+                                            ${(participant.totalDistance / 1000).toFixed(2)} km
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-weight: bold; color: #9b59b6; font-family: monospace;">
+                                            ${formatTime(participant.totalTime)}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    // Afficher un classement par temps (pour distances fixes)
+    function displayRankingByTime(ranked, title, distance) {
+        const rankingSection = document.getElementById('overallChronoRanking');
+        const medals = ['🥇', '🥈', '🥉'];
+        const sportIcons = { running: '🏃', cycling: '🚴', swimming: '🏊', multisport: '🏅' };
+
+        // Stocker les données pour l'export PDF
+        lastChronoRankingData = {
+            title: title,
+            type: 'distance',
+            participants: ranked,
+            categoriesMap: null,
+            distance: distance
+        };
+
+        rankingSection.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0; color: #2c3e50;">${title}</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
+                            ⬅️ Retour aux séries
+                        </button>
+                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #667eea;">
+                            🔄 Changer de type
+                        </button>
+                        <button class="btn" onclick="exportChronoRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+                            📄 Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <div style="font-size: 14px; opacity: 0.9;">Meilleur Temps sur ${distance}m</div>
+                    <div style="font-size: 28px; font-weight: bold;">${ranked.length} participants</div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
+                                <th style="padding: 15px; text-align: center;">Pos.</th>
+                                <th style="padding: 15px; text-align: left;">Participant</th>
+                                <th style="padding: 15px; text-align: center;">Dossard</th>
+                                <th style="padding: 15px; text-align: center;">Catégorie</th>
+                                <th style="padding: 15px; text-align: center;">Épreuve</th>
+                                <th style="padding: 15px; text-align: center;">Temps</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ranked.map((participant, index) => {
+                                const position = index + 1;
+                                const medal = position <= 3 ? medals[position - 1] : position;
+                                const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' :
+                                              index % 2 === 0 ? 'background: #f8f9fa;' : '';
+
+                                return `
+                                    <tr style="${rowBg}">
+                                        <td style="padding: 15px; text-align: center; font-size: 20px; font-weight: bold;">
+                                            ${medal}
+                                        </td>
+                                        <td style="padding: 15px;">
+                                            <div style="font-weight: bold; color: #2c3e50;">${participant.name}</div>
+                                        </td>
+                                        <td style="padding: 15px; text-align: center;">
+                                            <span style="background: #3498db; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold;">
+                                                ${participant.bib}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; color: #7f8c8d;">
+                                            ${participant.category || '-'}
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; color: #7f8c8d; font-size: 12px;">
+                                            ${sportIcons[participant.sportType] || ''} ${participant.eventName}<br>
+                                            <span style="opacity: 0.7;">${participant.serieName}</span>
+                                        </td>
+                                        <td style="padding: 15px; text-align: center; font-weight: bold; color: #27ae60; font-family: monospace; font-size: 18px;">
+                                            ${formatTime(participant.time)}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    // Variable pour stocker les données du dernier classement affiché
+    let lastChronoRankingData = {
+        title: '',
+        type: '',
+        participants: [],
+        categoriesMap: null
+    };
+
+    // Afficher les classements par catégorie
+    function displayRankingByCategories(categoriesMap) {
+        const rankingSection = document.getElementById('overallChronoRanking');
+        const categories = Object.keys(categoriesMap).sort();
+
+        // Stocker les données pour l'export PDF
+        lastChronoRankingData = {
+            title: '📋 Classements par Catégorie',
+            type: 'category',
+            participants: [],
+            categoriesMap: categoriesMap
+        };
+
+        let html = `
+            <div style="background: white; padding: 20px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0; color: #2c3e50;">📋 Classements par Catégorie</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
+                            ⬅️ Retour aux séries
+                        </button>
+                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #667eea;">
+                            🔄 Changer de type
+                        </button>
+                        <button class="btn" onclick="exportChronoRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+                            📄 Export PDF
+                        </button>
+                    </div>
+                </div>
+        `;
+
+        categories.forEach(category => {
+            const participants = categoriesMap[category];
+            const ranked = participants.sort((a, b) => {
+                if (a.totalDistance !== b.totalDistance) {
+                    return b.totalDistance - a.totalDistance;
+                }
+                return a.totalTime - b.totalTime;
+            });
+
+            const medals = ['🥇', '🥈', '🥉'];
+
+            html += `
+                <div style="margin-bottom: 30px;">
+                    <h4 style="color: #2c3e50; background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;">
+                        ${category} (${ranked.length} participant${ranked.length > 1 ? 's' : ''})
+                    </h4>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #ddd;">
+                                <th style="padding: 10px; text-align: center;">Pos.</th>
+                                <th style="padding: 10px; text-align: left;">Participant</th>
+                                <th style="padding: 10px; text-align: center;">Dossard</th>
+                                <th style="padding: 10px; text-align: center;">Distance</th>
+                                <th style="padding: 10px; text-align: center;">Temps</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ranked.map((participant, index) => {
+                                const position = index + 1;
+                                const medal = position <= 3 ? medals[position - 1] : position;
+
+                                return `
+                                    <tr style="${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                                        <td style="padding: 10px; text-align: center; font-weight: bold;">
+                                            ${medal}
+                                        </td>
+                                        <td style="padding: 10px; font-weight: bold; color: #2c3e50;">
+                                            ${participant.name}
+                                        </td>
+                                        <td style="padding: 10px; text-align: center;">
+                                            <span style="background: #3498db; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                                                ${participant.bib}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 10px; text-align: center; color: #27ae60; font-weight: bold;">
+                                            ${(participant.totalDistance / 1000).toFixed(2)} km
+                                        </td>
+                                        <td style="padding: 10px; text-align: center; font-family: monospace; font-weight: bold; color: #9b59b6;">
+                                            ${formatTime(participant.totalTime)}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        rankingSection.innerHTML = html;
+    }
+
+    // ========================================
+    // EXPORT PDF DU CLASSEMENT CHRONO
+    // ========================================
+
+    window.exportChronoRankingToPDF = function() {
+        if (!lastChronoRankingData || !lastChronoRankingData.title) {
+            alert('Aucun classement à exporter. Veuillez d\'abord afficher un classement.');
+            return;
+        }
+
+        // Ouvrir le modal de configuration des colonnes
+        showChronoPdfConfigModal();
+    };
+
+    // Afficher le modal de configuration PDF
+    function showChronoPdfConfigModal() {
+        const modal = document.getElementById('chronoPdfConfigModal');
+        const checkboxesContainer = document.getElementById('pdfColumnsCheckboxes');
+        const titleInput = document.getElementById('pdfCustomTitle');
+        const defaultTitleSpan = document.getElementById('pdfDefaultTitle');
+
+        const data = lastChronoRankingData;
+
+        // Afficher le titre par défaut et vider le champ de saisie
+        defaultTitleSpan.textContent = data.title;
+        titleInput.value = '';
+        titleInput.placeholder = `Ex: ${data.title} 2025`;
+
+        let columns = [];
+
+        // Définir les colonnes disponibles selon le type de classement
+        if (data.type === 'category') {
+            columns = [
+                { id: 'position', label: 'Position', checked: true },
+                { id: 'name', label: 'Nom du participant', checked: true },
+                { id: 'bib', label: 'Dossard', checked: true },
+                { id: 'distance', label: 'Distance totale', checked: true },
+                { id: 'time', label: 'Temps total', checked: true }
+            ];
+        } else if (data.type === 'distance') {
+            columns = [
+                { id: 'position', label: 'Position', checked: true },
+                { id: 'name', label: 'Nom du participant', checked: true },
+                { id: 'bib', label: 'Dossard', checked: true },
+                { id: 'category', label: 'Catégorie', checked: true },
+                { id: 'event', label: 'Épreuve/Série', checked: true },
+                { id: 'time', label: 'Temps', checked: true }
+            ];
+        } else {
+            // Classement standard (global, par sport, par type, multi-épreuves)
+            columns = [
+                { id: 'position', label: 'Position', checked: true },
+                { id: 'name', label: 'Nom du participant', checked: true },
+                { id: 'bib', label: 'Dossard', checked: true },
+                { id: 'category', label: 'Catégorie', checked: true },
+                { id: 'series', label: 'Nombre de séries', checked: true },
+                { id: 'distance', label: 'Distance totale', checked: true },
+                { id: 'time', label: 'Temps total', checked: true }
+            ];
+        }
+
+        // Générer les checkboxes
+        checkboxesContainer.innerHTML = columns.map(col => `
+            <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; cursor: pointer; transition: background 0.2s;"
+                   onmouseover="this.style.background='#e9ecef'"
+                   onmouseout="this.style.background='#f8f9fa'">
+                <input type="checkbox"
+                       id="pdfCol_${col.id}"
+                       ${col.checked ? 'checked' : ''}
+                       ${col.id === 'position' || col.id === 'name' ? 'disabled' : ''}
+                       style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                <span style="font-size: 14px; color: #2c3e50;">
+                    ${col.label}
+                    ${col.id === 'position' || col.id === 'name' ? '<span style="color: #95a5a6; font-size: 12px; margin-left: 5px;">(obligatoire)</span>' : ''}
+                </span>
+            </label>
+        `).join('');
+
+        modal.style.display = 'block';
+    }
+
+    // Fermer le modal de configuration PDF
+    window.closeChronoPdfConfigModal = function() {
+        document.getElementById('chronoPdfConfigModal').style.display = 'none';
+    };
+
+    // Confirmer et générer le PDF avec les colonnes sélectionnées
+    window.confirmChronoPdfExport = function() {
+        // Récupérer le titre personnalisé (ou utiliser le titre par défaut)
+        const customTitle = document.getElementById('pdfCustomTitle').value.trim();
+        const finalTitle = customTitle || lastChronoRankingData.title;
+
+        // Récupérer les colonnes sélectionnées
+        const selectedColumns = {
+            position: true, // Toujours inclus
+            name: true, // Toujours inclus
+            bib: document.getElementById('pdfCol_bib')?.checked ?? true,
+            category: document.getElementById('pdfCol_category')?.checked ?? true,
+            series: document.getElementById('pdfCol_series')?.checked ?? true,
+            distance: document.getElementById('pdfCol_distance')?.checked ?? true,
+            time: document.getElementById('pdfCol_time')?.checked ?? true,
+            event: document.getElementById('pdfCol_event')?.checked ?? true
+        };
+
+        closeChronoPdfConfigModal();
+        generateChronoPDF(selectedColumns, finalTitle);
+    };
+
+    // Générer le PDF avec les colonnes sélectionnées
+    function generateChronoPDF(selectedColumns, customTitle) {
+        const currentDate = new Date().toLocaleDateString('fr-FR', {
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+
+        const data = lastChronoRankingData;
+        const pdfTitle = customTitle || data.title; // Utiliser le titre personnalisé ou le titre par défaut
+        let tableRows = '';
+
+        // Compter les colonnes affichées pour le colspan
+        const visibleColumnsCount = Object.values(selectedColumns).filter(v => v).length;
+
+        // Générer le contenu selon le type de classement
+        if (data.type === 'category' && data.categoriesMap) {
+            // Classement par catégorie
+            const categories = Object.keys(data.categoriesMap).sort();
+            categories.forEach(category => {
+                const participants = data.categoriesMap[category].sort((a, b) => {
+                    if (a.totalDistance !== b.totalDistance) return b.totalDistance - a.totalDistance;
+                    return a.totalTime - b.totalTime;
+                });
+
+                tableRows += `
+                    <tr style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white;">
+                        <td colspan="${visibleColumnsCount}" style="padding: 12px; font-weight: bold; font-size: 16px;">
+                            ${category} (${participants.length} participant${participants.length > 1 ? 's' : ''})
+                        </td>
+                    </tr>
+                `;
+
+                participants.forEach((p, idx) => {
+                    const pos = idx + 1;
+                    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+                    let row = '<tr style="' + (idx % 2 === 0 ? 'background: #f8f9fa;' : '') + '">';
+
+                    if (selectedColumns.position) row += `<td style="padding: 10px; text-align: center; font-weight: bold;">${medal}</td>`;
+                    if (selectedColumns.name) row += `<td style="padding: 10px;">${p.name}</td>`;
+                    if (selectedColumns.bib) row += `<td style="padding: 10px; text-align: center;">${p.bib}</td>`;
+                    if (selectedColumns.distance) row += `<td style="padding: 10px; text-align: center;">${(p.totalDistance / 1000).toFixed(2)} km</td>`;
+                    if (selectedColumns.time) row += `<td style="padding: 10px; text-align: center; font-family: monospace;">${formatTime(p.totalTime)}</td>`;
+
+                    row += '</tr>';
+                    tableRows += row;
+                });
+            });
+        } else if (data.type === 'distance') {
+            // Classement par temps (distance fixe)
+            data.participants.forEach((p, idx) => {
+                const pos = idx + 1;
+                const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+                const sportIcons = { running: '🏃', cycling: '🚴', swimming: '🏊', multisport: '🏅' };
+                const sportIcon = sportIcons[p.sportType] || '';
+
+                let row = `<tr style="${pos <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : idx % 2 === 0 ? 'background: #f8f9fa;' : ''}">`;
+
+                if (selectedColumns.position) row += `<td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">${medal}</td>`;
+                if (selectedColumns.name) row += `<td style="padding: 12px; font-weight: bold;">${p.name}</td>`;
+                if (selectedColumns.bib) row += `<td style="padding: 12px; text-align: center;">${p.bib}</td>`;
+                if (selectedColumns.category) row += `<td style="padding: 12px; text-align: center;">${p.category || '-'}</td>`;
+                if (selectedColumns.event) row += `<td style="padding: 12px; text-align: center; font-size: 11px;">${sportIcon} ${p.eventName}<br>${p.serieName}</td>`;
+                if (selectedColumns.time) row += `<td style="padding: 12px; text-align: center; font-weight: bold; font-family: monospace; font-size: 16px; color: #27ae60;">${formatTime(p.time)}</td>`;
+
+                row += '</tr>';
+                tableRows += row;
+            });
+        } else {
+            // Classement standard (global, par sport, par type, multi-épreuves)
+            data.participants.forEach((p, idx) => {
+                const pos = idx + 1;
+                const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+
+                let row = `<tr style="${pos <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : idx % 2 === 0 ? 'background: #f8f9fa;' : ''}">`;
+
+                if (selectedColumns.position) row += `<td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">${medal}</td>`;
+                if (selectedColumns.name) row += `<td style="padding: 12px; font-weight: bold;">${p.name}</td>`;
+                if (selectedColumns.bib) row += `<td style="padding: 12px; text-align: center;">${p.bib}</td>`;
+                if (selectedColumns.category) row += `<td style="padding: 12px; text-align: center;">${p.category || '-'}</td>`;
+                if (selectedColumns.series) row += `<td style="padding: 12px; text-align: center;">${p.series ? p.series.length : 1}</td>`;
+                if (selectedColumns.distance) row += `<td style="padding: 12px; text-align: center; font-weight: bold; color: #27ae60;">${(p.totalDistance / 1000).toFixed(2)} km</td>`;
+                if (selectedColumns.time) row += `<td style="padding: 12px; text-align: center; font-weight: bold; font-family: monospace; color: #9b59b6;">${formatTime(p.totalTime)}</td>`;
+
+                row += '</tr>';
+                tableRows += row;
+            });
+        }
+
+        // Définir les en-têtes de tableau selon le type et les colonnes sélectionnées
+        let tableHeaders = '';
+        if (data.type === 'category') {
+            if (selectedColumns.position) tableHeaders += `<th style="padding: 12px; text-align: center;">Pos.</th>`;
+            if (selectedColumns.name) tableHeaders += `<th style="padding: 12px; text-align: left;">Participant</th>`;
+            if (selectedColumns.bib) tableHeaders += `<th style="padding: 12px; text-align: center;">Dossard</th>`;
+            if (selectedColumns.distance) tableHeaders += `<th style="padding: 12px; text-align: center;">Distance</th>`;
+            if (selectedColumns.time) tableHeaders += `<th style="padding: 12px; text-align: center;">Temps</th>`;
+        } else if (data.type === 'distance') {
+            if (selectedColumns.position) tableHeaders += `<th style="padding: 12px; text-align: center;">Pos.</th>`;
+            if (selectedColumns.name) tableHeaders += `<th style="padding: 12px; text-align: left;">Participant</th>`;
+            if (selectedColumns.bib) tableHeaders += `<th style="padding: 12px; text-align: center;">Dossard</th>`;
+            if (selectedColumns.category) tableHeaders += `<th style="padding: 12px; text-align: center;">Catégorie</th>`;
+            if (selectedColumns.event) tableHeaders += `<th style="padding: 12px; text-align: center;">Épreuve</th>`;
+            if (selectedColumns.time) tableHeaders += `<th style="padding: 12px; text-align: center;">Temps</th>`;
+        } else {
+            if (selectedColumns.position) tableHeaders += `<th style="padding: 12px; text-align: center;">Pos.</th>`;
+            if (selectedColumns.name) tableHeaders += `<th style="padding: 12px; text-align: left;">Participant</th>`;
+            if (selectedColumns.bib) tableHeaders += `<th style="padding: 12px; text-align: center;">Dossard</th>`;
+            if (selectedColumns.category) tableHeaders += `<th style="padding: 12px; text-align: center;">Catégorie</th>`;
+            if (selectedColumns.series) tableHeaders += `<th style="padding: 12px; text-align: center;">Séries</th>`;
+            if (selectedColumns.distance) tableHeaders += `<th style="padding: 12px; text-align: center;">Distance Totale</th>`;
+            if (selectedColumns.time) tableHeaders += `<th style="padding: 12px; text-align: center;">Temps Total</th>`;
+        }
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="fr">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${pdfTitle} - Mode Chrono</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                        padding: 25px;
+                    }
+                    .container {
+                        background: white;
+                        border-radius: 15px;
+                        padding: 30px;
+                        max-width: 1200px;
+                        margin: 0 auto;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                        padding: 25px;
+                        background: white;
+                        border: 2px solid #ddd;
+                        border-radius: 12px;
+                    }
+                    .header h1 {
+                        font-size: 32px;
+                        margin-bottom: 10px;
+                        color: #000000;
+                        font-weight: bold;
+                    }
+                    .header .date {
+                        font-size: 14px;
+                        color: #666666;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    thead tr {
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: white;
+                    }
+                    th {
+                        padding: 15px;
+                        font-weight: bold;
+                    }
+                    td {
+                        border-bottom: 1px solid #ddd;
+                    }
+                    @media print {
+                        body { background: white; padding: 0; }
+                        .container { box-shadow: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>⏱️ ${pdfTitle}</h1>
+                        <div class="date">Généré le ${currentDate}</div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>${tableHeaders}</tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Ouvrir dans une nouvelle fenêtre
+        const newWindow = window.open('', '_blank');
+        if (!newWindow) {
+            alert('Veuillez autoriser les pop-ups pour exporter le PDF');
+            return;
+        }
+
+        newWindow.document.write(htmlContent);
+        newWindow.document.close();
+
+        setTimeout(() => {
+            newWindow.focus();
+            const alertMessage = "✅ Page d'export créée avec succès !\n\n" +
+                                "Pour enregistrer en PDF :\n" +
+                                "1. Appuyez sur Ctrl+P (ou Cmd+P sur Mac)\n" +
+                                "2. Choisissez 'Enregistrer au format PDF'\n" +
+                                "3. Cliquez sur 'Enregistrer'\n\n" +
+                                "Voulez-vous ouvrir la boîte de dialogue d'impression maintenant ?";
+
+            if (newWindow.confirm(alertMessage)) {
+                newWindow.print();
+            }
+        }, 500);
+
+        showNotification('Page d\'export PDF ouverte dans un nouvel onglet !', 'success');
     };
 
     // Générer le classement général de toutes les séries
@@ -9090,15 +10317,7 @@ if (document.readyState === 'loading') {
         });
 
         if (allParticipants.length === 0) {
-            rankingSection.innerHTML = `
-                <div style="background: white; padding: 40px; border-radius: 10px; text-align: center;">
-                    <h3 style="color: #7f8c8d;">Aucune série terminée</h3>
-                    <p style="color: #95a5a6;">Terminez au moins une série pour voir le classement général.</p>
-                    <button class="btn" onclick="showOverallChronoRanking()" style="margin-top: 20px; background: #95a5a6;">
-                        ⬅️ Retour aux séries
-                    </button>
-                </div>
-            `;
+            displayEmptyRanking('🏆 Classement Général', 'Aucune série terminée. Terminez au moins une série pour voir le classement général.');
             return;
         }
 
@@ -9110,6 +10329,13 @@ if (document.readyState === 'loading') {
             return a.totalTime - b.totalTime;
         });
 
+        // Utiliser la fonction d'affichage standard
+        displayRanking(ranked, '🏆 Classement Général', 'global');
+    }
+
+    // ANCIENNE VERSION CONSERVÉE POUR RÉFÉRENCE - À SUPPRIMER SI TOUT FONCTIONNE
+    function generateOverallChronoRanking_OLD() {
+        const rankingSection = document.getElementById('overallChronoRanking');
         const medals = ['🥇', '🥈', '🥉'];
         const sportEmoji = {
             running: '🏃',
@@ -9121,7 +10347,7 @@ if (document.readyState === 'loading') {
             <div style="background: white; padding: 20px; border-radius: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="margin: 0; color: #2c3e50;">🏆 Classement Général de la Journée</h3>
-                    <button class="btn" onclick="showOverallChronoRanking()" style="background: #95a5a6;">
+                    <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
                         ⬅️ Retour aux séries
                     </button>
                 </div>
