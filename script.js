@@ -483,7 +483,7 @@ try {
                         <button class="btn" onclick="generateMatchesByCourtOptimized(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 10px 12px; font-size: 13px;">
                             🎾 Par Terrain
                         </button>
-                        <button class="btn" onclick="generateMatchesSwissSystem(${dayNumber})" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 10px 12px; font-size: 13px;">
+                        <button class="btn" onclick="generateMatchesSwissSystem(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 10px 12px; font-size: 13px;">
                             🏆 Swiss System
                         </button>
                     </div>
@@ -497,7 +497,7 @@ try {
                     <button class="btn btn-success" onclick="updateRankingsForDay(${dayNumber})">
                         🏆 Classements J${dayNumber}
                     </button>
-                    <button class="btn" onclick="showByeManagementModal(${dayNumber})" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                    <button class="btn" onclick="showByeManagementModal(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
                         🎯 Gérer BYE
                     </button>
                     <button class="btn" onclick="copyPlayersFromPreviousDay(${dayNumber})">
@@ -2773,7 +2773,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     text-align: center;
                     margin-bottom: 15px;
                     padding: 20px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
                     color: white;
                     border-radius: 12px;
                     position: relative;
@@ -2859,7 +2859,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 
                 .stat-label {
                     font-size: 11px;
-                    color: #8e44ad;
+                    color: #16a085;
                     margin-top: 8px;
                     font-weight: 600;
                     text-transform: uppercase;
@@ -3915,7 +3915,7 @@ function exportGeneralRankingToHTML() {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                     line-height: 1.6;
                     color: #333;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #0a64da 0%, #2020c7 100%);
                     min-height: 100vh;
                     padding: 20px;
                 }
@@ -4161,7 +4161,7 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
             }
 
             html += `
-                <div style="padding: 5px 15px; background: white; border-radius: 5px; color: #667eea; font-weight: bold;">
+                <div style="padding: 5px 15px; background: white; border-radius: 5px; color: #16a085; font-weight: bold;">
                     ${medal} Division ${div}: ${courtText}
                 </div>
             `;
@@ -5152,7 +5152,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
     let html = `
         <div class="manual-final-phase-container" style="margin-top: 30px;">
             <div class="final-phase-header" style="
-                background: linear-gradient(135deg, #8e44ad, #9b59b6);
+                background: linear-gradient(135deg, #16a085, #1abc9c);
                 color: white;
                 padding: 25px;
                 border-radius: 15px;
@@ -6060,7 +6060,7 @@ if (originalCheckPoolsCompletion) {
             const dayData = championship.days[dayNumber];
             if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.enabled) {
                 finalButton.innerHTML = '🔄 Gérer Phase Finale';
-                finalButton.style.background = 'linear-gradient(135deg, #8e44ad, #9b59b6)';
+                finalButton.style.background = 'linear-gradient(135deg, #16a085, #1abc9c)';
                 finalButton.onclick = () => updateManualFinalPhaseDisplay(dayNumber);
             } else {
                 finalButton.innerHTML = '🏆 Phase Finale Manuelle';
@@ -8354,7 +8354,7 @@ if (document.readyState === 'loading') {
                     <button class="btn" onclick="backToSeriesList()" style="background: #95a5a6; margin-right: 10px;">
                         ⬅️ Retour aux séries
                     </button>
-                    <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #667eea, #764ba2); margin-right: 10px;">
+                    <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #16a085, #1abc9c); margin-right: 10px;">
                         🏆 Voir Classement
                     </button>
                     <button class="btn btn-danger" onclick="endSerie()">
@@ -8365,7 +8365,7 @@ if (document.readyState === 'loading') {
                 <div style="overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; background: white;">
                         <thead>
-                            <tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            <tr style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
                                 <th style="padding: 12px; text-align: center;">Dossard</th>
                                 <th style="padding: 12px; text-align: left;">Participant</th>
                                 <th style="padding: 12px; text-align: center;">Tours</th>
@@ -9085,7 +9085,7 @@ if (document.readyState === 'loading') {
                     </table>
 
                     <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 15px; border-radius: 8px; text-align: center;">
                             <div style="font-size: 14px; opacity: 0.9;">Participants Totaux</div>
                             <div style="font-size: 32px; font-weight: bold;">${serie.participants.length}</div>
                         </div>
@@ -9146,7 +9146,7 @@ if (document.readyState === 'loading') {
             '🌍 Classement Global',
             'Tous les participants, toutes épreuves confondues',
             'global',
-            '#667eea',
+            '#16a085',
             `${analysis.totalParticipants} participants • ${analysis.totalSeries} séries`
         );
 
@@ -9158,7 +9158,7 @@ if (document.readyState === 'loading') {
                     `${sportIcons[sport] || '🏃'} Classement ${sport === 'running' ? 'Course' : sport === 'cycling' ? 'Vélo' : sport === 'swimming' ? 'Natation' : 'Multisport'}`,
                     `Uniquement les épreuves de ${sport === 'running' ? 'course' : sport === 'cycling' ? 'vélo' : sport === 'swimming' ? 'natation' : 'multisport'}`,
                     `sport-${sport}`,
-                    sport === 'running' ? '#e67e22' : sport === 'cycling' ? '#3498db' : sport === 'swimming' ? '#1abc9c' : '#9b59b6',
+                    sport === 'running' ? '#e67e22' : sport === 'cycling' ? '#3498db' : sport === 'swimming' ? '#1abc9c' : '#16a085',
                     `${analysis.sportCounts[sport]} série(s)`
                 );
             });
@@ -9188,7 +9188,7 @@ if (document.readyState === 'loading') {
                 '🎯 Classement Multi-Épreuves',
                 'Participants ayant effectué plusieurs épreuves (cumul des performances)',
                 'multi-events',
-                '#8e44ad',
+                '#16a085',
                 `${analysis.multiEventsParticipants} participant(s) concerné(s)`
             );
         }
@@ -9644,7 +9644,7 @@ if (document.readyState === 'loading') {
                     <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
                         ⬅️ Retour aux séries
                     </button>
-                    <button class="btn" onclick="showOverallChronoRanking()" style="background: #667eea;">
+                    <button class="btn" onclick="showOverallChronoRanking()" style="background: #16a085;">
                         🔄 Choisir un type de classement
                     </button>
                 </div>
@@ -9673,7 +9673,7 @@ if (document.readyState === 'loading') {
                         <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
                             ⬅️ Retour aux séries
                         </button>
-                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #667eea;">
+                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #16a085;">
                             🔄 Changer de type
                         </button>
                         <button class="btn" onclick="exportChronoRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
@@ -9682,7 +9682,7 @@ if (document.readyState === 'loading') {
                     </div>
                 </div>
 
-                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
                     <div style="font-size: 14px; opacity: 0.9;">Participants</div>
                     <div style="font-size: 28px; font-weight: bold;">${ranked.length}</div>
                 </div>
@@ -9690,7 +9690,7 @@ if (document.readyState === 'loading') {
                 <div style="overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
-                            <tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            <tr style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
                                 <th style="padding: 15px; text-align: center;">Pos.</th>
                                 <th style="padding: 15px; text-align: left;">Participant</th>
                                 <th style="padding: 15px; text-align: center;">Dossard</th>
@@ -9729,7 +9729,7 @@ if (document.readyState === 'loading') {
                                         <td style="padding: 15px; text-align: center; font-weight: bold; color: #27ae60;">
                                             ${(participant.totalDistance / 1000).toFixed(2)} km
                                         </td>
-                                        <td style="padding: 15px; text-align: center; font-weight: bold; color: #9b59b6; font-family: monospace;">
+                                        <td style="padding: 15px; text-align: center; font-weight: bold; color: #16a085; font-family: monospace;">
                                             ${formatTime(participant.totalTime)}
                                         </td>
                                     </tr>
@@ -9765,7 +9765,7 @@ if (document.readyState === 'loading') {
                         <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
                             ⬅️ Retour aux séries
                         </button>
-                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #667eea;">
+                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #16a085;">
                             🔄 Changer de type
                         </button>
                         <button class="btn" onclick="exportChronoRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
@@ -9860,7 +9860,7 @@ if (document.readyState === 'loading') {
                         <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
                             ⬅️ Retour aux séries
                         </button>
-                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #667eea;">
+                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #16a085;">
                             🔄 Changer de type
                         </button>
                         <button class="btn" onclick="exportChronoRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
@@ -9917,7 +9917,7 @@ if (document.readyState === 'loading') {
                                         <td style="padding: 10px; text-align: center; color: #27ae60; font-weight: bold;">
                                             ${(participant.totalDistance / 1000).toFixed(2)} km
                                         </td>
-                                        <td style="padding: 10px; text-align: center; font-family: monospace; font-weight: bold; color: #9b59b6;">
+                                        <td style="padding: 10px; text-align: center; font-family: monospace; font-weight: bold; color: #16a085;">
                                             ${formatTime(participant.totalTime)}
                                         </td>
                                     </tr>
@@ -10122,7 +10122,7 @@ if (document.readyState === 'loading') {
                 if (selectedColumns.category) row += `<td style="padding: 12px; text-align: center;">${p.category || '-'}</td>`;
                 if (selectedColumns.series) row += `<td style="padding: 12px; text-align: center;">${p.series ? p.series.length : 1}</td>`;
                 if (selectedColumns.distance) row += `<td style="padding: 12px; text-align: center; font-weight: bold; color: #27ae60;">${(p.totalDistance / 1000).toFixed(2)} km</td>`;
-                if (selectedColumns.time) row += `<td style="padding: 12px; text-align: center; font-weight: bold; font-family: monospace; color: #9b59b6;">${formatTime(p.totalTime)}</td>`;
+                if (selectedColumns.time) row += `<td style="padding: 12px; text-align: center; font-weight: bold; font-family: monospace; color: #16a085;">${formatTime(p.totalTime)}</td>`;
 
                 row += '</tr>';
                 tableRows += row;
@@ -10200,7 +10200,7 @@ if (document.readyState === 'loading') {
                         margin-top: 20px;
                     }
                     thead tr {
-                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        background: linear-gradient(135deg, #16a085, #1abc9c);
                         color: white;
                     }
                     th {
@@ -10352,7 +10352,7 @@ if (document.readyState === 'loading') {
                     </button>
                 </div>
 
-                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
                         <div>
                             <div style="font-size: 14px; opacity: 0.9;">Participants</div>
@@ -10374,7 +10374,7 @@ if (document.readyState === 'loading') {
                 <div style="overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; background: white;">
                         <thead>
-                            <tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            <tr style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
                                 <th style="padding: 15px; text-align: center;">Pos.</th>
                                 <th style="padding: 15px; text-align: left;">Participant</th>
                                 <th style="padding: 15px; text-align: center;">Séries</th>
@@ -10414,7 +10414,7 @@ if (document.readyState === 'loading') {
                                         </td>
                                         <td style="padding: 15px;">
                                             <details style="cursor: pointer;">
-                                                <summary style="font-weight: bold; color: #667eea; user-select: none;">Voir détails</summary>
+                                                <summary style="font-weight: bold; color: #16a085; user-select: none;">Voir détails</summary>
                                                 <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
                                                     ${participant.series.map((serie, idx) => {
                                                         // Trouver l'épreuve correspondante pour obtenir le type de sport
@@ -10733,7 +10733,7 @@ if (document.readyState === 'loading') {
         .header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid #16a085;
             padding-bottom: 20px;
         }
         h1 {
@@ -10751,7 +10751,7 @@ if (document.readyState === 'loading') {
             justify-content: space-around;
             margin: 20px 0;
             padding: 15px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #16a085, #1abc9c);
             color: white;
             border-radius: 8px;
         }
@@ -10773,7 +10773,7 @@ if (document.readyState === 'loading') {
             margin-top: 20px;
         }
         th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #16a085, #1abc9c);
             color: white;
             padding: 12px;
             text-align: left;

@@ -631,6 +631,53 @@ Le modal affiche maintenant :
 
 ---
 
+## 🎨 Harmonisation des couleurs CSS
+
+### Problème identifié
+Le mode chrono utilisait des couleurs violettes/roses (`#667eea`, `#764ba2`, `#9b59b6`, `#8e44ad`) qui n'étaient pas cohérentes avec la palette de couleurs principale de l'application.
+
+### Solution implémentée
+
+**Palette de couleurs de l'application :**
+- Bleu principal : `#3498db`, `#2980b9`
+- Bleu background : `#0a64da`, `#2020c7`
+- Gris foncé : `#2c3e50`, `#34495e`
+- Orange : `#f39c12`, `#e67e22`
+- Vert : `#27ae60`, `#2ecc71`
+- **Nouveau : Turquoise** `#16a085`, `#1abc9c` (pour le mode chrono)
+
+**Modifications appliquées :**
+
+1. **Remplacement global des couleurs violettes**
+   - `#667eea`, `#764ba2` → `#16a085`, `#1abc9c`
+   - `#9b59b6`, `#8e44ad` → `#16a085`, `#1abc9c`
+
+2. **Fichiers modifiés :**
+   - [script.js](script.js) : ~30 occurrences remplacées
+     - Headers de classement
+     - Boutons du mode chrono
+     - Tableaux de résultats
+     - Export PDF
+     - Modal de sélection
+   - [index.html](index.html) : ~10 occurrences remplacées
+     - Configuration mode chrono
+     - Boutons d'action
+     - Modals
+
+3. **Identité visuelle du mode chrono**
+   - **Turquoise** (`#16a085`, `#1abc9c`) : couleur principale pour différencier le mode chrono
+   - Cohérent avec les autres couleurs de l'app (bleu, vert, orange)
+   - Aspect professionnel et moderne
+
+### Résultat
+✅ Palette de couleurs cohérente dans toute l'application
+✅ Mode chrono facilement identifiable avec la couleur turquoise
+✅ Plus de rose/violet qui détonnait avec le reste
+✅ Design harmonieux et professionnel
+✅ Meilleure expérience utilisateur
+
+---
+
 ## 🤖 Amélioration : Détection automatique LAP vs FINISH pour les relais
 
 ### Problème initial
