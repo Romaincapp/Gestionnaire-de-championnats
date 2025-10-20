@@ -562,38 +562,64 @@ try {
 
     function switchTab(dayNumber) {
         championship.currentDay = dayNumber;
-        
-        document.querySelectorAll('.tab-content').forEach(content => {
+
+        console.log(`[switchTab] Passage à la journée ${dayNumber}`);
+
+        // Retirer la classe active de tous les contenus de journées
+        const allTabContents = document.querySelectorAll('.tab-content');
+        console.log(`[switchTab] ${allTabContents.length} .tab-content trouvés`);
+        allTabContents.forEach(content => {
+            console.log(`[switchTab] Retrait de active sur ${content.id}`);
             content.classList.remove('active');
+            // Force le masquage pour être sûr
+            if (content.id !== `day-${dayNumber}` && content.id !== 'general-ranking') {
+                content.style.display = 'none';
+            }
         });
-        
+
+        // Retirer la classe active de tous les onglets
         document.querySelectorAll('.tab').forEach(tab => {
             tab.classList.remove('active');
         });
-        
+
+        // Ajouter la classe active à l'onglet et au contenu ciblés
         const targetTab = document.querySelector(`[data-day="${dayNumber}"]`);
         const targetContent = document.getElementById(`day-${dayNumber}`);
-        
+
+        console.log(`[switchTab] Onglet trouvé:`, targetTab ? 'OUI' : 'NON');
+        console.log(`[switchTab] Contenu trouvé:`, targetContent ? 'OUI' : 'NON');
+
         if (targetTab) targetTab.classList.add('active');
-        if (targetContent) targetContent.classList.add('active');
+        if (targetContent) {
+            targetContent.classList.add('active');
+            targetContent.style.display = 'block'; // Force l'affichage
+            console.log(`[switchTab] Classe active ajoutée à ${targetContent.id}`);
+        }
     }
     window.switchTab = switchTab;
 
     function switchToGeneralRanking() {
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
+            // Force le masquage de tous les contenus sauf general-ranking
+            if (content.id !== 'general-ranking') {
+                content.style.display = 'none';
+            }
         });
-        
+
         document.querySelectorAll('.tab').forEach(tab => {
             tab.classList.remove('active');
         });
-        
+
         const generalTab = document.querySelector('[data-tab="general"]');
         const generalContent = document.getElementById('general-ranking');
-        
+
         if (generalTab) generalTab.classList.add('active');
-        if (generalContent) generalContent.classList.add('active');
-        
+        if (generalContent) {
+            generalContent.classList.add('active');
+            generalContent.style.display = 'block'; // Force l'affichage
+        }
+
         updateGeneralRanking();
     }
     window.switchToGeneralRanking = switchToGeneralRanking;
