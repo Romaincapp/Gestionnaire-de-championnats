@@ -676,6 +676,116 @@ Le mode chrono utilisait des couleurs violettes/roses (`#667eea`, `#764ba2`, `#9
 ✅ Design harmonieux et professionnel
 ✅ Meilleure expérience utilisateur
 
+### Correction finale - Roses restants
+
+**Problème détecté :** Il restait des couleurs roses (`#f093fb`, `#f5576c`) dans :
+- La section "Gestion des Séries de Course"
+- Les badges de dossards des participants
+- Le bouton "Ajouter des participants"
+- Les cartes de statistiques de série
+
+**Solution :** 10 occurrences supplémentaires remplacées par turquoise (`#16a085`, `#1abc9c`)
+- [index.html](index.html) : 4 occurrences
+- [script.js](script.js) : 6 occurrences
+
+✅ **Vérification finale :** Aucune couleur rose/violette restante dans le code
+
+---
+
+## 👁️ Masquage des options non pertinentes en mode chrono
+
+### Problème identifié
+Les options "Divisions" et "Terrains" restaient visibles en mode chrono, alors qu'elles ne s'appliquent qu'au mode championnat. Cela pouvait induire les utilisateurs en erreur.
+
+### Solution implémentée
+
+**1. Ajout d'IDs aux conteneurs** [index.html:35-58](index.html#L35-L58)
+```html
+<div id="divisionConfigContainer" style="display: flex; align-items: center; gap: 10px;">
+    <!-- Sélecteur de divisions -->
+</div>
+<div id="courtConfigContainer" style="display: flex; align-items: center; gap: 10px;">
+    <!-- Sélecteur de terrains -->
+</div>
+```
+
+**2. Modification de `toggleChronoMode()`** [script.js:7281-7313](script.js#L7281-L7313)
+```javascript
+if (checkbox.checked) {
+    // MODE CHRONO ACTIVÉ
+    // Masquer les options Divisions et Terrains (non pertinentes)
+    if (divisionConfigContainer) divisionConfigContainer.style.display = 'none';
+    if (courtConfigContainer) courtConfigContainer.style.display = 'none';
+    if (courtAssignmentInfo) courtAssignmentInfo.style.display = 'none';
+} else {
+    // MODE CHAMPIONNAT
+    // Réafficher les options Divisions et Terrains
+    if (divisionConfigContainer) divisionConfigContainer.style.display = 'flex';
+    if (courtConfigContainer) courtConfigContainer.style.display = 'flex';
+    if (courtAssignmentInfo) courtAssignmentInfo.style.display = 'block';
+}
+```
+
+### Comportement
+
+**Mode Championnat (par défaut) :**
+- ✅ Divisions visibles
+- ✅ Terrains visibles
+- ✅ Info d'attribution des terrains visible
+- ✅ Checkbox "Mode Chrono" visible
+
+**Mode Chrono (activé) :**
+- ❌ Divisions masquées
+- ❌ Terrains masqués
+- ❌ Info d'attribution masquée
+- ✅ Checkbox "Mode Chrono" visible (pour désactiver)
+
+### Avantages
+✅ Interface simplifiée en mode chrono
+✅ Plus de confusion sur les options disponibles
+✅ Meilleure expérience utilisateur
+✅ Séparation claire entre les deux modes
+✅ Transition fluide lors du changement de mode
+
+### Extension : Masquage des onglets et bouton Appliquer
+
+**Problème :** Les onglets "J1", "Classement Général" et le bouton "Appliquer Configuration" restaient visibles en mode chrono.
+
+**Solution :** Extension de `toggleChronoMode()` [script.js:7281-7323](script.js#L7281-L7323)
+
+**Modifications :**
+- Ajout de `id="tabsContainer"` au conteneur des onglets [index.html:19](index.html#L19)
+- Ajout de `id="applyConfigBtn"` au bouton Appliquer [index.html:63](index.html#L63)
+- Masquage/affichage automatique selon le mode
+
+**Interface finale :**
+
+**Mode Championnat :**
+```
+[J1] [+] [🏆 Classement Général]
+────────────────────────────────
+[Divisions: 3] [Terrains: 4] [☐ Mode Chrono] [✅ Appliquer Configuration]
+Info: Division 1 → Terrains 1-2...
+```
+
+**Mode Chrono :**
+```
+[☑ Mode Chrono]
+────────────────────────────────
+⏱️ Gestion des Séries de Course
+```
+
+**Éléments masqués en mode chrono :**
+- ❌ Onglet "Journée 1"
+- ❌ Bouton "+" (ajouter une journée)
+- ❌ Onglet "🏆 Classement Général"
+- ❌ Sélection des Divisions
+- ❌ Sélection des Terrains
+- ❌ Info d'attribution des terrains
+- ❌ Bouton "Appliquer Configuration"
+
+✅ **Visible** : Uniquement la checkbox "Mode Chrono" (pour pouvoir désactiver le mode)
+
 ---
 
 ## 🤖 Amélioration : Détection automatique LAP vs FINISH pour les relais

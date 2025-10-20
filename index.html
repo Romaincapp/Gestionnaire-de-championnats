@@ -16,7 +16,7 @@
         </div>
 
         <!-- ONGLETS -->
-        <div class="tabs-container">
+        <div class="tabs-container" id="tabsContainer">
             <div class="tabs" id="tabs">
                 <button class="tab active" onclick="switchTab(1)" data-day="1">
                     Journée 1
@@ -32,7 +32,7 @@
             <!-- CONFIGURATION -->
             <div style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 15px; border-radius: 10px; margin-bottom: 20px; color: white;">
                 <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
+                    <div id="divisionConfigContainer" style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-weight: bold;">⚙️ Divisions:</span>
                         <select id="divisionConfig" onchange="updateDivisionConfig()" style="padding: 8px; border-radius: 5px; border: none; font-size: 14px;">
                             <option value="1">1 Division</option>
@@ -43,7 +43,7 @@
                             <option value="6">6 Divisions</option>
                         </select>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
+                    <div id="courtConfigContainer" style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-weight: bold;">🎾 Terrains:</span>
                         <select id="courtConfig" onchange="updateCourtConfig()" style="padding: 8px; border-radius: 5px; border: none; font-size: 14px;">
                             <option value="1">1 Terrain</option>
@@ -60,7 +60,7 @@
                         <input type="checkbox" id="chronoModeCheckbox" onchange="toggleChronoMode()" style="width: 20px; height: 20px; cursor: pointer;">
                         <label for="chronoModeCheckbox" style="font-weight: bold; cursor: pointer;">⏱️ Mode Chrono</label>
                     </div>
-                    <button class="btn" onclick="applyConfiguration()" style="background: white; color: #16a085; font-weight: bold; padding: 8px 20px;">
+                    <button id="applyConfigBtn" class="btn" onclick="applyConfiguration()" style="background: white; color: #16a085; font-weight: bold; padding: 8px 20px;">
                         ✅ Appliquer Configuration
                     </button>
                 </div>
@@ -71,7 +71,7 @@
 
             <!-- MODE CHRONO -->
             <div id="chronoModeSection" style="display: none;">
-                <div class="section" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <div class="section" style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
                     <h2 style="color: white; text-align: center; margin-bottom: 20px;">⏱️ Gestion des Séries de Course</h2>
 
                     <!-- Gestion des séries -->
@@ -79,7 +79,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h3 style="margin: 0; color: #2c3e50;">🏃 Épreuves et Séries</h3>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button class="btn" onclick="showParticipantsManager()" style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white;">
+                                <button class="btn" onclick="showParticipantsManager()" style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
                                     👥 Ajouter des participants
                                 </button>
                                 <button class="btn" onclick="showAddEventModal()" style="background: linear-gradient(135deg, #e67e22, #d35400); color: white;">
@@ -463,14 +463,14 @@
             <h3>👥 Gestion des Participants</h3>
 
             <!-- Formulaire d'ajout de participant -->
-            <div style="background: linear-gradient(135deg, #f093fb, #f5576c); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <div style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h4 style="color: white; margin: 0;">➕ Ajouter un participant</h4>
-                    <button class="btn" onclick="showBulkParticipantsModal()" style="background: white; color: #f5576c; font-weight: bold;">
+                    <button class="btn" onclick="showBulkParticipantsModal()" style="background: white; color: #16a085; font-weight: bold;">
                         📋 Ajout en masse
                     </button>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                     <div>
                         <label style="color: white; font-weight: bold; display: block; margin-bottom: 5px;">🏃 Prénom / Équipe:</label>
                         <input type="text" id="participantName" placeholder="Ex: Jean Dupont ou Équipe A" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
@@ -482,6 +482,21 @@
                     <div>
                         <label style="color: white; font-weight: bold; display: block; margin-bottom: 5px;">🔢 Dossard:</label>
                         <input type="text" id="participantBib" placeholder="Ex: 42" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                    </div>
+                </div>
+                <!-- Champs supplémentaires optionnels -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="color: white; font-weight: bold; display: block; margin-bottom: 5px;">🎂 Âge (optionnel):</label>
+                        <input type="number" id="participantAge" placeholder="Ex: 28" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                    </div>
+                    <div>
+                        <label style="color: white; font-weight: bold; display: block; margin-bottom: 5px;">🌍 Nationalité (optionnel):</label>
+                        <input type="text" id="participantNationality" placeholder="Ex: France, Belgique..." style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
+                    </div>
+                    <div>
+                        <label style="color: white; font-weight: bold; display: block; margin-bottom: 5px;">🏅 Club (optionnel):</label>
+                        <input type="text" id="participantClub" placeholder="Ex: AC Paris" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
                     </div>
                 </div>
                 <button class="btn btn-success" onclick="addParticipantToChrono()" style="margin-top: 15px; width: 100%;">
@@ -507,20 +522,36 @@
 
     <!-- Modal Édition Participant -->
     <div id="editParticipantModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 600px;">
             <h3>✏️ Éditer le participant</h3>
             <div style="display: grid; gap: 15px;">
                 <div>
                     <label style="font-weight: bold; display: block; margin-bottom: 5px;">🏃 Prénom / Équipe:</label>
                     <input type="text" id="editParticipantName" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
                 </div>
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📋 Catégorie:</label>
-                    <input type="text" id="editParticipantCategory" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">📋 Catégorie:</label>
+                        <input type="text" id="editParticipantCategory" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">🔢 Dossard:</label>
+                        <input type="text" id="editParticipantBib" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                    </div>
                 </div>
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🔢 Dossard:</label>
-                    <input type="text" id="editParticipantBib" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">🎂 Âge:</label>
+                        <input type="number" id="editParticipantAge" placeholder="Optionnel" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">🌍 Nationalité:</label>
+                        <input type="text" id="editParticipantNationality" placeholder="Optionnel" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                    </div>
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">🏅 Club:</label>
+                        <input type="text" id="editParticipantClub" placeholder="Optionnel" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                    </div>
                 </div>
             </div>
             <div class="modal-buttons">
@@ -600,17 +631,48 @@
 
     <!-- Modal Ajout en masse Participants -->
     <div id="bulkParticipantsModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content" style="max-width: 900px;">
             <h3>📋 Ajout en masse de participants</h3>
 
-            <div style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 15px; border-radius: 10px; margin-bottom: 20px; color: white;">
+            <!-- Sélection des colonnes -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #ddd;">
+                <h4 style="margin: 0 0 15px 0; color: #2c3e50;">⚙️ Sélectionnez les colonnes à importer</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="bulkCol_bib" checked disabled style="width: 18px; height: 18px; cursor: not-allowed;">
+                        <span style="font-weight: bold;">🔢 Dossard <span style="color: #e74c3c;">*</span></span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="bulkCol_name" checked disabled style="width: 18px; height: 18px; cursor: not-allowed;">
+                        <span style="font-weight: bold;">🏃 Nom <span style="color: #e74c3c;">*</span></span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="bulkCol_category" checked disabled style="width: 18px; height: 18px; cursor: not-allowed;">
+                        <span style="font-weight: bold;">📋 Catégorie <span style="color: #e74c3c;">*</span></span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="bulkCol_age" onchange="updateBulkImportFormat()" style="width: 18px; height: 18px;">
+                        <span>🎂 Âge</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="bulkCol_nationality" onchange="updateBulkImportFormat()" style="width: 18px; height: 18px;">
+                        <span>🌍 Nationalité</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="bulkCol_club" onchange="updateBulkImportFormat()" style="width: 18px; height: 18px;">
+                        <span>🏅 Club</span>
+                    </label>
+                </div>
+                <p style="margin: 10px 0 0 0; font-size: 13px; color: #7f8c8d;">
+                    <span style="color: #e74c3c;">*</span> Champs obligatoires • Les autres sont optionnels
+                </p>
+            </div>
+
+            <div id="bulkImportFormatInfo" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 15px; border-radius: 10px; margin-bottom: 20px; color: white;">
                 <h4 style="margin: 0 0 10px 0;">📝 Format d'importation</h4>
                 <p style="margin: 5px 0; font-size: 14px;">Collez vos données avec <strong>une ligne par participant</strong> dans l'un des formats suivants :</p>
-                <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px; margin-top: 10px; font-family: monospace; font-size: 13px;">
-                    <div style="margin-bottom: 5px;"><strong>Format 1 (avec tabulations) :</strong> Dossard &nbsp;&nbsp;&nbsp; Nom &nbsp;&nbsp;&nbsp; Catégorie</div>
-                    <div style="margin-bottom: 5px;">Exemple: 42 &nbsp;&nbsp;&nbsp; Jean Dupont &nbsp;&nbsp;&nbsp; Senior</div>
-                    <div style="margin: 10px 0;"><strong>Format 2 (avec virgules) :</strong> Dossard,Nom,Catégorie</div>
-                    <div>Exemple: 42,Jean Dupont,Senior</div>
+                <div id="bulkFormatExample" style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px; margin-top: 10px; font-family: monospace; font-size: 13px;">
+                    <!-- Sera mis à jour dynamiquement -->
                 </div>
             </div>
 

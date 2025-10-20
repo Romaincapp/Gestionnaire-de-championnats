@@ -7272,7 +7272,9 @@ if (document.readyState === 'loading') {
         editingSerieId: null, // ID de la série en cours d'édition
         nextSerieId: 1,
         participants: [], // Liste des participants du mode chrono (athlètes ou équipes)
-        nextParticipantId: 1
+        nextParticipantId: 1,
+        customFields: [], // Colonnes personnalisées (âge, nationalité, club, etc.)
+        nextCustomFieldId: 1
     };
 
     window.raceData = raceData;
@@ -7282,17 +7284,43 @@ if (document.readyState === 'loading') {
         const checkbox = document.getElementById('chronoModeCheckbox');
         const chronoSection = document.getElementById('chronoModeSection');
         const dayContent = document.querySelector('.day-content.active');
+        const divisionConfigContainer = document.getElementById('divisionConfigContainer');
+        const courtConfigContainer = document.getElementById('courtConfigContainer');
+        const courtAssignmentInfo = document.getElementById('courtAssignmentInfo');
+        const applyConfigBtn = document.getElementById('applyConfigBtn');
+        const tabsContainer = document.getElementById('tabsContainer');
 
         if (checkbox.checked) {
+            // MODE CHRONO ACTIVÉ
             // Charger les données chrono depuis localStorage au premier affichage
             loadChronoFromLocalStorage();
             chronoSection.style.display = 'block';
             if (dayContent) dayContent.style.display = 'none';
+
+            // Masquer les options Divisions et Terrains (non pertinentes en mode chrono)
+            if (divisionConfigContainer) divisionConfigContainer.style.display = 'none';
+            if (courtConfigContainer) courtConfigContainer.style.display = 'none';
+            if (courtAssignmentInfo) courtAssignmentInfo.style.display = 'none';
+            if (applyConfigBtn) applyConfigBtn.style.display = 'none';
+
+            // Masquer les onglets J1 et Classement Général
+            if (tabsContainer) tabsContainer.style.display = 'none';
+
             displayEventsList();
             displayParticipantsList();
         } else {
+            // MODE CHAMPIONNAT
             chronoSection.style.display = 'none';
             if (dayContent) dayContent.style.display = 'block';
+
+            // Réafficher les options Divisions et Terrains
+            if (divisionConfigContainer) divisionConfigContainer.style.display = 'flex';
+            if (courtConfigContainer) courtConfigContainer.style.display = 'flex';
+            if (courtAssignmentInfo) courtAssignmentInfo.style.display = 'block';
+            if (applyConfigBtn) applyConfigBtn.style.display = 'block';
+
+            // Réafficher les onglets
+            if (tabsContainer) tabsContainer.style.display = 'block';
         }
     };
 
@@ -7386,6 +7414,9 @@ if (document.readyState === 'loading') {
         const name = document.getElementById('participantName').value.trim();
         const category = document.getElementById('participantCategory').value.trim();
         const bib = document.getElementById('participantBib').value.trim();
+        const age = document.getElementById('participantAge').value.trim();
+        const nationality = document.getElementById('participantNationality').value.trim();
+        const club = document.getElementById('participantClub').value.trim();
 
         if (!name) {
             showNotification('Veuillez entrer un nom ou une équipe', 'warning');
@@ -7413,7 +7444,10 @@ if (document.readyState === 'loading') {
             id: raceData.nextParticipantId++,
             name: name,
             category: category,
-            bib: bib
+            bib: bib,
+            age: age || null,
+            nationality: nationality || null,
+            club: club || null
         };
 
         raceData.participants.push(participant);
@@ -7422,6 +7456,9 @@ if (document.readyState === 'loading') {
         document.getElementById('participantName').value = '';
         document.getElementById('participantCategory').value = '';
         document.getElementById('participantBib').value = '';
+        document.getElementById('participantAge').value = '';
+        document.getElementById('participantNationality').value = '';
+        document.getElementById('participantClub').value = '';
 
         displayParticipantsList();
         saveChronoToLocalStorage();
@@ -7448,19 +7485,31 @@ if (document.readyState === 'loading') {
 
         participantsList.innerHTML = `
             <div style="display: grid; gap: 10px;">
-                ${sortedParticipants.map(participant => `
+                ${sortedParticipants.map(participant => {
+                    // Construire les infos supplémentaires
+                    const extraInfo = [];
+                    if (participant.age) extraInfo.push(`🎂 ${participant.age} ans`);
+                    if (participant.nationality) extraInfo.push(`🌍 ${participant.nationality}`);
+                    if (participant.club) extraInfo.push(`🏅 ${participant.club}`);
+
+                    return `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 2px solid #ddd; transition: all 0.3s;">
                         <div style="display: flex; gap: 20px; align-items: center; flex: 1;">
-                            <div style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; min-width: 60px; text-align: center;">
+                            <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; min-width: 60px; text-align: center;">
                                 ${participant.bib}
                             </div>
                             <div style="flex: 1;">
                                 <div style="font-weight: bold; font-size: 16px; color: #2c3e50; margin-bottom: 5px;">
                                     🏃 ${participant.name}
                                 </div>
-                                <div style="font-size: 14px; color: #7f8c8d;">
+                                <div style="font-size: 14px; color: #7f8c8d; margin-bottom: 3px;">
                                     📋 ${participant.category}
                                 </div>
+                                ${extraInfo.length > 0 ? `
+                                    <div style="font-size: 13px; color: #95a5a6; margin-top: 5px;">
+                                        ${extraInfo.join(' • ')}
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px;">
@@ -7472,7 +7521,7 @@ if (document.readyState === 'loading') {
                             </button>
                         </div>
                     </div>
-                `).join('')}
+                `}).join('')}
             </div>
         `;
     }
@@ -7485,6 +7534,9 @@ if (document.readyState === 'loading') {
         document.getElementById('editParticipantName').value = participant.name;
         document.getElementById('editParticipantCategory').value = participant.category;
         document.getElementById('editParticipantBib').value = participant.bib;
+        document.getElementById('editParticipantAge').value = participant.age || '';
+        document.getElementById('editParticipantNationality').value = participant.nationality || '';
+        document.getElementById('editParticipantClub').value = participant.club || '';
 
         document.getElementById('editParticipantModal').style.display = 'block';
     };
@@ -7498,9 +7550,12 @@ if (document.readyState === 'loading') {
         const name = document.getElementById('editParticipantName').value.trim();
         const category = document.getElementById('editParticipantCategory').value.trim();
         const bib = document.getElementById('editParticipantBib').value.trim();
+        const age = document.getElementById('editParticipantAge').value.trim();
+        const nationality = document.getElementById('editParticipantNationality').value.trim();
+        const club = document.getElementById('editParticipantClub').value.trim();
 
         if (!name || !category || !bib) {
-            showNotification('Tous les champs sont obligatoires', 'warning');
+            showNotification('Les champs Nom, Catégorie et Dossard sont obligatoires', 'warning');
             return;
         }
 
@@ -7517,6 +7572,9 @@ if (document.readyState === 'loading') {
         participant.name = name;
         participant.category = category;
         participant.bib = bib;
+        participant.age = age || null;
+        participant.nationality = nationality || null;
+        participant.club = club || null;
 
         displayParticipantsList();
         closeEditParticipantModal();
@@ -7545,7 +7603,53 @@ if (document.readyState === 'loading') {
         document.getElementById('bulkParticipantsText').value = '';
         document.getElementById('bulkParticipantsPreview').style.display = 'none';
         bulkParticipantsData = [];
+        updateBulkImportFormat(); // Mettre à jour le format selon les colonnes sélectionnées
         document.getElementById('bulkParticipantsModal').style.display = 'block';
+    };
+
+    // Mettre à jour le format d'import selon les colonnes sélectionnées
+    window.updateBulkImportFormat = function() {
+        const hasAge = document.getElementById('bulkCol_age').checked;
+        const hasNationality = document.getElementById('bulkCol_nationality').checked;
+        const hasClub = document.getElementById('bulkCol_club').checked;
+
+        // Construire les colonnes
+        const columns = ['Dossard', 'Nom', 'Catégorie'];
+        const exampleTab = ['42', 'Jean Dupont', 'Senior'];
+        const exampleCSV = ['42', 'Jean Dupont', 'Senior'];
+
+        if (hasAge) {
+            columns.push('Âge');
+            exampleTab.push('28');
+            exampleCSV.push('28');
+        }
+        if (hasNationality) {
+            columns.push('Nationalité');
+            exampleTab.push('France');
+            exampleCSV.push('France');
+        }
+        if (hasClub) {
+            columns.push('Club');
+            exampleTab.push('AC Paris');
+            exampleCSV.push('AC Paris');
+        }
+
+        // Générer le HTML du format
+        const formatHTML = `
+            <div style="margin-bottom: 5px;"><strong>Format 1 (avec tabulations) :</strong> ${columns.join(' &nbsp;&nbsp;&nbsp; ')}</div>
+            <div style="margin-bottom: 5px;">Exemple: ${exampleTab.join(' &nbsp;&nbsp;&nbsp; ')}</div>
+            <div style="margin: 10px 0;"><strong>Format 2 (avec virgules) :</strong> ${columns.join(',')}</div>
+            <div>Exemple: ${exampleCSV.join(',')}</div>
+        `;
+
+        document.getElementById('bulkFormatExample').innerHTML = formatHTML;
+
+        // Mettre à jour le placeholder du textarea
+        const placeholderTab = `${exampleTab.join('\t')}\n43\tMarie Martin\tU18${hasAge ? '\t25' : ''}${hasNationality ? '\tBelgique' : ''}${hasClub ? '\tRC Liège' : ''}`;
+        const placeholderCSV = `${exampleCSV.join(',')}\n43,Marie Martin,U18${hasAge ? ',25' : ''}${hasNationality ? ',Belgique' : ''}${hasClub ? ',RC Liège' : ''}`;
+
+        document.getElementById('bulkParticipantsText').placeholder =
+            `Exemple avec tabulations:\n${placeholderTab}\n\nou avec virgules:\n${placeholderCSV}`;
     };
 
     window.closeBulkParticipantsModal = function() {
@@ -7561,6 +7665,13 @@ if (document.readyState === 'loading') {
             return;
         }
 
+        // Récupérer les colonnes sélectionnées
+        const hasAge = document.getElementById('bulkCol_age').checked;
+        const hasNationality = document.getElementById('bulkCol_nationality').checked;
+        const hasClub = document.getElementById('bulkCol_club').checked;
+
+        const expectedColumns = 3 + (hasAge ? 1 : 0) + (hasNationality ? 1 : 0) + (hasClub ? 1 : 0);
+
         const lines = text.split('\n').filter(line => line.trim());
         bulkParticipantsData = [];
         const errors = [];
@@ -7571,23 +7682,28 @@ if (document.readyState === 'loading') {
 
             // Détecter le format (tabulation ou virgule)
             if (line.includes('\t')) {
-                parts = line.split('\t').map(p => p.trim()).filter(p => p);
+                parts = line.split('\t').map(p => p.trim());
             } else if (line.includes(',')) {
-                parts = line.split(',').map(p => p.trim()).filter(p => p);
+                parts = line.split(',').map(p => p.trim());
             } else {
                 // Essayer de split par espaces multiples
-                parts = line.split(/\s{2,}/).map(p => p.trim()).filter(p => p);
+                parts = line.split(/\s{2,}/).map(p => p.trim());
+            }
+
+            // Filtrer les parties vides à la fin
+            while (parts.length > 0 && !parts[parts.length - 1]) {
+                parts.pop();
             }
 
             if (parts.length < 3) {
-                errors.push(`Ligne ${lineNum}: format invalide (3 colonnes requises: dossard, nom, catégorie)`);
+                errors.push(`Ligne ${lineNum}: format invalide (minimum 3 colonnes: dossard, nom, catégorie)`);
                 return;
             }
 
-            const [bib, name, category] = parts;
+            const [bib, name, category, ...extraFields] = parts;
 
             if (!bib || !name || !category) {
-                errors.push(`Ligne ${lineNum}: colonnes vides détectées`);
+                errors.push(`Ligne ${lineNum}: colonnes obligatoires vides`);
                 return;
             }
 
@@ -7605,11 +7721,32 @@ if (document.readyState === 'loading') {
                 return;
             }
 
-            bulkParticipantsData.push({
+            // Construire l'objet participant avec les champs supplémentaires
+            const participant = {
                 bib: bib,
                 name: name,
-                category: category
-            });
+                category: category,
+                age: null,
+                nationality: null,
+                club: null
+            };
+
+            // Parser les champs supplémentaires dans l'ordre
+            let fieldIndex = 0;
+            if (hasAge && extraFields[fieldIndex]) {
+                participant.age = extraFields[fieldIndex];
+                fieldIndex++;
+            }
+            if (hasNationality && extraFields[fieldIndex]) {
+                participant.nationality = extraFields[fieldIndex];
+                fieldIndex++;
+            }
+            if (hasClub && extraFields[fieldIndex]) {
+                participant.club = extraFields[fieldIndex];
+                fieldIndex++;
+            }
+
+            bulkParticipantsData.push(participant);
         });
 
         // Afficher l'aperçu
@@ -7621,17 +7758,24 @@ if (document.readyState === 'loading') {
         } else {
             previewContent.innerHTML = `
                 <div style="display: grid; gap: 8px;">
-                    ${bulkParticipantsData.map((p, i) => `
+                    ${bulkParticipantsData.map((p, i) => {
+                        const extraInfo = [];
+                        if (p.age) extraInfo.push(`🎂 ${p.age} ans`);
+                        if (p.nationality) extraInfo.push(`🌍 ${p.nationality}`);
+                        if (p.club) extraInfo.push(`🏅 ${p.club}`);
+
+                        return `
                         <div style="display: flex; gap: 15px; padding: 10px; background: white; border-radius: 5px; border: 2px solid #27ae60;">
-                            <div style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; min-width: 50px; text-align: center;">
+                            <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; min-width: 50px; text-align: center;">
                                 ${p.bib}
                             </div>
                             <div style="flex: 1;">
                                 <div style="font-weight: bold;">${p.name}</div>
                                 <div style="font-size: 12px; color: #7f8c8d;">${p.category}</div>
+                                ${extraInfo.length > 0 ? `<div style="font-size: 11px; color: #95a5a6; margin-top: 3px;">${extraInfo.join(' • ')}</div>` : ''}
                             </div>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
             `;
         }
@@ -7665,7 +7809,10 @@ if (document.readyState === 'loading') {
                 id: raceData.nextParticipantId++,
                 name: participant.name,
                 category: participant.category,
-                bib: participant.bib
+                bib: participant.bib,
+                age: participant.age || null,
+                nationality: participant.nationality || null,
+                club: participant.club || null
             });
             addedCount++;
         });
@@ -8003,7 +8150,7 @@ if (document.readyState === 'loading') {
                            data-bib="${participant.bib}"
                            ${isChecked ? 'checked' : ''}
                            style="width: 18px; height: 18px; cursor: pointer;">
-                    <div style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 4px 8px; border-radius: 5px; font-weight: bold; min-width: 45px; text-align: center; font-size: 12px;">
+                    <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 4px 8px; border-radius: 5px; font-weight: bold; min-width: 45px; text-align: center; font-size: 12px;">
                         ${participant.bib}
                     </div>
                     <span style="font-weight: bold;">${participant.name}</span>
@@ -8323,7 +8470,7 @@ if (document.readyState === 'loading') {
 
                 <!-- Saisie rapide dossard (visible uniquement si course lancée) -->
                 ${serie.isRunning ? `
-                    <div style="background: linear-gradient(135deg, #f093fb, #f5576c); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                             <label style="color: white; font-weight: bold; font-size: 16px;">⚡ Saisie Rapide:</label>
                             <input
@@ -9026,7 +9173,7 @@ if (document.readyState === 'loading') {
         const medals = ['🥇', '🥈', '🥉'];
 
         let html = `
-            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px;">
+            <div style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); padding: 20px; border-radius: 10px;">
                 <h3 style="color: white; text-align: center; margin-bottom: 20px;">🏆 Classement Général</h3>
                 <div style="background: white; border-radius: 10px; padding: 20px;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -9089,7 +9236,7 @@ if (document.readyState === 'loading') {
                             <div style="font-size: 14px; opacity: 0.9;">Participants Totaux</div>
                             <div style="font-size: 32px; font-weight: bold;">${serie.participants.length}</div>
                         </div>
-                        <div style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 15px; border-radius: 8px; text-align: center;">
                             <div style="font-size: 14px; opacity: 0.9;">Terminés</div>
                             <div style="font-size: 32px; font-weight: bold;">
                                 ${serie.participants.filter(p => p.status === 'finished').length}
@@ -9217,6 +9364,28 @@ if (document.readyState === 'loading') {
             );
         }
 
+        // Option 7: Par Nationalité (si plusieurs nationalités détectées)
+        if (analysis.nationalities.length > 1) {
+            optionsHTML += createRankingOption(
+                '🌍 Classements par Nationalité',
+                'Classements séparés pour chaque nationalité',
+                'by-nationality',
+                '#3498db',
+                `${analysis.nationalities.length} nationalité(s)`
+            );
+        }
+
+        // Option 8: Par Club (si plusieurs clubs détectés)
+        if (analysis.clubs.length > 1) {
+            optionsHTML += createRankingOption(
+                '🏅 Classements par Club',
+                'Classements séparés pour chaque club',
+                'by-club',
+                '#27ae60',
+                `${analysis.clubs.length} club(s)`
+            );
+        }
+
         optionsContainer.innerHTML = optionsHTML;
         modal.style.display = 'block';
     }
@@ -9271,6 +9440,8 @@ if (document.readyState === 'loading') {
             hasMultiEvents: false,
             multiEventsParticipants: 0,
             categories: new Set(),
+            nationalities: new Set(),
+            clubs: new Set(),
             participantBibMap: {} // Pour détecter les participants multi-épreuves
         };
 
@@ -9306,6 +9477,16 @@ if (document.readyState === 'loading') {
                             // Catégories
                             if (participant.category) {
                                 analysis.categories.add(participant.category);
+                            }
+
+                            // Nationalités
+                            if (participant.nationality) {
+                                analysis.nationalities.add(participant.nationality);
+                            }
+
+                            // Clubs
+                            if (participant.club) {
+                                analysis.clubs.add(participant.club);
                             }
 
                             // Multi-épreuves
@@ -9382,6 +9563,10 @@ if (document.readyState === 'loading') {
             generateRankingByDistance(distance);
         } else if (type === 'by-category') {
             generateRankingByCategory();
+        } else if (type === 'by-nationality') {
+            generateRankingByNationality();
+        } else if (type === 'by-club') {
+            generateRankingByClub();
         }
     };
 
@@ -9553,7 +9738,81 @@ if (document.readyState === 'loading') {
             });
         });
 
-        displayRankingByCategories(categoriesMap);
+        displayRankingByCategories(categoriesMap, '📋 Classements par Catégorie');
+    }
+
+    // Classement par nationalité
+    function generateRankingByNationality() {
+        const nationalitiesMap = {};
+
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    serie.participants.forEach(participant => {
+                        if (participant.status === 'finished') {
+                            const nationality = participant.nationality || 'Non renseignée';
+
+                            if (!nationalitiesMap[nationality]) {
+                                nationalitiesMap[nationality] = [];
+                            }
+
+                            nationalitiesMap[nationality].push({
+                                name: participant.name,
+                                bib: participant.bib,
+                                category: participant.category,
+                                nationality: participant.nationality,
+                                club: participant.club,
+                                age: participant.age,
+                                eventName: event.name,
+                                serieName: serie.name,
+                                totalDistance: participant.totalDistance,
+                                totalTime: participant.finishTime || participant.totalTime,
+                                totalLaps: participant.laps.length
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        displayRankingByCategories(nationalitiesMap, '🌍 Classements par Nationalité');
+    }
+
+    // Classement par club
+    function generateRankingByClub() {
+        const clubsMap = {};
+
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    serie.participants.forEach(participant => {
+                        if (participant.status === 'finished') {
+                            const club = participant.club || 'Sans club';
+
+                            if (!clubsMap[club]) {
+                                clubsMap[club] = [];
+                            }
+
+                            clubsMap[club].push({
+                                name: participant.name,
+                                bib: participant.bib,
+                                category: participant.category,
+                                nationality: participant.nationality,
+                                club: participant.club,
+                                age: participant.age,
+                                eventName: event.name,
+                                serieName: serie.name,
+                                totalDistance: participant.totalDistance,
+                                totalTime: participant.finishTime || participant.totalTime,
+                                totalLaps: participant.laps.length
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        displayRankingByCategories(clubsMap, '🏅 Classements par Club');
     }
 
     // Fonction générique pour générer un classement filtré
@@ -9840,13 +10099,13 @@ if (document.readyState === 'loading') {
     };
 
     // Afficher les classements par catégorie
-    function displayRankingByCategories(categoriesMap) {
+    function displayRankingByCategories(categoriesMap, customTitle = '📋 Classements par Catégorie') {
         const rankingSection = document.getElementById('overallChronoRanking');
         const categories = Object.keys(categoriesMap).sort();
 
         // Stocker les données pour l'export PDF
         lastChronoRankingData = {
-            title: '📋 Classements par Catégorie',
+            title: customTitle,
             type: 'category',
             participants: [],
             categoriesMap: categoriesMap
@@ -9855,7 +10114,7 @@ if (document.readyState === 'loading') {
         let html = `
             <div style="background: white; padding: 20px; border-radius: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <h3 style="margin: 0; color: #2c3e50;">📋 Classements par Catégorie</h3>
+                    <h3 style="margin: 0; color: #2c3e50;">${customTitle}</h3>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
                             ⬅️ Retour aux séries
