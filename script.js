@@ -8701,6 +8701,9 @@ if (document.readyState === 'loading') {
                 const quickInput = document.getElementById('quickFinishInput');
                 if (quickInput) quickInput.focus();
             }, 100);
+
+            // Sauvegarder l'état dans le localStorage
+            saveChronoToLocalStorage();
         } else {
             // Pause
             serie.isRunning = false;
@@ -8709,6 +8712,9 @@ if (document.readyState === 'loading') {
             btn.textContent = '▶️ Reprendre';
             btn.className = 'btn btn-success';
             showNotification('Course en pause', 'warning');
+
+            // Sauvegarder l'état dans le localStorage
+            saveChronoToLocalStorage();
         }
     };
 

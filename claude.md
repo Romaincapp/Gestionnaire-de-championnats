@@ -871,3 +871,114 @@ Le système affiche maintenant des notifications explicites :
 ✅ Compatible avec l'ancien système (L+dossard toujours fonctionnel)
 ✅ Notifications claires pour confirmer l'action
 
+---
+
+## 💾 Persistance des données - localStorage
+
+### Vue d'ensemble
+
+Toutes les modifications apportées au mode chrono depuis hier sont **correctement sauvegardées** dans le localStorage via la fonction `saveChronoToLocalStorage()` [script.js:104-112](script.js#L104-L112).
+
+```javascript
+function saveChronoToLocalStorage() {
+    try {
+        localStorage.setItem('chronoRaceData', JSON.stringify(raceData));
+        console.log("Données chrono sauvegardées");
+    } catch (error) {
+        console.warn("Erreur sauvegarde chrono:", error);
+    }
+}
+```
+
+### Opérations sauvegardées automatiquement
+
+#### ✅ Gestion des participants
+- **Ajout de participant** [script.js:7490](script.js#L7490)
+- **Édition de participant** [script.js:7607](script.js#L7607)
+- **Suppression de participant** [script.js:7620](script.js#L7620)
+
+#### ✅ Gestion des épreuves
+- **Création d'épreuve** [script.js:7931](script.js#L7931)
+- **Édition d'épreuve** [script.js:7973](script.js#L7973)
+- **Suppression d'épreuve** [script.js:7973](script.js#L7973)
+
+#### ✅ Gestion des séries
+- **Création de série** [script.js:8344](script.js#L8344)
+- **Édition de série (avec préservation des chronos)** [script.js:8344](script.js#L8344)
+- **Suppression de série** [script.js:8404](script.js#L8404)
+- **Démarrage d'une série** [script.js:8420](script.js#L8420)
+
+#### ✅ Chronométrage
+- **Enregistrement d'un tour (LAP)** [script.js:8788](script.js#L8788)
+- **Finish d'un participant** [script.js:8830](script.js#L8830)
+- **Finish automatique de tous les participants** [script.js:8836](script.js#L8836)
+- **Édition manuelle du temps d'un participant** [script.js:9004](script.js#L9004)
+
+#### ✅ Import/Export
+- **Import en masse de participants** [script.js:8591](script.js#L8591)
+- **Import compétition chrono complète** [script.js:10942](script.js#L10942)
+
+### ✅ Correction appliquée - Sauvegarde démarrage/pause
+
+**Problème détecté initialement :** La fonction `toggleRaceTimer()` ne sauvegardait pas les changements dans le localStorage.
+
+**Solution implémentée** [script.js:8706 & 8717](script.js#L8706)
+
+Ajout de `saveChronoToLocalStorage()` dans les deux branches de `toggleRaceTimer()` :
+
+```javascript
+// Démarrage de la course
+setTimeout(() => {
+    const quickInput = document.getElementById('quickFinishInput');
+    if (quickInput) quickInput.focus();
+}, 100);
+saveChronoToLocalStorage(); // ✅ AJOUTÉ
+
+// Pause de la course
+showNotification('Course en pause', 'warning');
+saveChronoToLocalStorage(); // ✅ AJOUTÉ
+```
+
+**Maintenant sauvegardé :**
+- ✅ Démarrage de la course
+- ✅ Pause de la course
+- ✅ État `isRunning`
+- ✅ État des participants (`ready` → `running`)
+
+### Chargement depuis localStorage
+
+**Fonction de chargement** [script.js:114-127](script.js#L114-127)
+```javascript
+function loadFromLocalStorage() {
+    try {
+        const saved = localStorage.getItem('chronoRaceData');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            Object.assign(raceData, parsed);
+            console.log("Données chrono chargées");
+        }
+    } catch (error) {
+        console.warn("Erreur chargement chrono:", error);
+    }
+}
+```
+
+**Chargement automatique au démarrage** [script.js:~150](script.js)
+- Les données sont chargées automatiquement lors de l'initialisation de l'application
+- L'affichage est mis à jour en conséquence
+
+### Résumé
+
+✅ **Sauvegarde complète** pour :
+- Participants (ajout, édition, suppression, import)
+- Épreuves (création, édition, suppression)
+- Séries (création, édition avec préservation chronos, suppression, démarrage)
+- Chronométrage (démarrage/pause, LAP, FINISH, édition manuelle)
+- Import compétition complète
+
+✅ **Correction appliquée** :
+- ✅ Sauvegarde ajoutée dans `toggleRaceTimer()` pour l'état démarrage/pause
+
+✅ **Conclusion générale** :
+**TOUTES les données du mode chrono sont maintenant sauvegardées automatiquement dans le localStorage.** L'utilisateur peut fermer/rafraîchir la page à tout moment sans aucune perte de données.
+
