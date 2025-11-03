@@ -1,0 +1,459 @@
+{
+  "config": {
+    "numDivisions": 3,
+    "numCourts": 4
+  },
+  "days": {
+    "1": {
+      "players": {
+        "1": [
+          "Alice Martin",
+          "Bob Durand",
+          "Charlie Dubois",
+          "David Laurent"
+        ],
+        "2": [
+          "Eve Bernard",
+          "Frank Moreau",
+          "Grace Simon",
+          "Henry Petit"
+        ],
+        "3": [
+          "Iris Roux",
+          "Jack Michel",
+          "Karen Leroy",
+          "Leo Garcia"
+        ]
+      },
+      "matches": {
+        "1": [],
+        "2": [],
+        "3": []
+      },
+      "pools": {
+        "enabled": true,
+        "divisions": {
+          "1": {
+            "pools": [
+              ["Alice Martin", "Bob Durand"],
+              ["Charlie Dubois", "David Laurent"]
+            ],
+            "matches": [
+              {
+                "id": 0,
+                "player1": "Alice Martin",
+                "player2": "Bob Durand",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 1,
+                "dayNumber": 1,
+                "score1": "11",
+                "score2": "8",
+                "completed": true,
+                "winner": "Alice Martin",
+                "isPoolMatch": true
+              },
+              {
+                "id": 1,
+                "player1": "Charlie Dubois",
+                "player2": "David Laurent",
+                "poolIndex": 1,
+                "poolName": "Poule B",
+                "division": 1,
+                "dayNumber": 1,
+                "score1": "11",
+                "score2": "5",
+                "completed": true,
+                "winner": "Charlie Dubois",
+                "isPoolMatch": true
+              }
+            ],
+            "finalPhase": []
+          },
+          "2": {
+            "pools": [
+              ["Eve Bernard", "Frank Moreau"],
+              ["Grace Simon", "Henry Petit"]
+            ],
+            "matches": [
+              {
+                "id": 0,
+                "player1": "Eve Bernard",
+                "player2": "Frank Moreau",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 2,
+                "dayNumber": 1,
+                "score1": "11",
+                "score2": "9",
+                "completed": true,
+                "winner": "Eve Bernard",
+                "isPoolMatch": true
+              },
+              {
+                "id": 1,
+                "player1": "Grace Simon",
+                "player2": "Henry Petit",
+                "poolIndex": 1,
+                "poolName": "Poule B",
+                "division": 2,
+                "dayNumber": 1,
+                "score1": "11",
+                "score2": "7",
+                "completed": true,
+                "winner": "Grace Simon",
+                "isPoolMatch": true
+              }
+            ],
+            "finalPhase": []
+          },
+          "3": {
+            "pools": [
+              ["Iris Roux", "Jack Michel"],
+              ["Karen Leroy", "Leo Garcia"]
+            ],
+            "matches": [
+              {
+                "id": 0,
+                "player1": "Iris Roux",
+                "player2": "Jack Michel",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 3,
+                "dayNumber": 1,
+                "score1": "11",
+                "score2": "6",
+                "completed": true,
+                "winner": "Iris Roux",
+                "isPoolMatch": true
+              },
+              {
+                "id": 1,
+                "player1": "Karen Leroy",
+                "player2": "Leo Garcia",
+                "poolIndex": 1,
+                "poolName": "Poule B",
+                "division": 3,
+                "dayNumber": 1,
+                "score1": "11",
+                "score2": "4",
+                "completed": true,
+                "winner": "Karen Leroy",
+                "isPoolMatch": true
+              }
+            ],
+            "finalPhase": []
+          }
+        }
+      }
+    },
+    "2": {
+      "players": {
+        "1": [
+          "Alice Martin",
+          "Charlie Dubois",
+          "Bob Durand",
+          "David Laurent"
+        ],
+        "2": [
+          "Eve Bernard",
+          "Grace Simon",
+          "Frank Moreau",
+          "Henry Petit"
+        ],
+        "3": [
+          "Iris Roux",
+          "Karen Leroy",
+          "Jack Michel",
+          "Leo Garcia"
+        ]
+      },
+      "matches": {
+        "1": [],
+        "2": [],
+        "3": []
+      },
+      "pools": {
+        "enabled": true,
+        "divisions": {
+          "1": {
+            "pools": [
+              ["Alice Martin", "Charlie Dubois", "Bob Durand", "David Laurent"]
+            ],
+            "matches": [
+              {
+                "id": 0,
+                "player1": "Alice Martin",
+                "player2": "Charlie Dubois",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 1,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "9",
+                "completed": true,
+                "winner": "Alice Martin",
+                "isPoolMatch": true
+              },
+              {
+                "id": 1,
+                "player1": "Alice Martin",
+                "player2": "Bob Durand",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 1,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "7",
+                "completed": true,
+                "winner": "Alice Martin",
+                "isPoolMatch": true
+              },
+              {
+                "id": 2,
+                "player1": "Alice Martin",
+                "player2": "David Laurent",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 1,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "5",
+                "completed": true,
+                "winner": "Alice Martin",
+                "isPoolMatch": true
+              },
+              {
+                "id": 3,
+                "player1": "Charlie Dubois",
+                "player2": "Bob Durand",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 1,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "8",
+                "completed": true,
+                "winner": "Charlie Dubois",
+                "isPoolMatch": true
+              },
+              {
+                "id": 4,
+                "player1": "Charlie Dubois",
+                "player2": "David Laurent",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 1,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "6",
+                "completed": true,
+                "winner": "Charlie Dubois",
+                "isPoolMatch": true
+              },
+              {
+                "id": 5,
+                "player1": "Bob Durand",
+                "player2": "David Laurent",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 1,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "9",
+                "completed": true,
+                "winner": "Bob Durand",
+                "isPoolMatch": true
+              }
+            ],
+            "finalPhase": []
+          },
+          "2": {
+            "pools": [
+              ["Eve Bernard", "Grace Simon", "Frank Moreau", "Henry Petit"]
+            ],
+            "matches": [
+              {
+                "id": 0,
+                "player1": "Eve Bernard",
+                "player2": "Grace Simon",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 2,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "8",
+                "completed": true,
+                "winner": "Eve Bernard",
+                "isPoolMatch": true
+              },
+              {
+                "id": 1,
+                "player1": "Eve Bernard",
+                "player2": "Frank Moreau",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 2,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "6",
+                "completed": true,
+                "winner": "Eve Bernard",
+                "isPoolMatch": true
+              },
+              {
+                "id": 2,
+                "player1": "Eve Bernard",
+                "player2": "Henry Petit",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 2,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "7",
+                "completed": true,
+                "winner": "Eve Bernard",
+                "isPoolMatch": true
+              },
+              {
+                "id": 3,
+                "player1": "Grace Simon",
+                "player2": "Frank Moreau",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 2,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "9",
+                "completed": true,
+                "winner": "Grace Simon",
+                "isPoolMatch": true
+              },
+              {
+                "id": 4,
+                "player1": "Grace Simon",
+                "player2": "Henry Petit",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 2,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "5",
+                "completed": true,
+                "winner": "Grace Simon",
+                "isPoolMatch": true
+              },
+              {
+                "id": 5,
+                "player1": "Frank Moreau",
+                "player2": "Henry Petit",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 2,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "10",
+                "completed": true,
+                "winner": "Frank Moreau",
+                "isPoolMatch": true
+              }
+            ],
+            "finalPhase": []
+          },
+          "3": {
+            "pools": [
+              ["Iris Roux", "Karen Leroy", "Jack Michel", "Leo Garcia"]
+            ],
+            "matches": [
+              {
+                "id": 0,
+                "player1": "Iris Roux",
+                "player2": "Karen Leroy",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 3,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "7",
+                "completed": true,
+                "winner": "Iris Roux",
+                "isPoolMatch": true
+              },
+              {
+                "id": 1,
+                "player1": "Iris Roux",
+                "player2": "Jack Michel",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 3,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "9",
+                "completed": true,
+                "winner": "Iris Roux",
+                "isPoolMatch": true
+              },
+              {
+                "id": 2,
+                "player1": "Iris Roux",
+                "player2": "Leo Garcia",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 3,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "6",
+                "completed": true,
+                "winner": "Iris Roux",
+                "isPoolMatch": true
+              },
+              {
+                "id": 3,
+                "player1": "Karen Leroy",
+                "player2": "Jack Michel",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 3,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "8",
+                "completed": true,
+                "winner": "Karen Leroy",
+                "isPoolMatch": true
+              },
+              {
+                "id": 4,
+                "player1": "Karen Leroy",
+                "player2": "Leo Garcia",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 3,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "10",
+                "completed": true,
+                "winner": "Karen Leroy",
+                "isPoolMatch": true
+              },
+              {
+                "id": 5,
+                "player1": "Jack Michel",
+                "player2": "Leo Garcia",
+                "poolIndex": 0,
+                "poolName": "Poule A",
+                "division": 3,
+                "dayNumber": 2,
+                "score1": "11",
+                "score2": "9",
+                "completed": true,
+                "winner": "Jack Michel",
+                "isPoolMatch": true
+              }
+            ],
+            "finalPhase": []
+          }
+        }
+      }
+    }
+  }
+}

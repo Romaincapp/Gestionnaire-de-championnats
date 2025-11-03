@@ -30,41 +30,41 @@
 
         <div class="content">
             <!-- CONFIGURATION -->
-            <div style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 15px; border-radius: 10px; margin-bottom: 20px; color: white;">
-                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center;">
-                    <div id="divisionConfigContainer" style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-weight: bold;">⚙️ Divisions:</span>
-                        <select id="divisionConfig" onchange="updateDivisionConfig()" style="padding: 8px; border-radius: 5px; border: none; font-size: 14px;">
-                            <option value="1">1 Division</option>
-                            <option value="2">2 Divisions</option>
-                            <option value="3" selected>3 Divisions</option>
-                            <option value="4">4 Divisions</option>
-                            <option value="5">5 Divisions</option>
-                            <option value="6">6 Divisions</option>
+            <div style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: white;">
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: center;">
+                    <div id="divisionConfigContainer" style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: bold; font-size: 14px;">⚙️ Divisions:</span>
+                        <select id="divisionConfig" onchange="updateDivisionConfig()" style="padding: 6px 10px; border-radius: 5px; border: none; font-size: 13px;">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
                         </select>
                     </div>
-                    <div id="courtConfigContainer" style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-weight: bold;">🎾 Terrains:</span>
-                        <select id="courtConfig" onchange="updateCourtConfig()" style="padding: 8px; border-radius: 5px; border: none; font-size: 14px;">
-                            <option value="1">1 Terrain</option>
-                            <option value="2">2 Terrains</option>
-                            <option value="3">3 Terrains</option>
-                            <option value="4" selected>4 Terrains</option>
-                            <option value="5">5 Terrains</option>
-                            <option value="6">6 Terrains</option>
-                            <option value="8">8 Terrains</option>
-                            <option value="10">10 Terrains</option>
+                    <div id="courtConfigContainer" style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: bold; font-size: 14px;">🎾 Terrains:</span>
+                        <select id="courtConfig" onchange="updateCourtConfig()" style="padding: 6px 10px; border-radius: 5px; border: none; font-size: 13px;">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4" selected>4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="8">8</option>
+                            <option value="10">10</option>
                         </select>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" id="chronoModeCheckbox" onchange="toggleChronoMode()" style="width: 20px; height: 20px; cursor: pointer;">
-                        <label for="chronoModeCheckbox" style="font-weight: bold; cursor: pointer;">⏱️ Mode Chrono</label>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="chronoModeCheckbox" onchange="toggleChronoMode()" style="width: 18px; height: 18px; cursor: pointer;">
+                        <label for="chronoModeCheckbox" style="font-weight: bold; cursor: pointer; font-size: 14px;">⏱️ Mode Chrono</label>
                     </div>
-                    <button id="applyConfigBtn" class="btn" onclick="applyConfiguration()" style="background: white; color: #16a085; font-weight: bold; padding: 8px 20px;">
-                        ✅ Appliquer Configuration
+                    <button id="applyConfigBtn" class="btn" onclick="applyConfiguration()" style="background: white; color: #16a085; font-weight: bold; padding: 6px 15px; font-size: 13px;">
+                        ✅ Appliquer
                     </button>
                 </div>
-                <div id="courtAssignmentInfo" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; font-size: 13px; text-align: center;">
+                <div id="courtAssignmentInfo" style="margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.2); border-radius: 5px; font-size: 12px; text-align: center;">
                     <!-- Information sur l'attribution des terrains sera ajoutée ici -->
                 </div>
             </div>
@@ -124,137 +124,101 @@
             <div class="tab-content day-content active" id="day-1">
                 <div class="section">
                     <h2>👥 Gestion des Joueurs - Journée 1</h2>
-                    <div style="text-align: center; margin: 15px 0; padding: 15px; background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-radius: 8px; border: 3px solid #f39c12;">
-                    <strong style="color: #e67e22; font-size: 18px;">⚠️ CHOISISSEZ D'ABORD LA JOURNÉE DE DESTINATION !</strong>
+
+                    <div class="input-group" style="align-items: center; gap: 10px;">
+                        <input type="text" id="playerName" placeholder="Nom du joueur" style="flex: 1; min-width: 150px;">
+                        <select id="playerDivision" style="min-width: 120px;">
+                            <option value="1">Division 1</option>
+                            <option value="2">Division 2</option>
+                            <option value="3">Division 3</option>
+                        </select>
+                        <select id="targetDay" style="background: #16a085; color: white; font-weight: bold; border: 2px solid #1abc9c; padding: 10px; border-radius: 6px; min-width: 130px;">
+                            <option value="1">→ Journée 1</option>
+                        </select>
+                        <button class="btn btn-success" onclick="addPlayer()" style="white-space: nowrap;">Ajouter</button>
                     </div>
 
-                    <div class="input-group" style="align-items: end;">
-                        <input type="text" id="playerName" placeholder="Nom du joueur" style="flex: 1; min-width: 200px;">
-                        <select id="playerDivision">
-                                <option value="1">Division 1</option>
-                                <option value="2">Division 2</option>
-                                <option value="3">Division 3</option>
-                            </select>
-                            <div style="display: flex; flex-direction: column; min-width: 180px;">
-                             <label style="font-size: 14px; color: #e67e22; font-weight: bold; margin-bottom: 5px; text-transform: uppercase;">🎯 Destination :</label>
-                                <select id="targetDay" style="background: #f39c12; color: white; font-weight: bold; border: 3px solid #e67e22; padding: 12px; border-radius: 8px; font-size: 14px;">
-                        <option value="1">→ Journée 1</option>
-        </select>
-    </div>
-    <button class="btn btn-success" onclick="addPlayer()">Ajouter Joueur</button>
-</div>
-
-                    <div class="import-section">
-                        <div class="import-box">
-                            <h4>📁 Import fichier Excel/CSV</h4>
-                            <p style="font-size: 14px; color: #7f8c8d; margin-bottom: 15px;">
-                                Format : Colonne A = Noms, Colonne B = Division (1,2,3)
+                    <div class="import-section" style="gap: 12px; margin-top: 15px;">
+                        <div class="import-box" style="padding: 15px;">
+                            <h4 style="margin: 0 0 10px 0; font-size: 15px;">📁 Import Excel/CSV</h4>
+                            <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 10px;">
+                                A = Noms, B = Division (1,2,3)
                             </p>
-                            <div style="margin-bottom: 10px;">
-                                <label style="font-weight: bold; color: #e67e22; display: block; margin-bottom: 5px; font-size: 12px;">🎯 DESTINATION :</label>
-                                    <select id="fileTargetDay" style="width: 100%; background: #f39c12; color: white; font-weight: bold; border: 2px solid #e67e22; padding: 10px; border-radius: 6px;">
-                                     <option value="1">→ Journée 1</option>
-                              </select>
-                            </div>
+                            <select id="fileTargetDay" style="width: 100%; background: #16a085; color: white; font-weight: bold; border: 2px solid #1abc9c; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 13px;">
+                                <option value="1">→ Journée 1</option>
+                            </select>
                             <div class="file-input-wrapper">
                                 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-                                <label for="fileInput" class="file-input-label">
-                                    📎 Choisir un fichier
+                                <label for="fileInput" class="file-input-label" style="padding: 8px 12px; font-size: 13px;">
+                                    📎 Choisir fichier
                                 </label>
                             </div>
                         </div>
 
-                        <div class="import-box">
-                            <h4>📋 Copier-coller par division</h4>
-                            <p style="font-size: 14px; color: #7f8c8d; margin-bottom: 15px;">
-                                Collez une liste de noms (un par ligne)
+                        <div class="import-box" style="padding: 15px;">
+                            <h4 style="margin: 0 0 10px 0; font-size: 15px;">📋 Copier-coller</h4>
+                            <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 10px;">
+                                Liste de noms (un par ligne)
                             </p>
-                            <div style="display: flex; gap: 10px; flex-direction: column;">
-                                <select id="bulkDivision" style="width: 100%;">
-                                            <option value="1">Division 1</option>
-                                            <option value="2">Division 2</option>
-                                            <option value="3">Division 3</option>
-                                            </select>
-                                                <div>
-                                            <label style="font-weight: bold; color: #e67e22; display: block; margin-bottom: 5px; font-size: 12px;">🎯 DESTINATION :</label>
-                                            <select id="bulkTargetDay" style="width: 100%; background: #f39c12; color: white; font-weight: bold; border: 2px solid #e67e22; padding: 10px; border-radius: 6px;">
-                            <option value="1">→ Journée 1</option>
-                    </select>
-                    </div>
-                                    <button class="btn" onclick="showBulkInput()" style="width: 100%;">
-                                            📝 Ajouter en masse
-                                        </button>
-                                </div>
+                            <select id="bulkDivision" style="width: 100%; margin-bottom: 8px; padding: 8px; font-size: 13px;">
+                                <option value="1">Division 1</option>
+                                <option value="2">Division 2</option>
+                                <option value="3">Division 3</option>
+                            </select>
+                            <select id="bulkTargetDay" style="width: 100%; background: #16a085; color: white; font-weight: bold; border: 2px solid #1abc9c; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 13px;">
+                                <option value="1">→ Journée 1</option>
+                            </select>
+                            <button class="btn" onclick="showBulkInput()" style="width: 100%; padding: 8px; font-size: 13px;">
+                                📝 Ajouter en masse
+                            </button>
                         </div>
                     </div>
 
-                    <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 900px; border: 2px solid #dee2e6;">
-                        <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 18px; text-align: center;">🎯 Type de Génération</h3>
+                    <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; padding: 15px; margin: 15px auto; max-width: 800px; border: 2px solid #dee2e6;">
+                        <h3 style="color: #2c3e50; margin: 0 0 12px 0; font-size: 16px; text-align: center;">🎯 Génération de Matchs</h3>
 
-                        <!-- Modes standards -->
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
-                            <button class="btn" onclick="generateMatchesForDay()" style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 10px 12px; font-size: 13px;">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
+                            <button class="btn" onclick="generateMatchesForDay()" style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 8px 10px; font-size: 12px;">
                                 🔄 Round-Robin
                             </button>
-                            <button class="btn" onclick="generateMatchesOptimized4to10()" style="background: linear-gradient(135deg, #e67e22, #d35400); padding: 10px 12px; font-size: 13px;">
+                            <button class="btn" onclick="generateMatchesOptimized4to10()" style="background: linear-gradient(135deg, #e67e22, #d35400); padding: 8px 10px; font-size: 12px;">
                                 🎲 Optimisé 4-10
                             </button>
-                            <button class="btn" onclick="generateMatchesByCourtOptimized()" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 10px 12px; font-size: 13px;">
+                            <button class="btn" onclick="generateMatchesByCourtOptimized()" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 8px 10px; font-size: 12px;">
                                 🎾 Par Terrain
                             </button>
-                            <button class="btn" onclick="generateMatchesSwissSystem()" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 10px 12px; font-size: 13px;">
+                            <button class="btn" onclick="generateMatchesSwissSystem()" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 8px 10px; font-size: 12px;">
                                 🏆 Swiss System
                             </button>
                         </div>
 
-                        <div style="padding: 8px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; font-size: 11px; color: #6c757d; line-height: 1.5; text-align: center;">
-                            <strong>Round-Robin:</strong> Tous contre tous • <strong>Optimisé:</strong> Schéma fixe 4-10 joueurs • <strong>Par Terrain:</strong> 4-10/terrain • <strong>Swiss:</strong> Par niveau
+                        <div style="padding: 6px 10px; background: rgba(255,255,255,0.7); border-radius: 5px; font-size: 10px; color: #6c757d; line-height: 1.4; text-align: center;">
+                            <strong>Round-Robin:</strong> Tous vs tous • <strong>Optimisé:</strong> 4-10 joueurs • <strong>Terrain:</strong> 4-10/terrain • <strong>Swiss:</strong> Par niveau
                         </div>
                     </div>
 
-                    <div class="guide-box">
-                        <div class="guide-title">
-                            💡 Guide d'utilisation
-                        </div>
-                        <div class="guide-items">
-                            <div class="guide-item">
-                                <div class="key">TAB</div>
-                                <span>Passer au champ suivant</span>
-                            </div>
-                            <div class="guide-item">
-                                <div class="key">ENTER</div>
-                                <span>Mettre à jour le match</span>
-                            </div>
-                            <div class="guide-item">
-                                <span>🏆 Entrez les scores finaux de chaque équipe/joueur</span>
-                            </div>
-                            <div class="guide-item">
-                                <span>💾 Sauvegarde automatique</span>
-                            </div>
-                        </div>
+                    <div class="control-buttons" style="gap: 8px; flex-wrap: wrap; margin-top: 15px;">
+                        <button class="btn btn-success" onclick="updateRankings()" style="padding: 8px 12px; font-size: 13px;">
+                            🏆 Classements
+                        </button>
+                        <button class="btn" onclick="generateMatchesForDay(1)" style="padding: 8px 12px; font-size: 13px;">
+                            🎯 Générer Matchs
+                        </button>
+                        <button class="btn" onclick="showByeManagementModal(1)" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 8px 12px; font-size: 13px;">
+                            🎯 Gérer BYE
+                        </button>
+                        <button class="btn btn-danger" onclick="clearAllData()" style="padding: 8px 12px; font-size: 13px;">
+                            🗑️ Réinitialiser
+                        </button>
+                        <button class="btn" onclick="exportChampionship()" style="padding: 8px 12px; font-size: 13px;">
+                            💾 Exporter
+                        </button>
+                        <button class="btn" onclick="showImportModal()" style="padding: 8px 12px; font-size: 13px;">
+                            📥 Importer
+                        </button>
                     </div>
-
-                    <div class="control-buttons">
-    <button class="btn btn-success" onclick="updateRankings()">
-        🏆 Afficher les Classements
-    </button>
-    <button class="btn" onclick="generateMatchesForDay(1)">
-        🎯 Générer les Matchs
-    </button>
-    <button class="btn" onclick="showByeManagementModal(1)" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
-        🎯 Gérer BYE
-    </button>
-    <button class="btn btn-danger" onclick="clearAllData()">
-        🗑️ Réinitialiser TOUT
-    </button>
-    <button class="btn" onclick="exportChampionship()">
-        💾 Exporter Championnat
-    </button>
-    <button class="btn" onclick="showImportModal()">
-        📥 Importer Championnat
-    </button>
-</div>
                 </div>
+                <!-- Fin de la section "Gestion des Joueurs" -->
 
                 <div class="divisions" id="divisions-1">
                     <!-- Les divisions seront générées dynamiquement -->
@@ -334,14 +298,14 @@
     </div>
 
     <div id="bulkModal" class="modal">
-        <div class="modal-content">
-            <h3>Ajouter plusieurs joueurs</h3>
-            <p style="margin-bottom: 15px; color: #7f8c8d;">
+        <div class="modal-content" style="max-width: 600px; max-height: 85vh; display: flex; flex-direction: column;">
+            <h3 style="margin-top: 0;">Ajouter plusieurs joueurs</h3>
+            <p style="margin-bottom: 12px; color: #7f8c8d; font-size: 14px;">
                 Collez la liste des noms (un par ligne) pour la <strong id="selectedDivision">Division 1</strong> :
             </p>
             <textarea id="bulkText" placeholder="Joueur 1&#10;Joueur 2&#10;Joueur 3&#10;..."
-                      style="width: 100%; height: 200px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
-            <div class="modal-buttons">
+                      style="width: 100%; flex: 1; min-height: 250px; max-height: 400px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical; font-size: 14px;"></textarea>
+            <div class="modal-buttons" style="position: sticky; bottom: 0; background: white; padding: 15px 0 0 0; margin-top: 15px; border-top: 2px solid #ddd;">
                 <button class="btn btn-danger" onclick="closeBulkModal()">Annuler</button>
                 <button class="btn btn-success" onclick="addBulkPlayers()">Ajouter tous</button>
             </div>
@@ -631,66 +595,66 @@
 
     <!-- Modal Ajout en masse Participants -->
     <div id="bulkParticipantsModal" class="modal">
-        <div class="modal-content" style="max-width: 900px;">
-            <h3>📋 Ajout en masse de participants</h3>
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top: 0;">📋 Ajout en masse de participants</h3>
 
             <!-- Sélection des colonnes -->
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #ddd;">
-                <h4 style="margin: 0 0 15px 0; color: #2c3e50;">⚙️ Sélectionnez les colonnes à importer</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #ddd;">
+                <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">⚙️ Sélectionnez les colonnes à importer</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="bulkCol_bib" checked disabled style="width: 18px; height: 18px; cursor: not-allowed;">
-                        <span style="font-weight: bold;">🔢 Dossard <span style="color: #e74c3c;">*</span></span>
+                        <span style="font-weight: bold; font-size: 14px;">🔢 Dossard <span style="color: #e74c3c;">*</span></span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="bulkCol_name" checked disabled style="width: 18px; height: 18px; cursor: not-allowed;">
-                        <span style="font-weight: bold;">🏃 Nom <span style="color: #e74c3c;">*</span></span>
+                        <span style="font-weight: bold; font-size: 14px;">🏃 Nom <span style="color: #e74c3c;">*</span></span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="bulkCol_category" checked disabled style="width: 18px; height: 18px; cursor: not-allowed;">
-                        <span style="font-weight: bold;">📋 Catégorie <span style="color: #e74c3c;">*</span></span>
+                        <span style="font-weight: bold; font-size: 14px;">📋 Catégorie <span style="color: #e74c3c;">*</span></span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="bulkCol_age" onchange="updateBulkImportFormat()" style="width: 18px; height: 18px;">
-                        <span>🎂 Âge</span>
+                        <span style="font-size: 14px;">🎂 Âge</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="bulkCol_nationality" onchange="updateBulkImportFormat()" style="width: 18px; height: 18px;">
-                        <span>🌍 Nationalité</span>
+                        <span style="font-size: 14px;">🌍 Nationalité</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="bulkCol_club" onchange="updateBulkImportFormat()" style="width: 18px; height: 18px;">
-                        <span>🏅 Club</span>
+                        <span style="font-size: 14px;">🏅 Club</span>
                     </label>
                 </div>
-                <p style="margin: 10px 0 0 0; font-size: 13px; color: #7f8c8d;">
+                <p style="margin: 8px 0 0 0; font-size: 12px; color: #7f8c8d;">
                     <span style="color: #e74c3c;">*</span> Champs obligatoires • Les autres sont optionnels
                 </p>
             </div>
 
-            <div id="bulkImportFormatInfo" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 15px; border-radius: 10px; margin-bottom: 20px; color: white;">
-                <h4 style="margin: 0 0 10px 0;">📝 Format d'importation</h4>
-                <p style="margin: 5px 0; font-size: 14px;">Collez vos données avec <strong>une ligne par participant</strong> dans l'un des formats suivants :</p>
-                <div id="bulkFormatExample" style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px; margin-top: 10px; font-family: monospace; font-size: 13px;">
+            <div id="bulkImportFormatInfo" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: white;">
+                <h4 style="margin: 0 0 8px 0; font-size: 15px;">📝 Format d'importation</h4>
+                <p style="margin: 5px 0; font-size: 13px;">Collez vos données avec <strong>une ligne par participant</strong> dans l'un des formats suivants :</p>
+                <div id="bulkFormatExample" style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 5px; margin-top: 8px; font-family: monospace; font-size: 12px;">
                     <!-- Sera mis à jour dynamiquement -->
                 </div>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Collez vos données ici :</label>
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px;">Collez vos données ici :</label>
                 <textarea id="bulkParticipantsText"
                           placeholder="Exemple:&#10;42&#9;Jean Dupont&#9;Senior&#10;43&#9;Marie Martin&#9;U18&#10;44&#9;Équipe A&#9;Relais&#10;&#10;ou avec virgules:&#10;42,Jean Dupont,Senior&#10;43,Marie Martin,U18"
-                          style="width: 100%; height: 300px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical;"></textarea>
+                          style="width: 100%; height: 180px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical;"></textarea>
             </div>
 
-            <div id="bulkParticipantsPreview" style="display: none; margin-bottom: 20px;">
-                <h4 style="color: #2c3e50; margin-bottom: 10px;">👀 Aperçu (<span id="bulkPreviewCount">0</span> participants)</h4>
-                <div style="max-height: 200px; overflow-y: auto; border: 2px solid #ddd; border-radius: 8px; padding: 15px; background: #f8f9fa;">
+            <div id="bulkParticipantsPreview" style="display: none; margin-bottom: 15px;">
+                <h4 style="color: #2c3e50; margin-bottom: 8px; font-size: 15px;">👀 Aperçu (<span id="bulkPreviewCount">0</span> participants)</h4>
+                <div style="max-height: 150px; overflow-y: auto; border: 2px solid #ddd; border-radius: 8px; padding: 12px; background: #f8f9fa;">
                     <div id="bulkParticipantsPreviewContent"></div>
                 </div>
             </div>
 
-            <div class="modal-buttons">
+            <div class="modal-buttons" style="position: sticky; bottom: 0; background: white; padding: 15px 0 0 0; margin-top: 15px; border-top: 2px solid #ddd;">
                 <button class="btn" onclick="previewBulkParticipants()" style="background: #3498db; color: white;">
                     👁️ Prévisualiser
                 </button>
@@ -717,6 +681,142 @@
 
             <div class="modal-buttons" style="margin-top: 20px;">
                 <button class="btn btn-danger" onclick="closeChronoRankingTypeModal()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Stratégie Pré-remplissage Poules -->
+    <div id="poolPreFillStrategyModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h3 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">🎯 Stratégie de Pré-remplissage</h3>
+
+            <!-- Étape 1 : Choix du mode (réorganiser ou pré-remplir) -->
+            <div id="preFillModeSelection" style="display: block;">
+                <div style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                    <p style="margin: 0; font-size: 14px;">Comment souhaitez-vous remplir cette journée ?</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                    <!-- Réorganiser les joueurs existants -->
+                    <div onclick="selectPreFillMode('reorganize')" style="
+                        background: linear-gradient(135deg, #3498db, #2980b9);
+                        color: white;
+                        padding: 25px;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        transition: transform 0.2s, box-shadow 0.2s;
+                        border: 3px solid transparent;
+                    " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 20px rgba(52,152,219,0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                        <h4 style="margin: 0 0 10px 0; font-size: 20px;">🔄 Réorganiser les joueurs de la journée précédente</h4>
+                        <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+                            Reprend TOUS les joueurs de la journée précédente et les réorganise entre les divisions.<br>
+                            <strong>✅ Garde tous les joueurs</strong> - Idéal pour redistribuer sans perdre personne
+                        </p>
+                    </div>
+
+                    <!-- Pré-remplir depuis le classement -->
+                    <div onclick="selectPreFillMode('prefill')" style="
+                        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                        color: white;
+                        padding: 25px;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        transition: transform 0.2s, box-shadow 0.2s;
+                        border: 3px solid transparent;
+                    " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 20px rgba(155,89,182,0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                        <h4 style="margin: 0 0 10px 0; font-size: 20px;">📊 Pré-remplir depuis le classement général</h4>
+                        <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+                            Utilise le classement général pour remplir cette journée.<br>
+                            <strong>⚠️ Peut exclure certains joueurs</strong> selon la stratégie choisie
+                        </p>
+                    </div>
+                </div>
+
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button class="btn btn-danger" onclick="closePoolPreFillStrategyModal()">Annuler</button>
+                </div>
+            </div>
+
+            <!-- Étape 2 : Choix de la stratégie -->
+            <div id="preFillStrategySelection" style="display: none;">
+                <div style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                    <p style="margin: 0; font-size: 14px;">Choisissez comment répartir les joueurs dans les divisions</p>
+                </div>
+
+            <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                <!-- Stratégie Par Niveau -->
+                <div onclick="applyPreFillStrategy('by-level')" style="
+                    background: linear-gradient(135deg, #3498db, #2980b9);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    border: 3px solid transparent;
+                " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 20px rgba(52,152,219,0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                    <h4 style="margin: 0 0 10px 0; font-size: 18px;">🎯 Par Niveau</h4>
+                    <p style="margin: 0; font-size: 13px; opacity: 0.9;">
+                        Les joueurs restent dans leur division, triés du meilleur au moins bon<br>
+                        <strong>Usage :</strong> Simple pré-remplissage, sans changement de division
+                    </p>
+                </div>
+
+                <!-- Stratégie Serpent -->
+                <div onclick="applyPreFillStrategy('snake')" style="
+                    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    border: 3px solid transparent;
+                " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 20px rgba(155,89,182,0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                    <h4 style="margin: 0 0 10px 0; font-size: 18px;">🐍 Serpent (Snake Draft)</h4>
+                    <p style="margin: 0; font-size: 13px; opacity: 0.9;">
+                        Dans chaque division : 1er, dernier, 2e, avant-dernier, 3e... (mélange forts/faibles)<br>
+                        <strong>Usage :</strong> Équilibrer les poules, éviter que les meilleurs soient ensemble
+                    </p>
+                </div>
+
+                <!-- Stratégie Mixte -->
+                <div onclick="applyPreFillStrategy('balanced')" style="
+                    background: linear-gradient(135deg, #27ae60, #2ecc71);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    border: 3px solid transparent;
+                " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 20px rgba(39,174,96,0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                    <h4 style="margin: 0 0 10px 0; font-size: 18px;">⚖️ Mixte Équilibré</h4>
+                    <p style="margin: 0; font-size: 13px; opacity: 0.9;">
+                        Dans chaque division : alternance 1 fort, 1 moyen, 1 faible (répartition équitable)<br>
+                        <strong>Usage :</strong> Poules très équilibrées, matchs variés, tournoi convivial
+                    </p>
+                </div>
+
+                <!-- Stratégie Équilibrer (Promotions/Relégations) -->
+                <div onclick="applyPreFillStrategy('rebalance')" style="
+                    background: linear-gradient(135deg, #e67e22, #d35400);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    border: 3px solid transparent;
+                " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 20px rgba(230,126,34,0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                    <h4 style="margin: 0 0 10px 0; font-size: 18px;">🔄 Équilibrer les Divisions</h4>
+                    <p style="margin: 0; font-size: 13px; opacity: 0.9;">
+                        Promotions/Relégations : Les meilleurs de chaque division montent, les derniers descendent<br>
+                        <strong>Usage :</strong> Maintenir des divisions équilibrées tout au long du championnat
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="backToModeSelection()">⬅️ Retour</button>
+                <button class="btn btn-danger" onclick="closePoolPreFillStrategyModal()">Annuler</button>
+            </div>
             </div>
         </div>
     </div>
