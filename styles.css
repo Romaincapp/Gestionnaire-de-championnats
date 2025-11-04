@@ -446,8 +446,8 @@ body   * {
             background: white;
             border: 2px solid #ecf0f1;
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
+            padding: 10px;
+            margin-bottom: 6px;
             transition: all 0.3s ease;
         }
         
@@ -465,13 +465,13 @@ body   * {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
-        
+
         .player-names {
             font-weight: 600;
             color: #2c3e50;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         .match-status {
@@ -526,12 +526,12 @@ body   * {
         }
         
         .score-input {
-            width: 50px;
-            height: 40px;
+            width: 45px;
+            height: 35px;
             text-align: center;
-            padding: 8px;
+            padding: 6px;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
             border: 2px solid #ddd;
             border-radius: 6px;
             transition: all 0.3s ease;
@@ -571,11 +571,12 @@ body   * {
         }
         
         .match-result {
-            margin-top: 10px;
+            margin-top: 8px;
             text-align: center;
             font-weight: bold;
-            padding: 8px;
+            padding: 6px;
             border-radius: 6px;
+            font-size: 13px;
         }
         
         .result-pending {
@@ -587,7 +588,109 @@ body   * {
             background: #a8e6cf;
             color: #00b894;
         }
-        
+
+        /* Match collapsed state - ultra compact */
+        .match.collapsed {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            cursor: pointer;
+        }
+
+        .match.collapsed .match-header {
+            margin-bottom: 0;
+        }
+
+        .match.collapsed .player-names {
+            font-size: 13px;
+        }
+
+        .match.collapsed .sets-container,
+        .match.collapsed .match-result,
+        .match.collapsed .match-status {
+            display: none;
+        }
+
+        .match.collapsed .match-header::after {
+            content: "▼";
+            margin-left: 10px;
+            font-size: 12px;
+            color: #7f8c8d;
+            transition: transform 0.3s ease;
+        }
+
+        .match:not(.collapsed) .match-header::after {
+            content: "";
+        }
+
+        .match.completed:not(.collapsed) .player-names,
+        .pool-match.completed:not(.collapsed) .player-names {
+            display: none;
+        }
+
+        .collapse-score {
+            font-size: 12px;
+            font-weight: bold;
+            color: #27ae60;
+            margin-left: 10px;
+        }
+
+        /* Pool match and manual match collapsed states */
+        .pool-match.collapsed,
+        .manual-match.collapsed {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            cursor: pointer;
+        }
+
+        .pool-match.collapsed .match-header,
+        .manual-match.collapsed .match-header {
+            margin-bottom: 0;
+        }
+
+        .pool-match.collapsed .player-names,
+        .manual-match.collapsed .match-title {
+            font-size: 13px;
+        }
+
+        .pool-match.collapsed .score-container,
+        .pool-match.collapsed .match-result,
+        .pool-match.collapsed .match-status,
+        .manual-match.collapsed .score-container,
+        .manual-match.collapsed .match-result,
+        .manual-match.collapsed .match-status,
+        .manual-match.collapsed .players {
+            display: none;
+        }
+
+        .pool-match.collapsed .match-header::after,
+        .manual-match.collapsed .match-header::after {
+            content: "▼";
+            margin-left: 10px;
+            font-size: 12px;
+            color: #7f8c8d;
+            transition: transform 0.3s ease;
+        }
+
+        /* Players list collapse */
+        .players-list-container {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            margin-bottom: 0;
+        }
+
+        .players-list-container.active {
+            max-height: 800px;
+            opacity: 1;
+            overflow: auto;
+            margin-bottom: 15px;
+        }
+
+        .players-list-header:hover {
+            background: linear-gradient(135deg, #d5dbdb, #bdc3c7) !important;
+        }
+
         .rankings-section {
             margin-top: 30px;
             background: white;

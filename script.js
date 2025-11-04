@@ -361,8 +361,14 @@ try {
 
     function removePlayer(dayNumber, division, playerName) {
         console.log("removePlayer appelée");
+
+        // Demander confirmation avant suppression
+        if (!confirm(`Êtes-vous sûr de vouloir supprimer ${playerName} ?`)) {
+            return; // Annuler la suppression
+        }
+
         championship.days[dayNumber].players[division] = championship.days[dayNumber].players[division].filter(p => p !== playerName);
-        championship.days[dayNumber].matches[division] = championship.days[dayNumber].matches[division].filter(match => 
+        championship.days[dayNumber].matches[division] = championship.days[dayNumber].matches[division].filter(match =>
             match.player1 !== playerName && match.player2 !== playerName
         );
         updatePlayersDisplay(dayNumber);
@@ -1548,16 +1554,20 @@ try {
                         const statusClass = match.completed ? 'status-completed' : 'status-pending';
                         const statusText = match.completed ? 'Terminé' : 'En cours';
                         
+                        const score1 = match.score1 || 0;
+                        const score2 = match.score2 || 0;
+                        const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}` : '';
+
                         html += `
                             <div class="match ${matchStatus}" data-match-id="d${dayNumber}-div${division}-m${globalIndex}">
-                                <div class="match-header">
-                                    <div class="player-names">${match.player1} VS ${match.player2}</div>
-                                    <div class="match-status ${statusClass}">${statusText}</div>
-                                </div>
+                                ${match.completed || collapsedSummary ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="cursor: pointer;">
+                                    ${match.completed ? `<div class="player-names">${collapsedSummary}</div>` : ''}
+                                    ${match.completed ? `<div class="match-status ${statusClass}">${statusText}</div>` : ''}
+                                </div>` : ''}
                                 <div class="sets-container">
                                     <div class="set">
-                                        <div class="set-label">Score</div>
-                                        <div class="set-scores">
+                                        <div class="set-scores" style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                                            <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player1}</span>
                                             <input type="number" class="score-input"
                                                    placeholder="0" min="0"
                                                    value="${match.score1 || ''}"
@@ -1569,25 +1579,21 @@ try {
                                                    value="${match.score2 || ''}"
                                                    onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score2', this.value)"
                                                    onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
+                                            <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player2}</span>
                                         </div>
                                     </div>
                                 </div>
                         `;
 
-                        let resultText = 'En attente des résultats';
-                        let resultClass = 'result-pending';
-
                         if (match.completed && match.winner) {
-                            const score1 = match.score1 || 0;
-                            const score2 = match.score2 || 0;
-                            resultText = `🏆 ${match.winner} remporte le match (${score1}-${score2})`;
-                            resultClass = 'result-completed';
+                            html += `
+                                <div class="match-result result-completed">
+                                    🏆 ${match.winner} remporte le match (${score1}-${score2})
+                                </div>
+                            `;
                         }
 
                         html += `
-                                <div class="match-result ${resultClass}">
-                                    ${resultText}
-                                </div>
                             </div>
                         `;
                         });
@@ -1625,6 +1631,24 @@ try {
     }
     window.toggleTour = toggleTour;
 
+    function togglePlayersList(dayNumber, division) {
+        const container = document.getElementById(`players-list-container-${dayNumber}-${division}`);
+        const toggleIcon = document.getElementById(`players-list-toggle-${dayNumber}-${division}`);
+        if (container) {
+            container.classList.toggle('active');
+            if (toggleIcon) {
+                toggleIcon.textContent = container.classList.contains('active') ? '▼' : '▶';
+            }
+        }
+    }
+    window.togglePlayersList = togglePlayersList;
+
+    function toggleMatchCollapse(matchElement) {
+        if (!matchElement) return;
+        matchElement.classList.toggle('collapsed');
+    }
+    window.toggleMatchCollapse = toggleMatchCollapse;
+
     function updateSetScore(dayNumber, division, matchIndex, setIndex, scoreField, value) {
         championship.days[dayNumber].matches[division][matchIndex].sets[setIndex][scoreField] = value;
         saveToLocalStorage();
@@ -1638,28 +1662,42 @@ try {
     window.updateMatchScore = updateMatchScore;
 
     function handleEnterKey(event, dayNumber, division, matchIndex) {
-        if (event.key === 'Enter') {
-            const wasCompleted = championship.days[dayNumber].matches[division][matchIndex].completed;
-            
+        const match = championship.days[dayNumber].matches[division][matchIndex];
+        const shouldValidate = event.key === 'Enter' ||
+                               (event.key === 'Tab' && match.score1 !== undefined && match.score1 !== '' &&
+                                match.score2 !== undefined && match.score2 !== '');
+
+        if (shouldValidate) {
+            if (event.key === 'Tab' && (match.score1 === undefined || match.score1 === '' ||
+                                         match.score2 === undefined || match.score2 === '')) {
+                return; // Laisser Tab naviguer normalement si scores incomplets
+            }
+
+            if (event.key === 'Tab') {
+                event.preventDefault(); // Empêcher navigation Tab si on valide
+            }
+
+            const wasCompleted = match.completed;
+
             checkMatchCompletion(dayNumber, division, matchIndex);
-            
+
             const isNowCompleted = championship.days[dayNumber].matches[division][matchIndex].completed;
-            
+
             updateSingleMatchDisplay(dayNumber, division, matchIndex);
             saveToLocalStorage();
-            
+
             const matchElement = document.querySelector(`[data-match-id="d${dayNumber}-div${division}-m${matchIndex}"]`);
             if (matchElement) {
                 matchElement.style.transform = 'scale(1.02)';
                 matchElement.style.boxShadow = '0 5px 20px rgba(27, 164, 60, 0.4)';
                 matchElement.style.transition = 'all 0.3s ease';
-                
+
                 setTimeout(() => {
                     matchElement.style.transform = '';
                     matchElement.style.boxShadow = '';
                 }, 400);
             }
-            
+
             if (!wasCompleted && isNowCompleted) {
                 setTimeout(() => {
                     if (matchElement) {
@@ -1667,8 +1705,15 @@ try {
                         matchElement.style.borderColor = '#27ae60';
                     }
                 }, 200);
-                
+
                 showNotification(`Match terminé: ${championship.days[dayNumber].matches[division][matchIndex].winner} gagne!`, 'success');
+
+                // Auto-collapse le match terminé après un délai
+                setTimeout(() => {
+                    if (matchElement && !matchElement.classList.contains('collapsed')) {
+                        toggleMatchCollapse(matchElement);
+                    }
+                }, 800);
             }
         }
     }
@@ -1677,37 +1722,77 @@ try {
     function updateSingleMatchDisplay(dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
         const matchElement = document.querySelector(`[data-match-id="d${dayNumber}-div${division}-m${matchIndex}"]`);
-        
-        if (!matchElement) return;
-        
-        const statusElement = matchElement.querySelector('.match-status');
-        if (statusElement) {
-            if (match.completed) {
-                statusElement.className = 'match-status status-completed';
-                statusElement.textContent = 'Terminé';
-                matchElement.classList.add('completed');
-            } else {
-                statusElement.className = 'match-status status-pending';
-                statusElement.textContent = 'En cours';
-                matchElement.classList.remove('completed');
-            }
-        }
-        
-        const resultElement = matchElement.querySelector('.match-result');
-        if (resultElement) {
-            let resultText = 'En attente des résultats';
-            let resultClass = 'result-pending';
-            
-            if (match.completed && match.winner) {
-                const score1 = match.score1 || 0;
-                const score2 = match.score2 || 0;
 
-                resultText = `🏆 ${match.winner} remporte le match (${score1}-${score2})`;
-                resultClass = 'result-completed';
+        if (!matchElement) return;
+
+        const score1 = match.score1 || 0;
+        const score2 = match.score2 || 0;
+
+        if (match.completed) {
+            matchElement.classList.add('completed');
+
+            // Créer ou mettre à jour le header
+            let matchHeader = matchElement.querySelector('.match-header');
+            if (!matchHeader) {
+                matchHeader = document.createElement('div');
+                matchHeader.className = 'match-header';
+                // Insérer le header au début de matchElement, avant sets-container
+                const setsContainer = matchElement.querySelector('.sets-container');
+                matchElement.insertBefore(matchHeader, setsContainer);
             }
-            
-            resultElement.className = `match-result ${resultClass}`;
-            resultElement.textContent = resultText;
+
+            // Ajouter onclick sur le header pour toggle collapse
+            if (!matchHeader.hasAttribute('onclick')) {
+                matchHeader.setAttribute('onclick', 'toggleMatchCollapse(this.parentElement)');
+                matchHeader.style.cursor = 'pointer';
+            }
+
+            // Créer ou mettre à jour player-names
+            let playerNamesElement = matchHeader.querySelector('.player-names');
+            if (!playerNamesElement) {
+                playerNamesElement = document.createElement('div');
+                playerNamesElement.className = 'player-names';
+                matchHeader.appendChild(playerNamesElement);
+            }
+            // Mettre à jour le contenu avec le format collapsed
+            playerNamesElement.innerHTML = `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}`;
+
+            // Créer ou mettre à jour le badge de statut
+            let statusElement = matchHeader.querySelector('.match-status');
+            if (!statusElement) {
+                statusElement = document.createElement('div');
+                statusElement.className = 'match-status status-completed';
+                matchHeader.appendChild(statusElement);
+            } else {
+                statusElement.className = 'match-status status-completed';
+            }
+            statusElement.textContent = 'Terminé';
+
+            // Gérer le résultat - créer s'il n'existe pas
+            if (match.winner) {
+                let resultElement = matchElement.querySelector('.match-result');
+                if (!resultElement) {
+                    resultElement = document.createElement('div');
+                    resultElement.className = 'match-result result-completed';
+                    matchElement.appendChild(resultElement);
+                } else {
+                    resultElement.className = 'match-result result-completed';
+                }
+                resultElement.textContent = `🏆 ${match.winner} remporte le match (${score1}-${score2})`;
+            }
+        } else {
+            // Match non terminé - supprimer header et résultat s'ils existent
+            matchElement.classList.remove('completed');
+
+            const matchHeader = matchElement.querySelector('.match-header');
+            if (matchHeader) {
+                matchHeader.remove();
+            }
+
+            const resultElement = matchElement.querySelector('.match-result');
+            if (resultElement) {
+                resultElement.remove();
+            }
         }
         
         // Plus besoin de désactiver des sets car il n'y a plus que 2 scores
@@ -1971,11 +2056,28 @@ try {
         let html = '';
         for (let i = 1; i <= numDivisions; i++) {
             const medal = medals[i - 1] || '📊';
+            const playersCount = championship.days[dayNumber]?.players[i]?.length || 0;
             html += `
                 <div class="division division-${i}">
-                    <h3>${medal} Division ${i}</h3>
-                    <div class="players-list" id="division${dayNumber}-${i}-players">
-                        <div class="empty-state">Aucun joueur</div>
+                    <h3>${medal} Division ${i} <span style="font-size: 14px; color: #7f8c8d; font-weight: normal;">(${playersCount} joueur${playersCount !== 1 ? 's' : ''})</span></h3>
+                    <div class="players-list-header" onclick="togglePlayersList(${dayNumber}, ${i})" style="
+                        padding: 8px 12px;
+                        background: linear-gradient(135deg, #ecf0f1, #d5dbdb);
+                        border-radius: 6px;
+                        margin-bottom: 10px;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        transition: all 0.3s ease;
+                    ">
+                        <span style="font-weight: 600; color: #2c3e50; font-size: 13px;">👥 Liste des joueurs</span>
+                        <span id="players-list-toggle-${dayNumber}-${i}" style="font-size: 12px; color: #7f8c8d;">▼</span>
+                    </div>
+                    <div class="players-list-container active" id="players-list-container-${dayNumber}-${i}" style="transition: all 0.3s ease;">
+                        <div class="players-list" id="division${dayNumber}-${i}-players">
+                            <div class="empty-state">Aucun joueur</div>
+                        </div>
                     </div>
                     <div class="matches-container" id="division${dayNumber}-${i}-matches"></div>
                 </div>
@@ -5405,82 +5507,78 @@ function generatePoolMatchHTML(match, dayNumber) {
     const matchStatus = match.completed ? 'completed' : 'pending';
     const statusClass = match.completed ? 'status-completed' : 'status-pending';
     const statusText = match.completed ? 'Terminé' : 'En cours';
+    const score1 = match.score1 || 0;
+    const score2 = match.score2 || 0;
+    const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}` : '';
 
     return `
         <div class="pool-match ${matchStatus}" style="
             background: ${match.completed ? '#d5f4e6' : '#fff'};
             border: 2px solid ${match.completed ? '#27ae60' : '#ecf0f1'};
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
+            padding: 10px;
+            margin-bottom: 6px;
         ">
-            <div class="match-header" style="
+            ${match.completed ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 10px;
+                margin-bottom: 8px;
+                cursor: pointer;
             ">
-                <div class="player-names" style="font-weight: 600; color: #2c3e50;">
-                    ${match.player1} VS ${match.player2}
+                <div class="player-names" style="font-weight: 600; color: #2c3e50; font-size: 14px;">
+                    ${collapsedSummary}
                 </div>
                 <div class="match-status ${statusClass}" style="
                     font-size: 12px;
                     padding: 4px 8px;
                     border-radius: 12px;
                     font-weight: bold;
-                    background: ${match.completed ? '#a8e6cf' : '#ffeaa7'};
-                    color: ${match.completed ? '#00b894' : '#d63031'};
+                    background: #a8e6cf;
+                    color: #00b894;
                 ">${statusText}</div>
-            </div>
+            </div>` : ''}
             
             <div class="score-container" style="
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                gap: 15px;
+                gap: 8px;
                 margin-bottom: 10px;
-                padding: 15px;
+                padding: 10px;
                 background: #f8f9fa;
                 border: 1px solid #ddd;
                 border-radius: 6px;
             ">
-                <div style="text-align: center;">
-                    <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px; font-weight: bold;">
-                        ${match.player1}
-                    </div>
-                    <input type="number"
-                           value="${match.score1 || ''}"
-                           placeholder="0"
-                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score1', this.value)"
-                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
-                           style="width: 60px; height: 50px; text-align: center; padding: 8px; font-weight: bold; font-size: 20px; border: 2px solid #007bff; border-radius: 6px;">
-                </div>
-                <span style="font-weight: bold; color: #7f8c8d; font-size: 24px;">-</span>
-                <div style="text-align: center;">
-                    <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px; font-weight: bold;">
-                        ${match.player2}
-                    </div>
-                    <input type="number"
-                           value="${match.score2 || ''}"
-                           placeholder="0"
-                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value)"
-                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
-                           style="width: 60px; height: 50px; text-align: center; padding: 8px; font-weight: bold; font-size: 20px; border: 2px solid #007bff; border-radius: 6px;">
-                </div>
+                <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player1}</span>
+                <input type="number"
+                       value="${match.score1 || ''}"
+                       placeholder="0"
+                       onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score1', this.value)"
+                       onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
+                       style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
+                <span style="font-weight: bold; color: #7f8c8d; font-size: 18px;">-</span>
+                <input type="number"
+                       value="${match.score2 || ''}"
+                       placeholder="0"
+                       onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value)"
+                       onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
+                       style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
+                <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player2}</span>
             </div>
-            
+
+            ${match.completed && match.winner ? `
             <div class="match-result" style="
                 text-align: center;
                 font-weight: bold;
-                padding: 8px;
+                padding: 6px;
                 border-radius: 6px;
-                background: ${match.completed ? '#a8e6cf' : '#ffeaa7'};
-                color: ${match.completed ? '#00b894' : '#d63031'};
+                font-size: 13px;
+                background: #a8e6cf;
+                color: #00b894;
             ">
-                ${match.completed && match.winner ? 
-                    `🏆 ${match.winner} remporte le match` : 
-                    'En attente des résultats'}
-            </div>
+                🏆 ${match.winner} remporte le match (${score1}-${score2})
+            </div>` : ''}
         </div>
     `;
 }
@@ -5507,14 +5605,67 @@ function updatePoolMatchScore(dayNumber, matchId, scoreField, value) {
 }
 
 function handlePoolMatchEnter(event, dayNumber, matchId) {
-    if (event.key === 'Enter') {
+    const dayData = championship.days[dayNumber];
+    const numDivisions = championship.config.numDivisions || 3;
+    let match = null;
+
+    // Trouver le match
+    for (let division = 1; division <= numDivisions; division++) {
+        match = dayData.pools.divisions[division].matches.find(m => m.id == matchId);
+        if (match) break;
+    }
+
+    // Vérifier si on doit valider
+    const shouldValidate = event.key === 'Enter' ||
+                          (event.key === 'Tab' && match && match.score1 !== undefined && match.score1 !== '' &&
+                           match.score2 !== undefined && match.score2 !== '');
+
+    if (shouldValidate) {
+        if (event.key === 'Tab' && (!match || match.score1 === undefined || match.score1 === '' ||
+                                     match.score2 === undefined || match.score2 === '')) {
+            return; // Laisser Tab naviguer normalement si scores incomplets
+        }
+
         event.preventDefault();
+
+        let wasCompleted = false;
+        let matchElement = null;
+
+        // Récupérer l'état du match
+        for (let division = 1; division <= numDivisions; division++) {
+            const m = dayData.pools.divisions[division].matches.find(m => m.id == matchId);
+            if (m) {
+                wasCompleted = m.completed;
+                matchElement = event.target.closest('.pool-match');
+                break;
+            }
+        }
 
         // Compléter le match
         checkPoolMatchCompletion(dayNumber, matchId);
         updatePoolsDisplay(dayNumber);
         checkPoolsCompletion(dayNumber);
         saveToLocalStorage();
+
+        // Auto-collapse si le match vient d'être complété
+        if (!wasCompleted && matchElement) {
+            setTimeout(() => {
+                // Re-trouver l'élément après updatePoolsDisplay qui régénère le HTML
+                const allPoolMatches = document.querySelectorAll('.pool-match.completed');
+                allPoolMatches.forEach(pm => {
+                    if (pm && !pm.classList.contains('collapsed') && pm.hasAttribute('onclick')) {
+                        // Vérifier si c'est bien notre match en comparant les joueurs
+                        const playerNames = pm.querySelector('.player-names');
+                        if (playerNames && matchElement) {
+                            const oldPlayerNames = matchElement.querySelector('.player-names');
+                            if (oldPlayerNames && playerNames.textContent.includes(oldPlayerNames.textContent.split('VS')[0].trim())) {
+                                toggleMatchCollapse(pm);
+                            }
+                        }
+                    }
+                });
+            }, 800);
+        }
 
         // Passer au match suivant
         setTimeout(() => {
@@ -6148,38 +6299,41 @@ function getRoundIcon(roundName) {
 function generateManualMatchHTML(dayNumber, division, match, roundName) {
     const isCompleted = match.completed;
     const isActive = !match.isBye;
-    
+    const score1 = match.score1 || 0;
+    const score2 = match.score2 || 0;
+    const scoreDisplay = isCompleted && !match.isBye ? `<span class="collapse-score">${score1}-${score2}</span>` : '';
     return `
         <div class="manual-match" style="
             background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
             border: 2px solid ${isCompleted ? '#28a745' : isActive ? '#007bff' : '#6c757d'};
             border-radius: 10px;
-            padding: 15px;
+            padding: 10px;
             ${match.isBye ? 'opacity: 0.7;' : ''}
         ">
-            <div class="match-header" style="
+            <div class="match-header" ${isCompleted && !match.isBye ? `onclick="toggleMatchCollapse(this.parentElement)"` : ''} style="
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 12px;
+                margin-bottom: 8px;
+                ${isCompleted && !match.isBye ? 'cursor: pointer;' : ''}
             ">
                 <div class="match-title" style="
                     font-size: 13px;
                     color: #6c757d;
                     font-weight: bold;
                 ">
-                    Match ${match.position}
+                    Match ${match.position}${scoreDisplay}
                 </div>
-                <div class="match-status" style="
+                ${isCompleted || match.isBye ? `<div class="match-status" style="
                     font-size: 12px;
                     padding: 4px 10px;
                     border-radius: 15px;
                     font-weight: bold;
-                    background: ${isCompleted ? '#d4edda' : isActive ? '#cce5ff' : '#e2e3e5'};
-                    color: ${isCompleted ? '#155724' : isActive ? '#004085' : '#6c757d'};
+                    background: ${isCompleted ? '#d4edda' : '#e2e3e5'};
+                    color: ${isCompleted ? '#155724' : '#6c757d'};
                 ">
-                    ${isCompleted ? 'Terminé ✅' : match.isBye ? 'Qualifié ⚡' : 'En cours 🎯'}
-                </div>
+                    ${isCompleted ? 'Terminé ✅' : 'Qualifié ⚡'}
+                </div>` : ''}
             </div>
             
             <div class="players" style="
@@ -6188,6 +6342,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                 margin-bottom: ${match.isBye ? '0' : '15px'};
                 font-size: 15px;
                 text-align: center;
+                ${!match.isBye ? 'display: none;' : ''}
             ">
                 ${match.player1Seed ? `#${match.player1Seed}` : ''} ${match.player1}
                 ${!match.isBye ? ` VS ${match.player2Seed ? `#${match.player2Seed}` : ''} ${match.player2}` : ''}
@@ -6207,48 +6362,40 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    gap: 10px;
+                    gap: 8px;
                     margin-bottom: 12px;
                     padding: 12px;
                     background: #f8f9fa;
                     border: 1px solid #dee2e6;
                     border-radius: 6px;
                 ">
-                    <div style="text-align: center;">
-                        <div style="font-size: 11px; color: #6c757d; margin-bottom: 3px; font-weight: bold;">
-                            ${match.player1}
-                        </div>
-                        <input type="number"
-                               value="${match.score1 || ''}"
-                               placeholder="0"
-                               onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
-                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
-                    </div>
+                    <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player1}</span>
+                    <input type="number"
+                           value="${match.score1 || ''}"
+                           placeholder="0"
+                           onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
+                           onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
+                           style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
                     <span style="color: #6c757d; font-weight: bold; font-size: 18px;">-</span>
-                    <div style="text-align: center;">
-                        <div style="font-size: 11px; color: #6c757d; margin-bottom: 3px; font-weight: bold;">
-                            ${match.player2}
-                        </div>
-                        <input type="number"
-                               value="${match.score2 || ''}"
-                               placeholder="0"
-                               onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
-                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
-                    </div>
+                    <input type="number"
+                           value="${match.score2 || ''}"
+                           placeholder="0"
+                           onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
+                           onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
+                           style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
+                    <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player2}</span>
                 </div>
                 
                 <div class="match-result" style="
                     text-align: center;
-                    padding: 8px;
+                    padding: 6px;
                     border-radius: 6px;
                     font-weight: bold;
                     background: ${isCompleted ? '#d4edda' : '#fff3cd'};
                     color: ${isCompleted ? '#155724' : '#856404'};
                     font-size: 13px;
                 ">
-                    ${isCompleted && match.winner ? `🏆 ${match.winner} gagne` : 'En attente des scores'}
+                    ${isCompleted && match.winner ? `🏆 ${match.winner} gagne (${score1}-${score2})` : 'En attente des scores'}
                 </div>
             `}
         </div>
@@ -6416,12 +6563,72 @@ function updateManualMatchScore(matchId, scoreField, value, dayNumber) {
 }
 
 function handleManualMatchEnter(event, matchId, dayNumber) {
-    if (event.key === 'Enter') {
+    const dayData = championship.days[dayNumber];
+    const numDivisions = championship.config.numDivisions || 3;
+    let match = null;
+
+    // Trouver le match
+    for (let division = 1; division <= numDivisions; division++) {
+        const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
+        for (const roundName in rounds) {
+            match = rounds[roundName].matches.find(m => m.id === matchId);
+            if (match) break;
+        }
+        if (match) break;
+    }
+
+    // Vérifier si on doit valider
+    const shouldValidate = event.key === 'Enter' ||
+                          (event.key === 'Tab' && match && match.score1 !== undefined && match.score1 !== '' &&
+                           match.score2 !== undefined && match.score2 !== '');
+
+    if (shouldValidate) {
+        if (event.key === 'Tab' && (!match || match.score1 === undefined || match.score1 === '' ||
+                                     match.score2 === undefined || match.score2 === '')) {
+            return; // Laisser Tab naviguer normalement si scores incomplets
+        }
+
         event.preventDefault();
-        console.log(`⌨️ Enter sur match ${matchId}`);
+        console.log(`⌨️ ${event.key} sur match ${matchId}`);
+
+        let wasCompleted = false;
+        let matchElement = event.target.closest('.manual-match');
+
+        // Récupérer l'état du match
+        for (let division = 1; division <= numDivisions; division++) {
+            const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
+            for (const roundName in rounds) {
+                const m = rounds[roundName].matches.find(m => m.id === matchId);
+                if (m) {
+                    wasCompleted = m.completed;
+                    break;
+                }
+            }
+        }
 
         // Rafraîchir l'affichage
         updateManualFinalPhaseDisplay(dayNumber);
+
+        // Auto-collapse si le match vient d'être complété
+        if (!wasCompleted && matchElement) {
+            setTimeout(() => {
+                // Re-trouver les matchs complétés après updateManualFinalPhaseDisplay
+                const allManualMatches = document.querySelectorAll('.manual-match');
+                allManualMatches.forEach(mm => {
+                    if (mm && mm.hasAttribute('onclick')) {
+                        const inputs = mm.querySelectorAll('input[type="number"]');
+                        if (inputs.length > 0) {
+                            const onchangeAttr = inputs[0].getAttribute('onchange');
+                            if (onchangeAttr && onchangeAttr.includes(matchId)) {
+                                if (!mm.classList.contains('collapsed')) {
+                                    toggleMatchCollapse(mm);
+                                }
+                            }
+                        }
+                    }
+                });
+            }, 800);
+        }
 
         // Passer au match suivant
         setTimeout(() => {
