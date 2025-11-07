@@ -350,8 +350,8 @@ try {
                 container.innerHTML = '<div class="empty-state">Aucun joueur</div>';
             } else {
                 container.innerHTML = players.map(player => {
-                    // Échapper les caractères spéciaux pour JavaScript dans les onclick handlers
-                    const escapedPlayer = player.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    // Échapper seulement les apostrophes (pas les guillemets doubles car la chaîne JS est entre guillemets simples)
+                    const escapedPlayer = player.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                     return `<div class="player-tag" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayer}')">
                         ${player}
                         <div class="player-actions">
@@ -2555,7 +2555,7 @@ playerStats.forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
     const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
                       player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
-    const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
     rankingsHtml += `
         <tr style="cursor: pointer;" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayerName}')">
@@ -2659,7 +2659,7 @@ generalRanking.divisions[division].forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
     const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
                       player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
-    const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
     rankingHtml += `
         <tr style="cursor: pointer;" onclick="showGeneralPlayerDetails('${escapedPlayerName}', ${division})">
@@ -4072,7 +4072,7 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
         `;
         
         playersNeedingBye.forEach((player, index) => {
-            const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+            const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             modalHTML += `
                 <tr style="border-bottom: 1px solid #ddd; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
                     <td style="padding: 10px; font-weight: bold;">${player.name}</td>
