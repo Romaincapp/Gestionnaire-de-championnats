@@ -338,22 +338,28 @@ try {
     function updatePlayersDisplay(dayNumber) {
         console.log("updatePlayersDisplay appelée pour journée", dayNumber);
         if (!championship.days[dayNumber]) return;
-        
-        for (let division = 1; division <= 3; division++) {
+
+        const numDivisions = championship.config?.numberOfDivisions || 3;
+        for (let division = 1; division <= numDivisions; division++) {
             const container = document.getElementById(`division${dayNumber}-${division}-players`);
             if (!container) continue;
-            
+
             const players = championship.days[dayNumber].players[division];
             
             if (players.length === 0) {
                 container.innerHTML = '<div class="empty-state">Aucun joueur</div>';
             } else {
-                container.innerHTML = players.map(player => 
-                    `<div class="player-tag" onclick="showPlayerDetails(${dayNumber}, ${division}, '${player}')">
+                container.innerHTML = players.map(player => {
+                    // Échapper les caractères spéciaux pour JavaScript dans les onclick handlers
+                    const escapedPlayer = player.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    return `<div class="player-tag" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayer}')">
                         ${player}
-                        <button class="remove-player" onclick="event.stopPropagation(); removePlayer(${dayNumber}, ${division}, '${player}')" title="Supprimer">×</button>
-                    </div>`
-                ).join('');
+                        <div class="player-actions">
+                            <button class="edit-player" onclick="event.stopPropagation(); editPlayer(${dayNumber}, ${division}, '${escapedPlayer}')" title="Modifier">✏️</button>
+                            <button class="remove-player" onclick="event.stopPropagation(); removePlayer(${dayNumber}, ${division}, '${escapedPlayer}')" title="Supprimer">×</button>
+                        </div>
+                    </div>`;
+                }).join('');
             }
         }
     }
@@ -378,6 +384,76 @@ try {
         showNotification(`${playerName} supprimé`, 'warning');
     }
     window.removePlayer = removePlayer;
+
+    function editPlayer(dayNumber, division, oldPlayerName) {
+        console.log("editPlayer appelée");
+
+        const newName = prompt(`Modifier le nom du joueur:\n\nNom actuel: ${oldPlayerName}`, oldPlayerName);
+
+        if (!newName || newName.trim() === '') {
+            return; // Annulé
+        }
+
+        const trimmedNewName = newName.trim();
+
+        // Si le nom n'a pas changé
+        if (trimmedNewName === oldPlayerName) {
+            return;
+        }
+
+        // Vérifier si le nouveau nom existe déjà dans la division
+        if (championship.days[dayNumber].players[division].includes(trimmedNewName)) {
+            showNotification(`Le nom "${trimmedNewName}" existe déjà dans D${division} - J${dayNumber}`, 'warning');
+            return;
+        }
+
+        // Remplacer le nom dans le tableau des joueurs
+        const playerIndex = championship.days[dayNumber].players[division].indexOf(oldPlayerName);
+        if (playerIndex !== -1) {
+            championship.days[dayNumber].players[division][playerIndex] = trimmedNewName;
+        }
+
+        // Mettre à jour le nom dans tous les matchs classiques
+        championship.days[dayNumber].matches[division].forEach(match => {
+            if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
+            if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
+            if (match.winner === oldPlayerName) match.winner = trimmedNewName;
+        });
+
+        // Mettre à jour dans les matchs de poules si activé
+        if (championship.days[dayNumber].pools?.enabled && championship.days[dayNumber].pools.divisions[division]) {
+            const poolMatches = championship.days[dayNumber].pools.divisions[division].matches || [];
+            poolMatches.forEach(match => {
+                if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
+                if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
+                if (match.winner === oldPlayerName) match.winner = trimmedNewName;
+            });
+
+            // Mettre à jour dans les pools
+            const pools = championship.days[dayNumber].pools.divisions[division].pools || [];
+            pools.forEach(pool => {
+                const idx = pool.indexOf(oldPlayerName);
+                if (idx !== -1) pool[idx] = trimmedNewName;
+            });
+
+            // Mettre à jour dans la phase finale
+            const finalPhase = championship.days[dayNumber].pools.divisions[division].finalPhase || [];
+            finalPhase.forEach(match => {
+                if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
+                if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
+                if (match.winner === oldPlayerName) match.winner = trimmedNewName;
+            });
+        }
+
+        // Rafraîchir l'affichage
+        updatePlayersDisplay(dayNumber);
+        updateMatchesDisplay(dayNumber);
+        updateStats(dayNumber);
+        saveToLocalStorage();
+
+        showNotification(`"${oldPlayerName}" renommé en "${trimmedNewName}"`, 'success');
+    }
+    window.editPlayer = editPlayer;
 
     // GESTION DES ONGLETS ET JOURNÉES
     function addNewDay() {
@@ -2479,9 +2555,10 @@ playerStats.forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
     const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
                       player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+    const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
 
     rankingsHtml += `
-        <tr style="cursor: pointer;" onclick="showPlayerDetails(${dayNumber}, ${division}, '${player.name}')">
+        <tr style="cursor: pointer;" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayerName}')">
             <td class="rank-position ${rankClass}">${index + 1}</td>
             <td style="font-weight: 600;">${player.name}</td>
             <td class="stat-value">${player.totalPoints}</td>
@@ -2582,9 +2659,10 @@ generalRanking.divisions[division].forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
     const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
                       player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+    const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
 
     rankingHtml += `
-        <tr style="cursor: pointer;" onclick="showGeneralPlayerDetails('${player.name}', ${division})">
+        <tr style="cursor: pointer;" onclick="showGeneralPlayerDetails('${escapedPlayerName}', ${division})">
             <td class="rank-position ${rankClass}">${index + 1}</td>
             <td style="font-weight: 600;">${player.name}</td>
             <td class="stat-value">${player.totalPoints}</td>
@@ -3994,6 +4072,7 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
         `;
         
         playersNeedingBye.forEach((player, index) => {
+            const escapedPlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
             modalHTML += `
                 <tr style="border-bottom: 1px solid #ddd; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
                     <td style="padding: 10px; font-weight: bold;">${player.name}</td>
@@ -4003,7 +4082,7 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                         ${player.missingMatches}
                     </td>
                     <td style="padding: 10px; text-align: center;">
-                        <button onclick="addByeMatchForPlayer(${dayNumber}, ${player.division}, '${player.name}'); closeByeModal();" 
+                        <button onclick="addByeMatchForPlayer(${dayNumber}, ${player.division}, '${escapedPlayerName}'); closeByeModal();" 
                                 style="
                             background: linear-gradient(135deg, #27ae60, #2ecc71);
                             color: white;

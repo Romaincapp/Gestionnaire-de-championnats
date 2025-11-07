@@ -375,6 +375,33 @@ body   * {
             box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
         }
         
+        .player-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .edit-player {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s ease;
+        }
+
+        .edit-player:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
         .remove-player {
             background: rgba(255,255,255,0.3);
             border: none;
@@ -384,8 +411,18 @@ body   * {
             height: 20px;
             cursor: pointer;
             font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s ease;
         }
-        
+
+        .remove-player:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
         .matches-container {
             margin-top: 20px;
         }
