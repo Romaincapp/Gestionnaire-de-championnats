@@ -8,7 +8,8 @@
       "Bash(dir:*)",
       "Bash(code:*)",
       "Bash(node -e \"const fs = require(''fs''); try { JSON.parse(fs.readFileSync(''c:/Users/Maison/Nouveau dossier/Gestionnaire-de-championnats/testpool.json'', ''utf8'')); console.log(''JSON valide!''); } catch(e) { console.log(''Erreur:'', e.message); }\")",
-      "Bash(node -e \"const fs = require(''fs''); try { JSON.parse(fs.readFileSync(''c:/Users/Maison/Nouveau dossier/Gestionnaire-de-championnats/testpool.json'', ''utf8'')); console.log(''✅ JSON valide!''); } catch(e) { console.log(''❌ Erreur:'', e.message); }\")"
+      "Bash(node -e \"const fs = require(''fs''); try { JSON.parse(fs.readFileSync(''c:/Users/Maison/Nouveau dossier/Gestionnaire-de-championnats/testpool.json'', ''utf8'')); console.log(''✅ JSON valide!''); } catch(e) { console.log(''❌ Erreur:'', e.message); }\")",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

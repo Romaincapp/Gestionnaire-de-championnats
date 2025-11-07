@@ -7590,7 +7590,8 @@ function getDivisionMatches(dayData, division, dayNumber) {
                 type: 'Poule',
                 poolName: match.poolName || `Poule ${String.fromCharCode(65 + match.poolIndex)}`,
                 tour: null,
-                dayNumber: dayNumber
+                dayNumber: dayNumber,
+                court: match.court // Préserver le numéro de terrain
             });
         });
     } else if (dayData.matches[division].length > 0) {
@@ -7605,7 +7606,8 @@ function getDivisionMatches(dayData, division, dayNumber) {
                 type: 'Round-Robin',
                 tour: match.tour,
                 poolName: null,
-                dayNumber: dayNumber
+                dayNumber: dayNumber,
+                court: match.court // Préserver le numéro de terrain
             });
         });
     }
@@ -7616,12 +7618,49 @@ function getDivisionMatches(dayData, division, dayNumber) {
 // Grouper les matchs en pages
 function groupMatchesIntoPages(matches, matchesPerPage) {
     const pages = [];
-    
+
     for (let i = 0; i < matches.length; i += matchesPerPage) {
         pages.push(matches.slice(i, i + matchesPerPage));
     }
-    
+
     return pages;
+}
+
+// Réorganiser les matchs pour alterner les tours sur chaque page
+// Pour Boccia: sur chaque page de 4 matchs, on veut 1 match de chaque tour (T1, T2, T3, T4)
+function reorganizeMatchesByTour(matches) {
+    // Grouper les matchs par tour
+    const matchesByTour = {};
+
+    matches.forEach(match => {
+        const tour = match.tour || 0;
+        if (!matchesByTour[tour]) {
+            matchesByTour[tour] = [];
+        }
+        matchesByTour[tour].push(match);
+    });
+
+    // Obtenir les tours disponibles triés
+    const tours = Object.keys(matchesByTour).map(Number).sort((a, b) => a - b);
+
+    // Si pas de tours ou un seul tour, retourner les matchs tels quels
+    if (tours.length <= 1) {
+        return matches;
+    }
+
+    // Réorganiser en alternant les tours
+    const reorganized = [];
+    let maxLength = Math.max(...tours.map(t => matchesByTour[t].length));
+
+    for (let i = 0; i < maxLength; i++) {
+        tours.forEach(tour => {
+            if (matchesByTour[tour][i]) {
+                reorganized.push(matchesByTour[tour][i]);
+            }
+        });
+    }
+
+    return reorganized;
 }
 
 // Remplacez seulement cette fonction dans votre code existant :
@@ -8023,13 +8062,16 @@ function printBocciaMatchSheets(dayNumber) {
         return;
     }
 
-    // Collecter tous les matchs
+    // Collecter tous les matchs division par division
+    // Pour chaque division, réorganiser par tour AVANT de passer à la suivante
     let allMatches = [];
     const numDivisions = getNumberOfDivisions();
 
     for (let division = 1; division <= numDivisions; division++) {
         const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
-        allMatches.push(...divisionMatches);
+        // Réorganiser les matchs de cette division par tour (T1, T2, T3, T4 alternés)
+        const reorganizedDivisionMatches = reorganizeMatchesByTour(divisionMatches);
+        allMatches.push(...reorganizedDivisionMatches);
     }
 
     if (allMatches.length === 0) {
@@ -8285,8 +8327,8 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
 }
 
 function generateBocciaMatchCard(match, dayNumber) {
-    // Afficher le numéro de terrain si disponible
-    const terrainInfo = match.court ? ` • Terrain ${match.court}` : '';
+    // Afficher le numéro de terrain si disponible (en gras)
+    const terrainInfo = match.court ? ` • Terrain <strong>${match.court}</strong>` : '';
 
     return `
         <div class="match-card">
@@ -8382,6 +8424,7 @@ window.printBocciaMatchSheets = printBocciaMatchSheets;
 window.addPrintMatchesButton = addPrintMatchesButton;
 window.getDivisionMatches = getDivisionMatches;
 window.groupMatchesIntoPages = groupMatchesIntoPages;
+window.reorganizeMatchesByTour = reorganizeMatchesByTour;
 window.generateMatchSheetHTML = generateMatchSheetHTML;
 window.generateCompactMatchSheet = generateCompactMatchSheet;
 window.generateBocciaSheetHTML = generateBocciaSheetHTML;
