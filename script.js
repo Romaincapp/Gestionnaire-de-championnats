@@ -237,7 +237,7 @@ try {
     // FONCTIONS DE BASE
     function addPlayer() {
         console.log("addPlayer appelée");
-        const name = document.getElementById('playerName').value.trim();
+        const name = document.getElementById('playerName').value.trim().toUpperCase();
         const division = parseInt(document.getElementById('playerDivision').value);
         const targetDay = parseInt(document.getElementById('targetDay').value);
 
@@ -297,9 +297,9 @@ try {
             alert('Veuillez entrer au moins un nom de joueur');
             return;
         }
-        
+
         const names = text.split('\n')
-                         .map(name => name.trim())
+                         .map(name => name.trim().toUpperCase())
                          .filter(name => name.length > 0);
         
         let added = 0;
@@ -394,10 +394,10 @@ try {
             return; // Annulé
         }
 
-        const trimmedNewName = newName.trim();
+        const trimmedNewName = newName.trim().toUpperCase();
 
         // Si le nom n'a pas changé
-        if (trimmedNewName === oldPlayerName) {
+        if (trimmedNewName === oldPlayerName.toUpperCase()) {
             return;
         }
 
@@ -2482,8 +2482,10 @@ try {
         
         for (let division = 1; division <= 3; division++) {
             if (dayData.players[division].length === 0) continue;
-            
-           const playerStats = dayData.players[division].map(player => {
+
+           const playerStats = dayData.players[division]
+    .filter(player => player.toUpperCase() !== 'BYE')
+    .map(player => {
     const stats = calculatePlayerStats(dayNumber, division, player);
     return {
         name: player,
@@ -2726,11 +2728,13 @@ generalRanking.divisions[division].forEach((player, index) => {
                 const dayNum = parseInt(dayNumber);
                 const dayData = championship.days[dayNum];
 
-                dayData.players[division].forEach(playerName => {
-                    if (!playerFirstAppearance[playerName] || dayNum < playerFirstAppearance[playerName]) {
-                        playerFirstAppearance[playerName] = dayNum;
-                    }
-                });
+                dayData.players[division]
+                    .filter(playerName => playerName.toUpperCase() !== 'BYE')
+                    .forEach(playerName => {
+                        if (!playerFirstAppearance[playerName] || dayNum < playerFirstAppearance[playerName]) {
+                            playerFirstAppearance[playerName] = dayNum;
+                        }
+                    });
             });
 
             // Étape 2: Calculer les stats pour chaque joueur
@@ -2738,7 +2742,9 @@ generalRanking.divisions[division].forEach((player, index) => {
                 const dayNum = parseInt(dayNumber);
                 const dayData = championship.days[dayNum];
 
-                dayData.players[division].forEach(playerName => {
+                dayData.players[division]
+                    .filter(playerName => playerName.toUpperCase() !== 'BYE')
+                    .forEach(playerName => {
                    if (!playersData[playerName]) {
     playersData[playerName] = {
         name: playerName,
