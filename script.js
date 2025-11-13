@@ -331,7 +331,7 @@ try {
             if (!container) continue;
 
             const players = championship.days[dayNumber].players[division];
-            
+
             if (players.length === 0) {
                 container.innerHTML = '<div class="empty-state">Aucun joueur</div>';
             } else {
@@ -347,6 +347,9 @@ try {
                     </div>`;
                 }).join('');
             }
+
+            // Mettre à jour le compteur de joueurs dynamiquement
+            updatePlayerCount(dayNumber, division);
         }
     }
     window.updatePlayersDisplay = updatePlayersDisplay;
@@ -1717,6 +1720,23 @@ try {
                 }
             }
 
+            // Chercher dans la phase finale manuelle
+            if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions) {
+                for (let division = 1; division <= numDivisions; division++) {
+                    const rounds = dayData.pools.manualFinalPhase.divisions[division]?.rounds;
+                    if (rounds) {
+                        for (const roundName in rounds) {
+                            const match = rounds[roundName].matches.find(m => m.id === matchId);
+                            if (match) {
+                                match.isCollapsed = matchElement.classList.contains('collapsed');
+                                saveToLocalStorage();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
             // Chercher dans les matchs normaux (pour les manual-match)
             if (divisionAttr) {
                 const division = parseInt(divisionAttr);
@@ -2143,7 +2163,7 @@ try {
             const playersCount = championship.days[dayNumber]?.players[i]?.length || 0;
             html += `
                 <div class="division division-${i}">
-                    <h3>${medal} Division ${i} <span style="font-size: 14px; color: #7f8c8d; font-weight: normal;">(${playersCount} joueur${playersCount !== 1 ? 's' : ''})</span></h3>
+                    <h3>${medal} Division ${i} <span id="player-count-${dayNumber}-${i}" style="font-size: 14px; color: #7f8c8d; font-weight: normal;">(${playersCount} joueur${playersCount !== 1 ? 's' : ''})</span></h3>
                     <div class="players-list-header" onclick="togglePlayersList(${dayNumber}, ${i})" style="
                         padding: 8px 12px;
                         background: linear-gradient(135deg, #ecf0f1, #d5dbdb);
@@ -2170,6 +2190,16 @@ try {
 
         divisionsContainer.innerHTML = html;
     }
+
+    // Fonction pour mettre à jour dynamiquement le compteur de joueurs
+    function updatePlayerCount(dayNumber, division) {
+        const playerCountElement = document.getElementById(`player-count-${dayNumber}-${division}`);
+        if (!playerCountElement) return;
+
+        const playersCount = championship.days[dayNumber]?.players[division]?.length || 0;
+        playerCountElement.textContent = `(${playersCount} joueur${playersCount !== 1 ? 's' : ''})`;
+    }
+    window.updatePlayerCount = updatePlayerCount;
 
     // STATISTIQUES ET CLASSEMENTS
     function calculatePlayerStats(dayNumber, division, playerName) {
@@ -3630,16 +3660,31 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
         let totalPlayers = new Set();
         let totalMatches = 0;
         let totalDays = Object.keys(championship.days).length;
-        
+
         Object.values(championship.days).forEach(day => {
             Object.values(day.players).forEach(divPlayers => {
                 divPlayers.forEach(player => totalPlayers.add(player));
             });
+
+            // Compter les matchs réguliers
             Object.values(day.matches).forEach(divMatches => {
                 totalMatches += divMatches.length;
             });
+
+            // Compter les matchs de poule si présents
+            if (day.pools && day.pools.enabled && day.pools.divisions) {
+                Object.values(day.pools.divisions).forEach(divPool => {
+                    if (divPool.matches) {
+                        totalMatches += divPool.matches.length;
+                    }
+                    // Compter les matchs de phase finale
+                    if (divPool.finalPhase) {
+                        totalMatches += divPool.finalPhase.length;
+                    }
+                });
+            }
         });
-        
+
         return {
             totalPlayers: totalPlayers.size,
             totalMatches,
@@ -3976,8 +4021,6 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             }
         }
     }
-    window.clearAllData = clearAllData;
-
     window.clearAllData = clearAllData;
 
     // ======================================
@@ -4701,6 +4744,16 @@ function addPoolToggleToInterface(dayNumber) {
                             <option value="3">3 premiers</option>
                         </select>
                     </label>
+
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+                        <span style="font-weight: 600; color: #2c3e50;">⚡ Matchs/joueur:</span>
+                        <select id="matches-per-player-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #16a085; border-radius: 5px; font-size: 12px;">
+                            <option value="">Tous contre tous</option>
+                            <option value="3" selected>3 matchs</option>
+                            <option value="4">4 matchs</option>
+                            <option value="5">5 matchs</option>
+                        </select>
+                    </label>
                 </div>
 
                 <!-- Mode Avancé -->
@@ -4717,6 +4770,16 @@ function addPoolToggleToInterface(dayNumber) {
                         <input type="number" id="total-qualified-${dayNumber}" min="4" max="32" value="8"
                                onchange="updateAdvancedConfigInfo(${dayNumber})"
                                style="width: 60px; padding: 6px 8px; border: 2px solid #e67e22; border-radius: 5px; font-size: 12px;">
+                    </label>
+
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+                        <span style="font-weight: 600; color: #2c3e50;">⚡ Matchs/joueur:</span>
+                        <select id="matches-per-player-adv-${dayNumber}" onchange="updateAdvancedConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #16a085; border-radius: 5px; font-size: 12px;">
+                            <option value="">Tous contre tous</option>
+                            <option value="3" selected>3 matchs</option>
+                            <option value="4">4 matchs</option>
+                            <option value="5">5 matchs</option>
+                        </select>
                     </label>
                 </div>
 
@@ -4801,6 +4864,8 @@ function updateSimpleConfigInfo(dayNumber) {
     const configInfo = document.getElementById(`config-info-${dayNumber}`);
     const poolSize = parseInt(document.getElementById(`pool-size-${dayNumber}`).value);
     const qualifiedPerPool = parseInt(document.getElementById(`qualified-per-pool-${dayNumber}`).value);
+    const matchesPerPlayerInput = document.getElementById(`matches-per-player-${dayNumber}`);
+    const matchesPerPlayer = matchesPerPlayerInput?.value ? parseInt(matchesPerPlayerInput.value) : null;
 
     const dayData = championship.days[dayNumber];
     const numDivisions = championship.config.numDivisions || 3;
@@ -4814,7 +4879,19 @@ function updateSimpleConfigInfo(dayNumber) {
         const numPools = Math.ceil(players.length / poolSize);
         const totalQualified = numPools * qualifiedPerPool;
 
-        infoHTML += `Division ${division}: ${players.length} joueurs → ${numPools} poule(s) → ${totalQualified} qualifié(s)<br>`;
+        // Calculer le nombre de matchs par poule
+        let matchesPerPoolText = '';
+        if (!matchesPerPlayer || matchesPerPlayer >= poolSize - 1) {
+            // Round-robin complet
+            const matchesPerPool = (poolSize * (poolSize - 1)) / 2;
+            matchesPerPoolText = `~${matchesPerPool} matchs/poule (tous contre tous)`;
+        } else {
+            // Limité
+            const matchesPerPool = (poolSize * matchesPerPlayer) / 2;
+            matchesPerPoolText = `${matchesPerPool} matchs/poule (${matchesPerPlayer} par joueur)`;
+        }
+
+        infoHTML += `Division ${division}: ${players.length} joueurs → ${numPools} poule(s) → ${totalQualified} qualifié(s) → ${matchesPerPoolText}<br>`;
     }
 
     configInfo.innerHTML = infoHTML;
@@ -4828,6 +4905,8 @@ function updateAdvancedConfigInfo(dayNumber) {
     const configInfo = document.getElementById(`config-info-${dayNumber}`);
     const numPools = parseInt(document.getElementById(`num-pools-${dayNumber}`).value);
     const totalQualified = parseInt(document.getElementById(`total-qualified-${dayNumber}`).value);
+    const matchesPerPlayerInput = document.getElementById(`matches-per-player-adv-${dayNumber}`);
+    const matchesPerPlayer = matchesPerPlayerInput?.value ? parseInt(matchesPerPlayerInput.value) : null;
 
     const dayData = championship.days[dayNumber];
     const numDivisions = championship.config.numDivisions || 3;
@@ -4840,12 +4919,24 @@ function updateAdvancedConfigInfo(dayNumber) {
         if (players.length === 0) continue;
 
         const result = calculateQualificationDistribution(numPools, totalQualified, players.length);
+        const poolSize = Math.ceil(players.length / numPools);
 
         infoHTML += `<strong>📋 Division ${division} (${players.length} joueurs) :</strong><br>`;
 
         // Info sur les poules
         if (result.poolSizeInfo) {
             infoHTML += `${result.poolSizeInfo}<br>`;
+        }
+
+        // Info sur le nombre de matchs par poule
+        if (!matchesPerPlayer || matchesPerPlayer >= poolSize - 1) {
+            // Round-robin complet
+            const matchesPerPool = (poolSize * (poolSize - 1)) / 2;
+            infoHTML += `📊 ~${matchesPerPool} matchs/poule (tous contre tous)<br>`;
+        } else {
+            // Limité
+            const matchesPerPool = (poolSize * matchesPerPlayer) / 2;
+            infoHTML += `⚡ ${matchesPerPool} matchs/poule (${matchesPerPlayer} par joueur)<br>`;
         }
 
         // Info sur la qualification
@@ -5458,11 +5549,20 @@ function generatePools(dayNumber) {
         totalQualified = parseInt(document.getElementById(`total-qualified-${dayNumber}`).value);
     }
 
+    // Lire le paramètre matchesPerPlayer (global pour tous les modes)
+    const matchesPerPlayerInput = configMode === 'simple'
+        ? document.getElementById(`matches-per-player-${dayNumber}`)
+        : document.getElementById(`matches-per-player-adv-${dayNumber}`);
+    const matchesPerPlayer = matchesPerPlayerInput?.value ? parseInt(matchesPerPlayerInput.value) : null;
+
+    console.log(`🎯 Configuration pools J${dayNumber}:`, { mode: configMode, matchesPerPlayer });
+
     // Sauvegarder la configuration du mode
     if (!dayData.pools.config) {
         dayData.pools.config = {};
     }
     dayData.pools.config.mode = configMode;
+    dayData.pools.config.matchesPerPlayer = matchesPerPlayer; // Sauvegarde globale
 
     for (let division = 1; division <= numDivisions; division++) {
         const players = [...dayData.players[division]];
@@ -5530,15 +5630,24 @@ function generatePools(dayNumber) {
             }
         }
 
+        // Valider le nombre de matchs par joueur si spécifié
+        if (matchesPerPlayer) {
+            const validation = validateMatchesPerPlayer(poolSize, matchesPerPlayer);
+            if (!validation.valid) {
+                alert(`❌ Division ${division}: ${validation.message}\n\nAjustez le nombre de matchs ou la taille des poules.`);
+                continue; // Passer à la division suivante
+            }
+        }
+
         // Mélanger les joueurs pour équilibrer les poules
         const shuffledPlayers = shuffleArray([...players]);
         const pools = createBalancedPoolsWithBye(shuffledPlayers, poolSize);
 
         // Sauvegarder les poules
         dayData.pools.divisions[division].pools = pools;
-        
-        // Générer les matchs de poules
-        const poolMatches = generatePoolMatches(pools, division, dayNumber);
+
+        // Générer les matchs de poules avec le paramètre matchesPerPlayer
+        const poolMatches = generatePoolMatches(pools, division, dayNumber, matchesPerPlayer);
         dayData.pools.divisions[division].matches = poolMatches;
         totalMatches += poolMatches.length;
     }
@@ -5603,61 +5712,59 @@ function createBalancedPools(players, maxPoolSize) {
     return pools.filter(pool => pool.length > 0);
 }
 
-function generatePoolMatches(pools, division, dayNumber) {
-    const allMatches = [];
-    let matchId = 0;
+// ======================================
+// VALIDATION DU NOMBRE DE MATCHS PAR JOUEUR
+// ======================================
 
-    pools.forEach((pool, poolIndex) => {
-        for (let i = 0; i < pool.length; i++) {
-            for (let j = i + 1; j < pool.length; j++) {
-                const player1 = pool[i];
-                const player2 = pool[j];
+function validateMatchesPerPlayer(poolSize, matchesPerPlayer) {
+    if (!matchesPerPlayer) return { valid: true }; // Round-robin complet (par défaut)
 
-                // Ne pas créer de match si l'un des joueurs est BYE
-                const isBye1 = player1.startsWith('BYE');
-                const isBye2 = player2.startsWith('BYE');
+    const maxPossible = poolSize - 1;
 
-                if (isBye1 || isBye2) {
-                    // Match automatiquement gagné par le joueur non-BYE
-                    if (!isBye1 && isBye2) {
-                        // player1 gagne automatiquement
-                        allMatches.push({
-                            id: matchId++,
-                            player1: player1,
-                            player2: player2,
-                            poolIndex: poolIndex,
-                            poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
-                            division: division,
-                            dayNumber: dayNumber,
-                            score1: '0',
-                            score2: '0',
-                            completed: true,
-                            winner: player1,
-                            isPoolMatch: true,
-                            isByeMatch: true
-                        });
-                    } else if (isBye1 && !isBye2) {
-                        // player2 gagne automatiquement
-                        allMatches.push({
-                            id: matchId++,
-                            player1: player1,
-                            player2: player2,
-                            poolIndex: poolIndex,
-                            poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
-                            division: division,
-                            dayNumber: dayNumber,
-                            score1: '0',
-                            score2: '0',
-                            completed: true,
-                            winner: player2,
-                            isPoolMatch: true,
-                            isByeMatch: true
-                        });
-                    }
-                    // Si les deux sont BYE, on ne crée pas de match du tout
-                } else {
-                    // Match normal
-                    allMatches.push({
+    // Vérifier que le nombre demandé n'excède pas le maximum possible
+    if (matchesPerPlayer > maxPossible) {
+        return {
+            valid: false,
+            message: `Impossible: ${matchesPerPlayer} matchs demandés mais seulement ${maxPossible} adversaires disponibles dans une poule de ${poolSize} joueurs!`
+        };
+    }
+
+    // Vérifier que poolSize * matchesPerPlayer est pair (nécessaire pour équilibrage strict)
+    // Si impair, il est impossible d'avoir exactement N matchs pour chaque joueur
+    const totalEdges = poolSize * matchesPerPlayer;
+    if (totalEdges % 2 !== 0) {
+        return {
+            valid: false,
+            message: `Impossible: ${poolSize} joueurs × ${matchesPerPlayer} matchs = ${totalEdges} (impair). Chaque match compte pour 2 joueurs, le total doit être pair. Choisissez un autre nombre de matchs.`
+        };
+    }
+
+    return { valid: true };
+}
+
+// ======================================
+// GÉNÉRATION DES MATCHS DE POULES
+// ======================================
+
+function generateRoundRobinMatches(pool, poolIndex, division, dayNumber, startMatchId = 0) {
+    const matches = [];
+    let matchId = startMatchId;
+
+    // Génération round-robin complet: tous contre tous
+    for (let i = 0; i < pool.length; i++) {
+        for (let j = i + 1; j < pool.length; j++) {
+            const player1 = pool[i];
+            const player2 = pool[j];
+
+            // Ne pas créer de match si l'un des joueurs est BYE
+            const isBye1 = player1.startsWith('BYE');
+            const isBye2 = player2.startsWith('BYE');
+
+            if (isBye1 || isBye2) {
+                // Match automatiquement gagné par le joueur non-BYE
+                if (!isBye1 && isBye2) {
+                    // player1 gagne automatiquement
+                    matches.push({
                         id: matchId++,
                         player1: player1,
                         player2: player2,
@@ -5665,18 +5772,207 @@ function generatePoolMatches(pools, division, dayNumber) {
                         poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                         division: division,
                         dayNumber: dayNumber,
-                        score1: '',
-                        score2: '',
-                        completed: false,
-                        winner: null,
+                        score1: '0',
+                        score2: '0',
+                        completed: true,
+                        winner: player1,
                         isPoolMatch: true,
-                        isByeMatch: false
+                        isByeMatch: true
                     });
+                } else if (isBye1 && !isBye2) {
+                    // player2 gagne automatiquement
+                    matches.push({
+                        id: matchId++,
+                        player1: player1,
+                        player2: player2,
+                        poolIndex: poolIndex,
+                        poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+                        division: division,
+                        dayNumber: dayNumber,
+                        score1: '0',
+                        score2: '0',
+                        completed: true,
+                        winner: player2,
+                        isPoolMatch: true,
+                        isByeMatch: true
+                    });
+                }
+                // Si les deux sont BYE, on ne crée pas de match du tout
+            } else {
+                // Match normal
+                matches.push({
+                    id: matchId++,
+                    player1: player1,
+                    player2: player2,
+                    poolIndex: poolIndex,
+                    poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+                    division: division,
+                    dayNumber: dayNumber,
+                    score1: '',
+                    score2: '',
+                    completed: false,
+                    winner: null,
+                    isPoolMatch: true,
+                    isByeMatch: false
+                });
+            }
+        }
+    }
+
+    return matches;
+}
+
+function generateLimitedMatches(pool, poolIndex, division, dayNumber, matchesPerPlayer, startMatchId = 0) {
+    const matches = [];
+    let matchId = startMatchId;
+    const n = pool.length;
+
+    // Tableau de suivi: combien de matchs chaque joueur a
+    const matchCounts = Array(n).fill(0);
+    // Set pour éviter les matchs en double
+    const matchedPairs = new Set();
+
+    // Algorithme de rotation (Circle Method - Round Robin partiel)
+    // On crée une liste d'indices pour faire tourner
+    const indices = Array.from({ length: n }, (_, i) => i);
+
+    let round = 0;
+    const maxRounds = matchesPerPlayer * 2; // Sécurité pour éviter boucle infinie
+
+    while (round < maxRounds) {
+        // Vérifier si tous les joueurs ont atteint leur quota
+        if (matchCounts.every(c => c >= matchesPerPlayer)) break;
+
+        // Génération des appairages pour ce round
+        // En round-robin standard: joueur 0 reste fixe, les autres tournent
+        const roundPairs = [];
+
+        // Apparier les joueurs: premier avec dernier, deuxième avec avant-dernier, etc.
+        const half = Math.floor(n / 2);
+        for (let i = 0; i < half; i++) {
+            const idx1 = indices[i];
+            const idx2 = indices[n - 1 - i];
+
+            // Vérifier que les deux joueurs n'ont pas atteint leur quota
+            if (matchCounts[idx1] < matchesPerPlayer && matchCounts[idx2] < matchesPerPlayer) {
+                // Vérifier qu'ils ne se sont pas déjà affrontés
+                const pairKey = idx1 < idx2 ? `${idx1}-${idx2}` : `${idx2}-${idx1}`;
+                if (!matchedPairs.has(pairKey)) {
+                    roundPairs.push([idx1, idx2]);
+                    matchedPairs.add(pairKey);
                 }
             }
         }
+
+        // Si nombre impair de joueurs, un joueur n'est pas apparié ce round
+        // (c'est normal et voulu)
+
+        // Créer les matchs et incrémenter les compteurs
+        roundPairs.forEach(([i, j]) => {
+            const player1 = pool[i];
+            const player2 = pool[j];
+
+            const isBye1 = player1.startsWith('BYE');
+            const isBye2 = player2.startsWith('BYE');
+
+            if (isBye1 || isBye2) {
+                // Gestion des BYE
+                if (!isBye1 && isBye2) {
+                    matches.push({
+                        id: matchId++,
+                        player1: player1,
+                        player2: player2,
+                        poolIndex: poolIndex,
+                        poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+                        division: division,
+                        dayNumber: dayNumber,
+                        score1: '0',
+                        score2: '0',
+                        completed: true,
+                        winner: player1,
+                        isPoolMatch: true,
+                        isByeMatch: true
+                    });
+                } else if (isBye1 && !isBye2) {
+                    matches.push({
+                        id: matchId++,
+                        player1: player1,
+                        player2: player2,
+                        poolIndex: poolIndex,
+                        poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+                        division: division,
+                        dayNumber: dayNumber,
+                        score1: '0',
+                        score2: '0',
+                        completed: true,
+                        winner: player2,
+                        isPoolMatch: true,
+                        isByeMatch: true
+                    });
+                }
+            } else {
+                // Match normal
+                matches.push({
+                    id: matchId++,
+                    player1: player1,
+                    player2: player2,
+                    poolIndex: poolIndex,
+                    poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+                    division: division,
+                    dayNumber: dayNumber,
+                    score1: '',
+                    score2: '',
+                    completed: false,
+                    winner: null,
+                    isPoolMatch: true,
+                    isByeMatch: false
+                });
+            }
+
+            matchCounts[i]++;
+            matchCounts[j]++;
+        });
+
+        // Rotation: garder le premier fixe, faire tourner les autres
+        if (n > 1) {
+            const fixed = indices[0];
+            const rotating = indices.slice(1);
+            // Déplacer le dernier au début de la partie rotative
+            const rotated = [rotating[rotating.length - 1], ...rotating.slice(0, -1)];
+            indices.splice(0, n, fixed, ...rotated);
+        }
+
+        round++;
+    }
+
+    console.log(`✅ Poule ${String.fromCharCode(65 + poolIndex)}: ${matches.length} matchs générés, ${matchesPerPlayer} matchs/joueur`);
+    console.log(`   Répartition:`, matchCounts);
+
+    return matches;
+}
+
+function generatePoolMatches(pools, division, dayNumber, matchesPerPlayer = null) {
+    const allMatches = [];
+    let matchId = 0;
+
+    console.log(`🎯 Génération matchs pour Division ${division}:`, matchesPerPlayer ? `${matchesPerPlayer} matchs/joueur` : 'Round-robin complet');
+
+    pools.forEach((pool, poolIndex) => {
+        let poolMatches;
+
+        if (!matchesPerPlayer || matchesPerPlayer >= pool.length - 1) {
+            // Round-robin complet: tous contre tous
+            poolMatches = generateRoundRobinMatches(pool, poolIndex, division, dayNumber, matchId);
+        } else {
+            // Nombre de matchs limité par joueur
+            poolMatches = generateLimitedMatches(pool, poolIndex, division, dayNumber, matchesPerPlayer, matchId);
+        }
+
+        matchId += poolMatches.length;
+        allMatches.push(...poolMatches);
     });
 
+    console.log(`✅ Total: ${allMatches.length} matchs générés pour Division ${division}`);
     return allMatches;
 }
 
@@ -5802,7 +6098,7 @@ function updatePoolsDisplay(dayNumber) {
                             position: absolute;
                             left: 15px;
                             top: 50%;
-                            transform: translateY(-50%) rotate(${isCompleted ? '-90deg' : '0deg'});
+                            transform: translateY(-50%) rotate(0deg);
                             font-size: 20px;
                             transition: transform 0.3s;
                         ">▼</span>
@@ -5812,7 +6108,7 @@ function updatePoolsDisplay(dayNumber) {
                         </div>
                     </div>
 
-                    <div id="${poolContentId}" class="pool-content" style="display: ${isCompleted ? 'none' : 'block'};">
+                    <div id="${poolContentId}" class="pool-content" style="display: block;">
                         <div class="pool-players" style="
                         display: flex;
                         flex-wrap: wrap;
@@ -6122,22 +6418,29 @@ function handlePoolMatchEnter(event, dayNumber, matchId) {
             );
             console.log('📝 Nombre d\'inputs visibles:', visibleInputs.length);
 
-            // Trouver le premier input du match suivant après le match actuel
-            let foundCurrentMatch = false;
+            // Trouver le prochain match non-complété (le match actuel est maintenant collapsed)
+            // On cherche simplement le premier input disponible dont le matchId est différent de celui qu'on vient de compléter
+            let foundNext = false;
             for (let i = 0; i < visibleInputs.length; i++) {
                 const inputMatchElement = visibleInputs[i].closest('.pool-match');
                 const inputMatchId = inputMatchElement?.getAttribute('data-match-id');
 
-                if (foundCurrentMatch && inputMatchId !== matchId) {
-                    // Premier input du match suivant
+                // Si c'est un match différent (donc le match actuel est déjà collapsed et exclu)
+                // Prendre le premier input
+                if (inputMatchId && inputMatchId !== matchId) {
                     console.log('➡️ Focus sur le match suivant:', inputMatchId);
-                    visibleInputs[i].focus();
+                    // Empêcher le scroll automatique
+                    visibleInputs[i].focus({ preventScroll: true });
                     visibleInputs[i].select();
+                    // Scroll doux vers l'élément seulement s'il n'est pas visible
+                    visibleInputs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    foundNext = true;
                     break;
-                } else if (inputMatchId === matchId) {
-                    foundCurrentMatch = true;
-                    console.log('✓ Match actuel trouvé dans la liste');
                 }
+            }
+
+            if (!foundNext) {
+                console.log('✅ Tous les matchs sont terminés!');
             }
         }, 150); // Délai augmenté pour assurer la stabilité du DOM
     }
@@ -6902,12 +7205,24 @@ function generateManualFinalPhase(dayNumber) {
     }
     
     dayData.pools.manualFinalPhase.enabled = true;
-    
+
     // Mettre à jour l'affichage
     updateManualFinalPhaseDisplay(dayNumber);
     saveToLocalStorage();
-    
+
     alert(`🏆 Phase finale initialisée !\n\n${totalQualified} joueurs qualifiés au total.\n\nVous pouvez maintenant gérer les tours un par un !`);
+
+    // Scroll automatique vers la phase finale après l'alert
+    setTimeout(() => {
+        const firstFinalPhase = document.querySelector('.manual-final-phase-container');
+        if (firstFinalPhase) {
+            firstFinalPhase.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+            console.log('✅ Scroll automatique vers la phase finale');
+        }
+    }, 100); // Petit délai pour laisser l'alert se fermer
 }
 
 function determineFirstRound(numPlayers) {
@@ -7165,7 +7480,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
     const score2 = match.score2 || 0;
     const scoreDisplay = isCompleted && !match.isBye ? `<span class="collapse-score">${score1}-${score2}</span>` : '';
     return `
-        <div class="manual-match" style="
+        <div class="manual-match ${match.isCollapsed ? 'collapsed' : ''}" style="
             background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
             border: 2px solid ${isCompleted ? '#28a745' : isActive ? '#007bff' : '#6c757d'};
             border-radius: 10px;
@@ -7401,15 +7716,9 @@ function updateManualMatchScore(matchId, scoreField, value, dayNumber) {
 
             if (match && !match.isBye) {
                 match[scoreField] = value;
-                checkManualMatchCompletion(match);
+                // NE PAS régénérer le DOM ici pour permettre la navigation Tab naturelle
+                // La régénération se fera dans handleManualMatchEnter quand le match est validé
                 matchFound = true;
-
-                // Vérifier si le tour est terminé
-                checkRoundCompletion(dayNumber, division, roundName);
-
-                // IMPORTANT : Rafraîchir l'affichage pour montrer les boutons
-                updateManualFinalPhaseDisplay(dayNumber);
-
                 saveToLocalStorage();
                 break;
             }
@@ -7423,89 +7732,132 @@ function updateManualMatchScore(matchId, scoreField, value, dayNumber) {
 }
 
 function handleManualMatchEnter(event, matchId, dayNumber) {
+    console.log('🔵 handleManualMatchEnter appelé - Key:', event.key, 'MatchId:', matchId);
+
     const dayData = championship.days[dayNumber];
     const numDivisions = championship.config.numDivisions || 3;
     let match = null;
+    let matchDivision = null;
+    let matchRoundName = null;
 
     // Trouver le match
     for (let division = 1; division <= numDivisions; division++) {
         const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
         for (const roundName in rounds) {
             match = rounds[roundName].matches.find(m => m.id === matchId);
-            if (match) break;
+            if (match) {
+                matchDivision = division;
+                matchRoundName = roundName;
+                break;
+            }
         }
         if (match) break;
     }
 
-    // Vérifier si on doit valider
-    const shouldValidate = event.key === 'Enter' ||
-                          (event.key === 'Tab' && match && match.score1 !== undefined && match.score1 !== '' &&
-                           match.score2 !== undefined && match.score2 !== '');
+    if (!match) {
+        console.log('❌ Match non trouvé');
+        return;
+    }
+
+    // CORRECTION: Lire les valeurs directement depuis le DOM (pas depuis l'objet match)
+    const currentInput = event.target;
+    const matchContainer = currentInput.closest('.manual-match');
+    if (!matchContainer) {
+        console.log('❌ Container non trouvé');
+        return;
+    }
+
+    const inputs = matchContainer.querySelectorAll('input[type="number"]');
+    const input1 = inputs[0];
+    const input2 = inputs[1];
+
+    if (!input1 || !input2) {
+        console.log('❌ Inputs non trouvés');
+        return;
+    }
+
+    // Lire les valeurs actuelles du DOM
+    const score1Value = input1.value.trim();
+    const score2Value = input2.value.trim();
+    console.log('📊 Scores du DOM:', score1Value, '-', score2Value);
+
+    // Déterminer si on doit valider selon les valeurs du DOM
+    const bothScoresFilled = score1Value !== '' && score2Value !== '';
+    const shouldValidate = event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
+    console.log('✅ Should validate:', shouldValidate, '(bothFilled:', bothScoresFilled, ')');
 
     if (shouldValidate) {
-        if (event.key === 'Tab' && (!match || match.score1 === undefined || match.score1 === '' ||
-                                     match.score2 === undefined || match.score2 === '')) {
-            return; // Laisser Tab naviguer normalement si scores incomplets
+        // Si Tab sur scores incomplets, laisser la navigation naturelle
+        if (event.key === 'Tab' && !bothScoresFilled) {
+            console.log('⏩ Tab avec scores incomplets - navigation naturelle');
+            return;
         }
 
         event.preventDefault();
+        console.log('🛑 Validation du match...');
 
-        let wasCompleted = false;
-        let matchElement = event.target.closest('.manual-match');
+        // Mettre à jour les valeurs dans l'objet match AVANT de valider
+        match.score1 = score1Value;
+        match.score2 = score2Value;
 
-        // Récupérer l'état du match
-        for (let division = 1; division <= numDivisions; division++) {
-            const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
-            for (const roundName in rounds) {
-                const m = rounds[roundName].matches.find(m => m.id === matchId);
-                if (m) {
-                    wasCompleted = m.completed;
-                    break;
-                }
-            }
+        // Sauvegarder l'état AVANT régénération
+        const wasCompleted = match.completed;
+
+        // Vérifier la complétion du match
+        checkManualMatchCompletion(match);
+
+        // Vérifier si le tour est terminé (pour débloquer le suivant)
+        if (matchDivision && matchRoundName) {
+            checkRoundCompletion(dayNumber, matchDivision, matchRoundName);
+        }
+
+        // Auto-collapse le match qui vient d'être complété
+        if (!wasCompleted && match.completed) {
+            console.log('✂️ Auto-collapse du match:', matchId);
+            match.isCollapsed = true;
         }
 
         // Rafraîchir l'affichage
         updateManualFinalPhaseDisplay(dayNumber);
-
-        // Auto-collapse si le match vient d'être complété
-        if (!wasCompleted && matchElement) {
-            setTimeout(() => {
-                // Re-trouver les matchs complétés après updateManualFinalPhaseDisplay
-                const allManualMatches = document.querySelectorAll('.manual-match');
-                allManualMatches.forEach(mm => {
-                    if (mm && mm.hasAttribute('onclick')) {
-                        const inputs = mm.querySelectorAll('input[type="number"]');
-                        if (inputs.length > 0) {
-                            const onchangeAttr = inputs[0].getAttribute('onchange');
-                            if (onchangeAttr && onchangeAttr.includes(matchId)) {
-                                if (!mm.classList.contains('collapsed')) {
-                                    toggleMatchCollapse(mm);
-                                }
-                            }
-                        }
-                    }
-                });
-            }, 800);
-        }
+        saveToLocalStorage();
 
         // Passer au match suivant
         setTimeout(() => {
-            const currentInput = event.target;
-            // Trouver tous les inputs de score dans les phases finales
-            const allInputs = Array.from(document.querySelectorAll('.manual-final-phase-content input[type="number"]'));
-            const currentIndex = allInputs.indexOf(currentInput);
+            console.log('🔄 Navigation vers le match suivant...');
+            // Trouver tous les inputs VISIBLES (matchs non collapsed)
+            const visibleInputs = Array.from(
+                document.querySelectorAll('.manual-match:not(.collapsed) input[type="number"]')
+            );
+            console.log('📝 Nombre d\'inputs visibles:', visibleInputs.length);
 
-            if (currentIndex !== -1 && currentIndex < allInputs.length - 1) {
-                // Passer au prochain input
-                // Si on est sur score2, on passe au score1 du match suivant (sauter un input)
-                const nextIndex = currentIndex % 2 === 1 ? currentIndex + 1 : currentIndex + 2;
-                if (nextIndex < allInputs.length) {
-                    allInputs[nextIndex].focus();
-                    allInputs[nextIndex].select();
+            // Trouver le prochain match non-complété
+            let foundNext = false;
+            for (let i = 0; i < visibleInputs.length; i++) {
+                const inputMatchElement = visibleInputs[i].closest('.manual-match');
+                const inputs = inputMatchElement?.querySelectorAll('input[type="number"]');
+
+                if (inputs && inputs.length >= 2) {
+                    const onchangeAttr = inputs[0].getAttribute('onchange');
+                    const inputMatchId = onchangeAttr ? onchangeAttr.match(/'([^']+)'/)?.[1] : null;
+
+                    // Si c'est un match différent (donc le match actuel est déjà collapsed et exclu)
+                    if (inputMatchId && inputMatchId !== matchId) {
+                        console.log('➡️ Focus sur le match suivant:', inputMatchId);
+                        // Empêcher le scroll automatique
+                        visibleInputs[i].focus({ preventScroll: true });
+                        visibleInputs[i].select();
+                        // Scroll doux vers l'élément seulement s'il n'est pas visible
+                        visibleInputs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        foundNext = true;
+                        break;
+                    }
                 }
             }
-        }, 100); // Petit délai pour laisser le DOM se rafraîchir
+
+            if (!foundNext) {
+                console.log('✅ Tous les matchs sont terminés!');
+            }
+        }, 150);
     }
 }
 
