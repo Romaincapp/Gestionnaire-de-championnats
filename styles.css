@@ -696,7 +696,7 @@ body   * {
         .manual-match.collapsed .match-result,
         .manual-match.collapsed .match-status,
         .manual-match.collapsed .players {
-            display: none;
+            display: none !important;
         }
 
         .pool-match.collapsed .match-header::after,
