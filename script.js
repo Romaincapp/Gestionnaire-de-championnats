@@ -1,5 +1,3 @@
-console.log("Script démarré");
-
 try {
     // CONFIGURATION GLOBALE
     let config = {
@@ -29,15 +27,12 @@ try {
         }
     };
 
-    console.log("Variables globales créées");
     window.championship = championship; // Rendre accessible globalement
 
     let importedChampionshipData = null;
 
     // FONCTION SHOWNOTIFICATION (DÉFINIE AVANT TOUT)
     function showNotification(message, type = 'info') {
-        console.log(`[NOTIFICATION ${type.toUpperCase()}] ${message}`);
-        
         if (typeof document === 'undefined') {
             return;
         }
@@ -88,13 +83,11 @@ try {
         }, 3000);
     }
     window.showNotification = showNotification;
-    console.log("showNotification définie");
 
     // SAUVEGARDE LOCAL STORAGE
     function saveToLocalStorage() {
         try {
             localStorage.setItem('tennisTableChampionship', JSON.stringify(championship));
-            console.log("Données sauvegardées");
         } catch (error) {
             console.warn("Erreur sauvegarde:", error);
         }
@@ -104,7 +97,6 @@ try {
     function saveChronoToLocalStorage() {
         try {
             localStorage.setItem('chronoRaceData', JSON.stringify(raceData));
-            console.log("Données chrono sauvegardées");
         } catch (error) {
             console.warn("Erreur sauvegarde chrono:", error);
         }
@@ -121,7 +113,6 @@ try {
                     config.numberOfDivisions = championship.config.numberOfDivisions || 3;
                     config.numberOfCourts = championship.config.numberOfCourts || 4;
                 }
-                console.log("Données chargées depuis localStorage");
                 return true;
             }
         } catch (error) {
@@ -142,7 +133,6 @@ try {
                 raceData.nextEventId = loadedData.nextEventId || 1;
                 raceData.nextSerieId = loadedData.nextSerieId || 1;
                 raceData.nextParticipantId = loadedData.nextParticipantId || 1;
-                console.log("Données chrono chargées depuis localStorage");
                 return true;
             }
         } catch (error) {
@@ -236,7 +226,6 @@ try {
 
     // FONCTIONS DE BASE
     function addPlayer() {
-        console.log("addPlayer appelée");
         const name = document.getElementById('playerName').value.trim().toUpperCase();
         const division = parseInt(document.getElementById('playerDivision').value);
         const targetDay = parseInt(document.getElementById('targetDay').value);
@@ -268,7 +257,6 @@ try {
     window.addPlayer = addPlayer;
 
     function showBulkInput() {
-        console.log("showBulkInput appelée");
         const division = document.getElementById('bulkDivision').value;
         const targetDay = document.getElementById('bulkTargetDay').value;
         document.getElementById('selectedDivision').textContent = `Division ${division} - Journée ${targetDay}`;
@@ -287,7 +275,6 @@ try {
     window.closeBulkModal = closeBulkModal;
 
     function addBulkPlayers() {
-        console.log("addBulkPlayers appelée");
         const text = document.getElementById('bulkText').value.trim();
         const modal = document.getElementById('bulkModal');
         const dayNumber = parseInt(modal.dataset.dayNumber) || parseInt(document.getElementById('bulkTargetDay').value);
@@ -336,7 +323,6 @@ try {
     window.addBulkPlayers = addBulkPlayers;
 
     function updatePlayersDisplay(dayNumber) {
-        console.log("updatePlayersDisplay appelée pour journée", dayNumber);
         if (!championship.days[dayNumber]) return;
 
         const numDivisions = championship.config?.numberOfDivisions || 3;
@@ -366,8 +352,6 @@ try {
     window.updatePlayersDisplay = updatePlayersDisplay;
 
     function removePlayer(dayNumber, division, playerName) {
-        console.log("removePlayer appelée");
-
         // Demander confirmation avant suppression
         if (!confirm(`Êtes-vous sûr de vouloir supprimer ${playerName} ?`)) {
             return; // Annuler la suppression
@@ -386,8 +370,6 @@ try {
     window.removePlayer = removePlayer;
 
     function editPlayer(dayNumber, division, oldPlayerName) {
-        console.log("editPlayer appelée");
-
         const newName = prompt(`Modifier le nom du joueur:\n\nNom actuel: ${oldPlayerName}`, oldPlayerName);
 
         if (!newName || newName.trim() === '') {
@@ -675,13 +657,9 @@ try {
     function switchTab(dayNumber) {
         championship.currentDay = dayNumber;
 
-        console.log(`[switchTab] Passage à la journée ${dayNumber}`);
-
         // Retirer la classe active de tous les contenus de journées
         const allTabContents = document.querySelectorAll('.tab-content');
-        console.log(`[switchTab] ${allTabContents.length} .tab-content trouvés`);
         allTabContents.forEach(content => {
-            console.log(`[switchTab] Retrait de active sur ${content.id}`);
             content.classList.remove('active');
             // Force le masquage pour être sûr (y compris general-ranking)
             if (content.id !== `day-${dayNumber}`) {
@@ -698,14 +676,10 @@ try {
         const targetTab = document.querySelector(`[data-day="${dayNumber}"]`);
         const targetContent = document.getElementById(`day-${dayNumber}`);
 
-        console.log(`[switchTab] Onglet trouvé:`, targetTab ? 'OUI' : 'NON');
-        console.log(`[switchTab] Contenu trouvé:`, targetContent ? 'OUI' : 'NON');
-
         if (targetTab) targetTab.classList.add('active');
         if (targetContent) {
             targetContent.classList.add('active');
             targetContent.style.display = 'block'; // Force l'affichage
-            console.log(`[switchTab] Classe active ajoutée à ${targetContent.id}`);
         }
     }
     window.switchTab = switchTab;
@@ -790,7 +764,6 @@ try {
 
         // IMPORTANT: Forcer la mise à jour du contenu HTML pour les journées existantes
         // Cela garantit que les boutons optimisés apparaissent même après un chargement depuis localStorage
-        console.log('✅ Initialisation des journées terminée');
     }
 
     // GÉNÉRATION DES MATCHS
@@ -2430,33 +2403,26 @@ try {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
-        console.log(`[updateRankingsForDay] Journée ${dayNumber}, sortBy: ${sortBy}`);
-
         let rankingsHtml = '';
         let hasAnyMatches = false;
 
         for (let division = 1; division <= 3; division++) {
             // Vérifier les matchs classiques
             const classicMatches = dayData.matches[division] || [];
-            console.log(`[Division ${division}] Matchs classiques:`, classicMatches.length);
             if (classicMatches.some(match => {
                 checkMatchCompletion(dayNumber, division, classicMatches.indexOf(match));
                 return match.completed;
             })) {
                 hasAnyMatches = true;
-                console.log(`[Division ${division}] Matchs classiques terminés trouvés`);
                 break;
             }
 
             // Vérifier les matchs de poules
             if (dayData.pools && dayData.pools.enabled && dayData.pools.divisions[division]) {
                 const poolMatches = dayData.pools.divisions[division].matches || [];
-                console.log(`[Division ${division}] Matchs de poules:`, poolMatches.length);
                 const completedPoolMatches = poolMatches.filter(m => m.completed).length;
-                console.log(`[Division ${division}] Matchs de poules terminés:`, completedPoolMatches);
                 if (poolMatches.some(match => match.completed)) {
                     hasAnyMatches = true;
-                    console.log(`[Division ${division}] Matchs de poules terminés trouvés`);
                     break;
                 }
             }
@@ -2464,16 +2430,12 @@ try {
             // Vérifier les matchs de phase finale
             if (dayData.pools && dayData.pools.divisions[division] && dayData.pools.divisions[division].finalPhase) {
                 const finalMatches = dayData.pools.divisions[division].finalPhase || [];
-                console.log(`[Division ${division}] Matchs de phase finale:`, finalMatches.length);
                 if (finalMatches.some(match => match.completed)) {
                     hasAnyMatches = true;
-                    console.log(`[Division ${division}] Matchs de phase finale terminés trouvés`);
                     break;
                 }
             }
         }
-
-        console.log(`[updateRankingsForDay] hasAnyMatches:`, hasAnyMatches);
 
         if (!hasAnyMatches) {
             alert(`Aucun match terminé dans la Journée ${dayNumber} pour établir un classement !`);
@@ -3021,16 +2983,11 @@ if (dayStats && dayStats.matchesPlayed > 0) {
       
     
    function exportGeneralRankingToPDF() {
-    console.log("Début de la fonction exportGeneralRankingToPDF");
-
     const generalRanking = calculateGeneralRanking();
-    console.log("Classement général calculé:", generalRanking);
 
     const generalStats = calculateGeneralStats();
-    console.log("Statistiques générales calculées:", generalStats);
 
     if (!generalRanking.hasData) {
-        console.log("Aucun classement général disponible pour l'export PDF");
         alert('Aucun classement général disponible pour l\'export PDF');
         return;
     }
@@ -3604,7 +3561,6 @@ if (dayStats && dayStats.matchesPlayed > 0) {
         }
     }, 500);
 
-    console.log("Page d'export PDF créée avec succès");
     showNotification('Page d\'export PDF ouverte dans un nouvel onglet !', 'success');
 }
 
@@ -3932,8 +3888,6 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                         }
                     }
                     keysToRemove.forEach(key => localStorage.removeItem(key));
-
-                    console.log("✅ LocalStorage complètement nettoyé (championnat + mode chrono)");
                 } catch (error) {
                     console.warn("⚠️ Erreur lors du nettoyage du localStorage:", error);
                 }
@@ -3996,8 +3950,6 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     // ======================================
 
     function addByeMatchForPlayer(dayNumber, division, playerName) {
-        console.log(`Ajout d'un match BYE pour ${playerName} en D${division}-J${dayNumber}`);
-        
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
         
@@ -4024,8 +3976,6 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     window.addByeMatchForPlayer = addByeMatchForPlayer;
 
     function showByeManagementModal(dayNumber) {
-        console.log(`Affichage modal gestion BYE pour J${dayNumber}`);
-        
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
         
@@ -4169,8 +4119,6 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     window.closeByeModal = closeByeModal;
 
     function addByeToAll(dayNumber) {
-        console.log(`Ajout de BYE à tous les joueurs manquants pour J${dayNumber}`);
-        
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
         
@@ -4243,16 +4191,11 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
         }
     }
 function exportGeneralRankingToHTML() {
-    console.log("Début de la fonction exportGeneralRankingToHTML");
-
     const generalRanking = calculateGeneralRanking();
-    console.log("Classement général calculé:", generalRanking);
 
     const generalStats = calculateGeneralStats();
-    console.log("Statistiques générales calculées:", generalStats);
 
     if (!generalRanking.hasData) {
-        console.log("Aucun classement général disponible pour l'export HTML");
         alert('Aucun classement général disponible pour l\'export HTML');
         return;
     }
@@ -4487,7 +4430,6 @@ function exportGeneralRankingToHTML() {
     URL.revokeObjectURL(url);
 
     showNotification('Classement général exporté en HTML !', 'success');
-    console.log("Fin de la fonction exportGeneralRankingToHTML");
 }
 
 window.exportGeneralRanking = exportGeneralRanking;
@@ -4561,8 +4503,6 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
     window.initializeDivisionSelects = initializeDivisionSelects;
 
     document.addEventListener('DOMContentLoaded', function() {
-        console.log("DOM chargé, début initialisation");
-
         // Charger les données sauvegardées
         if (loadFromLocalStorage()) {
             initializeDivisionSelects();
@@ -4578,7 +4518,6 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
         }
 
         setupEventListeners();
-        console.log("Initialisation terminée");
     });
 
     // ======================================
@@ -5305,10 +5244,8 @@ function generatePools(dayNumber) {
         const poolMatches = generatePoolMatches(pools, division, dayNumber);
         dayData.pools.divisions[division].matches = poolMatches;
         totalMatches += poolMatches.length;
-        
-        console.log(`Division ${division}: ${pools.length} poules créées avec ${poolMatches.length} matchs`);
     }
-    
+
     // Mettre à jour l'affichage
     updatePoolsDisplay(dayNumber);
     saveToLocalStorage();
@@ -5983,8 +5920,6 @@ window.generateFinalPhase = function(dayNumber) {
     generateManualFinalPhase(dayNumber);
 };
 
-console.log("✅ Système de poules optionnel chargé avec succès !");
-
 // ======================================
 // SYSTÈME DE PHASES FINALES MANUELLES - SYNTAXE CORRIGÉE
 // ======================================
@@ -6082,8 +6017,6 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool) {
 
 // Fonction principale pour générer les phases finales manuelles
 function generateManualFinalPhase(dayNumber) {
-    console.log("🏆 Génération phase finale MANUELLE pour journée", dayNumber);
-    
     const dayData = championship.days[dayNumber];
     if (!dayData.pools || !dayData.pools.enabled) {
         alert('Les phases finales ne sont disponibles qu\'en mode Poules !');
@@ -6139,9 +6072,7 @@ function determineFirstRound(numPlayers) {
 function generateFirstRound(dayNumber, division, qualified, roundName) {
     const dayData = championship.days[dayNumber];
     const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
-    
-    console.log(`🎯 Génération ${roundName} pour Division ${division} avec ${qualified.length} joueurs`);
-    
+
     // Créer le tableau équilibré
     const seededPlayers = organizeSeeds(qualified);
     const matches = [];
@@ -6177,8 +6108,6 @@ function generateFirstRound(dayNumber, division, qualified, roundName) {
     
     // Marquer comme tour actuel
     dayData.pools.manualFinalPhase.currentRound = roundName;
-    
-    console.log(`✅ ${roundName} créé avec ${matches.length} matchs`);
 }
 
 function getNextRoundName(currentRound) {
@@ -6610,8 +6539,6 @@ function getQualifiedFromRound(round) {
 // ======================================
 
 function updateManualMatchScore(matchId, scoreField, value, dayNumber) {
-    console.log(`📝 Score manuel: ${matchId} - ${scoreField} = ${value}`);
-
     const dayData = championship.days[dayNumber];
     const numDivisions = championship.config.numDivisions || 3;
     let matchFound = false;
@@ -6674,7 +6601,6 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
         }
 
         event.preventDefault();
-        console.log(`⌨️ ${event.key} sur match ${matchId}`);
 
         let wasCompleted = false;
         let matchElement = event.target.closest('.manual-match');
@@ -6761,10 +6687,8 @@ function checkManualMatchCompletion(match) {
     }
 
     if (!wasCompleted && match.completed) {
-        console.log(`🏆 Match ${match.id} terminé: ${match.winner} gagne`);
         showNotification(`🏆 ${match.winner || 'Match nul'} remporte le match !`, 'success');
     } else if (wasCompleted && !match.completed) {
-        console.log(`⏸️ Match ${match.id} remis en attente`);
         showNotification(`⏸️ Match remis en attente`, 'info');
     }
 }
@@ -6780,7 +6704,6 @@ function checkRoundCompletion(dayNumber, division, roundName) {
     round.completed = (completedMatches === totalMatches && totalMatches > 0);
     
     if (!wasCompleted && round.completed) {
-        console.log(`✅ ${roundName} terminé en Division ${division}`);
         showNotification(`✅ ${roundName} terminé ! Vous pouvez passer au tour suivant.`, 'info');
         
         // Mettre à jour l'affichage
@@ -6795,8 +6718,6 @@ function checkRoundCompletion(dayNumber, division, roundName) {
 // ======================================
 
 function generateNextManualRound(dayNumber, division, currentRoundName) {
-    console.log(`🚀 Génération tour suivant après ${currentRoundName}`);
-    
     const dayData = championship.days[dayNumber];
     const currentRound = dayData.pools.manualFinalPhase.divisions[division].rounds[currentRoundName];
     
@@ -6807,7 +6728,6 @@ function generateNextManualRound(dayNumber, division, currentRoundName) {
     
     const nextRoundName = currentRound.nextRound;
     if (!nextRoundName) {
-        console.log('Pas de tour suivant défini');
         return;
     }
     
@@ -6872,8 +6792,6 @@ function createManualRound(dayNumber, division, roundName, players) {
         completed: false,
         nextRound: getNextRoundName(roundName)
     };
-    
-    console.log(`✅ ${roundName} créé avec ${matches.length} matchs`);
 }
 
 // ======================================
@@ -6881,8 +6799,6 @@ function createManualRound(dayNumber, division, roundName, players) {
 // ======================================
 
 function generateFinale(dayNumber, division) {
-    console.log(`🏆 Génération de la GRANDE FINALE - Division ${division}`);
-    
     const dayData = championship.days[dayNumber];
     const demiFinales = dayData.pools.manualFinalPhase.divisions[division].rounds["Demi-finales"];
     
@@ -6916,8 +6832,6 @@ function generateFinale(dayNumber, division) {
 }
 
 function generatePetiteFinale(dayNumber, division) {
-    console.log(`🥉 Génération de la PETITE FINALE - Division ${division}`);
-    
     const dayData = championship.days[dayNumber];
     const demiFinales = dayData.pools.manualFinalPhase.divisions[division].rounds["Demi-finales"];
     
@@ -7252,13 +7166,6 @@ if (originalInitializePoolsForDay) {
     };
 }
 
-console.log("✅ Système de phases finales MANUELLES chargé avec succès !");
-console.log("🎮 Fonctions disponibles :");
-console.log("  - generateFinalPhase() : Initialiser les phases finales");
-console.log("  - exportManualFinalResults() : Exporter les résultats"); 
-console.log("  - resetManualFinalPhase() : Réinitialiser");
-console.log("🏆 Contrôle total : Vous décidez quand passer au tour suivant !");
-
 // ======================================
 // CORRECTIF - SUPPRESSION SPINNERS ET AGRANDISSEMENT CHAMPS
 // ======================================
@@ -7316,9 +7223,8 @@ function addScoreInputStyles() {
             padding: 10px 8px !important;
         }
     `;
-    
+
     document.head.appendChild(style);
-    console.log("✅ Styles des champs de score améliorés - Spinners supprimés, champs agrandis");
 }
 
 // Fonction pour mettre à jour le HTML de génération des matchs avec de plus gros champs
@@ -7462,8 +7368,6 @@ window.generateManualMatchHTML = generateManualMatchHTMLImproved;
 // Appliquer les styles au chargement
 addScoreInputStyles();
 
-console.log("✅ Champs de score améliorés - Plus grands, sans spinners, meilleure UX !");
-
     // ======================================
 // FONCTION MANQUANTE - getQualifiedPlayersFromPools
 // ======================================
@@ -7534,9 +7438,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool) {
 // Fonction principale pour imprimer les feuilles de match
 function printMatchSheets(dayNumber) {
     if (!dayNumber) dayNumber = championship.currentDay;
-    
-    console.log(`📋 Génération des feuilles de match pour la Journée ${dayNumber}`);
-    
+
     const dayData = championship.days[dayNumber];
     if (!dayData) {
         alert('Aucune donnée trouvée pour cette journée !');
@@ -7977,10 +7879,6 @@ function generateCompactMatchSheet(match) {
 window.generateMatchSheetHTML = generateMatchSheetHTML;
 window.generateCompactMatchSheet = generateCompactMatchSheet;
 
-console.log('✅ Version compacte installée - 5 matchs par page optimisés !');
-
-
-
 // Ouvrir la fenêtre d'impression
 function openPrintWindow(htmlContent, filename) {
     const printWindow = window.open('', '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
@@ -8053,8 +7951,6 @@ function addPrintMatchesButton() {
 
 function printBocciaMatchSheets(dayNumber) {
     if (!dayNumber) dayNumber = championship.currentDay;
-
-    console.log(`🎾 Génération des feuilles de match Boccia pour la Journée ${dayNumber}`);
 
     const dayData = championship.days[dayNumber];
     if (!dayData) {
@@ -8431,13 +8327,8 @@ window.generateBocciaSheetHTML = generateBocciaSheetHTML;
 window.generateBocciaMatchCard = generateBocciaMatchCard;
 window.openPrintWindow = openPrintWindow;
 
-console.log('✅ Système d\'impression des feuilles de match installé !');
-console.log('✅ Système Boccia installé !');
-console.log('📋 Fonctions exportées vers window:', Object.keys(window).filter(k => k.includes('print')));
-
 // Ajouter automatiquement les boutons au chargement et lors de la création de nouvelles journées
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔄 DOM chargé - Ajout des boutons d\'impression...');
     setTimeout(addPrintMatchesButton, 1000);
 });
 
@@ -8447,24 +8338,19 @@ if (originalCreateDayContent) {
     window.createDayContent = function(dayNumber) {
         const result = originalCreateDayContent(dayNumber);
         setTimeout(() => {
-            console.log(`🔄 Journée ${dayNumber} créée - Ajout bouton impression...`);
             addPrintMatchesButton();
         }, 200);
         return result;
     };
-    console.log('🎣 Hook createDayContent installé');
 }
 
 // Ajouter immédiatement si le DOM est déjà chargé
 if (document.readyState === 'loading') {
     // DOM pas encore chargé
-    console.log('⏳ DOM en cours de chargement...');
 } else {
     // DOM déjà chargé
-    console.log('✅ DOM déjà chargé - Ajout immédiat des boutons...');
     setTimeout(addPrintMatchesButton, 500);
 }
-    console.log("=== SCRIPT CHARGÉ AVEC SUCCÈS ===");
     
     // ============================================
     // MODE CHRONO - GESTION DE COURSES MULTIPLES
@@ -12145,8 +12031,6 @@ if (document.readyState === 'loading') {
 
     // Exporter le classement général chrono en PDF
     window.exportOverallChronoRankingToPDF = function() {
-        console.log("Début de l'export PDF du classement chrono");
-
         // Collecter tous les participants de toutes les séries terminées
         const allParticipants = [];
 
