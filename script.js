@@ -9167,6 +9167,140 @@ function openPrintWindow(htmlContent, filename) {
     }, 1000);
 }
 
+// Afficher le modal des options d'impression
+function showPrintOptionsModal(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData) {
+        alert('Aucune donnée trouvée pour cette journée !');
+        return;
+    }
+
+    // Détecter le mode
+    const isPoolMode = dayData.pools && dayData.pools.enabled;
+
+    // Créer le modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    `;
+
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    `;
+
+    // Déterminer le label pour le récap
+    const recapLabel = isPoolMode ? 'Récap par Pool' : 'Récap par Terrain/Tour';
+    const recapIcon = isPoolMode ? '🏊' : '🏟️';
+
+    modalContent.innerHTML = `
+        <h2 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 20px; text-align: center;">
+            🖨️ Options d'impression
+        </h2>
+        <p style="margin: 0 0 20px 0; color: #666; font-size: 12px; text-align: center;">
+            Journée ${dayNumber}
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button id="print-option-sheets" style="
+                padding: 12px;
+                background: linear-gradient(135deg, #3498db, #2980b9);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                cursor: pointer;
+                text-align: left;
+                transition: transform 0.2s;
+            " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                📋 Feuilles de match (5 par page)
+            </button>
+            <button id="print-option-boccia" style="
+                padding: 12px;
+                background: linear-gradient(135deg, #16a085, #1abc9c);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                cursor: pointer;
+                text-align: left;
+                transition: transform 0.2s;
+            " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                🎾 Feuilles Boccia (4 par page)
+            </button>
+            <button id="print-option-recap" style="
+                padding: 12px;
+                background: linear-gradient(135deg, #f39c12, #e67e22);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                cursor: pointer;
+                text-align: left;
+                transition: transform 0.2s;
+            " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                ${recapIcon} ${recapLabel}
+            </button>
+        </div>
+        <button id="close-modal" style="
+            margin-top: 15px;
+            padding: 8px 12px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+        ">
+            Annuler
+        </button>
+    `;
+
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    // Event listeners
+    document.getElementById('print-option-sheets').onclick = () => {
+        document.body.removeChild(modal);
+        printMatchSheets(dayNumber);
+    };
+
+    document.getElementById('print-option-boccia').onclick = () => {
+        document.body.removeChild(modal);
+        printBocciaMatchSheets(dayNumber);
+    };
+
+    document.getElementById('print-option-recap').onclick = () => {
+        document.body.removeChild(modal);
+        printRecapSheets(dayNumber);
+    };
+
+    document.getElementById('close-modal').onclick = () => {
+        document.body.removeChild(modal);
+    };
+
+    // Fermer au clic sur le fond
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    };
+}
+
 // Fonction pour ajouter le bouton à l'interface
 function addPrintMatchesButton() {
     // Trouver tous les .control-buttons dans chaque journée
@@ -9185,67 +9319,22 @@ function addPrintMatchesButton() {
         const dayNumber = parseInt(dayContent.id.replace('day-', ''));
         if (isNaN(dayNumber)) return;
 
-        // Vérifier les données de la journée pour affichage conditionnel
-        const dayData = championship.days[dayNumber];
-        if (!dayData) return;
-
-        // Détecter si des terrains sont assignés ou si le mode pool est activé
-        let hasCourtAssignments = false;
-        let isPoolMode = dayData.pools && dayData.pools.enabled;
-
-        if (!isPoolMode) {
-            // Vérifier si au moins un match a un terrain assigné
-            const numDivisions = getNumberOfDivisions();
-            for (let division = 1; division <= numDivisions; division++) {
-                const matches = dayData.matches[division] || [];
-                if (matches.some(match => match.court)) {
-                    hasCourtAssignments = true;
-                    break;
-                }
-            }
-        }
-
-        // Créer le bouton d'impression Boccia
-        const bocciaButton = document.createElement('button');
-        bocciaButton.className = 'btn print-boccia-btn';
-        bocciaButton.innerHTML = '🎾 Imprimer Boccia';
-        bocciaButton.style.background = 'linear-gradient(135deg, #16a085, #1abc9c)';
-        bocciaButton.style.color = 'white';
-        bocciaButton.onclick = () => printBocciaMatchSheets(dayNumber);
-        bocciaButton.title = 'Imprimer les feuilles de match Boccia (4 par page, 4 manches + manche en or)';
-
-        // Créer le bouton Récap Terrains/Pools (affichage conditionnel)
-        let recapButton = null;
-        if (hasCourtAssignments || isPoolMode) {
-            recapButton = document.createElement('button');
-            recapButton.className = 'btn print-recap-btn';
-
-            // Label dynamique selon le mode
-            const buttonLabel = isPoolMode ? '📋 Récap Pools' : '🏟️ Récap Terrains';
-            const buttonTitle = isPoolMode
-                ? 'Imprimer une feuille récapitulative par pool'
-                : 'Imprimer une feuille récapitulative par terrain';
-
-            recapButton.innerHTML = buttonLabel;
-            recapButton.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
-            recapButton.style.color = 'white';
-            recapButton.onclick = () => printRecapSheets(dayNumber);
-            recapButton.title = buttonTitle;
-        }
+        // Créer le bouton unique Imprimer
+        const printButton = document.createElement('button');
+        printButton.className = 'btn print-matches-btn';
+        printButton.innerHTML = '🖨️ Imprimer';
+        printButton.style.background = 'linear-gradient(135deg, #9b59b6, #8e44ad)';
+        printButton.style.color = 'white';
+        printButton.onclick = () => showPrintOptionsModal(dayNumber);
+        printButton.title = 'Options d\'impression (feuilles de match, Boccia, récaps)';
 
         // Insérer après le bouton "Classements" s'il existe
         const rankingsButton = controlButtonsContainer.querySelector('button[onclick*="updateRankings"]');
         if (rankingsButton) {
-            rankingsButton.insertAdjacentElement('afterend', bocciaButton);
-            if (recapButton) {
-                bocciaButton.insertAdjacentElement('afterend', recapButton);
-            }
+            rankingsButton.insertAdjacentElement('afterend', printButton);
         } else {
             // Sinon l'insérer au début
-            controlButtonsContainer.insertBefore(bocciaButton, controlButtonsContainer.firstChild);
-            if (recapButton) {
-                bocciaButton.insertAdjacentElement('afterend', recapButton);
-            }
+            controlButtonsContainer.insertBefore(printButton, controlButtonsContainer.firstChild);
         }
     });
 }
@@ -9641,14 +9730,16 @@ function printRecapSheets(dayNumber) {
     }
 }
 
-// Imprimer une feuille récapitulative par terrain
+// Imprimer une feuille récapitulative par terrain ou par tour
 function printRecapByCourt(dayNumber) {
     const dayData = championship.days[dayNumber];
     const numCourts = getNumberOfCourts();
 
     // Collecter tous les matchs de toutes les divisions
     const matchesByCourt = {};
+    const matchesByTour = {};
     let totalMatchesWithCourt = 0;
+    let totalMatches = 0;
 
     // Initialiser les tableaux pour chaque terrain
     for (let court = 1; court <= numCourts; court++) {
@@ -9661,25 +9752,46 @@ function printRecapByCourt(dayNumber) {
         const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
 
         divisionMatches.forEach(match => {
+            totalMatches++;
+
             if (match.court) {
                 matchesByCourt[match.court].push(match);
                 totalMatchesWithCourt++;
             }
+
+            // Grouper aussi par tour pour le mode sans terrains
+            if (match.tour) {
+                const tourKey = `Tour ${match.tour}`;
+                if (!matchesByTour[tourKey]) {
+                    matchesByTour[tourKey] = [];
+                }
+                matchesByTour[tourKey].push(match);
+            }
         });
     }
 
-    if (totalMatchesWithCourt === 0) {
-        alert('⚠️ Aucun match avec terrain assigné trouvé pour cette journée !');
+    if (totalMatches === 0) {
+        alert('⚠️ Aucun match généré pour cette journée !');
         return;
     }
 
-    // Générer le HTML d'impression
-    const printHTML = generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts);
+    // Détecter si on doit générer par terrain ou par tour
+    if (totalMatchesWithCourt > 0) {
+        // Mode avec terrains assignés
+        const printHTML = generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, true);
+        openPrintWindow(printHTML, `Recap_Terrains_J${dayNumber}`);
+        showNotification(`🏟️ ${numCourts} feuilles récapitulatives par terrain générées !`, 'success');
+    } else {
+        // Mode sans terrains : générer par tour
+        if (Object.keys(matchesByTour).length === 0) {
+            alert('⚠️ Aucun match avec tour trouvé pour cette journée !');
+            return;
+        }
 
-    // Ouvrir dans une nouvelle fenêtre pour impression
-    openPrintWindow(printHTML, `Recap_Terrains_J${dayNumber}`);
-
-    showNotification(`🏟️ ${numCourts} feuilles récapitulatives par terrain générées !`, 'success');
+        const printHTML = generateRecapByTourHTML(dayNumber, matchesByTour);
+        openPrintWindow(printHTML, `Recap_Tours_J${dayNumber}`);
+        showNotification(`📋 ${Object.keys(matchesByTour).length} feuilles récapitulatives par tour générées !`, 'success');
+    }
 }
 
 // Imprimer une feuille récapitulative par pool
@@ -9739,8 +9851,221 @@ function printRecapByPool(dayNumber) {
     showNotification(`🏊 ${totalPools} feuilles récapitulatives par pool générées !`, 'success');
 }
 
+// Générer le HTML pour les récaps par tour (sans terrains)
+function generateRecapByTourHTML(dayNumber, matchesByTour) {
+    const currentDate = new Date().toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Récap Tours - Journée ${dayNumber}</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 15mm;
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 10px;
+                    line-height: 1.3;
+                    color: #000;
+                    background: white;
+                }
+
+                .page {
+                    width: 210mm;
+                    min-height: 297mm;
+                    page-break-after: always;
+                    padding: 10mm;
+                }
+
+                .page:last-child {
+                    page-break-after: avoid;
+                }
+
+                .page-header {
+                    text-align: center;
+                    border-bottom: 3px solid #2c3e50;
+                    padding-bottom: 8px;
+                    margin-bottom: 15px;
+                }
+
+                .page-title {
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    margin-bottom: 3px;
+                }
+
+                .page-subtitle {
+                    font-size: 12px;
+                    color: #666;
+                }
+
+                .tour-info {
+                    background: #3498db;
+                    color: white;
+                    padding: 8px;
+                    margin-bottom: 10px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    text-align: center;
+                    border-radius: 3px;
+                }
+
+                .matches-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                }
+
+                .matches-table th {
+                    background: #34495e;
+                    color: white;
+                    padding: 6px 4px;
+                    text-align: left;
+                    font-size: 11px;
+                    font-weight: bold;
+                }
+
+                .matches-table td {
+                    padding: 8px 4px;
+                    border-bottom: 1px solid #ddd;
+                    font-size: 10px;
+                }
+
+                .matches-table tr:hover {
+                    background: #f5f5f5;
+                }
+
+                .tour-separator {
+                    border-top: 3px solid #2c3e50 !important;
+                }
+
+                .match-id {
+                    font-weight: bold;
+                    color: #2c3e50;
+                    font-size: 9px;
+                }
+
+                .player-name {
+                    font-weight: 600;
+                }
+
+                .score-cell {
+                    width: 40px;
+                    text-align: center;
+                    border: 1px solid #ccc;
+                    background: #f9f9f9;
+                }
+
+                @media print {
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+    `;
+
+    // Trier les tours (Tour 1, Tour 2, etc.)
+    const sortedTours = Object.keys(matchesByTour).sort((a, b) => {
+        const numA = parseInt(a.replace('Tour ', ''));
+        const numB = parseInt(b.replace('Tour ', ''));
+        return numA - numB;
+    });
+
+    // Générer une page par tour
+    sortedTours.forEach(tourKey => {
+        const matches = matchesByTour[tourKey];
+
+        // Trier les matchs par division
+        matches.sort((a, b) => {
+            if (a.division !== b.division) return a.division - b.division;
+            return 0;
+        });
+
+        htmlContent += `
+            <div class="page">
+                <div class="page-header">
+                    <div class="page-title">📋 RÉCAPITULATIF ${tourKey.toUpperCase()}</div>
+                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}</div>
+                </div>
+
+                <div class="tour-info">
+                    ${tourKey} • ${matches.length} match${matches.length > 1 ? 's' : ''}
+                </div>
+
+                <table class="matches-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Match</th>
+                            <th style="width: 35%;">Joueur 1</th>
+                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">Score</th>
+                            <th style="width: 35%;">Joueur 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        let previousDivision = null;
+
+        matches.forEach(match => {
+            // Détecter le changement de division
+            const separatorClass = (previousDivision !== null && previousDivision !== match.division)
+                ? 'tour-separator'
+                : '';
+
+            previousDivision = match.division;
+
+            htmlContent += `
+                <tr class="${separatorClass}">
+                    <td>
+                        <div class="match-id">${match.matchId}</div>
+                        <div style="font-size: 9px; color: #666;">Division ${match.division}</div>
+                    </td>
+                    <td class="player-name">${match.player1}</td>
+                    <td class="score-cell"></td>
+                    <td class="score-cell"></td>
+                    <td class="player-name">${match.player2}</td>
+                </tr>
+            `;
+        });
+
+        htmlContent += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+
+    htmlContent += `
+        </body>
+        </html>
+    `;
+
+    return htmlContent;
+}
+
 // Générer le HTML pour les récaps par terrain
-function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts) {
+function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrain) {
     const currentDate = new Date().toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'long',
@@ -10182,7 +10507,9 @@ window.printRecapSheets = printRecapSheets;
 window.printRecapByCourt = printRecapByCourt;
 window.printRecapByPool = printRecapByPool;
 window.generateRecapByCourtHTML = generateRecapByCourtHTML;
+window.generateRecapByTourHTML = generateRecapByTourHTML;
 window.generateRecapByPoolHTML = generateRecapByPoolHTML;
+window.showPrintOptionsModal = showPrintOptionsModal;
 window.addPrintMatchesButton = addPrintMatchesButton;
 window.getDivisionMatches = getDivisionMatches;
 window.groupMatchesIntoPages = groupMatchesIntoPages;
