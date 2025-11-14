@@ -9185,6 +9185,26 @@ function addPrintMatchesButton() {
         const dayNumber = parseInt(dayContent.id.replace('day-', ''));
         if (isNaN(dayNumber)) return;
 
+        // Vérifier les données de la journée pour affichage conditionnel
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return;
+
+        // Détecter si des terrains sont assignés ou si le mode pool est activé
+        let hasCourtAssignments = false;
+        let isPoolMode = dayData.pools && dayData.pools.enabled;
+
+        if (!isPoolMode) {
+            // Vérifier si au moins un match a un terrain assigné
+            const numDivisions = getNumberOfDivisions();
+            for (let division = 1; division <= numDivisions; division++) {
+                const matches = dayData.matches[division] || [];
+                if (matches.some(match => match.court)) {
+                    hasCourtAssignments = true;
+                    break;
+                }
+            }
+        }
+
         // Créer le bouton d'impression Boccia
         const bocciaButton = document.createElement('button');
         bocciaButton.className = 'btn print-boccia-btn';
@@ -9194,13 +9214,38 @@ function addPrintMatchesButton() {
         bocciaButton.onclick = () => printBocciaMatchSheets(dayNumber);
         bocciaButton.title = 'Imprimer les feuilles de match Boccia (4 par page, 4 manches + manche en or)';
 
+        // Créer le bouton Récap Terrains/Pools (affichage conditionnel)
+        let recapButton = null;
+        if (hasCourtAssignments || isPoolMode) {
+            recapButton = document.createElement('button');
+            recapButton.className = 'btn print-recap-btn';
+
+            // Label dynamique selon le mode
+            const buttonLabel = isPoolMode ? '📋 Récap Pools' : '🏟️ Récap Terrains';
+            const buttonTitle = isPoolMode
+                ? 'Imprimer une feuille récapitulative par pool'
+                : 'Imprimer une feuille récapitulative par terrain';
+
+            recapButton.innerHTML = buttonLabel;
+            recapButton.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
+            recapButton.style.color = 'white';
+            recapButton.onclick = () => printRecapSheets(dayNumber);
+            recapButton.title = buttonTitle;
+        }
+
         // Insérer après le bouton "Classements" s'il existe
         const rankingsButton = controlButtonsContainer.querySelector('button[onclick*="updateRankings"]');
         if (rankingsButton) {
             rankingsButton.insertAdjacentElement('afterend', bocciaButton);
+            if (recapButton) {
+                bocciaButton.insertAdjacentElement('afterend', recapButton);
+            }
         } else {
             // Sinon l'insérer au début
             controlButtonsContainer.insertBefore(bocciaButton, controlButtonsContainer.firstChild);
+            if (recapButton) {
+                bocciaButton.insertAdjacentElement('afterend', recapButton);
+            }
         }
     });
 }
@@ -9573,10 +9618,571 @@ function generateBocciaMatchCard(match, dayNumber) {
 }
 
 // ===============================================
+// FEUILLES RÉCAPITULATIVES PAR TERRAIN/POOL
+// ===============================================
+
+// Fonction principale : détecte le mode et appelle la bonne fonction
+function printRecapSheets(dayNumber) {
+    if (!dayNumber) dayNumber = championship.currentDay;
+
+    const dayData = championship.days[dayNumber];
+    if (!dayData) {
+        alert('Aucune donnée trouvée pour cette journée !');
+        return;
+    }
+
+    // Détecter le mode : Pool ou Terrain
+    if (dayData.pools && dayData.pools.enabled) {
+        // Mode Pool
+        printRecapByPool(dayNumber);
+    } else {
+        // Mode Terrain (championnat normal)
+        printRecapByCourt(dayNumber);
+    }
+}
+
+// Imprimer une feuille récapitulative par terrain
+function printRecapByCourt(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    const numCourts = getNumberOfCourts();
+
+    // Collecter tous les matchs de toutes les divisions
+    const matchesByCourt = {};
+    let totalMatchesWithCourt = 0;
+
+    // Initialiser les tableaux pour chaque terrain
+    for (let court = 1; court <= numCourts; court++) {
+        matchesByCourt[court] = [];
+    }
+
+    // Collecter les matchs
+    const numDivisions = getNumberOfDivisions();
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
+
+        divisionMatches.forEach(match => {
+            if (match.court) {
+                matchesByCourt[match.court].push(match);
+                totalMatchesWithCourt++;
+            }
+        });
+    }
+
+    if (totalMatchesWithCourt === 0) {
+        alert('⚠️ Aucun match avec terrain assigné trouvé pour cette journée !');
+        return;
+    }
+
+    // Générer le HTML d'impression
+    const printHTML = generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts);
+
+    // Ouvrir dans une nouvelle fenêtre pour impression
+    openPrintWindow(printHTML, `Recap_Terrains_J${dayNumber}`);
+
+    showNotification(`🏟️ ${numCourts} feuilles récapitulatives par terrain générées !`, 'success');
+}
+
+// Imprimer une feuille récapitulative par pool
+function printRecapByPool(dayNumber) {
+    const dayData = championship.days[dayNumber];
+
+    if (!dayData.pools || !dayData.pools.enabled) {
+        alert('⚠️ Le mode pool n\'est pas activé pour cette journée !');
+        return;
+    }
+
+    // Collecter les matchs par pool
+    const matchesByPool = {};
+    let totalPools = 0;
+
+    const numDivisions = getNumberOfDivisions();
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionPools = dayData.pools.divisions[division];
+        if (!divisionPools || !divisionPools.matches) continue;
+
+        divisionPools.matches.forEach(match => {
+            const poolKey = `D${division}-${match.poolName}`;
+
+            if (!matchesByPool[poolKey]) {
+                matchesByPool[poolKey] = {
+                    division: division,
+                    poolName: match.poolName,
+                    poolIndex: match.poolIndex,
+                    matches: []
+                };
+                totalPools++;
+            }
+
+            matchesByPool[poolKey].matches.push({
+                matchId: `J${dayNumber}-D${division}-P${match.poolIndex + 1}-M${matchesByPool[poolKey].matches.length + 1}`,
+                division: division,
+                player1: match.player1,
+                player2: match.player2,
+                type: 'Poule',
+                poolName: match.poolName,
+                dayNumber: dayNumber
+            });
+        });
+    }
+
+    if (totalPools === 0) {
+        alert('⚠️ Aucun match de pool trouvé pour cette journée !');
+        return;
+    }
+
+    // Générer le HTML d'impression
+    const printHTML = generateRecapByPoolHTML(dayNumber, matchesByPool);
+
+    // Ouvrir dans une nouvelle fenêtre pour impression
+    openPrintWindow(printHTML, `Recap_Pools_J${dayNumber}`);
+
+    showNotification(`🏊 ${totalPools} feuilles récapitulatives par pool générées !`, 'success');
+}
+
+// Générer le HTML pour les récaps par terrain
+function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts) {
+    const currentDate = new Date().toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Récap Terrains - Journée ${dayNumber}</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 15mm;
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 10px;
+                    line-height: 1.3;
+                    color: #000;
+                    background: white;
+                }
+
+                .page {
+                    width: 210mm;
+                    min-height: 297mm;
+                    page-break-after: always;
+                    padding: 10mm;
+                }
+
+                .page:last-child {
+                    page-break-after: avoid;
+                }
+
+                .page-header {
+                    text-align: center;
+                    border-bottom: 3px solid #2c3e50;
+                    padding-bottom: 8px;
+                    margin-bottom: 15px;
+                }
+
+                .page-title {
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    margin-bottom: 3px;
+                }
+
+                .page-subtitle {
+                    font-size: 12px;
+                    color: #666;
+                }
+
+                .court-info {
+                    background: #16a085;
+                    color: white;
+                    padding: 8px;
+                    margin-bottom: 10px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    text-align: center;
+                    border-radius: 3px;
+                }
+
+                .matches-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                }
+
+                .matches-table th {
+                    background: #34495e;
+                    color: white;
+                    padding: 6px 4px;
+                    text-align: left;
+                    font-size: 11px;
+                    font-weight: bold;
+                }
+
+                .matches-table td {
+                    padding: 8px 4px;
+                    border-bottom: 1px solid #ddd;
+                    font-size: 10px;
+                }
+
+                .matches-table tr:hover {
+                    background: #f5f5f5;
+                }
+
+                .tour-separator {
+                    border-top: 3px solid #2c3e50 !important;
+                }
+
+                .match-id {
+                    font-weight: bold;
+                    color: #2c3e50;
+                    font-size: 9px;
+                }
+
+                .player-name {
+                    font-weight: 600;
+                }
+
+                .score-cell {
+                    width: 40px;
+                    text-align: center;
+                    border: 1px solid #ccc;
+                    background: #f9f9f9;
+                }
+
+                .match-count {
+                    text-align: center;
+                    margin-top: 10px;
+                    padding: 8px;
+                    background: #ecf0f1;
+                    font-weight: bold;
+                    color: #2c3e50;
+                }
+
+                @media print {
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+    `;
+
+    // Générer une page par terrain
+    for (let court = 1; court <= numCourts; court++) {
+        const matches = matchesByCourt[court] || [];
+
+        htmlContent += `
+            <div class="page">
+                <div class="page-header">
+                    <div class="page-title">🏟️ RÉCAPITULATIF TERRAIN ${court}</div>
+                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}</div>
+                </div>
+
+                <div class="court-info">
+                    TERRAIN N° ${court} • ${matches.length} match${matches.length > 1 ? 's' : ''}
+                </div>
+
+                <table class="matches-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Match</th>
+                            <th style="width: 35%;">Joueur 1</th>
+                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">Score</th>
+                            <th style="width: 35%;">Joueur 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        if (matches.length === 0) {
+            htmlContent += `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #999;">
+                        Aucun match assigné à ce terrain
+                    </td>
+                </tr>
+            `;
+        } else {
+            // Trier les matchs par division, puis par tour/pool
+            matches.sort((a, b) => {
+                if (a.division !== b.division) return a.division - b.division;
+                if (a.tour !== b.tour) {
+                    if (a.tour === null) return 1;
+                    if (b.tour === null) return -1;
+                    return a.tour - b.tour;
+                }
+                if (a.poolIndex !== b.poolIndex) {
+                    if (a.poolIndex === undefined) return 1;
+                    if (b.poolIndex === undefined) return -1;
+                    return a.poolIndex - b.poolIndex;
+                }
+                return 0;
+            });
+
+            let previousTourOrPool = null;
+
+            matches.forEach(match => {
+                const matchLabel = match.type === 'Poule'
+                    ? `${match.poolName}`
+                    : `Tour ${match.tour}`;
+
+                // Détecter le changement de tour ou pool
+                const currentTourOrPool = match.type === 'Poule'
+                    ? `${match.division}-${match.poolName}`
+                    : `${match.division}-${match.tour}`;
+
+                const separatorClass = (previousTourOrPool !== null && previousTourOrPool !== currentTourOrPool)
+                    ? 'tour-separator'
+                    : '';
+
+                previousTourOrPool = currentTourOrPool;
+
+                htmlContent += `
+                    <tr class="${separatorClass}">
+                        <td>
+                            <div class="match-id">${match.matchId}</div>
+                            <div style="font-size: 9px; color: #666;">D${match.division} - ${matchLabel}</div>
+                        </td>
+                        <td class="player-name">${match.player1}</td>
+                        <td class="score-cell"></td>
+                        <td class="score-cell"></td>
+                        <td class="player-name">${match.player2}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        htmlContent += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    htmlContent += `
+        </body>
+        </html>
+    `;
+
+    return htmlContent;
+}
+
+// Générer le HTML pour les récaps par pool
+function generateRecapByPoolHTML(dayNumber, matchesByPool) {
+    const currentDate = new Date().toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Récap Pools - Journée ${dayNumber}</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 15mm;
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 10px;
+                    line-height: 1.3;
+                    color: #000;
+                    background: white;
+                }
+
+                .page {
+                    width: 210mm;
+                    min-height: 297mm;
+                    page-break-after: always;
+                    padding: 10mm;
+                }
+
+                .page:last-child {
+                    page-break-after: avoid;
+                }
+
+                .page-header {
+                    text-align: center;
+                    border-bottom: 3px solid #2c3e50;
+                    padding-bottom: 8px;
+                    margin-bottom: 15px;
+                }
+
+                .page-title {
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    margin-bottom: 3px;
+                }
+
+                .page-subtitle {
+                    font-size: 12px;
+                    color: #666;
+                }
+
+                .pool-info {
+                    background: #3498db;
+                    color: white;
+                    padding: 8px;
+                    margin-bottom: 10px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    text-align: center;
+                    border-radius: 3px;
+                }
+
+                .matches-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                }
+
+                .matches-table th {
+                    background: #34495e;
+                    color: white;
+                    padding: 6px 4px;
+                    text-align: left;
+                    font-size: 11px;
+                    font-weight: bold;
+                }
+
+                .matches-table td {
+                    padding: 8px 4px;
+                    border-bottom: 1px solid #ddd;
+                    font-size: 10px;
+                }
+
+                .matches-table tr:hover {
+                    background: #f5f5f5;
+                }
+
+                .tour-separator {
+                    border-top: 3px solid #2c3e50 !important;
+                }
+
+                .match-id {
+                    font-weight: bold;
+                    color: #2c3e50;
+                    font-size: 9px;
+                }
+
+                .player-name {
+                    font-weight: 600;
+                }
+
+                .score-cell {
+                    width: 40px;
+                    text-align: center;
+                    border: 1px solid #ccc;
+                    background: #f9f9f9;
+                }
+
+                @media print {
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+    `;
+
+    // Générer une page par pool
+    Object.keys(matchesByPool).forEach(poolKey => {
+        const poolData = matchesByPool[poolKey];
+        const matches = poolData.matches;
+
+        htmlContent += `
+            <div class="page">
+                <div class="page-header">
+                    <div class="page-title">🏊 RÉCAPITULATIF ${poolData.poolName.toUpperCase()}</div>
+                    <div class="page-subtitle">Division ${poolData.division} • Journée ${dayNumber} • ${currentDate}</div>
+                </div>
+
+                <div class="pool-info">
+                    ${poolData.poolName} - Division ${poolData.division} • ${matches.length} match${matches.length > 1 ? 's' : ''}
+                </div>
+
+                <table class="matches-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Match</th>
+                            <th style="width: 35%;">Joueur 1</th>
+                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">Score</th>
+                            <th style="width: 35%;">Joueur 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        matches.forEach(match => {
+            htmlContent += `
+                <tr>
+                    <td>
+                        <div class="match-id">${match.matchId}</div>
+                    </td>
+                    <td class="player-name">${match.player1}</td>
+                    <td class="score-cell"></td>
+                    <td class="score-cell"></td>
+                    <td class="player-name">${match.player2}</td>
+                </tr>
+            `;
+        });
+
+        htmlContent += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+
+    htmlContent += `
+        </body>
+        </html>
+    `;
+
+    return htmlContent;
+}
+
+// ===============================================
 // EXPORT EXPLICITE VERS WINDOW - TRÈS IMPORTANT
 // ===============================================
 window.printMatchSheets = printMatchSheets;
 window.printBocciaMatchSheets = printBocciaMatchSheets;
+window.printRecapSheets = printRecapSheets;
+window.printRecapByCourt = printRecapByCourt;
+window.printRecapByPool = printRecapByPool;
+window.generateRecapByCourtHTML = generateRecapByCourtHTML;
+window.generateRecapByPoolHTML = generateRecapByPoolHTML;
 window.addPrintMatchesButton = addPrintMatchesButton;
 window.getDivisionMatches = getDivisionMatches;
 window.groupMatchesIntoPages = groupMatchesIntoPages;
