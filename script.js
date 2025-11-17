@@ -473,6 +473,12 @@ try {
         updateDaySelectors();
         updateTabsDisplay();
         switchTab(newDayNumber);
+
+        // Restaurer l'état collapsed si présent
+        setTimeout(() => {
+            restoreCollapseState();
+        }, 100);
+
         saveToLocalStorage();
 
         showNotification(`Journée ${newDayNumber} créée !`, 'success');
@@ -556,8 +562,12 @@ try {
     function generateDayContentHTML(dayNumber) {
         return `
             <div class="section">
-                <h2>👥 Joueurs Journée ${dayNumber}</h2>
+                <h2 style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="toggleDayHub(${dayNumber})">
+                    <span id="day-hub-icon-${dayNumber}" class="collapse-icon" style="font-size: 14px; transition: transform 0.3s ease; display: inline-block;">▼</span>
+                    <span>👥 Gestion des Joueurs - Journée ${dayNumber}</span>
+                </h2>
 
+                <div id="day-hub-content-${dayNumber}">
                 <div style="text-align: center; margin-bottom: 20px;">
                     <p style="color: #7f8c8d; font-style: italic;">
                         Utilisez la <strong>Journée 1 (Hub Central)</strong> pour ajouter des joueurs à cette journée
@@ -604,8 +614,9 @@ try {
                         🗑️ Vider J${dayNumber}
                     </button>
                 </div>
+                </div><!-- Fin day-hub-content-${dayNumber} -->
             </div>
-            
+
             <div class="divisions" id="divisions-${dayNumber}">
             </div>
             
@@ -4587,12 +4598,14 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
             updateTabsDisplay();
             updateDaySelectors();
             initializeAllDaysContent();
+            restoreCollapseState();
             switchTab(championship.currentDay);
         } else {
             initializeDivisionSelects();
             initializeDivisionsDisplay(1);
             updatePlayersDisplay(1);
             initializePoolsForDay(1);
+            restoreCollapseState();
         }
 
         setupEventListeners();
@@ -5045,6 +5058,94 @@ function togglePoolSection(dayNumber) {
             poolSection.style.display = 'none';
             toggleBtn.textContent = '🏊 Mode Poules Avancé';
         }
+    }
+}
+
+// Toggle le hub de configuration d'une journée
+function toggleDayHub(dayNumber) {
+    const hubContent = document.getElementById(`day-hub-content-${dayNumber}`);
+    const collapseIcon = document.getElementById(`day-hub-icon-${dayNumber}`);
+
+    if (!hubContent || !collapseIcon) return;
+
+    const isCollapsed = hubContent.style.display === 'none';
+
+    if (isCollapsed) {
+        hubContent.style.display = 'block';
+        collapseIcon.textContent = '▼';
+        collapseIcon.style.transform = 'rotate(0deg)';
+    } else {
+        hubContent.style.display = 'none';
+        collapseIcon.textContent = '▶';
+        collapseIcon.style.transform = 'rotate(0deg)';
+    }
+
+    saveCollapseState(dayNumber, !isCollapsed);
+}
+
+// Toggle le hub du classement général
+function toggleGeneralHub() {
+    const hubContent = document.getElementById('general-hub-content');
+    const collapseIcon = document.getElementById('general-hub-icon');
+
+    if (!hubContent || !collapseIcon) return;
+
+    const isCollapsed = hubContent.style.display === 'none';
+
+    if (isCollapsed) {
+        hubContent.style.display = 'block';
+        collapseIcon.textContent = '▼';
+        collapseIcon.style.transform = 'rotate(0deg)';
+    } else {
+        hubContent.style.display = 'none';
+        collapseIcon.textContent = '▶';
+        collapseIcon.style.transform = 'rotate(0deg)';
+    }
+
+    saveCollapseState('general', !isCollapsed);
+}
+
+// Sauvegarde l'état collapse dans localStorage
+function saveCollapseState(key, isCollapsed) {
+    try {
+        let collapseState = JSON.parse(localStorage.getItem('collapseState') || '{}');
+        collapseState[key] = isCollapsed;
+        localStorage.setItem('collapseState', JSON.stringify(collapseState));
+    } catch (e) {
+        console.error('Erreur sauvegarde collapse state:', e);
+    }
+}
+
+// Restaure l'état collapse depuis localStorage
+function restoreCollapseState() {
+    try {
+        const collapseState = JSON.parse(localStorage.getItem('collapseState') || '{}');
+
+        // Restaurer l'état pour chaque journée existante
+        Object.keys(championship.days || {}).forEach(dayNumber => {
+            const hubContent = document.getElementById(`day-hub-content-${dayNumber}`);
+            const collapseIcon = document.getElementById(`day-hub-icon-${dayNumber}`);
+
+            if (hubContent && collapseIcon && collapseState[dayNumber]) {
+                hubContent.style.display = 'none';
+                collapseIcon.textContent = '▶';
+                collapseIcon.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        // Restaurer l'état du classement général
+        if (collapseState['general']) {
+            const hubContent = document.getElementById('general-hub-content');
+            const collapseIcon = document.getElementById('general-hub-icon');
+
+            if (hubContent && collapseIcon) {
+                hubContent.style.display = 'none';
+                collapseIcon.textContent = '▶';
+                collapseIcon.style.transform = 'rotate(0deg)';
+            }
+        }
+    } catch (e) {
+        console.error('Erreur restauration collapse state:', e);
     }
 }
 

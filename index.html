@@ -123,8 +123,12 @@
             <!-- CONTENU JOURNÉE -->
             <div class="tab-content day-content active" id="day-1">
                 <div class="section">
-                    <h2>👥 Gestion des Joueurs - Journée 1</h2>
+                    <h2 style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="toggleDayHub(1)">
+                        <span id="day-hub-icon-1" class="collapse-icon" style="font-size: 14px; transition: transform 0.3s ease; display: inline-block;">▼</span>
+                        <span>👥 Gestion des Joueurs - Journée 1</span>
+                    </h2>
 
+                    <div id="day-hub-content-1">
                     <div class="input-group" style="align-items: center; gap: 10px;">
                         <input type="text" id="playerName" placeholder="Nom du joueur" style="flex: 1; min-width: 150px;">
                         <select id="playerDivision" style="min-width: 120px;">
@@ -217,6 +221,7 @@
                             📥 Importer
                         </button>
                     </div>
+                    </div><!-- Fin day-hub-content-1 -->
                 </div>
                 <!-- Fin de la section "Gestion des Joueurs" -->
 
@@ -244,8 +249,12 @@
             <!-- CLASSEMENT GÉNÉRAL -->
             <div class="tab-content general-content" id="general-ranking">
                 <div class="section general-ranking-section">
-                    <h2>🏆 Classement Général du Championnat</h2>
+                    <h2 style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="toggleGeneralHub()">
+                        <span id="general-hub-icon" class="collapse-icon" style="font-size: 14px; transition: transform 0.3s ease; display: inline-block;">▼</span>
+                        <span>🏆 Classement Général du Championnat</span>
+                    </h2>
 
+                    <div id="general-hub-content">
                     <div class="general-stats" id="generalStats">
                         <!-- Stats générales seront générées ici -->
                     </div>
@@ -264,6 +273,7 @@
                         📄 Exporter HTML
                         </button>
                     </div>
+                    </div><!-- Fin general-hub-content -->
 
                     <div id="generalRankingContent">
                         <div class="empty-state">

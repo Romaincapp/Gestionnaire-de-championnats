@@ -1248,3 +1248,15 @@ body   * {
                 font-size: 12px;
             }
         }
+
+        /* Collapse icon pour hubs */
+        .collapse-icon {
+            transition: transform 0.3s ease;
+            display: inline-block;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        h2:hover .collapse-icon {
+            color: #2980b9;
+        }
