@@ -1090,8 +1090,8 @@ try {
                             player1: player,
                             player2: 'BYE',
                             tour: tourIndex + 1,
-                            score1: '',
-                            score2: '',
+                            score1: 5,
+                            score2: 0,
                             completed: true,
                             winner: player,
                             isBye: true
@@ -2082,38 +2082,39 @@ try {
 
     function copyPlayersFromPreviousDay(dayNumber) {
         const previousDay = dayNumber - 1;
-        
+
         if (!championship.days[previousDay]) {
             alert(`Aucune journée ${previousDay} trouvée`);
             return;
         }
-        
+
+        const numDivisions = championship.config?.numberOfDivisions || 3;
         const prevPlayers = championship.days[previousDay].players;
         let totalPlayers = 0;
-        
-        for (let division = 1; division <= 3; division++) {
-            totalPlayers += prevPlayers[division].length;
+        let divisionDetails = '';
+
+        for (let division = 1; division <= numDivisions; division++) {
+            const divPlayerCount = prevPlayers[division]?.length || 0;
+            totalPlayers += divPlayerCount;
+            divisionDetails += `Division ${division}: ${divPlayerCount} joueurs\n`;
         }
-        
+
         if (totalPlayers === 0) {
             alert(`Aucun joueur à copier depuis la Journée ${previousDay}`);
             return;
         }
-        
+
         const confirmMsg = `Copier les joueurs de la Journée ${previousDay} vers la Journée ${dayNumber} ?\n\n` +
-                          `Division 1: ${prevPlayers[1].length} joueurs\n` +
-                          `Division 2: ${prevPlayers[2].length} joueurs\n` +
-                          `Division 3: ${prevPlayers[3].length} joueurs\n\n` +
-                          `Total: ${totalPlayers} joueurs`;
-        
+                          divisionDetails + `\nTotal: ${totalPlayers} joueurs`;
+
         if (confirm(confirmMsg)) {
-            for (let division = 1; division <= 3; division++) {
-                championship.days[dayNumber].players[division] = [...prevPlayers[division]];
+            for (let division = 1; division <= numDivisions; division++) {
+                championship.days[dayNumber].players[division] = [...(prevPlayers[division] || [])];
             }
-            
+
             updatePlayersDisplay(dayNumber);
             saveToLocalStorage();
-            
+
             showNotification(`${totalPlayers} joueurs copiés de J${previousDay} vers J${dayNumber}`, 'success');
         }
     }
@@ -2686,7 +2687,7 @@ playerStats.forEach((player, index) => {
                     <th>Joueur</th>
                     <th>Points Total</th>
                     <th>Journées</th>
-                    <th>V/D Global</th>
+                    <th>V/D/F Global</th>
                     <th>% Vict. Moy.</th>
                     <th>PP/PC</th>
                     <th>Diff</th>
@@ -2707,7 +2708,7 @@ generalRanking.divisions[division].forEach((player, index) => {
             <td style="font-weight: 600;">${player.name}</td>
             <td class="stat-value">${player.totalPoints}</td>
             <td>${player.daysPlayed}</td>
-            <td>${player.totalWins}/${player.totalLosses}</td>
+            <td>${player.totalWins}/${player.totalLosses}/${player.totalForfaits}</td>
             <td>${player.avgWinRate}%</td>
             <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
             <td style="${diffStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
@@ -2752,12 +2753,18 @@ generalRanking.divisions[division].forEach((player, index) => {
     }
 
     function calculateGeneralRanking() {
+        const numDivisions = championship.config?.numberOfDivisions || 3;
+        const divisions = {};
+        for (let i = 1; i <= numDivisions; i++) {
+            divisions[i] = [];
+        }
+
         const generalRanking = {
             hasData: false,
-            divisions: { 1: [], 2: [], 3: [] }
+            divisions: divisions
         };
 
-        for (let division = 1; division <= 3; division++) {
+        for (let division = 1; division <= numDivisions; division++) {
             const playersData = {};
             const playerFirstAppearance = {}; // Première journée où chaque joueur apparaît
 
@@ -2790,6 +2797,7 @@ generalRanking.divisions[division].forEach((player, index) => {
         totalPoints: 0,
         totalWins: 0,
         totalLosses: 0,
+        totalForfaits: 0,
         totalPointsWon: 0,
         totalPointsLost: 0,
         totalMatchesPlayed: 0,
@@ -2802,9 +2810,10 @@ generalRanking.divisions[division].forEach((player, index) => {
     const missedDays = allDays.filter(d => d < playerFirstAppearance[playerName]);
 
     missedDays.forEach(() => {
-        // 4 forfaits par journée manquée = 4 défaites (4 points)
-        playersData[playerName].totalLosses += 4;
-        playersData[playerName].totalPoints += 4; // 4 défaites × 1 point
+        // 4 forfaits par journée manquée = 0 points, -20 goal average (5 buts encaissés par match)
+        playersData[playerName].totalForfaits += 4;
+        playersData[playerName].totalPoints += 0; // 4 forfaits × 0 point
+        playersData[playerName].totalPointsLost += 20; // 4 forfaits × 5 buts encaissés
         playersData[playerName].totalMatchesPlayed += 4;
         playersData[playerName].winRates.push(0); // 0% de victoire pour une journée forfait
     });
@@ -2883,11 +2892,12 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             if (dayNum < firstAppearance) {
                 playerHistory.push({
                     day: dayNum,
-                    totalPoints: 4,
+                    totalPoints: 0,
                     wins: 0,
-                    losses: 4,
+                    losses: 0,
+                    forfaits: 4,
                     pointsWon: 0,
-                    pointsLost: 0,
+                    pointsLost: 20,
                     matchesPlayed: 4,
                     winRate: 0,
                     isForfeit: true
@@ -2924,6 +2934,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             totalPoints: acc.totalPoints + day.totalPoints,
             totalWins: acc.totalWins + day.wins,
             totalLosses: acc.totalLosses + day.losses,
+            totalForfaits: acc.totalForfaits + (day.forfaits || 0),
             totalPointsWon: acc.totalPointsWon + day.pointsWon,
             totalPointsLost: acc.totalPointsLost + day.pointsLost,
             totalMatchesPlayed: acc.totalMatchesPlayed + day.matchesPlayed
@@ -2931,6 +2942,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             totalPoints: 0,
             totalWins: 0,
             totalLosses: 0,
+            totalForfaits: 0,
             totalPointsWon: 0,
             totalPointsLost: 0,
             totalMatchesPlayed: 0
@@ -2957,8 +2969,8 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     <div class="overview-label">Points total</div>
                 </div>
                 <div class="overview-card">
-                    <div class="overview-number">${totals.totalWins}/${totals.totalLosses}</div>
-                    <div class="overview-label">V/D Global</div>
+                    <div class="overview-number">${totals.totalWins}/${totals.totalLosses}/${totals.totalForfaits}</div>
+                    <div class="overview-label">V/D/F Global</div>
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${avgWinRate}%</div>
@@ -2984,12 +2996,12 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         <div>
                             <div class="history-opponent">Journée ${dayStats.day} ⚠️ FORFAIT</div>
                             <div style="font-size: 12px; color: #c0392b;">
-                                Équipe absente - 4 défaites automatiques
+                                Équipe absente - 4 forfaits automatiques (-20 buts)
                             </div>
                         </div>
                         <div class="history-score">
                             <div style="font-weight: bold; color: #e74c3c;">${dayStats.totalPoints} pts</div>
-                            <div style="font-size: 12px;">0V/4D</div>
+                            <div style="font-size: 12px;">0V/0D/4F</div>
                         </div>
                     </div>
                 `;
@@ -3561,7 +3573,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                             <th>Joueur</th>
                             <th>Points</th>
                             <th>Journées</th>
-                            <th>V/D</th>
+                            <th>V/D/F</th>
                             <th>% Vict.</th>
                             <th>PP/PC</th>
                             <th>Diff</th>
@@ -3582,7 +3594,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     <td class="player-name">${player.name}</td>
                     <td class="points-total">${player.totalPoints}</td>
                     <td style="text-align: center;">${player.daysPlayed}</td>
-                    <td style="text-align: center;">${player.totalWins}/${player.totalLosses}</td>
+                    <td style="text-align: center;">${player.totalWins}/${player.totalLosses}/${player.totalForfaits}</td>
                     <td style="text-align: center;">${player.avgWinRate}%</td>
                     <td style="text-align: center;">${player.totalPointsWon}/${player.totalPointsLost}</td>
                     <td style="text-align: center;">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
@@ -4041,13 +4053,13 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     function addByeMatchForPlayer(dayNumber, division, playerName) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
-        
+
         // Créer un match BYE (victoire automatique)
         const byeMatch = {
             player1: playerName,
             player2: "BYE",
             tour: 4, // Mettre au tour 4 par défaut
-            score1: 3,
+            score1: 5,
             score2: 0,
             completed: true,
             winner: playerName,
@@ -4460,7 +4472,7 @@ function exportGeneralRankingToHTML() {
                             <th>Joueur</th>
                             <th>Points</th>
                             <th>Journées</th>
-                            <th>V/D</th>
+                            <th>V/D/F</th>
                             <th>% Vict.</th>
                             <th>PP/PC</th>
                             <th>Diff</th>
@@ -4477,7 +4489,7 @@ function exportGeneralRankingToHTML() {
                     <td>${player.name}</td>
                     <td>${player.totalPoints}</td>
                     <td>${player.daysPlayed}</td>
-                    <td>${player.totalWins}/${player.totalLosses}</td>
+                    <td>${player.totalWins}/${player.totalLosses}/${player.totalForfaits}</td>
                     <td>${player.avgWinRate}%</td>
                     <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
                     <td>${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>

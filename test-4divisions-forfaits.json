@@ -1,0 +1,122 @@
+{
+  "version": "2.0",
+  "exportDate": "2025-01-20T10:00:00.000Z",
+  "stats": {
+    "totalDays": 3,
+    "totalPlayers": 22,
+    "totalMatches": 58
+  },
+  "championship": {
+    "currentDay": 3,
+    "config": {
+      "numberOfDivisions": 4,
+      "numberOfCourts": 4
+    },
+    "days": {
+      "1": {
+        "players": {
+          "1": ["Alice Martin", "Bruno Lefevre", "Claire Dubois", "David Moreau", "Emma Bernard", "Felix Roux"],
+          "2": ["Gabrielle Petit", "Hugo Laurent", "Isabelle Simon", "Jules Michel", "Karine Legrand"],
+          "3": ["Louis Garcia", "Marie Robert", "Nathan Richard", "Oceane Durand"],
+          "4": ["Pierre Bertrand", "Quentin Morel", "Rose Fournier", "Simon Girard", "Therese Bonnet", "Ulysse Blanc", "Valerie Andre"]
+        },
+        "matches": {
+          "1": [
+            {"player1": "Alice Martin", "player2": "Bruno Lefevre", "tour": 1, "score1": 5, "score2": 3, "completed": true, "winner": "Alice Martin"},
+            {"player1": "Claire Dubois", "player2": "David Moreau", "tour": 1, "score1": 5, "score2": 2, "completed": true, "winner": "Claire Dubois"},
+            {"player1": "Emma Bernard", "player2": "Felix Roux", "tour": 1, "score1": 3, "score2": 5, "completed": true, "winner": "Felix Roux"},
+            {"player1": "Alice Martin", "player2": "Claire Dubois", "tour": 2, "score1": 5, "score2": 4, "completed": true, "winner": "Alice Martin"},
+            {"player1": "Bruno Lefevre", "player2": "David Moreau", "tour": 2, "score1": 2, "score2": 5, "completed": true, "winner": "David Moreau"},
+            {"player1": "Emma Bernard", "player2": "Felix Roux", "tour": 2, "score1": 5, "score2": 1, "completed": true, "winner": "Emma Bernard"},
+            {"player1": "Alice Martin", "player2": "David Moreau", "tour": 3, "score1": 5, "score2": 3, "completed": true, "winner": "Alice Martin"},
+            {"player1": "Bruno Lefevre", "player2": "Felix Roux", "tour": 3, "score1": 1, "score2": 5, "completed": true, "winner": "Felix Roux"},
+            {"player1": "Claire Dubois", "player2": "Emma Bernard", "tour": 3, "score1": 5, "score2": 4, "completed": true, "winner": "Claire Dubois"}
+          ],
+          "2": [
+            {"player1": "Gabrielle Petit", "player2": "Hugo Laurent", "tour": 1, "score1": 5, "score2": 2, "completed": true, "winner": "Gabrielle Petit"},
+            {"player1": "Isabelle Simon", "player2": "Jules Michel", "tour": 1, "score1": 3, "score2": 5, "completed": true, "winner": "Jules Michel"},
+            {"player1": "Karine Legrand", "player2": "BYE", "tour": 1, "score1": 5, "score2": 0, "completed": true, "winner": "Karine Legrand", "isBye": true},
+            {"player1": "Gabrielle Petit", "player2": "Isabelle Simon", "tour": 2, "score1": 5, "score2": 3, "completed": true, "winner": "Gabrielle Petit"},
+            {"player1": "Hugo Laurent", "player2": "Jules Michel", "tour": 2, "score1": 4, "score2": 5, "completed": true, "winner": "Jules Michel"}
+          ],
+          "3": [
+            {"player1": "Louis Garcia", "player2": "Marie Robert", "tour": 1, "score1": 5, "score2": 3, "completed": true, "winner": "Louis Garcia"},
+            {"player1": "Nathan Richard", "player2": "Oceane Durand", "tour": 1, "score1": 2, "score2": 5, "completed": true, "winner": "Oceane Durand"},
+            {"player1": "Louis Garcia", "player2": "Nathan Richard", "tour": 2, "score1": 5, "score2": 1, "completed": true, "winner": "Louis Garcia"},
+            {"player1": "Marie Robert", "player2": "Oceane Durand", "tour": 2, "score1": 3, "score2": 5, "completed": true, "winner": "Oceane Durand"}
+          ],
+          "4": [
+            {"player1": "Pierre Bertrand", "player2": "Quentin Morel", "tour": 1, "score1": 5, "score2": 4, "completed": true, "winner": "Pierre Bertrand"},
+            {"player1": "Rose Fournier", "player2": "Simon Girard", "tour": 1, "score1": 3, "score2": 5, "completed": true, "winner": "Simon Girard"},
+            {"player1": "Therese Bonnet", "player2": "Ulysse Blanc", "tour": 1, "score1": 5, "score2": 2, "completed": true, "winner": "Therese Bonnet"},
+            {"player1": "Valerie Andre", "player2": "BYE", "tour": 1, "score1": 5, "score2": 0, "completed": true, "winner": "Valerie Andre", "isBye": true},
+            {"player1": "Pierre Bertrand", "player2": "Rose Fournier", "tour": 2, "score1": 5, "score2": 3, "completed": true, "winner": "Pierre Bertrand"},
+            {"player1": "Quentin Morel", "player2": "Simon Girard", "tour": 2, "score1": 5, "score2": 4, "completed": true, "winner": "Quentin Morel"}
+          ]
+        }
+      },
+      "2": {
+        "players": {
+          "1": ["Alice Martin", "Bruno Lefevre", "Claire Dubois", "David Moreau", "Emma Bernard", "Felix Roux"],
+          "2": ["Gabrielle Petit", "Hugo Laurent", "Isabelle Simon", "Jules Michel", "Karine Legrand"],
+          "3": ["Louis Garcia", "Marie Robert", "Nathan Richard", "Oceane Durand"],
+          "4": ["Pierre Bertrand", "Quentin Morel", "Rose Fournier", "Simon Girard", "Therese Bonnet", "Ulysse Blanc", "Valerie Andre"]
+        },
+        "matches": {
+          "1": [
+            {"player1": "Alice Martin", "player2": "Emma Bernard", "tour": 1, "score1": 5, "score2": 2, "completed": true, "winner": "Alice Martin"},
+            {"player1": "Bruno Lefevre", "player2": "Claire Dubois", "tour": 1, "score1": 3, "score2": 5, "completed": true, "winner": "Claire Dubois"},
+            {"player1": "David Moreau", "player2": "Felix Roux", "tour": 1, "score1": 5, "score2": 3, "completed": true, "winner": "David Moreau"},
+            {"player1": "Alice Martin", "player2": "Bruno Lefevre", "tour": 2, "score1": 5, "score2": 1, "completed": true, "winner": "Alice Martin"},
+            {"player1": "Claire Dubois", "player2": "Emma Bernard", "tour": 2, "score1": 5, "score2": 4, "completed": true, "winner": "Claire Dubois"},
+            {"player1": "David Moreau", "player2": "Felix Roux", "tour": 2, "score1": 2, "score2": 5, "completed": true, "winner": "Felix Roux"}
+          ],
+          "2": [
+            {"player1": "Gabrielle Petit", "player2": "Jules Michel", "tour": 1, "score1": 5, "score2": 3, "completed": true, "winner": "Gabrielle Petit"},
+            {"player1": "Hugo Laurent", "player2": "Isabelle Simon", "tour": 1, "score1": 4, "score2": 5, "completed": true, "winner": "Isabelle Simon"},
+            {"player1": "Karine Legrand", "player2": "BYE", "tour": 1, "score1": 5, "score2": 0, "completed": true, "winner": "Karine Legrand", "isBye": true}
+          ],
+          "3": [
+            {"player1": "Louis Garcia", "player2": "Oceane Durand", "tour": 1, "score1": 5, "score2": 4, "completed": true, "winner": "Louis Garcia"},
+            {"player1": "Marie Robert", "player2": "Nathan Richard", "tour": 1, "score1": 3, "score2": 5, "completed": true, "winner": "Nathan Richard"},
+            {"player1": "Louis Garcia", "player2": "Marie Robert", "tour": 2, "score1": 5, "score2": 2, "completed": true, "winner": "Louis Garcia"},
+            {"player1": "Nathan Richard", "player2": "Oceane Durand", "tour": 2, "score1": 4, "score2": 5, "completed": true, "winner": "Oceane Durand"}
+          ],
+          "4": [
+            {"player1": "Pierre Bertrand", "player2": "Simon Girard", "tour": 1, "score1": 5, "score2": 3, "completed": true, "winner": "Pierre Bertrand"},
+            {"player1": "Quentin Morel", "player2": "Rose Fournier", "tour": 1, "score1": 4, "score2": 5, "completed": true, "winner": "Rose Fournier"},
+            {"player1": "Therese Bonnet", "player2": "Ulysse Blanc", "tour": 1, "score1": 5, "score2": 3, "completed": true, "winner": "Therese Bonnet"},
+            {"player1": "Valerie Andre", "player2": "BYE", "tour": 1, "score1": 5, "score2": 0, "completed": true, "winner": "Valerie Andre", "isBye": true}
+          ]
+        }
+      },
+      "3": {
+        "players": {
+          "1": ["Alice Martin", "Claire Dubois", "Emma Bernard", "Felix Roux"],
+          "2": ["Gabrielle Petit", "Hugo Laurent", "Jules Michel", "Karine Legrand"],
+          "3": ["Louis Garcia", "Marie Robert", "Nathan Richard", "Oceane Durand"],
+          "4": ["Pierre Bertrand", "Rose Fournier", "Simon Girard", "Valerie Andre"]
+        },
+        "matches": {
+          "1": [
+            {"player1": "Alice Martin", "player2": "Claire Dubois", "tour": 1, "score1": 5, "score2": 3, "completed": true, "winner": "Alice Martin"},
+            {"player1": "Emma Bernard", "player2": "Felix Roux", "tour": 1, "score1": 2, "score2": 5, "completed": true, "winner": "Felix Roux"},
+            {"player1": "Alice Martin", "player2": "Emma Bernard", "tour": 2, "score1": 5, "score2": 1, "completed": true, "winner": "Alice Martin"}
+          ],
+          "2": [
+            {"player1": "Gabrielle Petit", "player2": "Hugo Laurent", "tour": 1, "score1": 5, "score2": 4, "completed": true, "winner": "Gabrielle Petit"},
+            {"player1": "Jules Michel", "player2": "Karine Legrand", "tour": 1, "score1": 5, "score2": 3, "completed": true, "winner": "Jules Michel"}
+          ],
+          "3": [
+            {"player1": "Louis Garcia", "player2": "Marie Robert", "tour": 1, "score1": 5, "score2": 2, "completed": true, "winner": "Louis Garcia"},
+            {"player1": "Nathan Richard", "player2": "Oceane Durand", "tour": 1, "score1": 3, "score2": 5, "completed": true, "winner": "Oceane Durand"}
+          ],
+          "4": [
+            {"player1": "Pierre Bertrand", "player2": "Rose Fournier", "tour": 1, "score1": 5, "score2": 4, "completed": true, "winner": "Pierre Bertrand"},
+            {"player1": "Simon Girard", "player2": "Valerie Andre", "tour": 1, "score1": 4, "score2": 5, "completed": true, "winner": "Valerie Andre"}
+          ]
+        }
+      }
+    }
+  }
+}
