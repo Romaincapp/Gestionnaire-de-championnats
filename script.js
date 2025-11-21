@@ -2671,9 +2671,10 @@ playerStats.forEach((player, index) => {
         }
         
         let rankingHtml = '';
-        
-        for (let division = 1; division <= 3; division++) {
-            if (generalRanking.divisions[division].length === 0) continue;
+        const numDivisions = championship.config?.numberOfDivisions || 3;
+
+        for (let division = 1; division <= numDivisions; division++) {
+            if (!generalRanking.divisions[division] || generalRanking.divisions[division].length === 0) continue;
             
             rankingHtml += `
     <div style="margin-bottom: 40px;">
