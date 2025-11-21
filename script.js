@@ -2767,8 +2767,9 @@ generalRanking.divisions[division].forEach((player, index) => {
         for (let division = 1; division <= numDivisions; division++) {
             const playersData = {};
             const playerFirstAppearance = {}; // Première journée où chaque joueur apparaît
+            const playerLastAppearance = {};  // Dernière journée où chaque joueur apparaît
 
-            // Étape 1: Déterminer la première apparition de chaque joueur
+            // Étape 1: Déterminer la première ET dernière apparition de chaque joueur
             Object.keys(championship.days).forEach(dayNumber => {
                 const dayNum = parseInt(dayNumber);
                 const dayData = championship.days[dayNum];
@@ -2778,6 +2779,9 @@ generalRanking.divisions[division].forEach((player, index) => {
                     .forEach(playerName => {
                         if (!playerFirstAppearance[playerName] || dayNum < playerFirstAppearance[playerName]) {
                             playerFirstAppearance[playerName] = dayNum;
+                        }
+                        if (!playerLastAppearance[playerName] || dayNum > playerLastAppearance[playerName]) {
+                            playerLastAppearance[playerName] = dayNum;
                         }
                     });
             });
@@ -2834,7 +2838,21 @@ if (dayStats && dayStats.matchesPlayed > 0) {
 }
                 });
             });
-            
+
+            // Étape 3: Ajouter les forfaits pour les journées manquées APRÈS la dernière apparition
+            const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
+            Object.keys(playersData).forEach(playerName => {
+                const missedDaysAfter = allDays.filter(d => d > playerLastAppearance[playerName]);
+                missedDaysAfter.forEach(() => {
+                    // 4 forfaits par journée manquée = 0 points, -20 goal average
+                    playersData[playerName].totalForfaits += 4;
+                    playersData[playerName].totalPoints += 0;
+                    playersData[playerName].totalPointsLost += 20;
+                    playersData[playerName].totalMatchesPlayed += 4;
+                    playersData[playerName].winRates.push(0);
+                });
+            });
+
            const playersArray = Object.values(playersData)
     .filter(player => player.daysPlayed > 0)
     .map(player => ({
@@ -2872,8 +2890,9 @@ if (dayStats && dayStats.matchesPlayed > 0) {
     function showGeneralPlayerDetails(playerName, division) {
         const playerHistory = [];
 
-        // Déterminer la première journée où le joueur apparaît
+        // Déterminer la première ET dernière journée où le joueur apparaît
         let firstAppearance = null;
+        let lastAppearance = null;
         Object.keys(championship.days).forEach(dayNumber => {
             const dayNum = parseInt(dayNumber);
             const dayData = championship.days[dayNum];
@@ -2882,12 +2901,15 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 if (firstAppearance === null || dayNum < firstAppearance) {
                     firstAppearance = dayNum;
                 }
+                if (lastAppearance === null || dayNum > lastAppearance) {
+                    lastAppearance = dayNum;
+                }
             }
         });
 
         const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
 
-        // Ajouter des journées forfait pour les journées manquées avant la première apparition
+        // Ajouter des journées forfait pour les journées manquées AVANT la première apparition
         allDays.forEach(dayNum => {
             if (dayNum < firstAppearance) {
                 playerHistory.push({
@@ -2919,6 +2941,24 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         isForfeit: false
                     });
                 }
+            }
+        });
+
+        // Ajouter des journées forfait pour les journées manquées APRÈS la dernière apparition
+        allDays.forEach(dayNum => {
+            if (dayNum > lastAppearance) {
+                playerHistory.push({
+                    day: dayNum,
+                    totalPoints: 0,
+                    wins: 0,
+                    losses: 0,
+                    forfaits: 4,
+                    pointsWon: 0,
+                    pointsLost: 20,
+                    matchesPlayed: 4,
+                    winRate: 0,
+                    isForfeit: true
+                });
             }
         });
 
