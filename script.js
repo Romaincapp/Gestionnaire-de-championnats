@@ -236,9 +236,16 @@ try {
         }
 
         if (!championship.days[targetDay]) {
+            const numDivisions = championship.config?.numberOfDivisions || 3;
+            const players = {};
+            const matches = {};
+            for (let div = 1; div <= numDivisions; div++) {
+                players[div] = [];
+                matches[div] = [];
+            }
             championship.days[targetDay] = {
-                players: { 1: [], 2: [], 3: [] },
-                matches: { 1: [], 2: [], 3: [] }
+                players: players,
+                matches: matches
             };
         }
 
@@ -293,9 +300,16 @@ try {
         let duplicates = [];
         
         if (!championship.days[dayNumber]) {
+            const numDivisions = championship.config?.numberOfDivisions || 3;
+            const players = {};
+            const matches = {};
+            for (let div = 1; div <= numDivisions; div++) {
+                players[div] = [];
+                matches[div] = [];
+            }
             championship.days[dayNumber] = {
-                players: { 1: [], 2: [], 3: [] },
-                matches: { 1: [], 2: [], 3: [] }
+                players: players,
+                matches: matches
             };
         }
         
@@ -1573,7 +1587,7 @@ try {
 
                     html += `
                         <div class="tour-section">
-                            <div class="tour-header" onclick="toggleTour(${dayNumber}, ${division}, ${tour})">
+                            <div class="tour-header" data-day="${dayNumber}" data-division="${division}" data-tour="${tour}" style="cursor: pointer;">
                                 <div class="tour-title">🎯 Tour ${tour}</div>
                                 <div class="tour-progress" id="progress-d${dayNumber}-div${division}-t${tour}">${completedMatches}/${totalMatches} terminés</div>
                             </div>
@@ -1674,16 +1688,35 @@ try {
             }
 
             container.innerHTML = html;
-            
-            setTimeout(() => {
-                for (let div = 1; div <= numDivisions; div++) {
-                    const firstTour = document.getElementById(`tour${dayNumber}-${div}-1`);
-                    if (firstTour) {
-                        firstTour.classList.add('active');
-                    }
-                }
-            }, 100);
         }
+
+        // Ouvrir le premier tour de chaque division et installer les event listeners
+        setTimeout(() => {
+            // Ouvrir le premier tour de chaque division
+            for (let div = 1; div <= numDivisions; div++) {
+                const firstTour = document.getElementById(`tour${dayNumber}-${div}-1`);
+                if (firstTour) {
+                    firstTour.classList.add('active');
+                }
+            }
+
+            // Installer un event listener global avec délégation d'événements
+            const divisionsContainer = document.getElementById(`divisions-${dayNumber}`);
+            if (divisionsContainer && !divisionsContainer.hasAttribute('data-tour-listener')) {
+                divisionsContainer.addEventListener('click', function(e) {
+                    const tourHeader = e.target.closest('.tour-header');
+                    if (tourHeader) {
+                        const day = parseInt(tourHeader.getAttribute('data-day'));
+                        const division = parseInt(tourHeader.getAttribute('data-division'));
+                        const tour = parseInt(tourHeader.getAttribute('data-tour'));
+                        if (day && division && tour) {
+                            toggleTour(day, division, tour);
+                        }
+                    }
+                });
+                divisionsContainer.setAttribute('data-tour-listener', 'true');
+            }
+        }, 100);
     }
 
     function toggleTour(dayNumber, division, tour) {
@@ -2042,17 +2075,24 @@ try {
     function importPlayersFromData(data, dayNumber) {
         let imported = 0;
         let errors = [];
-        
+
+        const numDivisions = championship.config?.numberOfDivisions || 3;
         data.forEach((row, index) => {
             if (row.length >= 2) {
                 const name = String(row[0]).trim();
                 const division = parseInt(row[1]);
-                
-                if (name && [1, 2, 3].includes(division)) {
+
+                if (name && division >= 1 && division <= numDivisions) {
                     if (!championship.days[dayNumber]) {
+                        const players = {};
+                        const matches = {};
+                        for (let div = 1; div <= numDivisions; div++) {
+                            players[div] = [];
+                            matches[div] = [];
+                        }
                         championship.days[dayNumber] = {
-                            players: { 1: [], 2: [], 3: [] },
-                            matches: { 1: [], 2: [], 3: [] }
+                            players: players,
+                            matches: matches
                         };
                     }
                     if (!championship.days[dayNumber].players[division].includes(name)) {
@@ -2126,8 +2166,9 @@ try {
         
         let totalPlayers = 0;
         let totalMatches = 0;
-        
-        for (let division = 1; division <= 3; division++) {
+
+        const numDivisions = championship.config?.numberOfDivisions || 3;
+        for (let division = 1; division <= numDivisions; division++) {
             totalPlayers += dayData.players[division].length;
             totalMatches += dayData.matches[division].length;
         }
@@ -2145,9 +2186,15 @@ try {
                           `Cette action est irréversible !`;
         
         if (confirm(confirmMsg)) {
+            const players = {};
+            const matches = {};
+            for (let div = 1; div <= numDivisions; div++) {
+                players[div] = [];
+                matches[div] = [];
+            }
             championship.days[dayNumber] = {
-                players: { 1: [], 2: [], 3: [] },
-                matches: { 1: [], 2: [], 3: [] }
+                players: players,
+                matches: matches
             };
             
             updatePlayersDisplay(dayNumber);
@@ -2391,12 +2438,13 @@ try {
     function updateStats(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
-        
+
+        const numDivisions = championship.config?.numberOfDivisions || 3;
         let totalPlayers = 0;
         let totalMatches = 0;
         let completedMatches = 0;
-        
-        for (let division = 1; division <= 3; division++) {
+
+        for (let division = 1; division <= numDivisions; division++) {
             totalPlayers += dayData.players[division].length;
             totalMatches += dayData.matches[division].length;
             
@@ -2419,8 +2467,8 @@ try {
             for (let tour = 1; tour <= 4; tour++) {
                 let tourTotal = 0;
                 let tourCompleted = 0;
-                
-                for (let division = 1; division <= 3; division++) {
+
+                for (let division = 1; division <= numDivisions; division++) {
                     const tourMatches = dayData.matches[division].filter(m => m.tour === tour);
                     tourTotal += tourMatches.length;
                     tourCompleted += tourMatches.filter(m => m.completed).length;
@@ -2480,10 +2528,11 @@ try {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
+        const numDivisions = championship.config?.numberOfDivisions || 3;
         let rankingsHtml = '';
         let hasAnyMatches = false;
 
-        for (let division = 1; division <= 3; division++) {
+        for (let division = 1; division <= numDivisions; division++) {
             // Vérifier les matchs classiques
             const classicMatches = dayData.matches[division] || [];
             if (classicMatches.some(match => {
@@ -2518,8 +2567,8 @@ try {
             alert(`Aucun match terminé dans la Journée ${dayNumber} pour établir un classement !`);
             return;
         }
-        
-        for (let division = 1; division <= 3; division++) {
+
+        for (let division = 1; division <= numDivisions; division++) {
             if (dayData.players[division].length === 0) continue;
 
            const playerStats = dayData.players[division]
@@ -2688,7 +2737,7 @@ playerStats.forEach((player, index) => {
                     <th>Joueur</th>
                     <th>Points Total</th>
                     <th>Journées</th>
-                    <th>V/D/F Global</th>
+                    <th>V/D/F</th>
                     <th>% Vict. Moy.</th>
                     <th>PP/PC</th>
                     <th>Diff</th>
@@ -3011,7 +3060,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${totals.totalWins}/${totals.totalLosses}/${totals.totalForfaits}</div>
-                    <div class="overview-label">V/D/F Global</div>
+                    <div class="overview-label">V/D/F</div>
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${avgWinRate}%</div>
@@ -3287,7 +3336,19 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 .division-3 .division-title {
                     background: linear-gradient(135deg, #27ae60, #229954);
                 }
-                
+
+                .division-4 .division-title {
+                    background: linear-gradient(135deg, #3498db, #2980b9);
+                }
+
+                .division-5 .division-title {
+                    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                }
+
+                .division-6 .division-title {
+                    background: linear-gradient(135deg, #16a085, #138d75);
+                }
+
                 .ranking-table {
                     width: 100%;
                     border-collapse: collapse;
@@ -3492,6 +3553,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                         padding: 10px !important;
+                        page-break-after: avoid !important;
                     }
                     
                     .division-1 .division-title {
@@ -3511,7 +3573,25 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         color: #155724 !important;
                         border-color: #27ae60 !important;
                     }
-                    
+
+                    .division-4 .division-title {
+                        background: #d6eaf8 !important;
+                        color: #1b4f72 !important;
+                        border-color: #3498db !important;
+                    }
+
+                    .division-5 .division-title {
+                        background: #e8daef !important;
+                        color: #4a235a !important;
+                        border-color: #9b59b6 !important;
+                    }
+
+                    .division-6 .division-title {
+                        background: #d0ece7 !important;
+                        color: #0e6655 !important;
+                        border-color: #16a085 !important;
+                    }
+
                     .ranking-table {
                         page-break-inside: avoid;
                         font-size: 10px;
@@ -3598,12 +3678,14 @@ if (dayStats && dayStats.matchesPlayed > 0) {
     `;
 
     // Ajouter les classements par division
-    for (let division = 1; division <= 3; division++) {
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    for (let division = 1; division <= numDivisions; division++) {
         if (generalRanking.divisions[division].length === 0) continue;
 
-        const divisionIcon = division === 1 ? '🥇' : division === 2 ? '🥈' : '🥉';
+        const divisionIcons = ['', '🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣'];
+        const divisionIcon = divisionIcons[division] || '📊';
         const divisionName = `${divisionIcon} DIVISION ${division}`;
-        
+
         htmlContent += `
             <div class="division division-${division}">
                 <div class="division-title">${divisionName}</div>
@@ -3867,20 +3949,30 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                 championship.currentDay = 1;
             }
 
-            // Appliquer la configuration (numDivisions, numCourts)
+            // Appliquer la configuration (numberOfDivisions, numberOfCourts)
             if (championship.config) {
-                if (championship.config.numDivisions) {
-                    const numDivSelect = document.getElementById('numDivisions');
-                    if (numDivSelect) numDivSelect.value = championship.config.numDivisions;
+                // Normaliser les noms de propriétés (anciens exports utilisaient numDivisions, nouveaux utilisent numberOfDivisions)
+                if (championship.config.numberOfDivisions) {
+                    championship.config.numDivisions = championship.config.numberOfDivisions;
                 }
-                if (championship.config.numCourts) {
+                if (championship.config.numberOfCourts) {
+                    championship.config.numCourts = championship.config.numberOfCourts;
+                }
+
+                if (championship.config.numDivisions || championship.config.numberOfDivisions) {
+                    const numDivSelect = document.getElementById('numDivisions');
+                    const value = championship.config.numDivisions || championship.config.numberOfDivisions;
+                    if (numDivSelect) numDivSelect.value = value;
+                }
+                if (championship.config.numCourts || championship.config.numberOfCourts) {
                     const numCourtsSelect = document.getElementById('numCourts');
-                    if (numCourtsSelect) numCourtsSelect.value = championship.config.numCourts;
+                    const value = championship.config.numCourts || championship.config.numberOfCourts;
+                    if (numCourtsSelect) numCourtsSelect.value = value;
                 }
             }
 
-            // Utiliser le nombre de divisions de la configuration importée
-            const numDivisions = championship.config?.numDivisions || 3;
+            // Utiliser le nombre de divisions de la configuration importée (supporter les deux noms)
+            const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
             Object.keys(championship.days).forEach(dayNumber => {
                 const day = championship.days[dayNumber];
@@ -4120,11 +4212,12 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     function showByeManagementModal(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
-        
+
+        const numDivisions = championship.config?.numberOfDivisions || 3;
         // Analyser qui a besoin de matchs BYE
         let playersNeedingBye = [];
-        
-        for (let division = 1; division <= 3; division++) {
+
+        for (let division = 1; division <= numDivisions; division++) {
             const players = dayData.players[division];
             
             players.forEach(player => {
@@ -4263,10 +4356,11 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     function addByeToAll(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
-        
+
+        const numDivisions = championship.config?.numberOfDivisions || 3;
         let addedCount = 0;
-        
-        for (let division = 1; division <= 3; division++) {
+
+        for (let division = 1; division <= numDivisions; division++) {
             const players = dayData.players[division];
             
             players.forEach(player => {
@@ -4499,10 +4593,12 @@ function exportGeneralRankingToHTML() {
     `;
 
     // Ajouter les classements par division
-    for (let division = 1; division <= 3; division++) {
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    for (let division = 1; division <= numDivisions; division++) {
         if (generalRanking.divisions[division].length === 0) continue;
 
-        const divisionIcon = division === 1 ? '🥇' : division === 2 ? '🥈' : '🥉';
+        const divisionIcons = ['', '🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣'];
+        const divisionIcon = divisionIcons[division] || '📊';
         htmlContent += `
             <div class="division division-${division}">
                 <h3>${divisionIcon} DIVISION ${division}</h3>
@@ -8370,8 +8466,9 @@ function exportManualFinalResults(dayNumber) {
         dayNumber: dayNumber,
         results: {}
     };
-    
-    for (let division = 1; division <= 3; division++) {
+
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    for (let division = 1; division <= numDivisions; division++) {
         const finalPhase = dayData.pools.manualFinalPhase.divisions[division];
         
         if (Object.keys(finalPhase.rounds).length > 0) {
@@ -8435,13 +8532,14 @@ function resetManualFinalPhase(dayNumber) {
     if (!confirm('⚠️ Supprimer toute la phase finale manuelle ?\n\nCela supprimera tous les matchs et résultats, mais conservera les poules.')) {
         return;
     }
-    
+
+    const numDivisions = championship.config?.numberOfDivisions || 3;
     const dayData = championship.days[dayNumber];
     if (dayData.pools && dayData.pools.manualFinalPhase) {
         dayData.pools.manualFinalPhase.enabled = false;
         dayData.pools.manualFinalPhase.currentRound = null;
-        
-        for (let division = 1; division <= 3; division++) {
+
+        for (let division = 1; division <= numDivisions; division++) {
             dayData.pools.manualFinalPhase.divisions[division] = {
                 qualified: [],
                 rounds: {},
@@ -8452,9 +8550,9 @@ function resetManualFinalPhase(dayNumber) {
             };
         }
     }
-    
+
     // Supprimer l'affichage
-    for (let division = 1; division <= 3; division++) {
+    for (let division = 1; division <= numDivisions; division++) {
         const container = document.getElementById(`division${dayNumber}-${division}-matches`);
         if (container) {
             const finalPhaseContainer = container.querySelector('.manual-final-phase-container');

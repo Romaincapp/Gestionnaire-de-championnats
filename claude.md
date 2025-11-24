@@ -134,18 +134,152 @@ if (dayData.pools?.divisions[division]?.finalPhase) {
 
 ### 3. Dynamic Division Support (CRITICAL)
 
-**Never hardcode division counts.** The application supports 1-6 divisions dynamically.
+**NEVER hardcode division counts.** The application supports 1-6 divisions dynamically configured by the user. Hardcoding division counts is the #1 most common bug in this codebase and breaks core functionality.
+
+#### Why This Matters
+
+When divisions are hardcoded to 3:
+- Users with 4-6 divisions lose data and functionality
+- Users with 1-2 divisions get errors accessing non-existent data
+- Stats calculations ignore divisions beyond 3
+- Rankings are incomplete and incorrect
+- Exports miss data from divisions 4-6
+- UI collapse/expand functionality breaks
+- Import/export creates corrupted data structures
+
+#### The Correct Pattern
+
+**For loops iterating over divisions:**
 
 ```javascript
-// WRONG
-for (let div = 1; div <= 3; div++) { ... }
+// ❌ WRONG - Hardcoded to 3 divisions
+for (let division = 1; division <= 3; division++) {
+    processData(dayData.players[division]);
+}
 
-// CORRECT
-const numDivisions = config.numberOfDivisions;
-for (let div = 1; div <= numDivisions; div++) { ... }
+// ✅ CORRECT - Dynamic division count
+const numDivisions = championship.config?.numberOfDivisions || 3;
+for (let division = 1; division <= numDivisions; division++) {
+    processData(dayData.players[division]);
+}
 ```
 
-When importing championships, respect `championship.config.numDivisions` from the JSON.
+**Data structure initialization:**
+
+```javascript
+// ❌ WRONG - Hardcoded structure
+championship.days[dayNumber] = {
+    players: { 1: [], 2: [], 3: [] },
+    matches: { 1: [], 2: [], 3: [] }
+};
+
+// ✅ CORRECT - Dynamic structure
+const numDivisions = championship.config?.numberOfDivisions || 3;
+const players = {};
+const matches = {};
+for (let div = 1; div <= numDivisions; div++) {
+    players[div] = [];
+    matches[div] = [];
+}
+championship.days[dayNumber] = {
+    players: players,
+    matches: matches
+};
+```
+
+**Division validation in imports:**
+
+```javascript
+// ❌ WRONG - Hardcoded validation
+if (name && [1, 2, 3].includes(division)) {
+    // process player
+}
+
+// ✅ CORRECT - Dynamic validation
+const numDivisions = championship.config?.numberOfDivisions || 3;
+if (name && division >= 1 && division <= numDivisions) {
+    // process player
+}
+```
+
+#### Common Locations Where This Bug Occurs
+
+Always check these function types:
+1. **Statistics calculations** - `updateStats()`, `showStats()`, `calculatePlayerStats()`
+2. **Ranking generation** - `updateRankings()`, `calculateGeneralRanking()`, `showRankings()`
+3. **Data initialization** - `addNewDay()`, `emptyDay()`, `createChampionship()`
+4. **Import/Export** - `importPlayers()`, `exportRanking()`, `exportToPDF()`, `exportToHTML()`
+5. **Pool/Final phase** - `generatePools()`, `showManualFinalPhaseModal()`, `resetFinalPhase()`
+6. **BYE management** - `detectByePlayers()`, `addByeToAll()`
+7. **Day operations** - `clearDayData()`, `copyPlayers()`, `preFillFromGeneralRanking()`
+8. **Display functions** - Any function that renders division-specific UI
+
+#### Debugging Hardcoded Divisions
+
+To find hardcoded divisions in the codebase:
+
+```bash
+# Search for hardcoded loops
+grep -n "division <= 3" script.js
+
+# Search for hardcoded structures
+grep -n "{ 1: \[\], 2: \[\], 3: \[\] }" script.js
+
+# Search for hardcoded validation
+grep -n "\[1, 2, 3\]" script.js
+```
+
+#### Configuration Access Patterns
+
+The division count is stored in `championship.config.numberOfDivisions`:
+
+```javascript
+// ✅ Preferred - with fallback
+const numDivisions = championship.config?.numberOfDivisions || 3;
+
+// ✅ Alternative - explicit check
+const numDivisions = championship.config && championship.config.numberOfDivisions
+    ? championship.config.numberOfDivisions
+    : 3;
+
+// ⚠️ Acceptable - but no fallback (risky if config is undefined)
+const numDivisions = championship.config.numberOfDivisions;
+```
+
+Always use optional chaining (`?.`) and provide a sensible fallback (typically `3`).
+
+#### When Importing Championships
+
+When importing championship JSON data, ALWAYS respect the imported `numberOfDivisions`:
+
+```javascript
+// ✅ CORRECT
+const importedData = JSON.parse(jsonString);
+if (importedData.config?.numberOfDivisions) {
+    championship.config.numberOfDivisions = importedData.config.numberOfDivisions;
+}
+// Now all subsequent operations use the correct count
+```
+
+#### Testing for This Bug
+
+To verify a function handles divisions correctly:
+1. Configure championship with 6 divisions
+2. Add players to divisions 4, 5, 6
+3. Run the function
+4. Verify divisions 4-6 are processed (check stats, rankings, exports)
+5. Repeat with 1 division to ensure no errors accessing undefined divisions 2-3
+
+#### Historical Context
+
+This bug affected 15+ functions in a January 2025 audit, causing:
+- Export PDF/HTML buttons to fail
+- Division 2 collapse/expand to break in match preview
+- Stats to ignore divisions 4-6
+- Rankings to be incomplete
+- Data corruption on import for 4-6 division championships
+
+**Always assume division count is dynamic. Never assume 3.**
 
 ### 4. Data Merging for Edits
 
