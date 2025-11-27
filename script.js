@@ -1650,7 +1650,15 @@ try {
                         const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}` : '';
 
                         html += `
-                            <div class="match ${matchStatus}" data-match-id="d${dayNumber}-div${division}-m${globalIndex}">
+                            <div class="match ${matchStatus}" data-match-id="d${dayNumber}-div${division}-m${globalIndex}" style="position: relative;">
+                                <button onclick="deleteMatch(${dayNumber}, ${division}, ${globalIndex})"
+                                        title="Supprimer ce match"
+                                        style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
+                                               background: #e74c3c; color: white; border: none; border-radius: 50%;
+                                               font-size: 12px; cursor: pointer; line-height: 1; padding: 0;
+                                               opacity: 0.7; transition: opacity 0.2s;"
+                                        onmouseover="this.style.opacity='1'"
+                                        onmouseout="this.style.opacity='0.7'">×</button>
                                 ${match.completed || collapsedSummary ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="cursor: pointer;">
                                     ${match.completed ? `<div class="player-names">${collapsedSummary}</div>` : ''}
                                     ${match.completed ? `<div class="match-status ${statusClass}">${statusText}</div>` : ''}
@@ -1822,6 +1830,22 @@ try {
         saveToLocalStorage();
     }
     window.updateMatchScore = updateMatchScore;
+
+    function deleteMatch(dayNumber, division, matchIndex) {
+        const match = championship.days[dayNumber].matches[division][matchIndex];
+        if (!match) return;
+
+        const confirmMsg = `Supprimer ce match ?\n\n${match.player1} vs ${match.player2}`;
+        if (!confirm(confirmMsg)) return;
+
+        // Supprimer le match du tableau
+        championship.days[dayNumber].matches[division].splice(matchIndex, 1);
+
+        saveToLocalStorage();
+        updateMatchesDisplay(dayNumber);
+        showNotification(`Match supprimé`, 'warning');
+    }
+    window.deleteMatch = deleteMatch;
 
     function handleEnterKey(event, dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
