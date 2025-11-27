@@ -1848,6 +1848,53 @@ try {
     }
     window.deleteMatch = deleteMatch;
 
+    function deletePoolMatch(dayNumber, matchId, division) {
+        const dayData = championship.days[dayNumber];
+        if (!dayData || !dayData.pools || !dayData.pools.divisions || !dayData.pools.divisions[division]) return;
+
+        const poolDiv = dayData.pools.divisions[division];
+        if (!poolDiv.matches) return;
+
+        const matchIndex = poolDiv.matches.findIndex(m => m.id === matchId);
+        if (matchIndex === -1) return;
+
+        const match = poolDiv.matches[matchIndex];
+        const confirmMsg = `Supprimer ce match de poule ?\n\n${match.player1} vs ${match.player2}`;
+        if (!confirm(confirmMsg)) return;
+
+        // Supprimer le match
+        poolDiv.matches.splice(matchIndex, 1);
+
+        saveToLocalStorage();
+        updatePoolsDisplay(dayNumber);
+        showNotification(`Match de poule supprimé`, 'warning');
+    }
+    window.deletePoolMatch = deletePoolMatch;
+
+    function deleteManualMatch(dayNumber, division, roundName, position) {
+        const dayData = championship.days[dayNumber];
+        if (!dayData || !dayData.pools || !dayData.pools.manualFinalPhase) return;
+
+        const manualPhase = dayData.pools.manualFinalPhase;
+        if (!manualPhase.matches || !manualPhase.matches[division]) return;
+
+        const matches = manualPhase.matches[division];
+        const matchIndex = matches.findIndex(m => m.round === roundName && m.position === position);
+        if (matchIndex === -1) return;
+
+        const match = matches[matchIndex];
+        const confirmMsg = `Supprimer ce match de phase finale ?\n\n${match.player1 || '?'} vs ${match.player2 || '?'}`;
+        if (!confirm(confirmMsg)) return;
+
+        // Supprimer le match
+        matches.splice(matchIndex, 1);
+
+        saveToLocalStorage();
+        updateManualFinalPhaseDisplay(dayNumber);
+        showNotification(`Match de phase finale supprimé`, 'warning');
+    }
+    window.deleteManualMatch = deleteManualMatch;
+
     function handleEnterKey(event, dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
         const shouldValidate = event.key === 'Enter' ||
@@ -6602,7 +6649,17 @@ function generatePoolMatchHTML(match, dayNumber) {
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 6px;
+            position: relative;
         ">
+            <button onclick="event.stopPropagation(); deletePoolMatch(${dayNumber}, '${match.id}', ${match.division})"
+                    title="Supprimer ce match"
+                    style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
+                           width: 18px; height: 18px; z-index: 10;
+                           background: #e74c3c; color: white; border: none; border-radius: 50%;
+                           font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
+                           opacity: 0.6; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'"
+                    onmouseout="this.style.opacity='0.6'">×</button>
             ${match.completed ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="
                 display: flex;
                 justify-content: space-between;
@@ -7850,8 +7907,18 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
             border: 2px solid ${isCompleted ? '#28a745' : isActive ? '#007bff' : '#6c757d'};
             border-radius: 10px;
             padding: 10px;
+            position: relative;
             ${match.isBye ? 'opacity: 0.7;' : ''}
         ">
+            ${!match.isBye ? `<button onclick="event.stopPropagation(); deleteManualMatch(${dayNumber}, ${division}, '${roundName}', ${match.position})"
+                    title="Supprimer ce match"
+                    style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
+                           width: 18px; height: 18px; z-index: 10;
+                           background: #e74c3c; color: white; border: none; border-radius: 50%;
+                           font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
+                           opacity: 0.6; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'"
+                    onmouseout="this.style.opacity='0.6'">×</button>` : ''}
             <div class="match-header" ${isCompleted && !match.isBye ? `onclick="toggleMatchCollapse(this.parentElement)"` : ''} style="
                 display: flex;
                 justify-content: space-between;
