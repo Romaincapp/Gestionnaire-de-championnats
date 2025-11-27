@@ -15,6 +15,20 @@ try {
         return divisions;
     }
 
+    // Fonction pour formater un nom en "Nom Propre" (première lettre majuscule, reste minuscule)
+    function formatProperName(name) {
+        if (!name) return '';
+        return name.trim()
+            .toLowerCase()
+            .split(/(\s+|-)/) // Sépare par espaces ou tirets, en gardant les séparateurs
+            .map(part => {
+                if (part.match(/^[\s-]+$/)) return part; // Garde les séparateurs tels quels
+                return part.charAt(0).toUpperCase() + part.slice(1);
+            })
+            .join('');
+    }
+    window.formatProperName = formatProperName;
+
     // STRUCTURE DE DONNÉES CHAMPIONNAT
     let championship = {
         currentDay: 1,
@@ -226,7 +240,7 @@ try {
 
     // FONCTIONS DE BASE
     function addPlayer() {
-        const name = document.getElementById('playerName').value.trim().toUpperCase();
+        const name = formatProperName(document.getElementById('playerName').value);
         const division = parseInt(document.getElementById('playerDivision').value);
         const targetDay = parseInt(document.getElementById('targetDay').value);
 
@@ -293,7 +307,7 @@ try {
         }
 
         const names = text.split('\n')
-                         .map(name => name.trim().toUpperCase())
+                         .map(name => formatProperName(name))
                          .filter(name => name.length > 0);
         
         let added = 0;
@@ -393,10 +407,10 @@ try {
             return; // Annulé
         }
 
-        const trimmedNewName = newName.trim().toUpperCase();
+        const trimmedNewName = formatProperName(newName);
 
-        // Si le nom n'a pas changé
-        if (trimmedNewName === oldPlayerName.toUpperCase()) {
+        // Si le nom n'a pas changé (comparaison insensible à la casse)
+        if (trimmedNewName.toLowerCase() === oldPlayerName.toLowerCase()) {
             return;
         }
 
@@ -2079,7 +2093,7 @@ try {
         const numDivisions = championship.config?.numberOfDivisions || 3;
         data.forEach((row, index) => {
             if (row.length >= 2) {
-                const name = String(row[0]).trim();
+                const name = formatProperName(String(row[0]));
                 const division = parseInt(row[1]);
 
                 if (name && division >= 1 && division <= numDivisions) {
