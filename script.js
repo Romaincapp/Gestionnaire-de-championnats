@@ -4054,17 +4054,37 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                 }
 
                 // Reformater les phases finales manuelles si elles existent
-                if (day.pools && day.pools.manualFinalPhase && day.pools.manualFinalPhase.matches) {
-                    Object.keys(day.pools.manualFinalPhase.matches).forEach(div => {
-                        const matches = day.pools.manualFinalPhase.matches[div];
-                        if (matches) {
-                            matches.forEach(match => {
-                                if (match.player1) match.player1 = formatProperName(match.player1);
-                                if (match.player2) match.player2 = formatProperName(match.player2);
-                                if (match.winner) match.winner = formatProperName(match.winner);
-                            });
-                        }
-                    });
+                if (day.pools && day.pools.manualFinalPhase) {
+                    // Reformater les matchs
+                    if (day.pools.manualFinalPhase.matches) {
+                        Object.keys(day.pools.manualFinalPhase.matches).forEach(div => {
+                            const matches = day.pools.manualFinalPhase.matches[div];
+                            if (matches) {
+                                matches.forEach(match => {
+                                    if (match.player1) match.player1 = formatProperName(match.player1);
+                                    if (match.player2) match.player2 = formatProperName(match.player2);
+                                    if (match.winner) match.winner = formatProperName(match.winner);
+                                });
+                            }
+                        });
+                    }
+
+                    // Reformater les joueurs qualifiés
+                    if (day.pools.manualFinalPhase.divisions) {
+                        Object.keys(day.pools.manualFinalPhase.divisions).forEach(div => {
+                            const divData = day.pools.manualFinalPhase.divisions[div];
+                            if (divData && divData.qualified) {
+                                divData.qualified = divData.qualified.map(q => {
+                                    if (typeof q === 'string') {
+                                        return formatProperName(q);
+                                    } else if (q && q.name) {
+                                        q.name = formatProperName(q.name);
+                                    }
+                                    return q;
+                                });
+                            }
+                        });
+                    }
                 }
             });
 
