@@ -1651,14 +1651,15 @@ try {
 
                         html += `
                             <div class="match ${matchStatus}" data-match-id="d${dayNumber}-div${division}-m${globalIndex}" style="position: relative;">
-                                <button onclick="deleteMatch(${dayNumber}, ${division}, ${globalIndex})"
+                                <button onclick="event.stopPropagation(); deleteMatch(${dayNumber}, ${division}, ${globalIndex})"
                                         title="Supprimer ce match"
-                                        style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
+                                        style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
+                                               width: 18px; height: 18px; z-index: 10;
                                                background: #e74c3c; color: white; border: none; border-radius: 50%;
-                                               font-size: 12px; cursor: pointer; line-height: 1; padding: 0;
-                                               opacity: 0.7; transition: opacity 0.2s;"
+                                               font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
+                                               opacity: 0.6; transition: opacity 0.2s;"
                                         onmouseover="this.style.opacity='1'"
-                                        onmouseout="this.style.opacity='0.7'">×</button>
+                                        onmouseout="this.style.opacity='0.6'">×</button>
                                 ${match.completed || collapsedSummary ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="cursor: pointer;">
                                     ${match.completed ? `<div class="player-names">${collapsedSummary}</div>` : ''}
                                     ${match.completed ? `<div class="match-status ${statusClass}">${statusText}</div>` : ''}
