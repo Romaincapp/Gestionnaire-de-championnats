@@ -4009,6 +4009,62 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                 for (let division = 1; division <= numDivisions; division++) {
                     if (!Array.isArray(day.players[division])) day.players[division] = [];
                     if (!Array.isArray(day.matches[division])) day.matches[division] = [];
+
+                    // Reformater les noms de joueurs en "Nom Propre"
+                    day.players[division] = day.players[division].map(name => formatProperName(name));
+
+                    // Reformater les noms dans les matchs
+                    day.matches[division].forEach(match => {
+                        if (match.player1) match.player1 = formatProperName(match.player1);
+                        if (match.player2) match.player2 = formatProperName(match.player2);
+                        if (match.winner) match.winner = formatProperName(match.winner);
+                    });
+                }
+
+                // Reformater les noms dans les poules si elles existent
+                if (day.pools && day.pools.divisions) {
+                    Object.keys(day.pools.divisions).forEach(div => {
+                        const poolDiv = day.pools.divisions[div];
+
+                        // Reformater les joueurs dans les poules
+                        if (poolDiv.pools) {
+                            poolDiv.pools = poolDiv.pools.map(pool =>
+                                pool.map(name => formatProperName(name))
+                            );
+                        }
+
+                        // Reformater les matchs de poules
+                        if (poolDiv.matches) {
+                            poolDiv.matches.forEach(match => {
+                                if (match.player1) match.player1 = formatProperName(match.player1);
+                                if (match.player2) match.player2 = formatProperName(match.player2);
+                                if (match.winner) match.winner = formatProperName(match.winner);
+                            });
+                        }
+
+                        // Reformater les phases finales
+                        if (poolDiv.finalPhase) {
+                            poolDiv.finalPhase.forEach(match => {
+                                if (match.player1) match.player1 = formatProperName(match.player1);
+                                if (match.player2) match.player2 = formatProperName(match.player2);
+                                if (match.winner) match.winner = formatProperName(match.winner);
+                            });
+                        }
+                    });
+                }
+
+                // Reformater les phases finales manuelles si elles existent
+                if (day.pools && day.pools.manualFinalPhase && day.pools.manualFinalPhase.matches) {
+                    Object.keys(day.pools.manualFinalPhase.matches).forEach(div => {
+                        const matches = day.pools.manualFinalPhase.matches[div];
+                        if (matches) {
+                            matches.forEach(match => {
+                                if (match.player1) match.player1 = formatProperName(match.player1);
+                                if (match.player2) match.player2 = formatProperName(match.player2);
+                                if (match.winner) match.winner = formatProperName(match.winner);
+                            });
+                        }
+                    });
                 }
             });
 
@@ -9401,9 +9457,341 @@ function generateCompactMatchSheet(match) {
     `;
 }
 
+// Générer une feuille de match simple (2 scores uniquement)
+function generateSimpleScoreSheet(match) {
+    const divisionName = match.division === 1 ? 'D1' :
+                        match.division === 2 ? 'D2' :
+                        match.division === 3 ? 'D3' :
+                        match.division === 4 ? 'D4' :
+                        match.division === 5 ? 'D5' : 'D6';
+
+    const matchInfo = match.type === 'Poule' ?
+        `${match.poolName}` :
+        `Tour ${match.tour}`;
+
+    const courtInfo = match.court ? ` • Terrain ${match.court}` : '';
+
+    return `
+        <div class="match-sheet">
+            <div class="match-header">
+                <div class="match-id">${match.matchId} • ${divisionName}${courtInfo}</div>
+                <div>${match.type} • ${matchInfo}</div>
+            </div>
+
+            <div class="players-row">
+                <div class="player-name">${match.player1}</div>
+                <div class="vs-text">VS</div>
+                <div class="player-name">${match.player2}</div>
+            </div>
+
+            <div class="score-section">
+                <table class="score-table simple-score">
+                    <thead>
+                        <tr>
+                            <th>JOUEUR</th>
+                            <th>SCORE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="player-col">${match.player1}</td>
+                            <td class="score-col large-score"></td>
+                        </tr>
+                        <tr>
+                            <td class="player-col">${match.player2}</td>
+                            <td class="score-col large-score"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="result-row">
+                <div class="result-box">
+                    <div class="result-label">VAINQUEUR:</div>
+                    <div class="result-line"></div>
+                </div>
+                <div class="result-box">
+                    <div class="result-label">ARBITRE:</div>
+                    <div class="result-line"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Fonction pour imprimer les feuilles 2 scores
+function printSimpleScoreSheets(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData) {
+        showNotification('Aucune donnée pour cette journée', 'warning');
+        return;
+    }
+
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    let allMatches = [];
+    let matchCounter = 1;
+
+    // Collecter tous les matchs
+    for (let division = 1; division <= numDivisions; division++) {
+        // Matchs de poules si activés
+        if (dayData.pools?.enabled && dayData.pools.divisions?.[division]?.matches) {
+            const poolMatches = dayData.pools.divisions[division].matches;
+            poolMatches.forEach(match => {
+                if (match.player1 && match.player2 && match.player1 !== 'BYE' && match.player2 !== 'BYE') {
+                    allMatches.push({
+                        ...match,
+                        division,
+                        matchId: matchCounter++,
+                        type: 'Poule',
+                        poolName: match.poolName || `Poule ${match.poolIndex + 1}`
+                    });
+                }
+            });
+        }
+
+        // Matchs classiques
+        const matches = dayData.matches[division] || [];
+        matches.forEach(match => {
+            if (match.player1 && match.player2 && match.player1 !== 'BYE' && match.player2 !== 'BYE') {
+                allMatches.push({
+                    ...match,
+                    division,
+                    matchId: matchCounter++,
+                    type: 'Match',
+                    tour: match.tour || 1
+                });
+            }
+        });
+
+        // Phase finale si activée
+        if (dayData.pools?.divisions?.[division]?.finalPhase) {
+            const finalMatches = dayData.pools.divisions[division].finalPhase;
+            finalMatches.forEach(match => {
+                if (match.player1 && match.player2 && match.player1 !== 'BYE' && match.player2 !== 'BYE') {
+                    allMatches.push({
+                        ...match,
+                        division,
+                        matchId: matchCounter++,
+                        type: 'Finale',
+                        tour: match.round || 1
+                    });
+                }
+            });
+        }
+    }
+
+    if (allMatches.length === 0) {
+        showNotification('Aucun match à imprimer', 'warning');
+        return;
+    }
+
+    // Grouper par pages de 5
+    const matchPages = [];
+    for (let i = 0; i < allMatches.length; i += 5) {
+        matchPages.push(allMatches.slice(i, i + 5));
+    }
+
+    const printHTML = generateSimpleScoreSheetHTML(dayNumber, matchPages);
+    openPrintWindow(printHTML, `Feuilles_2scores_J${dayNumber}`);
+    showNotification(`📝 ${allMatches.length} feuilles 2 scores générées !`, 'success');
+}
+
+// Générer le HTML complet pour les feuilles 2 scores
+function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Feuilles 2 Scores - Journée ${dayNumber}</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: Arial, sans-serif; }
+
+                @page { size: A4; margin: 5mm; }
+
+                .page {
+                    width: 200mm;
+                    height: 287mm;
+                    padding: 3mm;
+                    page-break-after: always;
+                    page-break-inside: avoid;
+                }
+                .page:last-child { page-break-after: avoid; }
+
+                .page-title {
+                    text-align: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    padding: 2mm 0;
+                    border-bottom: 2px solid #9b59b6;
+                    margin-bottom: 2mm;
+                    height: 8mm;
+                }
+
+                .matches-container {
+                    height: 274mm;
+                }
+
+                .match-sheet {
+                    border: 2px solid #9b59b6;
+                    border-radius: 3px;
+                    padding: 2mm 3mm;
+                    height: 54mm;
+                    margin-bottom: 1mm;
+                    background: white;
+                    overflow: hidden;
+                    page-break-inside: avoid;
+                }
+
+                .match-header {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 10px;
+                    color: #666;
+                    padding-bottom: 1mm;
+                    border-bottom: 1px dashed #ccc;
+                    height: 6mm;
+                }
+
+                .match-id {
+                    font-weight: bold;
+                    color: #9b59b6;
+                }
+
+                .players-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    height: 10mm;
+                }
+
+                .player-name {
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    flex: 1;
+                    text-align: center;
+                }
+
+                .vs-text {
+                    font-size: 10px;
+                    color: #9b59b6;
+                    font-weight: bold;
+                    padding: 0 2mm;
+                }
+
+                .score-section {
+                    height: 26mm;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .score-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 10px;
+                }
+
+                .score-table th {
+                    background: #9b59b6;
+                    color: white;
+                    padding: 1.5mm;
+                    text-align: center;
+                    font-size: 9px;
+                    height: 6mm;
+                }
+
+                .score-table td {
+                    border: 1px solid #ddd;
+                    padding: 1.5mm;
+                    text-align: center;
+                    height: 10mm;
+                }
+
+                .player-col {
+                    text-align: left !important;
+                    font-weight: bold;
+                    width: 60%;
+                    background: #f8f9fa;
+                }
+
+                .score-col {
+                    width: 40%;
+                    background: white;
+                }
+
+                .result-row {
+                    display: flex;
+                    gap: 3mm;
+                    padding-top: 1mm;
+                    border-top: 1px dashed #ccc;
+                    height: 8mm;
+                    align-items: center;
+                }
+
+                .result-box {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    gap: 1mm;
+                }
+
+                .result-label {
+                    font-size: 8px;
+                    font-weight: bold;
+                    color: #666;
+                    white-space: nowrap;
+                }
+
+                .result-line {
+                    flex: 1;
+                    border-bottom: 1px solid #333;
+                    min-width: 15mm;
+                }
+
+                @media print {
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .page { page-break-inside: avoid; }
+                    .match-sheet { page-break-inside: avoid; }
+                }
+            </style>
+        </head>
+        <body>
+    `;
+
+    matchPages.forEach((pageMatches, pageIndex) => {
+        htmlContent += `
+            <div class="page">
+                <div class="page-title">📝 FEUILLES 2 SCORES - JOURNÉE ${dayNumber}</div>
+                <div class="matches-container">
+        `;
+
+        pageMatches.forEach(match => {
+            htmlContent += generateSimpleScoreSheet(match);
+        });
+
+        htmlContent += `
+                </div>
+            </div>
+        `;
+    });
+
+    htmlContent += `
+        </body>
+        </html>
+    `;
+
+    return htmlContent;
+}
+
 // Exporter les nouvelles fonctions
 window.generateMatchSheetHTML = generateMatchSheetHTML;
 window.generateCompactMatchSheet = generateCompactMatchSheet;
+window.generateSimpleScoreSheet = generateSimpleScoreSheet;
+window.printSimpleScoreSheets = printSimpleScoreSheets;
+window.generateSimpleScoreSheetHTML = generateSimpleScoreSheetHTML;
 
 // Ouvrir la fenêtre d'impression
 function openPrintWindow(htmlContent, filename) {
@@ -9492,7 +9880,20 @@ function showPrintOptionsModal(dayNumber) {
                 text-align: left;
                 transition: transform 0.2s;
             " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                📋 Feuilles de match (5 par page)
+                📋 Feuilles de match avec sets (5 par page)
+            </button>
+            <button id="print-option-simple" style="
+                padding: 12px;
+                background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                cursor: pointer;
+                text-align: left;
+                transition: transform 0.2s;
+            " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                📝 Feuilles 2 scores (5 par page)
             </button>
             <button id="print-option-boccia" style="
                 padding: 12px;
@@ -9543,6 +9944,11 @@ function showPrintOptionsModal(dayNumber) {
     document.getElementById('print-option-sheets').onclick = () => {
         document.body.removeChild(modal);
         printMatchSheets(dayNumber);
+    };
+
+    document.getElementById('print-option-simple').onclick = () => {
+        document.body.removeChild(modal);
+        printSimpleScoreSheets(dayNumber);
     };
 
     document.getElementById('print-option-boccia').onclick = () => {
