@@ -4388,8 +4388,15 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
 
     // ========== AFFICHAGE CLASSEMENT NOUVELLE FENÊTRE ==========
     let rankingWindow = null;
+    let rankingWindowTarget = null;
 
     function openRankingInNewWindow(dayOrGeneral) {
+        rankingWindowTarget = dayOrGeneral;
+        refreshRankingWindow(dayOrGeneral);
+    }
+    window.openRankingInNewWindow = openRankingInNewWindow;
+
+    function refreshRankingWindow(dayOrGeneral) {
         const isGeneral = dayOrGeneral === 'general';
         const title = isGeneral ? 'Classement Général' : `Classement Journée ${dayOrGeneral}`;
 
@@ -4514,14 +4521,22 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             font-size: 13px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         }
+        .refreshing {
+            animation: pulse 1s ease-in-out;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🏆 ${title}</h1>
-        <div class="update-time">Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}</div>
+        <div class="update-time" id="updateTime">Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}</div>
     </div>
-    <div class="content">
+    <div class="content" id="rankingContent">
         ${rankingContent}
     </div>
     <div class="auto-refresh">
@@ -4529,19 +4544,23 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             <input type="checkbox" id="autoRefresh" checked> Auto-refresh (30s)
         </label>
     </div>
-    <button class="refresh-btn" onclick="window.opener.postMessage({action: 'refreshRanking', target: '${dayOrGeneral}'}, '*'); location.reload();">
+    <button class="refresh-btn" onclick="requestRefresh()">
         🔄 Rafraîchir
     </button>
     <script>
         let autoRefreshInterval;
         const checkbox = document.getElementById('autoRefresh');
 
+        function requestRefresh() {
+            if (window.opener && !window.opener.closed) {
+                document.body.classList.add('refreshing');
+                window.opener.postMessage({action: 'refreshRanking', target: '${dayOrGeneral}'}, '*');
+            }
+        }
+
         function startAutoRefresh() {
             autoRefreshInterval = setInterval(() => {
-                if (window.opener && !window.opener.closed) {
-                    window.opener.postMessage({action: 'refreshRanking', target: '${dayOrGeneral}'}, '*');
-                    setTimeout(() => location.reload(), 500);
-                }
+                requestRefresh();
             }, 30000);
         }
 
@@ -4554,6 +4573,15 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                 startAutoRefresh();
             } else {
                 stopAutoRefresh();
+            }
+        });
+
+        // Écouter les mises à jour depuis la fenêtre parente
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.action === 'updateContent') {
+                document.getElementById('rankingContent').innerHTML = event.data.content;
+                document.getElementById('updateTime').textContent = 'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR');
+                document.body.classList.remove('refreshing');
             }
         });
 
@@ -4570,27 +4598,47 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             rankingWindow.focus();
         } else {
             rankingWindow = window.open('', 'RankingDisplay', 'width=800,height=600,menubar=no,toolbar=no,location=no,status=no');
-            rankingWindow.document.write(html);
-            rankingWindow.document.close();
+            if (rankingWindow) {
+                rankingWindow.document.write(html);
+                rankingWindow.document.close();
+            }
         }
 
-        showNotification('Classement ouvert dans une nouvelle fenêtre', 'success');
+        if (!rankingWindowTarget) {
+            showNotification('Classement ouvert dans une nouvelle fenêtre', 'success');
+        }
     }
-    window.openRankingInNewWindow = openRankingInNewWindow;
 
     // Écouter les messages de la fenêtre de classement
     window.addEventListener('message', (event) => {
         if (event.data && event.data.action === 'refreshRanking') {
             const target = event.data.target;
+
+            // Mettre à jour les données
             if (target === 'general') {
                 updateGeneralRanking();
             } else {
                 updateRankingsForDay(parseInt(target));
             }
+
+            // Attendre que les données soient mises à jour puis renvoyer le contenu
+            setTimeout(() => {
+                if (rankingWindow && !rankingWindow.closed) {
+                    let content = '';
+                    if (target === 'general') {
+                        const container = document.getElementById('generalRankingContent');
+                        content = container ? container.innerHTML : '';
+                    } else {
+                        const container = document.getElementById(`rankingsContent-${target}`);
+                        content = container ? container.innerHTML : '';
+                    }
+                    rankingWindow.postMessage({action: 'updateContent', content: content}, '*');
+                }
+            }, 300);
         }
     });
 
-    function showByeManagementModal(dayNumber) {
+function showByeManagementModal(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
