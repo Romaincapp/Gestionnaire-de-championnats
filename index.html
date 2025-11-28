@@ -212,6 +212,7 @@
                         <div class="rankings-toggle">
                             <button class="toggle-btn active" onclick="showRankings('points')">Par Points</button>
                             <button class="toggle-btn" onclick="showRankings('winrate')">Par % Victoires</button>
+                            <button class="toggle-btn" onclick="openRankingInNewWindow(1)" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">📺 Afficher</button>
                         </div>
                     </div>
                     <div id="rankingsContent-1"></div>
@@ -236,18 +237,21 @@
                         <!-- Stats générales seront générées ici -->
                     </div>
 
-                    <div class="control-buttons" style="margin-bottom: 30px;">
-                        <button class="btn btn-warning" onclick="updateGeneralRanking()">
-                            🔄 Mettre à jour Classement Général
+                    <div class="control-buttons" style="margin-bottom: 30px; flex-wrap: wrap; gap: 8px;">
+                        <button class="btn btn-warning" onclick="updateGeneralRanking()" style="padding: 8px 12px; font-size: 13px;">
+                            🔄 Mettre à jour
                         </button>
-                         <button class="btn btn-success" onclick="exportGeneralRanking()">
-                            📊 Exporter JSON
+                        <button class="btn" onclick="openRankingInNewWindow('general')" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 8px 12px; font-size: 13px;">
+                            📺 Afficher
                         </button>
-                        <button class="btn" onclick="exportGeneralRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-                            📄 Exporter PDF
+                        <button class="btn btn-success" onclick="exportGeneralRanking()" style="padding: 8px 12px; font-size: 13px;">
+                            📊 JSON
                         </button>
-                        <button class="btn" onclick="exportGeneralRankingToHTML()" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
-                        📄 Exporter HTML
+                        <button class="btn" onclick="exportGeneralRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 8px 12px; font-size: 13px;">
+                            📄 PDF
+                        </button>
+                        <button class="btn" onclick="exportGeneralRankingToHTML()" style="background: linear-gradient(135deg, #27ae60, #2ecc71); padding: 8px 12px; font-size: 13px;">
+                            📄 HTML
                         </button>
                     </div>
                     </div><!-- Fin general-hub-content -->

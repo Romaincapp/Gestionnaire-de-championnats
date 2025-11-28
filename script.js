@@ -634,6 +634,7 @@ try {
                     <div class="rankings-toggle">
                         <button class="toggle-btn active" onclick="showRankingsForDay(${dayNumber}, 'points')">Par Points</button>
                         <button class="toggle-btn" onclick="showRankingsForDay(${dayNumber}, 'winrate')">Par % Victoires</button>
+                        <button class="toggle-btn" onclick="openRankingInNewWindow(${dayNumber})" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">📺 Afficher</button>
                     </div>
                 </div>
                 <div id="rankingsContent-${dayNumber}"></div>
@@ -4385,6 +4386,210 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     }
     window.selectMatchGenerationType = selectMatchGenerationType;
 
+    // ========== AFFICHAGE CLASSEMENT NOUVELLE FENÊTRE ==========
+    let rankingWindow = null;
+
+    function openRankingInNewWindow(dayOrGeneral) {
+        const isGeneral = dayOrGeneral === 'general';
+        const title = isGeneral ? 'Classement Général' : `Classement Journée ${dayOrGeneral}`;
+
+        // Récupérer le contenu du classement
+        let rankingContent = '';
+        if (isGeneral) {
+            const container = document.getElementById('generalRankingContent');
+            rankingContent = container ? container.innerHTML : '<p>Aucun classement disponible</p>';
+        } else {
+            const container = document.getElementById(`rankingsContent-${dayOrGeneral}`);
+            rankingContent = container ? container.innerHTML : '<p>Aucun classement disponible</p>';
+        }
+
+        // Générer la page HTML complète
+        const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 ${title}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(243, 156, 18, 0.3);
+        }
+        .header h1 {
+            font-size: 2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header .update-time {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .content {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            color: #2c3e50;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .ranking-table, table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .ranking-table th, table th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .ranking-table td, table td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .ranking-table tr:nth-child(even), table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .ranking-table tr:hover, table tr:hover {
+            background: #e3f2fd;
+        }
+        /* Podium styles */
+        tr:nth-child(2) td:first-child { color: #FFD700; font-weight: bold; }
+        tr:nth-child(3) td:first-child { color: #C0C0C0; font-weight: bold; }
+        tr:nth-child(4) td:first-child { color: #CD7F32; font-weight: bold; }
+        .division-ranking, .ranking-division {
+            margin-bottom: 25px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .division-ranking h3, .ranking-division h3, h3 {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 12px 15px;
+            margin: 0;
+            font-size: 16px;
+        }
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
+            transition: transform 0.2s;
+        }
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+        .auto-refresh {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            color: #2c3e50;
+            font-size: 13px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 ${title}</h1>
+        <div class="update-time">Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}</div>
+    </div>
+    <div class="content">
+        ${rankingContent}
+    </div>
+    <div class="auto-refresh">
+        <label>
+            <input type="checkbox" id="autoRefresh" checked> Auto-refresh (30s)
+        </label>
+    </div>
+    <button class="refresh-btn" onclick="window.opener.postMessage({action: 'refreshRanking', target: '${dayOrGeneral}'}, '*'); location.reload();">
+        🔄 Rafraîchir
+    </button>
+    <script>
+        let autoRefreshInterval;
+        const checkbox = document.getElementById('autoRefresh');
+
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({action: 'refreshRanking', target: '${dayOrGeneral}'}, '*');
+                    setTimeout(() => location.reload(), 500);
+                }
+            }, 30000);
+        }
+
+        function stopAutoRefresh() {
+            clearInterval(autoRefreshInterval);
+        }
+
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        });
+
+        startAutoRefresh();
+    </script>
+</body>
+</html>`;
+
+        // Ouvrir ou réutiliser la fenêtre
+        if (rankingWindow && !rankingWindow.closed) {
+            rankingWindow.document.open();
+            rankingWindow.document.write(html);
+            rankingWindow.document.close();
+            rankingWindow.focus();
+        } else {
+            rankingWindow = window.open('', 'RankingDisplay', 'width=800,height=600,menubar=no,toolbar=no,location=no,status=no');
+            rankingWindow.document.write(html);
+            rankingWindow.document.close();
+        }
+
+        showNotification('Classement ouvert dans une nouvelle fenêtre', 'success');
+    }
+    window.openRankingInNewWindow = openRankingInNewWindow;
+
+    // Écouter les messages de la fenêtre de classement
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.action === 'refreshRanking') {
+            const target = event.data.target;
+            if (target === 'general') {
+                updateGeneralRanking();
+            } else {
+                updateRankingsForDay(parseInt(target));
+            }
+        }
+    });
+
     function showByeManagementModal(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
@@ -5186,6 +5391,14 @@ function togglePoolConfigMode(dayNumber, mode) {
     const advancedConfig = document.getElementById(`advanced-config-${dayNumber}`);
     const configInfo = document.getElementById(`config-info-${dayNumber}`);
 
+    // Sauvegarder le mode choisi
+    const dayData = championship.days[dayNumber];
+    if (!dayData.pools.config) {
+        dayData.pools.config = {};
+    }
+    dayData.pools.config.mode = mode;
+    saveToLocalStorage();
+
     if (mode === 'simple') {
         simpleConfig.style.display = 'flex';
         advancedConfig.style.display = 'none';
@@ -5206,7 +5419,17 @@ function updateSimpleConfigInfo(dayNumber) {
     const matchesPerPlayer = matchesPerPlayerInput?.value ? parseInt(matchesPerPlayerInput.value) : null;
 
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+
+    // Sauvegarder la configuration
+    if (!dayData.pools.config) {
+        dayData.pools.config = {};
+    }
+    dayData.pools.config.mode = 'simple';
+    dayData.pools.config.poolSize = poolSize;
+    dayData.pools.config.qualifiedPerPool = qualifiedPerPool;
+    dayData.pools.config.matchesPerPlayer = matchesPerPlayer;
+    saveToLocalStorage();
 
     let infoHTML = '<strong>ℹ️ Configuration Simple :</strong><br>';
 
@@ -5241,13 +5464,28 @@ function updateSimpleConfigInfo(dayNumber) {
 // Met à jour le message informatif pour le Mode Avancé avec validation
 function updateAdvancedConfigInfo(dayNumber) {
     const configInfo = document.getElementById(`config-info-${dayNumber}`);
-    const numPools = parseInt(document.getElementById(`num-pools-${dayNumber}`).value);
-    const totalQualified = parseInt(document.getElementById(`total-qualified-${dayNumber}`).value);
+    const numPoolsEl = document.getElementById(`num-pools-${dayNumber}`);
+    const totalQualifiedEl = document.getElementById(`total-qualified-${dayNumber}`);
     const matchesPerPlayerInput = document.getElementById(`matches-per-player-adv-${dayNumber}`);
+
+    if (!numPoolsEl || !totalQualifiedEl) return;
+
+    const numPools = parseInt(numPoolsEl.value);
+    const totalQualified = parseInt(totalQualifiedEl.value);
     const matchesPerPlayer = matchesPerPlayerInput?.value ? parseInt(matchesPerPlayerInput.value) : null;
 
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+
+    // Sauvegarder la configuration avancée
+    if (!dayData.pools.config) {
+        dayData.pools.config = {};
+    }
+    dayData.pools.config.mode = 'advanced';
+    dayData.pools.config.numPools = numPools;
+    dayData.pools.config.totalQualified = totalQualified;
+    dayData.pools.config.matchesPerPlayer = matchesPerPlayer;
+    saveToLocalStorage();
 
     let infoHTML = '';
     let hasWarning = false;
@@ -5259,48 +5497,98 @@ function updateAdvancedConfigInfo(dayNumber) {
         const result = calculateQualificationDistribution(numPools, totalQualified, players.length);
         const poolSize = Math.ceil(players.length / numPools);
 
-        infoHTML += `<strong>📋 Division ${division} (${players.length} joueurs) :</strong><br>`;
+        infoHTML += `<div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 2px solid #3498db;">`;
+        infoHTML += `<div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px; font-size: 13px;">📋 Division ${division} — ${players.length} joueurs</div>`;
 
-        // Info sur les poules
-        if (result.poolSizeInfo) {
-            infoHTML += `${result.poolSizeInfo}<br>`;
-        }
+        // Structure des poules
+        infoHTML += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">`;
+        infoHTML += `<span style="background: #3498db; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">${result.poolSizeInfo}</span>`;
 
-        // Info sur le nombre de matchs par poule
+        // Matchs par poule
         if (!matchesPerPlayer || matchesPerPlayer >= poolSize - 1) {
-            // Round-robin complet
-            const matchesPerPool = (poolSize * (poolSize - 1)) / 2;
-            infoHTML += `📊 ~${matchesPerPool} matchs/poule (tous contre tous)<br>`;
+            const matchesPerPool = Math.round((poolSize * (poolSize - 1)) / 2);
+            infoHTML += `<span style="background: #9b59b6; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">~${matchesPerPool} matchs/poule</span>`;
         } else {
-            // Limité
-            const matchesPerPool = (poolSize * matchesPerPlayer) / 2;
-            infoHTML += `⚡ ${matchesPerPool} matchs/poule (${matchesPerPlayer} par joueur)<br>`;
+            const matchesPerPool = Math.round((poolSize * matchesPerPlayer) / 2);
+            infoHTML += `<span style="background: #16a085; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">${matchesPerPlayer} matchs/joueur</span>`;
         }
+        infoHTML += `</div>`;
 
-        // Info sur la qualification
-        infoHTML += `<span style="color: #27ae60; font-weight: bold;">✓ Qualification: ${result.qualificationInfo}</span><br>`;
+        // Logique de qualification - APERÇU DÉTAILLÉ
+        infoHTML += `<div style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 10px; border-radius: 8px; margin-top: 8px;">`;
+        infoHTML += `<div style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">🏆 Logique de Qualification → ${totalQualified} qualifiés</div>`;
+
+        // Affichage visuel de la logique
+        infoHTML += `<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 6px; font-size: 11px;">`;
+
+        if (result.topPerPool === 0) {
+            infoHTML += `<div style="margin-bottom: 4px;">🥇 Les <strong>${totalQualified} meilleurs 1ers</strong> toutes poules confondues</div>`;
+        } else if (result.bestRunnerUps === 0) {
+            // Cas parfait
+            if (result.topPerPool === 1) {
+                infoHTML += `<div>🥇 <strong>1er de chaque poule</strong> (${numPools} qualifiés directs)</div>`;
+            } else if (result.topPerPool === 2) {
+                infoHTML += `<div>🥇 <strong>1er</strong> + 🥈 <strong>2ème de chaque poule</strong> (${numPools * 2} qualifiés directs)</div>`;
+            } else {
+                infoHTML += `<div>🏅 <strong>Top ${result.topPerPool} de chaque poule</strong> (${numPools * result.topPerPool} qualifiés directs)</div>`;
+            }
+        } else {
+            // Cas hybride - le plus intéressant !
+            const directQualified = result.topPerPool * numPools;
+            const positionOrdinal = result.runnerUpPosition === 2 ? '2èmes' : result.runnerUpPosition === 3 ? '3èmes' : result.runnerUpPosition === 4 ? '4èmes' : `${result.runnerUpPosition}èmes`;
+
+            infoHTML += `<div style="margin-bottom: 6px;">`;
+            if (result.topPerPool === 1) {
+                infoHTML += `🥇 <strong>1er de chaque poule</strong> → ${directQualified} qualifiés directs`;
+            } else if (result.topPerPool === 2) {
+                infoHTML += `🥇🥈 <strong>1er + 2ème de chaque poule</strong> → ${directQualified} qualifiés directs`;
+            } else {
+                infoHTML += `🏅 <strong>Top ${result.topPerPool} de chaque poule</strong> → ${directQualified} qualifiés directs`;
+            }
+            infoHTML += `</div>`;
+
+            infoHTML += `<div style="background: rgba(0,0,0,0.1); padding: 4px 8px; border-radius: 4px;">`;
+            infoHTML += `➕ Les <strong>${result.bestRunnerUps} meilleurs ${positionOrdinal}</strong> toutes poules confondues`;
+            infoHTML += `</div>`;
+        }
+        infoHTML += `</div>`;
+
+        // Phase finale
+        const finalPhaseType = getFinalPhaseType(totalQualified);
+        infoHTML += `<div style="margin-top: 6px; font-size: 10px; opacity: 0.9;">`;
+        infoHTML += `📊 Phase finale : <strong>${finalPhaseType}</strong>`;
+        infoHTML += `</div>`;
+
+        infoHTML += `</div>`; // Fin bloc qualification
 
         // Avertissements
         if (result.warnings && result.warnings.length > 0) {
             hasWarning = true;
+            infoHTML += `<div style="margin-top: 8px;">`;
             result.warnings.forEach(warning => {
-                infoHTML += `<span style="color: #e67e22;">⚠️ ${warning}</span><br>`;
+                infoHTML += `<div style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 10px; margin-bottom: 2px;">⚠️ ${warning}</div>`;
             });
+            infoHTML += `</div>`;
         }
 
-        infoHTML += '<br>';
+        infoHTML += `</div>`; // Fin division
     }
 
     configInfo.innerHTML = infoHTML;
     configInfo.style.display = 'block';
+    configInfo.style.padding = '0';
+    configInfo.style.background = 'transparent';
+    configInfo.style.borderLeft = 'none';
+}
 
-    if (hasWarning) {
-        configInfo.style.borderLeftColor = '#e67e22';
-        configInfo.style.background = 'rgba(230, 126, 34, 0.1)';
-    } else {
-        configInfo.style.borderLeftColor = '#27ae60';
-        configInfo.style.background = 'rgba(39, 174, 96, 0.1)';
-    }
+// Retourne le type de phase finale selon le nombre de qualifiés
+function getFinalPhaseType(numQualified) {
+    if (numQualified <= 2) return 'Finale directe';
+    if (numQualified <= 4) return 'Demi-finales → Finale';
+    if (numQualified <= 8) return 'Quarts → Demi → Finale';
+    if (numQualified <= 16) return 'Huitièmes → Quarts → Demi → Finale';
+    if (numQualified <= 32) return 'Seizièmes → ... → Finale';
+    return 'Tableau à élimination directe';
 }
 
 // Calcule la distribution de qualification pour le Mode Avancé
@@ -7408,21 +7696,152 @@ function initializePoolsForDay(dayNumber) {
     if (!existingToggle) {
         addPoolToggleToInterface(dayNumber);
     }
-    
+
     // Initialiser la structure de données
     initializePoolSystem(dayNumber);
-    
-    // Vérifier l'état du toggle si les poules sont activées
+
+    // Restaurer l'état complet des poules si elles étaient activées
     const dayData = championship.days[dayNumber];
     if (dayData.pools && dayData.pools.enabled) {
-        const checkbox = document.getElementById(`pool-enabled-${dayNumber}`);
-        if (checkbox) {
-            checkbox.checked = true;
-            togglePoolMode(dayNumber); // Appliquer l'état
-            updatePoolsDisplay(dayNumber);
-        }
+        // Attendre que le DOM soit prêt
+        setTimeout(() => {
+            restorePoolState(dayNumber);
+        }, 100);
     }
 }
+
+// Restaure l'état complet des poules après un rechargement
+function restorePoolState(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData || !dayData.pools) return;
+
+    console.log(`Restauration des poules pour J${dayNumber}...`);
+
+    // 1. Afficher le bouton et la section toggle
+    const showPoolBtn = document.getElementById(`show-pool-btn-${dayNumber}`);
+    const poolToggle = document.getElementById(`pool-toggle-${dayNumber}`);
+
+    if (poolToggle && dayData.pools.enabled) {
+        poolToggle.style.display = 'block';
+    }
+
+    // 2. Cocher la checkbox
+    const checkbox = document.getElementById(`pool-enabled-${dayNumber}`);
+    if (checkbox) {
+        checkbox.checked = dayData.pools.enabled;
+    }
+
+    // 3. Afficher la config et l'info
+    const config = document.getElementById(`pool-config-${dayNumber}`);
+    const info = document.getElementById(`pool-info-${dayNumber}`);
+
+    if (dayData.pools.enabled) {
+        if (config) config.style.display = 'block';
+        if (info) info.style.display = 'block';
+    }
+
+    // 4. Restaurer le mode de configuration (simple/avancé)
+    if (dayData.pools.config) {
+        const mode = dayData.pools.config.mode || 'simple';
+        const modeRadio = document.querySelector(`input[name="pool-config-mode-${dayNumber}"][value="${mode}"]`);
+        if (modeRadio) {
+            modeRadio.checked = true;
+            togglePoolConfigMode(dayNumber, mode);
+        }
+
+        // Restaurer les valeurs du mode simple
+        if (mode === 'simple') {
+            const poolSizeEl = document.getElementById(`pool-size-${dayNumber}`);
+            const qualifiedEl = document.getElementById(`qualified-per-pool-${dayNumber}`);
+            if (poolSizeEl && dayData.pools.config.poolSize) {
+                poolSizeEl.value = dayData.pools.config.poolSize;
+            }
+            if (qualifiedEl && dayData.pools.config.qualifiedPerPool) {
+                qualifiedEl.value = dayData.pools.config.qualifiedPerPool;
+            }
+        }
+
+        // Restaurer les valeurs du mode avancé
+        if (mode === 'advanced') {
+            const numPoolsEl = document.getElementById(`num-pools-${dayNumber}`);
+            const totalQualifiedEl = document.getElementById(`total-qualified-${dayNumber}`);
+            if (numPoolsEl && dayData.pools.config.numPools) {
+                numPoolsEl.value = dayData.pools.config.numPools;
+            }
+            if (totalQualifiedEl && dayData.pools.config.totalQualified) {
+                totalQualifiedEl.value = dayData.pools.config.totalQualified;
+            }
+            updateAdvancedConfigInfo(dayNumber);
+        }
+    }
+
+    // 5. Afficher les poules générées si elles existent
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    let hasPoolData = false;
+
+    for (let div = 1; div <= numDivisions; div++) {
+        if (dayData.pools.divisions &&
+            dayData.pools.divisions[div] &&
+            dayData.pools.divisions[div].pools &&
+            dayData.pools.divisions[div].pools.length > 0) {
+            hasPoolData = true;
+            break;
+        }
+    }
+
+    if (hasPoolData) {
+        updatePoolsDisplay(dayNumber);
+
+        // Activer le bouton Phase Finale si des poules existent
+        const finalPhaseBtn = document.getElementById(`final-phase-btn-${dayNumber}`);
+        if (finalPhaseBtn) {
+            finalPhaseBtn.disabled = false;
+        }
+    }
+
+    // 6. Restaurer la phase finale si elle existe
+    if (dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.enabled) {
+        setTimeout(() => {
+            displayManualFinalPhaseFromData(dayNumber);
+        }, 200);
+    }
+
+    console.log(`Poules J${dayNumber} restaurées avec succès`);
+}
+window.restorePoolState = restorePoolState;
+
+// Restaure l'affichage de la phase finale depuis les données sauvegardées
+function displayManualFinalPhaseFromData(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData || !dayData.pools || !dayData.pools.manualFinalPhase) return;
+
+    const manualFinalPhase = dayData.pools.manualFinalPhase;
+    if (!manualFinalPhase.enabled) return;
+
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionFinalPhase = manualFinalPhase.divisions[division];
+        if (!divisionFinalPhase || !divisionFinalPhase.qualified || divisionFinalPhase.qualified.length === 0) continue;
+
+        const container = document.getElementById(`division${dayNumber}-${division}-matches`);
+        if (!container) continue;
+
+        // Ajouter l'affichage de la phase finale
+        const finalPhaseHTML = generateManualFinalPhaseHTML(dayNumber, division, divisionFinalPhase);
+
+        // Chercher si le conteneur de phase finale existe déjà
+        let finalContainer = container.querySelector('.manual-final-phase-container');
+        if (finalContainer) {
+            finalContainer.outerHTML = finalPhaseHTML;
+        } else {
+            container.insertAdjacentHTML('beforeend', finalPhaseHTML);
+        }
+    }
+
+    console.log(`Phase finale J${dayNumber} restaurée`);
+}
+window.displayManualFinalPhaseFromData = displayManualFinalPhaseFromData;
 
 // Export des fonctions principales
 window.initializePoolsForDay = initializePoolsForDay;
