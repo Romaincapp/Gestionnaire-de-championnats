@@ -605,32 +605,12 @@ try {
                     </button>
                 </div>
 
-                <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; padding: 15px; margin: 15px auto; max-width: 800px; border: 2px solid #dee2e6;">
-                    <h3 style="color: #2c3e50; margin: 0 0 12px 0; font-size: 16px; text-align: center;">🎯 Génération de Matchs</h3>
-
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
-                        <button class="btn" onclick="generateMatchesForDay(${dayNumber})" style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 8px 10px; font-size: 12px;">
-                            🔄 Round-Robin
-                        </button>
-                        <button class="btn" onclick="generateMatchesOptimized4to10(${dayNumber})" style="background: linear-gradient(135deg, #e67e22, #d35400); padding: 8px 10px; font-size: 12px;">
-                            🎲 Optimisé 4-10
-                        </button>
-                        <button class="btn" onclick="generateMatchesByCourtOptimized(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 8px 10px; font-size: 12px;">
-                            🎾 Par Terrain
-                        </button>
-                        <button class="btn" onclick="generateMatchesSwissSystem(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 8px 10px; font-size: 12px;">
-                            🏆 Swiss System
-                        </button>
-                    </div>
-
-                    <div style="padding: 6px 10px; background: rgba(255,255,255,0.7); border-radius: 5px; font-size: 10px; color: #6c757d; line-height: 1.4; text-align: center;">
-                        <strong>Round-Robin:</strong> Tous vs tous • <strong>Optimisé:</strong> 4-10 joueurs • <strong>Terrain:</strong> 4-10/terrain • <strong>Swiss:</strong> Par niveau
-                    </div>
-                </div>
-
                 <div class="control-buttons" style="gap: 8px; flex-wrap: wrap; margin-top: 15px;">
                     <button class="btn btn-success" onclick="updateRankingsForDay(${dayNumber})" style="padding: 8px 12px; font-size: 13px;">
                         🏆 Classements J${dayNumber}
+                    </button>
+                    <button class="btn" onclick="showMatchGenerationModal(${dayNumber})" style="padding: 8px 12px; font-size: 13px;">
+                        🎯 Générer Matchs
                     </button>
                     <button class="btn" onclick="showByeManagementModal(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 8px 12px; font-size: 13px;">
                         🎯 Gérer BYE
@@ -4371,6 +4351,40 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     }
     window.addByeMatchForPlayer = addByeMatchForPlayer;
 
+    // ========== MODAL GÉNÉRATION DE MATCHS ==========
+    let currentMatchGenerationDay = 1;
+
+    function showMatchGenerationModal(dayNumber) {
+        currentMatchGenerationDay = dayNumber;
+        document.getElementById('matchGenerationModal').style.display = 'block';
+    }
+    window.showMatchGenerationModal = showMatchGenerationModal;
+
+    function closeMatchGenerationModal() {
+        document.getElementById('matchGenerationModal').style.display = 'none';
+    }
+    window.closeMatchGenerationModal = closeMatchGenerationModal;
+
+    function selectMatchGenerationType(type) {
+        closeMatchGenerationModal();
+        const day = currentMatchGenerationDay;
+        switch(type) {
+            case 'round-robin':
+                generateMatchesForDay(day);
+                break;
+            case 'optimized':
+                generateMatchesOptimized4to10(day);
+                break;
+            case 'court':
+                generateMatchesByCourtOptimized(day);
+                break;
+            case 'swiss':
+                generateMatchesSwissSystem(day);
+                break;
+        }
+    }
+    window.selectMatchGenerationType = selectMatchGenerationType;
+
     function showByeManagementModal(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
@@ -4962,9 +4976,9 @@ function addPoolToggleToInterface(dayNumber) {
     const section = document.querySelector(`#day-${dayNumber} .section`);
     if (!section) return;
 
-    // Chercher la div qui contient les boutons de type de génération
-    const generationTypeDiv = section.querySelector('div[style*="background: linear-gradient(135deg, #f8f9fa, #e9ecef)"]');
-    if (!generationTypeDiv) return;
+    // Chercher le conteneur control-buttons pour insérer le mode pool après
+    const controlButtons = section.querySelector('.control-buttons');
+    if (!controlButtons) return;
 
     const poolToggleHTML = `
         <!-- Bouton Mode Poules (masqué par défaut) -->
@@ -5159,7 +5173,7 @@ function addPoolToggleToInterface(dayNumber) {
         </div>
     `;
 
-    generationTypeDiv.insertAdjacentHTML('afterend', poolToggleHTML);
+    controlButtons.insertAdjacentHTML('afterend', poolToggleHTML);
 }
 
 // ======================================
