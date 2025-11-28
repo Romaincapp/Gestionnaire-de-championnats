@@ -631,10 +631,11 @@ try {
             <div class="rankings-section" id="rankings-${dayNumber}" style="display: none;">
                 <div class="rankings-header">
                     <div class="rankings-title">🏆 Classements Journée ${dayNumber}</div>
-                    <div class="rankings-toggle">
+                    <div class="rankings-toggle" style="flex-wrap: wrap; gap: 5px;">
                         <button class="toggle-btn active" onclick="showRankingsForDay(${dayNumber}, 'points')">Par Points</button>
                         <button class="toggle-btn" onclick="showRankingsForDay(${dayNumber}, 'winrate')">Par % Victoires</button>
                         <button class="toggle-btn" onclick="openRankingInNewWindow(${dayNumber})" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">📺 Afficher</button>
+                        <button class="toggle-btn" onclick="showCompleteDayRanking(${dayNumber})" style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white;">📊 Complet</button>
                     </div>
                 </div>
                 <div id="rankingsContent-${dayNumber}"></div>
@@ -4637,6 +4638,483 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             }, 300);
         }
     });
+
+// ========== CLASSEMENT COMPLET DE JOURNÉE (POOLS + FINALES) ==========
+let currentCompleteDayRanking = 1;
+
+function showCompleteDayRanking(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData) {
+        alert('Journée non trouvée');
+        return;
+    }
+
+    // Vérifier si le mode pool est activé
+    if (!dayData.pools?.enabled) {
+        alert('⚠️ Le mode Pool doit être activé pour voir le classement complet.\n\nCe classement détaillé affiche les résultats des poules et de la phase finale.');
+        return;
+    }
+
+    currentCompleteDayRanking = dayNumber;
+
+    let html = '';
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionData = dayData.pools.divisions[division];
+        if (!divisionData) continue;
+
+        const pools = divisionData.pools || [];
+        const poolMatches = divisionData.matches || [];
+        const finalMatches = divisionData.finalPhase || [];
+
+        if (pools.length === 0) continue;
+
+        // Calculer les classements de poules
+        const poolRankings = calculatePoolRankings(pools, poolMatches, dayNumber, division);
+
+        // Calculer les positions finales du bracket
+        const finalPositions = calculateFinalPositions(finalMatches);
+
+        // Générer le HTML pour cette division
+        html += generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, poolMatches, finalMatches, finalPositions);
+    }
+
+    if (!html) {
+        html = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Aucune poule n\'a été générée pour cette journée.</p>';
+    }
+
+    document.getElementById('completeDayRankingTitle').textContent = `📊 Classement Complet - Journée ${dayNumber}`;
+    document.getElementById('completeDayRankingContent').innerHTML = html;
+    document.getElementById('completeDayRankingModal').style.display = 'block';
+}
+window.showCompleteDayRanking = showCompleteDayRanking;
+
+function closeCompleteDayRankingModal() {
+    document.getElementById('completeDayRankingModal').style.display = 'none';
+}
+window.closeCompleteDayRankingModal = closeCompleteDayRankingModal;
+
+function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
+    const poolRankings = [];
+
+    pools.forEach((poolPlayers, poolIndex) => {
+        const poolName = String.fromCharCode(65 + poolIndex); // A, B, C...
+        const rankings = [];
+
+        poolPlayers.forEach(player => {
+            if (player.toUpperCase() === 'BYE') return;
+
+            // Calculer les stats de ce joueur dans cette poule uniquement
+            const playerPoolMatches = poolMatches.filter(m =>
+                m.poolIndex === poolIndex &&
+                (m.player1 === player || m.player2 === player)
+            );
+
+            let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+
+            playerPoolMatches.forEach(match => {
+                if (match.completed) {
+                    const isPlayer1 = match.player1 === player;
+                    const score1 = parseInt(match.score1) || 0;
+                    const score2 = parseInt(match.score2) || 0;
+
+                    if (match.winner === player) {
+                        wins++;
+                    } else {
+                        losses++;
+                    }
+
+                    if (isPlayer1) {
+                        pointsWon += score1;
+                        pointsLost += score2;
+                    } else {
+                        pointsWon += score2;
+                        pointsLost += score1;
+                    }
+                }
+            });
+
+            rankings.push({
+                name: player,
+                wins,
+                losses,
+                points: wins * 3 + losses * 1,
+                pointsWon,
+                pointsLost,
+                goalAverage: pointsWon - pointsLost,
+                matchesPlayed: wins + losses
+            });
+        });
+
+        // Trier par points, puis goal average, puis points marqués
+        rankings.sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            if (b.goalAverage !== a.goalAverage) return b.goalAverage - a.goalAverage;
+            if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
+            return a.name.localeCompare(b.name);
+        });
+
+        poolRankings.push({
+            poolName,
+            poolIndex,
+            rankings
+        });
+    });
+
+    return poolRankings;
+}
+
+function calculateFinalPositions(finalMatches) {
+    const positions = {};
+
+    if (!finalMatches || finalMatches.length === 0) {
+        return positions;
+    }
+
+    // Identifier les types de matchs
+    const finale = finalMatches.find(m => m.round === 'Finale' || m.matchType === 'finale');
+    const demis = finalMatches.filter(m => m.round === 'Demi-finale' || m.matchType === 'demi');
+    const quarts = finalMatches.filter(m => m.round === 'Quart de finale' || m.matchType === 'quart');
+    const petiteFinale = finalMatches.find(m => m.round === 'Petite finale' || m.matchType === 'petite-finale');
+
+    // Position 1 : Vainqueur de la finale
+    if (finale && finale.completed && finale.winner) {
+        positions[finale.winner] = { position: 1, label: 'Vainqueur', badge: '🥇' };
+        // Position 2 : Perdant de la finale
+        const perdantFinale = finale.player1 === finale.winner ? finale.player2 : finale.player1;
+        if (perdantFinale) {
+            positions[perdantFinale] = { position: 2, label: 'Finaliste', badge: '🥈' };
+        }
+    }
+
+    // Petite finale pour 3ème/4ème place
+    if (petiteFinale && petiteFinale.completed && petiteFinale.winner) {
+        positions[petiteFinale.winner] = { position: 3, label: '3ème', badge: '🥉' };
+        const perdantPetiteFinale = petiteFinale.player1 === petiteFinale.winner ? petiteFinale.player2 : petiteFinale.player1;
+        if (perdantPetiteFinale) {
+            positions[perdantPetiteFinale] = { position: 4, label: '4ème', badge: '🥉' };
+        }
+    } else if (demis.length > 0) {
+        // Si pas de petite finale, les perdants des demis sont 3-4
+        let pos = 3;
+        demis.forEach(match => {
+            if (match.completed && match.winner) {
+                const perdant = match.player1 === match.winner ? match.player2 : match.player1;
+                if (perdant && !positions[perdant]) {
+                    positions[perdant] = { position: pos, label: pos === 3 ? '3ème' : '4ème', badge: '🥉' };
+                    pos++;
+                }
+            }
+        });
+    }
+
+    // Perdants des quarts = 5-8
+    if (quarts.length > 0) {
+        let pos = 5;
+        quarts.forEach(match => {
+            if (match.completed && match.winner) {
+                const perdant = match.player1 === match.winner ? match.player2 : match.player1;
+                if (perdant && !positions[perdant]) {
+                    positions[perdant] = { position: pos, label: `${pos}ème`, badge: '' };
+                    pos++;
+                }
+            }
+        });
+    }
+
+    return positions;
+}
+
+function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, poolMatches, finalMatches, finalPositions) {
+    const divIcon = division === 1 ? '🥇' : division === 2 ? '🥈' : '🥉';
+
+    // Déterminer les qualifiés par poule
+    const dayData = championship.days[dayNumber];
+    const config = dayData.pools?.config?.divisions?.[division];
+    const qualifiedPerPool = config?.qualifiedPerPool || config?.topPerPool || 2;
+    const bestRunnerUps = config?.bestRunnerUps || 0;
+
+    let html = `
+        <div style="background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 12px 15px;">
+                <h3 style="margin: 0; font-size: 16px;">${divIcon} Division ${division}</h3>
+            </div>
+
+            <!-- Phase Poules -->
+            <div style="padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee;">
+                <h4 style="margin: 0 0 12px 0; color: #2c3e50; font-size: 14px;">📋 Phase Poules</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+    `;
+
+    // Générer le classement de chaque poule
+    poolRankings.forEach(pool => {
+        html += `
+            <div style="flex: 1; min-width: 180px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 8px 12px; font-weight: 600; font-size: 13px;">
+                    Poule ${pool.poolName}
+                </div>
+                <div style="padding: 8px;">
+        `;
+
+        pool.rankings.forEach((player, idx) => {
+            const isQualified = idx < qualifiedPerPool;
+            const bgColor = isQualified ? '#e8f5e9' : 'transparent';
+            const checkMark = isQualified ? ' ✓' : '';
+
+            html += `
+                <div style="display: flex; justify-content: space-between; padding: 6px 8px; background: ${bgColor}; border-radius: 4px; margin-bottom: 4px; font-size: 12px;">
+                    <span style="font-weight: ${isQualified ? '600' : '400'};">${idx + 1}. ${player.name}${checkMark}</span>
+                    <span style="color: #7f8c8d;">${player.points}pts (${player.wins}V-${player.losses}D)</span>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    });
+
+    html += `
+                </div>
+            </div>
+    `;
+
+    // Phase Finale (si des matchs existent)
+    if (finalMatches && finalMatches.length > 0) {
+        html += `
+            <div style="padding: 15px; background: #fff3cd; border-bottom: 1px solid #eee;">
+                <h4 style="margin: 0 0 12px 0; color: #856404; font-size: 14px;">🎯 Phase Finale</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+        `;
+
+        // Grouper les matchs par round
+        const matchesByRound = {};
+        finalMatches.forEach(match => {
+            const round = match.round || match.matchType || 'Match';
+            if (!matchesByRound[round]) matchesByRound[round] = [];
+            matchesByRound[round].push(match);
+        });
+
+        // Ordre d'affichage des rounds
+        const roundOrder = ['Quart de finale', 'quart', 'Demi-finale', 'demi', 'Petite finale', 'petite-finale', 'Finale', 'finale'];
+        const sortedRounds = Object.keys(matchesByRound).sort((a, b) => {
+            const idxA = roundOrder.indexOf(a);
+            const idxB = roundOrder.indexOf(b);
+            return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+        });
+
+        sortedRounds.forEach(round => {
+            const matches = matchesByRound[round];
+            const roundLabel = round.charAt(0).toUpperCase() + round.slice(1);
+
+            html += `
+                <div style="background: white; border-radius: 8px; padding: 10px; min-width: 150px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                    <div style="font-weight: 600; font-size: 11px; color: #856404; margin-bottom: 8px; text-align: center;">${roundLabel}</div>
+            `;
+
+            matches.forEach(match => {
+                const isComplete = match.completed;
+                const winner = match.winner;
+
+                html += `
+                    <div style="background: ${isComplete ? '#f8f9fa' : '#fff'}; padding: 6px; border-radius: 4px; margin-bottom: 4px; font-size: 11px; border: 1px solid ${isComplete ? '#dee2e6' : '#ffc107'};">
+                        <div style="display: flex; justify-content: space-between; ${winner === match.player1 ? 'font-weight: 600;' : ''}">
+                            <span>${match.player1 || '?'}</span>
+                            <span>${match.score1 || '-'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; ${winner === match.player2 ? 'font-weight: 600;' : ''}">
+                            <span>${match.player2 || '?'}</span>
+                            <span>${match.score2 || '-'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    }
+
+    // Classement Final Combiné
+    html += `
+        <div style="padding: 15px; background: #d4edda;">
+            <h4 style="margin: 0 0 12px 0; color: #155724; font-size: 14px;">🏅 Classement Final</h4>
+    `;
+
+    // Construire le classement final
+    const allPlayers = [];
+    const processedPlayers = new Set();
+
+    // D'abord les joueurs avec position finale (du bracket)
+    Object.entries(finalPositions)
+        .sort((a, b) => a[1].position - b[1].position)
+        .forEach(([playerName, posData]) => {
+            if (!processedPlayers.has(playerName)) {
+                const stats = calculatePlayerStats(dayNumber, division, playerName);
+                allPlayers.push({
+                    name: playerName,
+                    ...posData,
+                    ...stats,
+                    hasFinalPosition: true
+                });
+                processedPlayers.add(playerName);
+            }
+        });
+
+    // Ensuite les autres joueurs triés par stats
+    poolRankings.forEach(pool => {
+        pool.rankings.forEach(player => {
+            if (!processedPlayers.has(player.name)) {
+                const stats = calculatePlayerStats(dayNumber, division, player.name);
+                allPlayers.push({
+                    name: player.name,
+                    position: 99,
+                    label: '',
+                    badge: '',
+                    ...stats,
+                    hasFinalPosition: false
+                });
+                processedPlayers.add(player.name);
+            }
+        });
+    });
+
+    // Trier les joueurs sans position finale par leurs stats
+    const playersWithPos = allPlayers.filter(p => p.hasFinalPosition);
+    const playersWithoutPos = allPlayers.filter(p => !p.hasFinalPosition)
+        .sort((a, b) => {
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            const gaA = (a.pointsWon || 0) - (a.pointsLost || 0);
+            const gaB = (b.pointsWon || 0) - (b.pointsLost || 0);
+            if (gaB !== gaA) return gaB - gaA;
+            return a.name.localeCompare(b.name);
+        });
+
+    // Assigner les positions finales
+    let nextPosition = playersWithPos.length > 0 ?
+        Math.max(...playersWithPos.map(p => p.position)) + 1 : 1;
+
+    playersWithoutPos.forEach(player => {
+        player.position = nextPosition++;
+        player.label = `${player.position}${player.position === 1 ? 'er' : 'ème'}`;
+    });
+
+    const finalRanking = [...playersWithPos, ...playersWithoutPos];
+
+    // Générer le tableau
+    html += `
+        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; font-size: 12px;">
+            <thead>
+                <tr style="background: linear-gradient(135deg, #155724, #1e7e34); color: white;">
+                    <th style="padding: 8px; text-align: center; width: 50px;">Pos</th>
+                    <th style="padding: 8px; text-align: left;">Joueur</th>
+                    <th style="padding: 8px; text-align: center;">Pts</th>
+                    <th style="padding: 8px; text-align: center;">V/D</th>
+                    <th style="padding: 8px; text-align: center;">PP/PC</th>
+                    <th style="padding: 8px; text-align: center;">Diff</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    finalRanking.forEach((player, idx) => {
+        const bgColor = player.position === 1 ? '#fff9c4' :
+                       player.position === 2 ? '#f5f5f5' :
+                       player.position <= 4 ? '#ffecb3' : 'white';
+        const badge = player.badge || '';
+        const ga = (player.pointsWon || 0) - (player.pointsLost || 0);
+        const gaDisplay = ga >= 0 ? `+${ga}` : ga;
+
+        html += `
+            <tr style="background: ${bgColor}; border-bottom: 1px solid #eee;">
+                <td style="padding: 8px; text-align: center; font-weight: 600;">${badge} ${player.position}</td>
+                <td style="padding: 8px; font-weight: ${player.position <= 4 ? '600' : '400'};">
+                    ${player.name}
+                    ${player.label && player.position <= 4 ? `<span style="font-size: 10px; color: #666; margin-left: 5px;">(${player.label})</span>` : ''}
+                </td>
+                <td style="padding: 8px; text-align: center;">${player.totalPoints || 0}</td>
+                <td style="padding: 8px; text-align: center;">${player.wins || 0}/${player.losses || 0}</td>
+                <td style="padding: 8px; text-align: center;">${player.pointsWon || 0}/${player.pointsLost || 0}</td>
+                <td style="padding: 8px; text-align: center; color: ${ga >= 0 ? '#27ae60' : '#e74c3c'};">${gaDisplay}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+            </tbody>
+        </table>
+        </div>
+        </div>
+    `;
+
+    return html;
+}
+
+function openCompleteRankingInNewWindow() {
+    const content = document.getElementById('completeDayRankingContent').innerHTML;
+    const title = document.getElementById('completeDayRankingTitle').textContent;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.3);
+        }
+        .header h1 {
+            font-size: 1.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .content {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            color: #2c3e50;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${title}</h1>
+    </div>
+    <div class="content">
+        ${content}
+    </div>
+</body>
+</html>`;
+
+    const newWindow = window.open('', 'CompleteRankingDisplay', 'width=1000,height=800,menubar=no,toolbar=no,location=no,status=no');
+    if (newWindow) {
+        newWindow.document.write(html);
+        newWindow.document.close();
+    }
+}
+window.openCompleteRankingInNewWindow = openCompleteRankingInNewWindow;
 
 function showByeManagementModal(dayNumber) {
         const dayData = championship.days[dayNumber];
@@ -10501,6 +10979,19 @@ function showPrintOptionsModal(dayNumber) {
             " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                 🎾 Feuilles Boccia (4 par page)
             </button>
+            <button id="print-option-boccia-blank" style="
+                padding: 12px;
+                background: linear-gradient(135deg, #8e44ad, #9b59b6);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                cursor: pointer;
+                text-align: left;
+                transition: transform 0.2s;
+            " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                📄 Feuilles Boccia vierges (4 par page)
+            </button>
             <button id="print-option-recap" style="
                 padding: 12px;
                 background: linear-gradient(135deg, #f39c12, #e67e22);
@@ -10547,6 +11038,11 @@ function showPrintOptionsModal(dayNumber) {
     document.getElementById('print-option-boccia').onclick = () => {
         document.body.removeChild(modal);
         printBocciaMatchSheets(dayNumber);
+    };
+
+    document.getElementById('print-option-boccia-blank').onclick = () => {
+        document.body.removeChild(modal);
+        printBlankBocciaSheets();
     };
 
     document.getElementById('print-option-recap').onclick = () => {
@@ -10911,6 +11407,352 @@ function generateBocciaMatchCard(match, dayNumber) {
                             <th style="width: 28%;">MANCHE</th>
                             <th style="width: 36%;">${match.player1.substring(0, 12)}</th>
                             <th style="width: 36%;">${match.player2.substring(0, 12)}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th class="manche-header">Manche 1</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr>
+                            <th class="manche-header">Manche 2</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr>
+                            <th class="manche-header">Manche 3</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr>
+                            <th class="manche-header">Manche 4</th>
+                            <td class="player-score-col"></td>
+                            <td class="player-score-col"></td>
+                        </tr>
+                        <tr style="background: #fff9e6;">
+                            <th class="manche-header" style="background: #f9e79f;">Manche en Or*</th>
+                            <td class="player-score-col barrage-col"></td>
+                            <td class="player-score-col barrage-col"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <th>TOTAL</th>
+                            <td class="total-cell"></td>
+                            <td class="total-cell"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="font-size: 6px; color: #666; font-style: italic; margin-top: 1mm;">
+                    * Manche en Or uniquement si nécessaire (égalité après 4 manches)
+                </div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-row">
+                    <div class="result-label">VAINQUEUR:</div>
+                    <div class="result-line"></div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label">ARBITRE:</div>
+                    <div class="result-line"></div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label">TERRAIN N°:</div>
+                    <div class="result-line" style="max-width: 15mm;"></div>
+                    <div class="result-label" style="margin-left: 3mm;">HEURE:</div>
+                    <div class="result-line" style="max-width: 15mm;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ===============================================
+// FEUILLES BOCCIA VIERGES (SANS NOMS DE JOUEURS)
+// ===============================================
+
+function printBlankBocciaSheets() {
+    // Demander le nombre de feuilles à imprimer
+    const numSheets = prompt('Combien de feuilles Boccia vierges voulez-vous imprimer ?', '8');
+    if (!numSheets || isNaN(parseInt(numSheets)) || parseInt(numSheets) < 1) {
+        return;
+    }
+
+    const count = parseInt(numSheets);
+    const numPages = Math.ceil(count / 4);
+
+    // Générer le HTML d'impression
+    const printHTML = generateBlankBocciaHTML(count, numPages);
+
+    // Ouvrir dans une nouvelle fenêtre pour impression
+    openPrintWindow(printHTML, `Feuilles_Boccia_Vierges`);
+
+    showNotification(`📄 ${count} feuilles Boccia vierges générées !`, 'success');
+}
+
+function generateBlankBocciaHTML(count, numPages) {
+    const currentDate = new Date().toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Feuilles Boccia Vierges</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 10mm;
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 8px;
+                    line-height: 1.1;
+                    color: #000;
+                    background: white;
+                }
+
+                .page {
+                    width: 210mm;
+                    height: 297mm;
+                    page-break-after: always;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    grid-template-rows: 1fr 1fr;
+                    gap: 5mm;
+                    padding: 5mm;
+                }
+
+                .page:last-child {
+                    page-break-after: avoid;
+                }
+
+                .match-card {
+                    border: 2px solid #000;
+                    padding: 3mm;
+                    background: white;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .match-header {
+                    text-align: center;
+                    border-bottom: 1.5px solid #000;
+                    padding-bottom: 2mm;
+                    margin-bottom: 2mm;
+                }
+
+                .match-title {
+                    font-size: 12px;
+                    font-weight: bold;
+                    margin-bottom: 1mm;
+                }
+
+                .match-info {
+                    font-size: 8px;
+                    color: #666;
+                }
+
+                .match-id {
+                    font-size: 9px;
+                    font-weight: bold;
+                    background: #f0f0f0;
+                    padding: 1mm;
+                    margin-top: 1mm;
+                    border: 1px solid #999;
+                }
+
+                .players-section {
+                    margin-bottom: 2mm;
+                }
+
+                .player-row {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 1mm;
+                }
+
+                .player-label {
+                    font-weight: bold;
+                    font-size: 8px;
+                    width: 20mm;
+                }
+
+                .player-name-box {
+                    flex: 1;
+                    border: 1px solid #000;
+                    padding: 1.5mm;
+                    font-size: 10px;
+                    font-weight: bold;
+                    background: white;
+                    min-height: 6mm;
+                }
+
+                .score-section {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .score-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 8px;
+                    margin-bottom: 2mm;
+                }
+
+                .score-table th {
+                    background: #000;
+                    color: white;
+                    padding: 1.5mm;
+                    text-align: center;
+                    font-size: 8px;
+                    border: 1px solid #000;
+                    font-weight: bold;
+                }
+
+                .score-table td {
+                    padding: 2mm;
+                    text-align: center;
+                    border: 1px solid #000;
+                    min-height: 8mm;
+                }
+
+                .manche-header {
+                    background: #f0f0f0;
+                    font-weight: bold;
+                    font-size: 8px;
+                    text-align: left;
+                    padding-left: 2mm !important;
+                    width: 25%;
+                }
+
+                .player-score-col {
+                    background: white;
+                    min-width: 10mm;
+                }
+
+                .barrage-col {
+                    background: #fff9e6 !important;
+                }
+
+                .total-row th {
+                    background: #c0392b;
+                }
+
+                .total-cell {
+                    background: #ffe6e6;
+                    font-weight: bold;
+                    font-size: 9px;
+                }
+
+                .result-section {
+                    margin-top: auto;
+                    padding-top: 2mm;
+                    border-top: 1px dashed #999;
+                }
+
+                .result-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 1mm;
+                }
+
+                .result-label {
+                    font-size: 7px;
+                    font-weight: bold;
+                    margin-right: 2mm;
+                }
+
+                .result-line {
+                    flex: 1;
+                    border-bottom: 1px solid #000;
+                    min-height: 4mm;
+                }
+
+                @media print {
+                    body {
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
+                    }
+
+                    .page {
+                        page-break-inside: avoid;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+    `;
+
+    // Générer les pages (4 feuilles par page)
+    let sheetsGenerated = 0;
+    for (let page = 0; page < numPages; page++) {
+        htmlContent += `<div class="page">`;
+
+        for (let i = 0; i < 4 && sheetsGenerated < count; i++) {
+            sheetsGenerated++;
+            htmlContent += generateBlankBocciaCard(sheetsGenerated, currentDate);
+        }
+
+        // Compléter avec des cartes vides si dernière page incomplète
+        const remaining = 4 - (sheetsGenerated % 4 === 0 ? 4 : sheetsGenerated % 4);
+        if (page === numPages - 1 && remaining < 4 && remaining > 0) {
+            for (let j = 0; j < remaining; j++) {
+                htmlContent += `<div class="match-card" style="border-style: dashed; opacity: 0.3;"></div>`;
+            }
+        }
+
+        htmlContent += `</div>`;
+    }
+
+    htmlContent += `
+        </body>
+        </html>
+    `;
+
+    return htmlContent;
+}
+
+function generateBlankBocciaCard(sheetNumber, currentDate) {
+    return `
+        <div class="match-card">
+            <div class="match-header">
+                <div class="match-title">🎾 FEUILLE DE MATCH BOCCIA</div>
+                <div class="match-info">${currentDate}</div>
+                <div class="match-id">Feuille N° ${sheetNumber}</div>
+            </div>
+
+            <div class="players-section">
+                <div class="player-row">
+                    <div class="player-label">JOUEUR 1:</div>
+                    <div class="player-name-box"></div>
+                </div>
+                <div class="player-row">
+                    <div class="player-label">JOUEUR 2:</div>
+                    <div class="player-name-box"></div>
+                </div>
+            </div>
+
+            <div class="score-section">
+                <table class="score-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 28%;">MANCHE</th>
+                            <th style="width: 36%;">Joueur 1</th>
+                            <th style="width: 36%;">Joueur 2</th>
                         </tr>
                     </thead>
                     <tbody>

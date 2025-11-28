@@ -209,10 +209,11 @@
                 <div class="rankings-section" id="rankings-1" style="display: none;">
                     <div class="rankings-header">
                         <div class="rankings-title">🏆 Classements Journée 1</div>
-                        <div class="rankings-toggle">
+                        <div class="rankings-toggle" style="flex-wrap: wrap; gap: 5px;">
                             <button class="toggle-btn active" onclick="showRankings('points')">Par Points</button>
                             <button class="toggle-btn" onclick="showRankings('winrate')">Par % Victoires</button>
                             <button class="toggle-btn" onclick="openRankingInNewWindow(1)" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">📺 Afficher</button>
+                            <button class="toggle-btn" onclick="showCompleteDayRanking(1)" style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white;">📊 Complet</button>
                         </div>
                     </div>
                     <div id="rankingsContent-1"></div>
@@ -891,6 +892,23 @@
 
             <div style="text-align: center; margin-top: 12px;">
                 <button class="btn btn-danger" onclick="closeMatchGenerationModal()" style="padding: 6px 12px; font-size: 12px;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Classement Complet de Journée -->
+    <div id="completeDayRankingModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #3498db;">
+                <h3 id="completeDayRankingTitle" style="margin: 0; color: #2c3e50;">📊 Classement Complet - Journée 1</h3>
+                <button onclick="closeCompleteDayRankingModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d;">×</button>
+            </div>
+            <div id="completeDayRankingContent">
+                <!-- Contenu généré dynamiquement -->
+            </div>
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; position: sticky; bottom: 0; background: white;">
+                <button onclick="closeCompleteDayRankingModal()" class="btn btn-secondary" style="padding: 8px 20px;">Fermer</button>
+                <button onclick="openCompleteRankingInNewWindow()" class="btn" style="padding: 8px 20px; background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">📺 Afficher</button>
             </div>
         </div>
     </div>
