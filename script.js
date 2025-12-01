@@ -6029,6 +6029,15 @@ function addPoolToggleToInterface(dayNumber) {
                     " disabled id="final-phase-btn-${dayNumber}">
                         🏆 Phase Finale
                     </button>
+
+                    <button class="btn" onclick="generateDirectFinalPhase(${dayNumber})" style="
+                        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                        color: white;
+                        padding: 8px 15px;
+                        font-size: 12px;
+                    " id="direct-final-btn-${dayNumber}">
+                        ⚡ Élimination Directe
+                    </button>
                 </div>
             </div>
 
@@ -8828,14 +8837,243 @@ function generateManualFinalPhase(dayNumber) {
     }, 100); // Petit délai pour laisser l'alert se fermer
 }
 
+// ======================================
+// PHASE FINALE DIRECTE (sans poules)
+// ======================================
+
+/**
+ * Génère une phase finale directe avec tous les joueurs inscrits
+ * Sans passer par les phases de poules
+ */
+function generateDirectFinalPhase(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData) {
+        alert('Journée non trouvée !');
+        return;
+    }
+
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    let totalPlayers = 0;
+
+    // Vérifier qu'il y a des joueurs dans au moins une division
+    for (let division = 1; division <= numDivisions; division++) {
+        const players = dayData.players[division] || [];
+        const validPlayers = players.filter(p => p && p.toUpperCase() !== 'BYE');
+        totalPlayers += validPlayers.length;
+    }
+
+    if (totalPlayers === 0) {
+        alert('⚠️ Aucun joueur inscrit !\n\nAjoutez des joueurs avant de générer la phase finale.');
+        return;
+    }
+
+    // Demander confirmation
+    if (!confirm(`⚡ ÉLIMINATION DIRECTE\n\nCette option crée une phase finale directe sans poules.\n\n${totalPlayers} joueur(s) inscrit(s) au total.\n\nContinuer ?`)) {
+        return;
+    }
+
+    // Initialiser la structure pools si nécessaire
+    if (!dayData.pools) {
+        dayData.pools = {
+            enabled: true,
+            config: { mode: 'direct' },
+            divisions: {}
+        };
+    } else {
+        dayData.pools.enabled = true;
+        dayData.pools.config = dayData.pools.config || {};
+        dayData.pools.config.mode = 'direct';
+    }
+
+    // Initialiser les divisions
+    for (let div = 1; div <= numDivisions; div++) {
+        if (!dayData.pools.divisions[div]) {
+            dayData.pools.divisions[div] = {
+                pools: [],
+                matches: []
+            };
+        }
+    }
+
+    // Initialiser la phase finale manuelle
+    initializeManualFinalPhase(dayNumber);
+
+    let totalQualified = 0;
+
+    // Pour chaque division, qualifier tous les joueurs directement
+    for (let division = 1; division <= numDivisions; division++) {
+        const players = dayData.players[division] || [];
+        const validPlayers = players.filter(p => p && p.toUpperCase() !== 'BYE');
+
+        if (validPlayers.length < 2) continue;
+
+        // Créer la liste des qualifiés (tous les joueurs)
+        const qualified = validPlayers.map((playerName, index) => ({
+            name: playerName,
+            seed: index + 1,
+            qualificationMethod: 'Inscrit',
+            isDirect: true,
+            wins: 0,
+            losses: 0,
+            points: 0,
+            diff: 0,
+            pointsWon: 0,
+            poolRank: index + 1,
+            poolName: '-'
+        }));
+
+        // Mélanger les joueurs pour un tirage aléatoire équitable
+        const shuffledQualified = shuffleArray([...qualified]);
+
+        // Réattribuer les seeds après mélange
+        shuffledQualified.forEach((player, idx) => {
+            player.seed = idx + 1;
+        });
+
+        dayData.pools.manualFinalPhase.divisions[division].qualified = shuffledQualified;
+        totalQualified += shuffledQualified.length;
+
+        // Ajuster le nombre de joueurs à une puissance de 2 (avec BYEs si nécessaire)
+        const adjustedQualified = adjustToPowerOfTwo(shuffledQualified);
+
+        // Déterminer le premier tour selon le nombre de joueurs
+        const firstRoundName = determineFirstRound(adjustedQualified.length);
+        if (firstRoundName && adjustedQualified.length >= 2) {
+            generateFirstRoundDirect(dayNumber, division, adjustedQualified, firstRoundName);
+        }
+    }
+
+    dayData.pools.manualFinalPhase.enabled = true;
+
+    // Mettre à jour l'affichage
+    updateManualFinalPhaseDisplay(dayNumber);
+    saveToLocalStorage();
+
+    // Désactiver le bouton d'élimination directe
+    const directBtn = document.getElementById(`direct-final-btn-${dayNumber}`);
+    if (directBtn) {
+        directBtn.disabled = true;
+        directBtn.style.opacity = '0.5';
+    }
+
+    alert(`⚡ ÉLIMINATION DIRECTE CRÉÉE !\n\n${totalQualified} joueur(s) en compétition.\n\nLes matchs ont été générés automatiquement.`);
+
+    // Scroll vers la phase finale
+    setTimeout(() => {
+        const firstFinalPhase = document.querySelector('.manual-final-phase-container');
+        if (firstFinalPhase) {
+            firstFinalPhase.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 100);
+}
+window.generateDirectFinalPhase = generateDirectFinalPhase;
+
+/**
+ * Ajuste le nombre de joueurs à la puissance de 2 supérieure en ajoutant des BYEs
+ */
+function adjustToPowerOfTwo(players) {
+    const count = players.length;
+
+    // Trouver la prochaine puissance de 2
+    let targetSize = 2;
+    while (targetSize < count) {
+        targetSize *= 2;
+    }
+
+    // Si déjà une puissance de 2, retourner tel quel
+    if (count === targetSize) {
+        return players;
+    }
+
+    // Ajouter des BYEs pour atteindre la puissance de 2
+    const result = [...players];
+    const byesToAdd = targetSize - count;
+
+    for (let i = 0; i < byesToAdd; i++) {
+        result.push({
+            name: 'BYE',
+            seed: count + i + 1,
+            isBye: true,
+            qualificationMethod: 'BYE',
+            isDirect: false
+        });
+    }
+
+    return result;
+}
+
+/**
+ * Génère le premier tour pour l'élimination directe
+ */
+function generateFirstRoundDirect(dayNumber, division, qualified, roundName) {
+    const dayData = championship.days[dayNumber];
+    const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
+
+    // Organiser les seeds pour un bracket équilibré
+    const seededPlayers = organizeSeeds(qualified);
+    const matches = [];
+
+    for (let i = 0; i < seededPlayers.length; i += 2) {
+        const player1 = seededPlayers[i];
+        const player2 = seededPlayers[i + 1] || { name: 'BYE', isBye: true };
+
+        const isByeMatch = player1.isBye || player2.isBye;
+        const winner = player1.isBye ? player2.name : (player2.isBye ? player1.name : null);
+
+        const matchData = {
+            id: `${roundName}-${division}-${Math.floor(i/2) + 1}`,
+            player1: player1.name,
+            player2: player2.name,
+            player1Seed: player1.seed,
+            player2Seed: player2.seed || null,
+            score1: player2.isBye ? 3 : (player1.isBye ? 0 : ''),
+            score2: player2.isBye ? 0 : (player1.isBye ? 3 : ''),
+            completed: isByeMatch,
+            winner: winner,
+            roundName: roundName,
+            position: Math.floor(i/2) + 1,
+            isBye: isByeMatch
+        };
+
+        matches.push(matchData);
+    }
+
+    rounds[roundName] = {
+        name: roundName,
+        matches: matches,
+        completed: false,
+        createdAt: new Date().toISOString()
+    };
+
+    dayData.pools.manualFinalPhase.currentRound = roundName;
+}
+
+/**
+ * Mélange un tableau de manière aléatoire (Fisher-Yates)
+ */
+function shuffleArray(array) {
+    const result = [...array];
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+}
+
 function determineFirstRound(numPlayers) {
-    // 32 joueurs = 16 matchs = 16èmes de finale
-    // 16 joueurs = 8 matchs = 8èmes de finale
-    // 8 joueurs = 4 matchs = Quarts de finale
+    // Détermine le premier tour selon le nombre de joueurs
+    // 2 joueurs = Finale directe
+    // 3-4 joueurs = Demi-finales
+    // 5-8 joueurs = Quarts de finale
+    // 9-16 joueurs = 8èmes de finale
+    // 17-32 joueurs = 16èmes de finale
+    // 33+ joueurs = 32èmes de finale
     if (numPlayers > 32) return "32èmes";
     if (numPlayers > 16) return "16èmes";
     if (numPlayers > 8) return "8èmes";
-    if (numPlayers >= 4) return "Quarts";
+    if (numPlayers > 4) return "Quarts";
+    if (numPlayers > 2) return "Demi-finales";
+    if (numPlayers === 2) return "Finale";
     return null;
 }
 
