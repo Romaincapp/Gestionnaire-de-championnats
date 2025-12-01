@@ -2843,9 +2843,12 @@ playerStats.forEach((player, index) => {
         let rankingHtml = '';
         const numDivisions = championship.config?.numberOfDivisions || 3;
 
+        // Vérifier si le mode pool est activé pour afficher la colonne Étape
+        const isPoolMode = Object.values(championship.days).some(day => day.pools?.enabled);
+
         for (let division = 1; division <= numDivisions; division++) {
             if (!generalRanking.divisions[division] || generalRanking.divisions[division].length === 0) continue;
-            
+
             rankingHtml += `
     <div style="margin-bottom: 40px;">
         <h3 style="color: #e67e22; margin-bottom: 20px; font-size: 1.4rem;">
@@ -2856,6 +2859,7 @@ playerStats.forEach((player, index) => {
                 <tr>
                     <th>Rang</th>
                     <th>Joueur</th>
+                    ${isPoolMode ? '<th>Étape</th>' : ''}
                     <th>Points Total</th>
                     <th>Journées</th>
                     <th>V/D/F</th>
@@ -2873,10 +2877,35 @@ generalRanking.divisions[division].forEach((player, index) => {
                       player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
     const escapedPlayerName = JSON.stringify(player.name).slice(1, -1);
 
+    // Style de la colonne Étape selon le résultat
+    let stageStyle = '';
+    let stageIcon = '';
+    if (player.stageLabel === 'Champion') {
+        stageStyle = 'background: linear-gradient(135deg, #ffd700, #ffed4e); color: #856404; font-weight: bold;';
+        stageIcon = '🏆 ';
+    } else if (player.stageLabel === 'Finaliste') {
+        stageStyle = 'background: linear-gradient(135deg, #c0c0c0, #e8e8e8); color: #555; font-weight: bold;';
+        stageIcon = '🥈 ';
+    } else if (player.stageLabel === '3ème') {
+        stageStyle = 'background: linear-gradient(135deg, #cd7f32, #daa520); color: white; font-weight: bold;';
+        stageIcon = '🥉 ';
+    } else if (player.stageLabel === '4ème') {
+        stageStyle = 'background: #f0e68c; color: #666; font-weight: 500;';
+    } else if (player.stageLabel === 'Demi') {
+        stageStyle = 'background: #e8f5e9; color: #2e7d32;';
+    } else if (player.stageLabel === 'Quart') {
+        stageStyle = 'background: #e3f2fd; color: #1565c0;';
+    } else if (player.stageLabel === '8ème' || player.stageLabel === '16ème') {
+        stageStyle = 'background: #fff3e0; color: #ef6c00;';
+    } else if (player.stageLabel === 'Pool') {
+        stageStyle = 'background: #ffebee; color: #c62828;';
+    }
+
     rankingHtml += `
         <tr style="cursor: pointer;" onclick="showGeneralPlayerDetails('${escapedPlayerName}', ${division})">
             <td class="rank-position ${rankClass}">${index + 1}</td>
             <td style="font-weight: 600;">${player.name}</td>
+            ${isPoolMode ? `<td style="${stageStyle} text-align: center; border-radius: 4px;">${stageIcon}${player.stageLabel}</td>` : ''}
             <td class="stat-value">${player.totalPoints}</td>
             <td>${player.daysPlayed}</td>
             <td>${player.totalWins}/${player.totalLosses}/${player.totalForfaits}</td>
@@ -3024,31 +3053,50 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 });
             });
 
+           // Étape 4: Déterminer si on est en mode pool et récupérer les étapes finales
+           const isPoolMode = Object.values(championship.days).some(day => day.pools?.enabled);
+
            const playersArray = Object.values(playersData)
     .filter(player => player.daysPlayed > 0)
-    .map(player => ({
-        ...player,
-        avgWinRate: player.winRates.length > 0 ?
-            Math.round(player.winRates.reduce((a, b) => a + b, 0) / player.winRates.length) : 0,
-        goalAveragePoints: player.totalPointsWon - player.totalPointsLost
-    }))
+    .map(player => {
+        // Calculer la meilleure étape finale du joueur sur toutes les journées
+        const bestStage = getBestPlayerStage(player.name, division);
+
+        return {
+            ...player,
+            avgWinRate: player.winRates.length > 0 ?
+                Math.round(player.winRates.reduce((a, b) => a + b, 0) / player.winRates.length) : 0,
+            goalAveragePoints: player.totalPointsWon - player.totalPointsLost,
+            // Ajouter les informations d'étape finale
+            stageWeight: bestStage ? bestStage.stageWeight : 0,
+            stageLabel: bestStage ? bestStage.stageLabel : '-',
+            stagePosition: bestStage ? bestStage.position : 999,
+            stageDayNumber: bestStage ? bestStage.dayNumber : null
+        };
+    })
     .sort((a, b) => {
-        // 1. Points totaux
+        // EN MODE POOL: Prioriser l'étape finale
+        if (isPoolMode) {
+            // 1. Étape finale (stageWeight) - plus c'est élevé, meilleure est la performance
+            if (b.stageWeight !== a.stageWeight) return b.stageWeight - a.stageWeight;
+        }
+
+        // 2. Points totaux
         if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
 
-        // 2. Nombre de victoires
+        // 3. Nombre de victoires
         if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
 
-        // 3. Différence de points (PP - PC)
+        // 4. Différence de points (PP - PC)
         if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
 
-        // 4. Points Pour
+        // 5. Points Pour
         if (b.totalPointsWon !== a.totalPointsWon) return b.totalPointsWon - a.totalPointsWon;
 
-        // 5. % victoires moyen
+        // 6. % victoires moyen
         if (b.avgWinRate !== a.avgWinRate) return b.avgWinRate - a.avgWinRate;
 
-        // 6. Ordre alphabétique
+        // 7. Ordre alphabétique
         return a.name.localeCompare(b.name);
     });
             
@@ -6930,20 +6978,27 @@ function generatePools(dayNumber) {
             }
         }
 
-        // Valider le nombre de matchs par joueur si spécifié
-        if (matchesPerPlayer) {
-            const validation = validateMatchesPerPlayer(poolSize, matchesPerPlayer);
-            if (!validation.valid) {
-                alert(`❌ Division ${division}: ${validation.message}\n\nAjustez le nombre de matchs ou la taille des poules.`);
-                continue; // Passer à la division suivante
-            }
-        }
-
         // Mélanger les joueurs pour équilibrer les poules
         const shuffledPlayers = shuffleArray([...players]);
         // En mode avancé, passer le nombre de poules exact choisi par l'utilisateur
         const targetPools = (configMode === 'advanced') ? numPools : null;
         const pools = createBalancedPoolsWithBye(shuffledPlayers, poolSize, targetPools);
+
+        // Valider le nombre de matchs par joueur pour CHAQUE poule
+        if (matchesPerPlayer) {
+            let hasWarning = false;
+            pools.forEach((pool, idx) => {
+                const realSize = pool.filter(p => !p.startsWith('BYE')).length;
+                const validation = validateMatchesPerPlayer(realSize, matchesPerPlayer);
+                if (!validation.valid) {
+                    alert(`❌ Division ${division}, Poule ${String.fromCharCode(65 + idx)}: ${validation.message}`);
+                }
+                if (validation.warning && !hasWarning) {
+                    hasWarning = true;
+                    console.log(`⚠️ Division ${division}: ${validation.warning}`);
+                }
+            });
+        }
 
         // Sauvegarder les poules
         dayData.pools.divisions[division].pools = pools;
@@ -7041,13 +7096,14 @@ function validateMatchesPerPlayer(poolSize, matchesPerPlayer) {
         };
     }
 
-    // Vérifier que poolSize * matchesPerPlayer est pair (nécessaire pour équilibrage strict)
-    // Si impair, il est impossible d'avoir exactement N matchs pour chaque joueur
+    // Vérifier si la distribution parfaite est possible
     const totalEdges = poolSize * matchesPerPlayer;
     if (totalEdges % 2 !== 0) {
+        // Ce n'est plus bloquant - l'algorithme gère ce cas
+        // Mais on retourne un warning pour informer l'utilisateur
         return {
-            valid: false,
-            message: `Impossible: ${poolSize} joueurs × ${matchesPerPlayer} matchs = ${totalEdges} (impair). Chaque match compte pour 2 joueurs, le total doit être pair. Choisissez un autre nombre de matchs.`
+            valid: true,
+            warning: `Note: ${poolSize} joueurs × ${matchesPerPlayer} matchs = distribution imparfaite. Certains joueurs auront ${matchesPerPlayer - 1} ou ${matchesPerPlayer} matchs.`
         };
     }
 
@@ -7139,91 +7195,102 @@ function generateLimitedMatches(pool, poolIndex, division, dayNumber, matchesPer
     let matchId = startMatchId;
     const n = pool.length;
 
+    // Filtrer les BYE pour le calcul
+    const realPlayers = pool.filter(p => !p.startsWith('BYE'));
+    const realN = realPlayers.length;
+
+    // Vérifier si la distribution exacte est possible
+    const totalConnections = realN * matchesPerPlayer;
+    const isExactPossible = totalConnections % 2 === 0;
+
+    // Calculer le nombre de matchs cible
+    // Si impossible (impair), certains joueurs auront 1 match de plus ou moins
+    const targetMatches = isExactPossible
+        ? totalConnections / 2
+        : Math.floor(totalConnections / 2);
+
+    console.log(`📊 Poule ${String.fromCharCode(65 + poolIndex)}: ${realN} joueurs, ${matchesPerPlayer} matchs demandés`);
+    console.log(`   Distribution exacte possible: ${isExactPossible ? 'OUI' : 'NON (certains auront ±1 match)'}`);
+
     // Tableau de suivi: combien de matchs chaque joueur a
     const matchCounts = Array(n).fill(0);
     // Set pour éviter les matchs en double
     const matchedPairs = new Set();
 
-    // Algorithme de rotation (Circle Method - Round Robin partiel)
-    // On crée une liste d'indices pour faire tourner
-    const indices = Array.from({ length: n }, (_, i) => i);
+    // NOUVEL ALGORITHME: Priorisation par nombre de matchs restants
+    // Générer toutes les paires possibles et les trier par priorité
 
-    let round = 0;
-    const maxRounds = matchesPerPlayer * 2; // Sécurité pour éviter boucle infinie
+    function generatePriorityPairs() {
+        const pairs = [];
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                const player1 = pool[i];
+                const player2 = pool[j];
+                const isBye1 = player1.startsWith('BYE');
+                const isBye2 = player2.startsWith('BYE');
 
-    while (round < maxRounds) {
-        // Vérifier si tous les joueurs ont atteint leur quota
-        if (matchCounts.every(c => c >= matchesPerPlayer)) break;
+                // Ignorer les paires BYE vs BYE
+                if (isBye1 && isBye2) continue;
 
-        // Génération des appairages pour ce round
-        // En round-robin standard: joueur 0 reste fixe, les autres tournent
-        const roundPairs = [];
-
-        // Apparier les joueurs: premier avec dernier, deuxième avec avant-dernier, etc.
-        const half = Math.floor(n / 2);
-        for (let i = 0; i < half; i++) {
-            const idx1 = indices[i];
-            const idx2 = indices[n - 1 - i];
-
-            // Vérifier que les deux joueurs n'ont pas atteint leur quota
-            if (matchCounts[idx1] < matchesPerPlayer && matchCounts[idx2] < matchesPerPlayer) {
-                // Vérifier qu'ils ne se sont pas déjà affrontés
-                const pairKey = idx1 < idx2 ? `${idx1}-${idx2}` : `${idx2}-${idx1}`;
+                const pairKey = `${i}-${j}`;
                 if (!matchedPairs.has(pairKey)) {
-                    roundPairs.push([idx1, idx2]);
-                    matchedPairs.add(pairKey);
+                    // Priorité = somme des matchs manquants (plus élevé = plus prioritaire)
+                    const remaining1 = Math.max(0, matchesPerPlayer - matchCounts[i]);
+                    const remaining2 = Math.max(0, matchesPerPlayer - matchCounts[j]);
+                    pairs.push({
+                        i, j,
+                        priority: remaining1 + remaining2,
+                        minRemaining: Math.min(remaining1, remaining2)
+                    });
                 }
             }
         }
+        // Trier: d'abord par minRemaining décroissant (joueurs qui ont le plus besoin)
+        // puis par priorité totale décroissante
+        pairs.sort((a, b) => {
+            if (b.minRemaining !== a.minRemaining) return b.minRemaining - a.minRemaining;
+            return b.priority - a.priority;
+        });
+        return pairs;
+    }
 
-        // Si nombre impair de joueurs, un joueur n'est pas apparié ce round
-        // (c'est normal et voulu)
+    // Générer les matchs jusqu'à atteindre le quota ou épuiser les possibilités
+    let iterations = 0;
+    const maxIterations = n * n; // Sécurité
 
-        // Créer les matchs et incrémenter les compteurs
-        roundPairs.forEach(([i, j]) => {
-            const player1 = pool[i];
-            const player2 = pool[j];
+    while (iterations < maxIterations) {
+        // Vérifier si on a assez de matchs
+        if (matches.length >= targetMatches) break;
 
-            const isBye1 = player1.startsWith('BYE');
-            const isBye2 = player2.startsWith('BYE');
+        // Vérifier si tous les joueurs ont atteint leur quota
+        const allReached = matchCounts.every((c, idx) => {
+            const player = pool[idx];
+            if (player.startsWith('BYE')) return true;
+            return c >= matchesPerPlayer;
+        });
+        if (allReached) break;
 
-            if (isBye1 || isBye2) {
-                // Gestion des BYE
-                if (!isBye1 && isBye2) {
-                    matches.push({
-                        id: matchId++,
-                        player1: player1,
-                        player2: player2,
-                        poolIndex: poolIndex,
-                        poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
-                        division: division,
-                        dayNumber: dayNumber,
-                        score1: '0',
-                        score2: '0',
-                        completed: true,
-                        winner: player1,
-                        isPoolMatch: true,
-                        isByeMatch: true
-                    });
-                } else if (isBye1 && !isBye2) {
-                    matches.push({
-                        id: matchId++,
-                        player1: player1,
-                        player2: player2,
-                        poolIndex: poolIndex,
-                        poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
-                        division: division,
-                        dayNumber: dayNumber,
-                        score1: '0',
-                        score2: '0',
-                        completed: true,
-                        winner: player2,
-                        isPoolMatch: true,
-                        isByeMatch: true
-                    });
-                }
-            } else {
-                // Match normal
+        // Obtenir les paires prioritaires
+        const priorityPairs = generatePriorityPairs();
+        if (priorityPairs.length === 0) break;
+
+        // Prendre la paire la plus prioritaire où les deux joueurs ont besoin de matchs
+        const bestPair = priorityPairs.find(p => p.minRemaining > 0);
+        if (!bestPair) break;
+
+        const { i, j } = bestPair;
+        const player1 = pool[i];
+        const player2 = pool[j];
+        const pairKey = `${i}-${j}`;
+
+        matchedPairs.add(pairKey);
+
+        const isBye1 = player1.startsWith('BYE');
+        const isBye2 = player2.startsWith('BYE');
+
+        if (isBye1 || isBye2) {
+            // Gestion des BYE - ne compte pas comme match joué
+            if (!isBye1 && isBye2) {
                 matches.push({
                     id: matchId++,
                     player1: player1,
@@ -7232,33 +7299,71 @@ function generateLimitedMatches(pool, poolIndex, division, dayNumber, matchesPer
                     poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                     division: division,
                     dayNumber: dayNumber,
-                    score1: '',
-                    score2: '',
-                    completed: false,
-                    winner: null,
+                    score1: '0',
+                    score2: '0',
+                    completed: true,
+                    winner: player1,
                     isPoolMatch: true,
-                    isByeMatch: false
+                    isByeMatch: true
+                });
+            } else if (isBye1 && !isBye2) {
+                matches.push({
+                    id: matchId++,
+                    player1: player1,
+                    player2: player2,
+                    poolIndex: poolIndex,
+                    poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+                    division: division,
+                    dayNumber: dayNumber,
+                    score1: '0',
+                    score2: '0',
+                    completed: true,
+                    winner: player2,
+                    isPoolMatch: true,
+                    isByeMatch: true
                 });
             }
-
+        } else {
+            // Match normal
+            matches.push({
+                id: matchId++,
+                player1: player1,
+                player2: player2,
+                poolIndex: poolIndex,
+                poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+                division: division,
+                dayNumber: dayNumber,
+                score1: '',
+                score2: '',
+                completed: false,
+                winner: null,
+                isPoolMatch: true,
+                isByeMatch: false
+            });
             matchCounts[i]++;
             matchCounts[j]++;
-        });
-
-        // Rotation: garder le premier fixe, faire tourner les autres
-        if (n > 1) {
-            const fixed = indices[0];
-            const rotating = indices.slice(1);
-            // Déplacer le dernier au début de la partie rotative
-            const rotated = [rotating[rotating.length - 1], ...rotating.slice(0, -1)];
-            indices.splice(0, n, fixed, ...rotated);
         }
 
-        round++;
+        iterations++;
     }
 
-    console.log(`✅ Poule ${String.fromCharCode(65 + poolIndex)}: ${matches.length} matchs générés, ${matchesPerPlayer} matchs/joueur`);
-    console.log(`   Répartition:`, matchCounts);
+    // Log de la distribution finale
+    const distribution = {};
+    pool.forEach((player, idx) => {
+        if (!player.startsWith('BYE')) {
+            distribution[player] = matchCounts[idx];
+        }
+    });
+    console.log(`✅ Poule ${String.fromCharCode(65 + poolIndex)}: ${matches.length} matchs générés`);
+    console.log(`   Distribution finale:`, distribution);
+
+    // Vérifier si la distribution est équilibrée
+    const counts = Object.values(distribution);
+    const minCount = Math.min(...counts);
+    const maxCount = Math.max(...counts);
+    if (maxCount - minCount > 1) {
+        console.warn(`⚠️ Distribution inégale dans Poule ${String.fromCharCode(65 + poolIndex)}: min=${minCount}, max=${maxCount}`);
+    }
 
     return matches;
 }
@@ -9955,6 +10060,218 @@ function getPodiumFromFinalPhase(finalPhase) {
     }
     
     return podium;
+}
+
+// ======================================
+// DÉTERMINATION DE L'ÉTAPE FINALE D'UN JOUEUR
+// ======================================
+
+/**
+ * Détermine l'étape finale atteinte par un joueur pour une journée donnée
+ * Retourne un objet avec:
+ * - stageWeight: poids pour le tri (plus c'est élevé, meilleure est la performance)
+ * - stageLabel: label textuel de l'étape
+ * - position: position finale (1 = champion, 2 = finaliste, etc.)
+ */
+function getPlayerFinalStageForDay(playerName, dayNumber, division) {
+    const dayData = championship.days[dayNumber];
+
+    // Si pas de mode pool activé, retourner null (pas d'étape)
+    if (!dayData || !dayData.pools || !dayData.pools.enabled) {
+        return null;
+    }
+
+    const divisionPools = dayData.pools.divisions[division];
+    if (!divisionPools) {
+        return null;
+    }
+
+    // Vérifier si le joueur est dans cette division
+    const players = dayData.players[division] || [];
+    if (!players.includes(playerName)) {
+        return null;
+    }
+
+    // Vérifier si le joueur a été qualifié pour la phase finale
+    const manualFinalPhase = dayData.pools.manualFinalPhase;
+    const isQualified = manualFinalPhase &&
+                        manualFinalPhase.enabled &&
+                        manualFinalPhase.divisions[division] &&
+                        manualFinalPhase.divisions[division].qualified &&
+                        manualFinalPhase.divisions[division].qualified.some(q => q.name === playerName);
+
+    if (!isQualified) {
+        // Joueur éliminé en phase de poules
+        return {
+            stageWeight: 10,
+            stageLabel: 'Pool',
+            position: 99
+        };
+    }
+
+    // Joueur qualifié - déterminer à quelle étape il a été éliminé
+    const finalPhase = manualFinalPhase.divisions[division];
+    const rounds = finalPhase.rounds || {};
+
+    // Ordre des rounds du moins avancé au plus avancé
+    const roundsOrder = ["16èmes", "8èmes", "Quarts", "Demi-finales", "Petite finale", "Finale"];
+    const roundWeights = {
+        "16èmes": 40,
+        "8èmes": 50,
+        "Quarts": 60,
+        "Demi-finales": 70,
+        "Petite finale": 75,
+        "Finale": 90
+    };
+    const roundPositions = {
+        "16èmes": 17,      // 17-32
+        "8èmes": 9,        // 9-16
+        "Quarts": 5,       // 5-8
+        "Demi-finales": 3, // 3-4 (avant petite finale)
+        "Petite finale": 3, // 3-4
+        "Finale": 2        // 1-2
+    };
+
+    let lastRoundPlayed = null;
+    let isWinner = false;
+    let lostInRound = null;
+
+    // Parcourir les rounds pour trouver où le joueur a été éliminé
+    for (const roundName of roundsOrder) {
+        if (!rounds[roundName]) continue;
+
+        const roundMatches = rounds[roundName].matches || [];
+        for (const match of roundMatches) {
+            if (match.player1 === playerName || match.player2 === playerName) {
+                lastRoundPlayed = roundName;
+
+                if (match.completed && match.winner) {
+                    if (match.winner === playerName) {
+                        isWinner = true;
+                    } else {
+                        // Joueur a perdu dans ce round
+                        lostInRound = roundName;
+                    }
+                }
+            }
+        }
+    }
+
+    // Déterminer l'étape finale
+    if (lostInRound === "Finale") {
+        // Finaliste
+        return {
+            stageWeight: 90,
+            stageLabel: 'Finaliste',
+            position: 2
+        };
+    }
+
+    if (lostInRound === "Petite finale") {
+        // 4ème place
+        return {
+            stageWeight: 75,
+            stageLabel: '4ème',
+            position: 4
+        };
+    }
+
+    // Vérifier si le joueur a gagné la petite finale (3ème)
+    if (rounds["Petite finale"]) {
+        const petiteFinaleMatches = rounds["Petite finale"].matches || [];
+        for (const match of petiteFinaleMatches) {
+            if (match.completed && match.winner === playerName) {
+                return {
+                    stageWeight: 80,
+                    stageLabel: '3ème',
+                    position: 3
+                };
+            }
+        }
+    }
+
+    // Vérifier si le joueur a gagné la finale (Champion)
+    if (rounds["Finale"]) {
+        const finaleMatches = rounds["Finale"].matches || [];
+        for (const match of finaleMatches) {
+            if (match.completed && match.winner === playerName) {
+                return {
+                    stageWeight: 100,
+                    stageLabel: 'Champion',
+                    position: 1
+                };
+            }
+        }
+    }
+
+    if (lostInRound === "Demi-finales") {
+        // Perdant de demi-finale (3-4ème, en attendant petite finale)
+        return {
+            stageWeight: 70,
+            stageLabel: 'Demi',
+            position: 3
+        };
+    }
+
+    if (lostInRound === "Quarts") {
+        return {
+            stageWeight: 60,
+            stageLabel: 'Quart',
+            position: 5
+        };
+    }
+
+    if (lostInRound === "8èmes") {
+        return {
+            stageWeight: 50,
+            stageLabel: '8ème',
+            position: 9
+        };
+    }
+
+    if (lostInRound === "16èmes") {
+        return {
+            stageWeight: 40,
+            stageLabel: '16ème',
+            position: 17
+        };
+    }
+
+    // Joueur qualifié mais phase finale non terminée
+    if (lastRoundPlayed) {
+        return {
+            stageWeight: roundWeights[lastRoundPlayed] || 30,
+            stageLabel: 'En cours',
+            position: roundPositions[lastRoundPlayed] || 10
+        };
+    }
+
+    // Qualifié mais pas encore joué
+    return {
+        stageWeight: 30,
+        stageLabel: 'Qualifié',
+        position: 10
+    };
+}
+
+/**
+ * Récupère la meilleure étape atteinte par un joueur sur toutes les journées
+ */
+function getBestPlayerStage(playerName, division) {
+    let bestStage = null;
+
+    Object.keys(championship.days).forEach(dayNumber => {
+        const dayNum = parseInt(dayNumber);
+        const stage = getPlayerFinalStageForDay(playerName, dayNum, division);
+
+        if (stage) {
+            if (!bestStage || stage.stageWeight > bestStage.stageWeight) {
+                bestStage = { ...stage, dayNumber: dayNum };
+            }
+        }
+    });
+
+    return bestStage;
 }
 
 function resetManualFinalPhase(dayNumber) {
