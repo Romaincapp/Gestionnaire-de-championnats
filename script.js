@@ -2689,6 +2689,9 @@ try {
             return;
         }
 
+        // Vérifier si le mode pool est activé pour cette journée
+        const isPoolMode = dayData.pools?.enabled;
+
         for (let division = 1; division <= numDivisions; division++) {
             if (dayData.players[division].length === 0) continue;
 
@@ -2696,16 +2699,27 @@ try {
     .filter(player => player.toUpperCase() !== 'BYE')
     .map(player => {
     const stats = calculatePlayerStats(dayNumber, division, player);
+    // Récupérer l'étape finale du joueur pour cette journée
+    const stage = getPlayerFinalStageForDay(player, dayNumber, division);
     return {
         name: player,
         ...stats,
-        goalAveragePoints: stats.pointsWon - stats.pointsLost
+        goalAveragePoints: stats.pointsWon - stats.pointsLost,
+        // Ajouter les informations d'étape finale
+        stageWeight: stage ? stage.stageWeight : 0,
+        stageLabel: stage ? stage.stageLabel : '-',
+        stagePosition: stage ? stage.position : 999
     };
 });
 
 if (sortBy === 'points') {
-    // Tri standard par points
+    // Tri standard par points (avec étape finale en priorité en mode pool)
     playerStats.sort((a, b) => {
+        // EN MODE POOL: Prioriser l'étape finale
+        if (isPoolMode) {
+            if (b.stageWeight !== a.stageWeight) return b.stageWeight - a.stageWeight;
+        }
+
         // 1. Points totaux
         if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
 
@@ -2722,8 +2736,13 @@ if (sortBy === 'points') {
         return a.name.localeCompare(b.name);
     });
 } else {
-    // Tri par % victoires
+    // Tri par % victoires (avec étape finale en priorité en mode pool)
     playerStats.sort((a, b) => {
+        // EN MODE POOL: Prioriser l'étape finale
+        if (isPoolMode) {
+            if (b.stageWeight !== a.stageWeight) return b.stageWeight - a.stageWeight;
+        }
+
         // 1. % de victoires
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
 
@@ -2751,6 +2770,7 @@ if (sortBy === 'points') {
                 <tr>
                     <th>Rang</th>
                     <th>Joueur</th>
+                    ${isPoolMode ? '<th>Étape</th>' : ''}
                     <th>Points</th>
                     <th>V/D</th>
                     <th>% Vict.</th>
@@ -2768,10 +2788,35 @@ playerStats.forEach((player, index) => {
                       player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
     const escapedPlayerName = JSON.stringify(player.name).slice(1, -1);
 
+    // Style de la colonne Étape selon le résultat
+    let stageStyle = '';
+    let stageIcon = '';
+    if (player.stageLabel === 'Champion') {
+        stageStyle = 'background: linear-gradient(135deg, #ffd700, #ffed4e); color: #856404; font-weight: bold;';
+        stageIcon = '🏆 ';
+    } else if (player.stageLabel === 'Finaliste') {
+        stageStyle = 'background: linear-gradient(135deg, #c0c0c0, #e8e8e8); color: #555; font-weight: bold;';
+        stageIcon = '🥈 ';
+    } else if (player.stageLabel === '3ème') {
+        stageStyle = 'background: linear-gradient(135deg, #cd7f32, #daa520); color: white; font-weight: bold;';
+        stageIcon = '🥉 ';
+    } else if (player.stageLabel === '4ème') {
+        stageStyle = 'background: #f0e68c; color: #666; font-weight: 500;';
+    } else if (player.stageLabel === 'Demi') {
+        stageStyle = 'background: #e8f5e9; color: #2e7d32;';
+    } else if (player.stageLabel === 'Quart') {
+        stageStyle = 'background: #e3f2fd; color: #1565c0;';
+    } else if (player.stageLabel === '8ème' || player.stageLabel === '16ème') {
+        stageStyle = 'background: #fff3e0; color: #ef6c00;';
+    } else if (player.stageLabel === 'Pool') {
+        stageStyle = 'background: #ffebee; color: #c62828;';
+    }
+
     rankingsHtml += `
         <tr style="cursor: pointer;" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayerName}')">
             <td class="rank-position ${rankClass}">${index + 1}</td>
             <td style="font-weight: 600;">${player.name}</td>
+            ${isPoolMode ? `<td style="${stageStyle} text-align: center; border-radius: 4px;">${stageIcon}${player.stageLabel}</td>` : ''}
             <td class="stat-value">${player.totalPoints}</td>
             <td>${player.wins}/${player.losses}</td>
             <td>${player.winRate}%</td>
