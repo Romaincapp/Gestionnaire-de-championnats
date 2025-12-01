@@ -6850,16 +6850,23 @@ function generatePools(dayNumber) {
                 const nearest = optimalCounts.reduce((prev, curr) =>
                     Math.abs(curr - players.length) < Math.abs(prev - players.length) ? curr : prev
                 );
-                const needsBye = players.length % poolSize !== 0;
+                const notPerfectlyBalanced = players.length % poolSize !== 0;
 
-                if (needsBye) {
-                    const numByes = poolSize - (players.length % poolSize);
+                if (notPerfectlyBalanced) {
+                    // Calculer la répartition réelle sans BYE
+                    const numPools = Math.ceil(players.length / poolSize);
+                    const baseSize = Math.floor(players.length / numPools);
+                    const extraPools = players.length % numPools;
+                    const poolDistribution = extraPools > 0
+                        ? `${extraPools} poule(s) de ${baseSize + 1} + ${numPools - extraPools} poule(s) de ${baseSize}`
+                        : `${numPools} poule(s) de ${baseSize}`;
+
                     const confirmed = confirm(
-                        `⚠️ Division ${division}: ${players.length} joueur(s)\n\n` +
-                        `📊 Nombre optimal pour des poules de ${poolSize}: ${optimalCounts.join(', ')}\n` +
+                        `ℹ️ Division ${division}: ${players.length} joueur(s)\n\n` +
+                        `📊 Nombre optimal pour des poules égales de ${poolSize}: ${optimalCounts.join(', ')}\n` +
                         `💡 Le plus proche: ${nearest} joueurs\n\n` +
-                        `🎯 Solution: ${numByes} joueur(s) BYE seront ajoutés automatiquement\n` +
-                        `Les joueurs BYE ne jouent pas (repos garanti).\n\n` +
+                        `🎯 Répartition prévue: ${poolDistribution}\n` +
+                        `(Poules de tailles légèrement différentes - pratique sportive standard)\n\n` +
                         `Voulez-vous continuer ?`
                     );
 
@@ -6881,7 +6888,9 @@ function generatePools(dayNumber) {
 
         // Mélanger les joueurs pour équilibrer les poules
         const shuffledPlayers = shuffleArray([...players]);
-        const pools = createBalancedPoolsWithBye(shuffledPlayers, poolSize);
+        // En mode avancé, passer le nombre de poules exact choisi par l'utilisateur
+        const targetPools = (configMode === 'advanced') ? numPools : null;
+        const pools = createBalancedPoolsWithBye(shuffledPlayers, poolSize, targetPools);
 
         // Sauvegarder les poules
         dayData.pools.divisions[division].pools = pools;
@@ -6911,25 +6920,35 @@ function calculateOptimalPlayerCounts(poolSize) {
     return optimal;
 }
 
-// Créer des poules équilibrées avec gestion automatique des BYEs
-function createBalancedPoolsWithBye(players, maxPoolSize) {
+// Créer des poules équilibrées SANS ajouter de BYE
+// Les poules peuvent avoir des tailles légèrement différentes (ex: 8 et 7 joueurs)
+// C'est la pratique standard dans les tournois sportifs
+// @param players - liste des joueurs
+// @param maxPoolSize - taille max d'une poule (utilisé pour calculer le nombre de poules si targetNumPools non spécifié)
+// @param targetNumPools - (optionnel) nombre exact de poules souhaité (mode avancé)
+function createBalancedPoolsWithBye(players, maxPoolSize, targetNumPools = null) {
     const totalPlayers = players.length;
-    const remainder = totalPlayers % maxPoolSize;
 
-    // Si le nombre de joueurs est un multiple parfait de maxPoolSize, pas de BYE
-    if (remainder === 0) {
-        return createBalancedPools(players, maxPoolSize);
+    // Utiliser le nombre de poules spécifié ou le calculer depuis maxPoolSize
+    const numPools = targetNumPools || Math.ceil(totalPlayers / maxPoolSize);
+
+    // Répartir équitablement les joueurs sans BYE
+    // Ex: 38 joueurs, 5 poules → 3 poules de 8 + 2 poules de 7
+    const baseSize = Math.floor(totalPlayers / numPools);
+    const extraPlayers = totalPlayers % numPools;
+
+    const pools = [];
+    let playerIndex = 0;
+
+    for (let i = 0; i < numPools; i++) {
+        // Les premières poules ont 1 joueur de plus si nécessaire
+        const poolSize = baseSize + (i < extraPlayers ? 1 : 0);
+        const pool = players.slice(playerIndex, playerIndex + poolSize);
+        pools.push(pool);
+        playerIndex += poolSize;
     }
 
-    // Sinon, ajouter des joueurs BYE pour compléter
-    const numByes = maxPoolSize - remainder;
-    const playersWithBye = [...players];
-
-    for (let i = 1; i <= numByes; i++) {
-        playersWithBye.push(`BYE ${i}`);
-    }
-
-    return createBalancedPools(playersWithBye, maxPoolSize);
+    return pools;
 }
 
 function createBalancedPools(players, maxPoolSize) {
