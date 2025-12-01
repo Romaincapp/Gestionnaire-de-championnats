@@ -8626,8 +8626,12 @@ function generateManualFinalPhase(dayNumber) {
 }
 
 function determineFirstRound(numPlayers) {
-    if (numPlayers >= 16) return "16èmes";
-    if (numPlayers >= 8) return "8èmes";
+    // 32 joueurs = 16 matchs = 16èmes de finale
+    // 16 joueurs = 8 matchs = 8èmes de finale
+    // 8 joueurs = 4 matchs = Quarts de finale
+    if (numPlayers > 32) return "32èmes";
+    if (numPlayers > 16) return "16èmes";
+    if (numPlayers > 8) return "8èmes";
     if (numPlayers >= 4) return "Quarts";
     return null;
 }
@@ -8674,7 +8678,7 @@ function generateFirstRound(dayNumber, division, qualified, roundName) {
 }
 
 function getNextRoundName(currentRound) {
-    const sequence = ["16èmes", "8èmes", "Quarts", "Demi-finales", "Finale"];
+    const sequence = ["32èmes", "16èmes", "8èmes", "Quarts", "Demi-finales", "Finale"];
     const currentIndex = sequence.indexOf(currentRound);
     return currentIndex >= 0 && currentIndex < sequence.length - 1 ? sequence[currentIndex + 1] : null;
 }
@@ -8868,8 +8872,31 @@ function generateBracketPositions(n) {
     if (n <= 2) return [0, 1];
     if (n <= 4) return [0, 3, 2, 1]; // 1 vs 4, 2 vs 3 -> gagnants en finale
     if (n <= 8) return [0, 7, 4, 3, 2, 5, 6, 1]; // Standard 8-bracket
-    // Pour 16: séparation maximale des têtes de série
-    return [0, 15, 8, 7, 4, 11, 12, 3, 2, 13, 10, 5, 6, 9, 14, 1];
+    if (n <= 16) {
+        // Pour 16: séparation maximale des têtes de série
+        return [0, 15, 8, 7, 4, 11, 12, 3, 2, 13, 10, 5, 6, 9, 14, 1];
+    }
+    // Pour 32: bracket standard avec séparation maximale
+    if (n <= 32) {
+        return [
+            0, 31, 16, 15, 8, 23, 24, 7,   // Haut du tableau (quart 1-2)
+            4, 27, 20, 11, 12, 19, 28, 3,  // Haut du tableau (quart 3-4)
+            2, 29, 18, 13, 10, 21, 26, 5,  // Bas du tableau (quart 5-6)
+            6, 25, 22, 9, 14, 17, 30, 1    // Bas du tableau (quart 7-8)
+        ];
+    }
+    // Pour 64 ou plus: générer dynamiquement
+    const positions = [];
+    for (let i = 0; i < n; i++) {
+        positions.push(i);
+    }
+    // Algorithme de placement standard : seed 1 vs seed n, seed 2 vs seed n-1, etc.
+    const result = new Array(n);
+    for (let i = 0; i < n / 2; i++) {
+        result[i * 2] = positions[i];
+        result[i * 2 + 1] = positions[n - 1 - i];
+    }
+    return result.map((_, idx) => idx); // Retourner indices linéaires si > 32
 }
 
 // ======================================
