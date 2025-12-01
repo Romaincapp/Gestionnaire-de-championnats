@@ -449,13 +449,36 @@ try {
                 if (idx !== -1) pool[idx] = trimmedNewName;
             });
 
-            // Mettre à jour dans la phase finale
+            // Mettre à jour dans la phase finale (ancien système)
             const finalPhase = championship.days[dayNumber].pools.divisions[division].finalPhase || [];
             finalPhase.forEach(match => {
                 if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
                 if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
                 if (match.winner === oldPlayerName) match.winner = trimmedNewName;
             });
+
+            // Mettre à jour dans la phase finale MANUELLE (nouveau système)
+            const manualFinalPhase = championship.days[dayNumber].pools?.manualFinalPhase?.divisions?.[division];
+            if (manualFinalPhase) {
+                // Mettre à jour dans les qualifiés
+                if (manualFinalPhase.qualified) {
+                    manualFinalPhase.qualified.forEach(player => {
+                        if (player.name === oldPlayerName) player.name = trimmedNewName;
+                    });
+                }
+                // Mettre à jour dans tous les tours
+                if (manualFinalPhase.rounds) {
+                    Object.values(manualFinalPhase.rounds).forEach(round => {
+                        if (round.matches) {
+                            round.matches.forEach(match => {
+                                if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
+                                if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
+                                if (match.winner === oldPlayerName) match.winner = trimmedNewName;
+                            });
+                        }
+                    });
+                }
+            }
         }
 
         // Rafraîchir l'affichage
@@ -2347,13 +2370,29 @@ try {
             playerMatches = [...playerMatches, ...playerPoolMatches];
         }
 
-        // Ajouter les matchs de phase finale si présents
+        // Ajouter les matchs de phase finale si présents (ancien système)
         if (dayData.pools && dayData.pools.divisions[division] && dayData.pools.divisions[division].finalPhase) {
             const finalMatches = dayData.pools.divisions[division].finalPhase || [];
             const playerFinalMatches = finalMatches.filter(match =>
                 match.player1 === playerName || match.player2 === playerName
             );
             playerMatches = [...playerMatches, ...playerFinalMatches];
+        }
+
+        // Ajouter les matchs de phase finale MANUELLE si présents (nouveau système)
+        if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions[division]) {
+            const manualFinalPhase = dayData.pools.manualFinalPhase.divisions[division];
+            if (manualFinalPhase.rounds) {
+                // Parcourir tous les tours (16èmes, 8èmes, Quarts, Demi-finales, Finale, Petite finale)
+                Object.values(manualFinalPhase.rounds).forEach(round => {
+                    if (round.matches) {
+                        const playerRoundMatches = round.matches.filter(match =>
+                            match.player1 === playerName || match.player2 === playerName
+                        );
+                        playerMatches = [...playerMatches, ...playerRoundMatches];
+                    }
+                });
+            }
         }
 
         let wins = 0;
@@ -2621,12 +2660,26 @@ try {
                 }
             }
 
-            // Vérifier les matchs de phase finale
+            // Vérifier les matchs de phase finale (ancien système)
             if (dayData.pools && dayData.pools.divisions[division] && dayData.pools.divisions[division].finalPhase) {
                 const finalMatches = dayData.pools.divisions[division].finalPhase || [];
                 if (finalMatches.some(match => match.completed)) {
                     hasAnyMatches = true;
                     break;
+                }
+            }
+
+            // Vérifier les matchs de phase finale MANUELLE (nouveau système)
+            if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions[division]) {
+                const manualFinalPhase = dayData.pools.manualFinalPhase.divisions[division];
+                if (manualFinalPhase.rounds) {
+                    const hasCompletedFinalMatch = Object.values(manualFinalPhase.rounds).some(round =>
+                        round.matches && round.matches.some(match => match.completed)
+                    );
+                    if (hasCompletedFinalMatch) {
+                        hasAnyMatches = true;
+                        break;
+                    }
                 }
             }
         }
@@ -10869,7 +10922,7 @@ function printSimpleScoreSheets(dayNumber) {
             }
         });
 
-        // Phase finale si activée
+        // Phase finale si activée (ancien système)
         if (dayData.pools?.divisions?.[division]?.finalPhase) {
             const finalMatches = dayData.pools.divisions[division].finalPhase;
             finalMatches.forEach(match => {
@@ -10880,6 +10933,26 @@ function printSimpleScoreSheets(dayNumber) {
                         matchId: matchCounter++,
                         type: 'Finale',
                         tour: match.round || 1
+                    });
+                }
+            });
+        }
+
+        // Phase finale MANUELLE si activée (nouveau système)
+        if (dayData.pools?.manualFinalPhase?.divisions?.[division]?.rounds) {
+            const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
+            Object.entries(rounds).forEach(([roundName, round]) => {
+                if (round.matches) {
+                    round.matches.forEach(match => {
+                        if (match.player1 && match.player2 && match.player1 !== 'BYE' && match.player2 !== 'BYE' && !match.isBye) {
+                            allMatches.push({
+                                ...match,
+                                division,
+                                matchId: matchCounter++,
+                                type: roundName,
+                                tour: roundName
+                            });
+                        }
                     });
                 }
             });
