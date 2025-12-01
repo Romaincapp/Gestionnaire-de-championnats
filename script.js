@@ -8661,7 +8661,196 @@ function getNextRoundName(currentRound) {
 }
 
 function organizeSeeds(qualified) {
-    return qualified.sort((a, b) => a.seed - b.seed);
+    // Algorithme de placement qui sépare les joueurs de même poule
+    // pour qu'ils ne se rencontrent qu'au tour le plus tardif possible
+
+    const numPlayers = qualified.length;
+    if (numPlayers < 4) {
+        return qualified.sort((a, b) => a.seed - b.seed);
+    }
+
+    // Grouper les joueurs par poule
+    const poolGroups = {};
+    qualified.forEach(player => {
+        const poolKey = player.poolIndex !== undefined ? player.poolIndex : player.poolName;
+        if (!poolGroups[poolKey]) {
+            poolGroups[poolKey] = [];
+        }
+        poolGroups[poolKey].push(player);
+    });
+
+    // Trier chaque groupe par rang dans la poule
+    Object.values(poolGroups).forEach(group => {
+        group.sort((a, b) => a.poolRank - b.poolRank);
+    });
+
+    const poolKeys = Object.keys(poolGroups);
+    const numPools = poolKeys.length;
+
+    // Déterminer la taille du tableau (prochaine puissance de 2)
+    const bracketSize = Math.pow(2, Math.ceil(Math.log2(numPlayers)));
+    const result = new Array(bracketSize).fill(null);
+
+    // Cas spécial : 2 poules (croisement classique)
+    if (numPools === 2) {
+        const poolA = poolGroups[poolKeys[0]];
+        const poolB = poolGroups[poolKeys[1]];
+
+        // Placement croisé : 1A vs 2B en haut, 1B vs 2A en bas
+        // Ainsi les joueurs de même poule ne se rencontrent qu'en finale
+        if (bracketSize === 4) {
+            result[0] = poolA[0]; // 1er poule A
+            result[1] = poolB[1]; // 2ème poule B
+            result[2] = poolB[0]; // 1er poule B
+            result[3] = poolA[1]; // 2ème poule A
+        } else {
+            // Pour tableaux plus grands, alterner les placements
+            let posA = 0, posB = bracketSize / 2;
+            poolA.forEach((player, idx) => {
+                if (idx % 2 === 0) result[posA++] = player;
+                else result[posB++] = player;
+            });
+            posA = 1; posB = bracketSize / 2 + 1;
+            poolB.forEach((player, idx) => {
+                if (idx % 2 === 0) result[posB - 1 + idx] = player;
+                else result[posA - 1 + idx] = player;
+            });
+        }
+    }
+    // Cas 4 poules : placement en quarts séparés
+    else if (numPools === 4) {
+        // Ordre des poules pour croisement optimal
+        // Q1: 1A vs 2C, Q2: 1D vs 2B, Q3: 1B vs 2D, Q4: 1C vs 2A
+        const crossOrder = [
+            [0, 2], // Q1: poule 0 vs poule 2
+            [3, 1], // Q2: poule 3 vs poule 1
+            [1, 3], // Q3: poule 1 vs poule 3
+            [2, 0]  // Q4: poule 2 vs poule 0
+        ];
+
+        let pos = 0;
+        crossOrder.forEach(([poolIdx1, poolIdx2]) => {
+            const pool1 = poolGroups[poolKeys[poolIdx1]] || [];
+            const pool2 = poolGroups[poolKeys[poolIdx2]] || [];
+
+            if (pool1[0]) result[pos] = pool1[0]; // 1er de poule
+            if (pool2[1]) result[pos + 1] = pool2[1]; // 2ème de l'autre poule
+            pos += 2;
+        });
+    }
+    // Cas général : algorithme de séparation par moitiés
+    else {
+        // Grouper les joueurs par rang (tous les 1ers, tous les 2èmes, etc.)
+        const byRank = {};
+        qualified.forEach(player => {
+            const rank = player.poolRank || 1;
+            if (!byRank[rank]) byRank[rank] = [];
+            byRank[rank].push(player);
+        });
+
+        // Placer les joueurs en s'assurant que même poule = moitiés différentes
+        const halfSize = bracketSize / 2;
+        let topPos = 0;
+        let bottomPos = halfSize;
+
+        // Alterner les poules entre haut et bas du tableau
+        poolKeys.forEach((poolKey, poolIdx) => {
+            const players = poolGroups[poolKey];
+            players.forEach((player, playerIdx) => {
+                // Alterner: pair en haut, impair en bas (par poule)
+                if (poolIdx % 2 === 0) {
+                    if (playerIdx % 2 === 0 && topPos < halfSize) {
+                        result[topPos++] = player;
+                    } else if (bottomPos < bracketSize) {
+                        result[bottomPos++] = player;
+                    }
+                } else {
+                    if (playerIdx % 2 === 0 && bottomPos < bracketSize) {
+                        result[bottomPos++] = player;
+                    } else if (topPos < halfSize) {
+                        result[topPos++] = player;
+                    }
+                }
+            });
+        });
+    }
+
+    // Compacter le tableau (retirer les nulls) et réorganiser pour matchs équilibrés
+    const compacted = result.filter(p => p !== null);
+
+    // Si on n'a pas assez de joueurs, compléter avec les joueurs manquants
+    qualified.forEach(player => {
+        if (!compacted.includes(player)) {
+            compacted.push(player);
+        }
+    });
+
+    // S'assurer qu'on a le bon nombre de joueurs
+    const finalResult = compacted.slice(0, numPlayers);
+
+    // Réorganiser pour que les matchs soient bien formés (seed order dans chaque moitié)
+    return reorderForBracket(finalResult, poolGroups);
+}
+
+// Réorganise le tableau pour un bracket équilibré tout en gardant la séparation des poules
+function reorderForBracket(players, poolGroups) {
+    const n = players.length;
+    if (n < 4) return players;
+
+    // Vérifier si deux joueurs sont de la même poule
+    function samePool(p1, p2) {
+        if (!p1 || !p2) return false;
+        const pool1 = p1.poolIndex !== undefined ? p1.poolIndex : p1.poolName;
+        const pool2 = p2.poolIndex !== undefined ? p2.poolIndex : p2.poolName;
+        return pool1 === pool2;
+    }
+
+    // Trier par seed d'abord
+    const sorted = [...players].sort((a, b) => (a.seed || 99) - (b.seed || 99));
+
+    // Pour un tableau de 4 : positions [0,1] = match1, [2,3] = match2
+    // Pour un tableau de 8 : [0,1]=M1, [2,3]=M2, [4,5]=M3, [6,7]=M4
+    // Les gagnants de M1 vs M2 se rencontrent en demi, M3 vs M4 aussi
+
+    const result = new Array(n).fill(null);
+    const used = new Set();
+
+    // Placement standard du seeding avec vérification des poules
+    // Seed 1 vs dernier seed, Seed 2 vs avant-dernier, etc.
+    const positions = generateBracketPositions(n);
+
+    positions.forEach((pos, idx) => {
+        if (idx < sorted.length) {
+            result[pos] = sorted[idx];
+        }
+    });
+
+    // Vérifier et corriger les conflits de poules
+    for (let i = 0; i < result.length; i += 2) {
+        if (samePool(result[i], result[i + 1])) {
+            // Conflit ! Chercher un échange possible
+            for (let j = i + 2; j < result.length; j++) {
+                // Essayer d'échanger result[i+1] avec result[j]
+                if (!samePool(result[i], result[j]) && !samePool(result[j - (j % 2)], result[i + 1])) {
+                    const temp = result[i + 1];
+                    result[i + 1] = result[j];
+                    result[j] = temp;
+                    break;
+                }
+            }
+        }
+    }
+
+    return result.filter(p => p !== null);
+}
+
+// Génère les positions de placement pour un bracket standard
+function generateBracketPositions(n) {
+    if (n <= 2) return [0, 1];
+    if (n <= 4) return [0, 3, 2, 1]; // 1 vs 4, 2 vs 3 -> gagnants en finale
+    if (n <= 8) return [0, 7, 4, 3, 2, 5, 6, 1]; // Standard 8-bracket
+    // Pour 16: séparation maximale des têtes de série
+    return [0, 15, 8, 7, 4, 11, 12, 3, 2, 13, 10, 5, 6, 9, 14, 1];
 }
 
 // ======================================
