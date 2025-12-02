@@ -9960,7 +9960,7 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
     console.log('🔵 handleManualMatchEnter appelé - Key:', event.key, 'MatchId:', matchId);
 
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || 3;
     let match = null;
     let matchDivision = null;
     let matchRoundName = null;
