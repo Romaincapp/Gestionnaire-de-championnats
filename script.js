@@ -9880,7 +9880,8 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
     
     // Pour les autres tours terminés
     if (allCompleted) {
-        const nextRound = round.nextRound;
+        // Fallback: calculer nextRound si non défini (pour données créées avant correction)
+        const nextRound = round.nextRound || getNextRoundName(roundName);
         if (nextRound) {
             return `
                 <div style="
