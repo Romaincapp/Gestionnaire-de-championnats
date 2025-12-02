@@ -9189,6 +9189,7 @@ function generateFirstRoundDirect(dayNumber, division, qualified, roundName) {
         name: roundName,
         matches: matches,
         completed: false,
+        nextRound: getNextRoundName(roundName),
         createdAt: new Date().toISOString()
     };
 
