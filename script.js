@@ -10145,14 +10145,18 @@ function checkRoundCompletion(dayNumber, division, roundName) {
 function generateNextManualRound(dayNumber, division, currentRoundName) {
     const dayData = championship.days[dayNumber];
     const currentRound = dayData.pools.manualFinalPhase.divisions[division].rounds[currentRoundName];
-    
-    if (!currentRound.completed) {
+
+    // Vérifier si tous les matchs sont terminés (fallback si completed non mis à jour)
+    const allMatchesCompleted = currentRound.matches.every(m => m.completed);
+    if (!currentRound.completed && !allMatchesCompleted) {
         alert('⚠️ Terminez d\'abord tous les matchs du tour actuel !');
         return;
     }
-    
-    const nextRoundName = currentRound.nextRound;
+
+    // Fallback: calculer nextRound si non défini
+    const nextRoundName = currentRound.nextRound || getNextRoundName(currentRoundName);
     if (!nextRoundName) {
+        alert('⚠️ Pas de tour suivant défini !');
         return;
     }
     
