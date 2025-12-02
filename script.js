@@ -1876,6 +1876,144 @@ try {
     }
     window.deletePoolMatch = deletePoolMatch;
 
+    // ======================================
+    // AJOUT MANUEL DE MATCHS DANS LES POOLS
+    // ======================================
+
+    function showAddPoolMatchModal(dayNumber, division, poolIndex) {
+        const dayData = championship.days[dayNumber];
+        if (!dayData || !dayData.pools || !dayData.pools.divisions || !dayData.pools.divisions[division]) {
+            showNotification('Erreur: données de pool non trouvées', 'error');
+            return;
+        }
+
+        const pools = dayData.pools.divisions[division].pools;
+        if (!pools || !pools[poolIndex]) {
+            showNotification('Erreur: pool non trouvée', 'error');
+            return;
+        }
+
+        const allPoolPlayers = pools[poolIndex];
+        const realPlayers = allPoolPlayers.filter(p => !p.startsWith('BYE'));
+        const poolName = `Poule ${String.fromCharCode(65 + poolIndex)}`;
+
+        // Options: joueurs réels + option BYE toujours disponible à la fin
+        let playerOptions = realPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
+        playerOptions += `<option value="BYE">--- BYE (repos) ---</option>`;
+
+        const modalHTML = `
+            <div id="add-pool-match-modal" style="
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); display: flex; align-items: center;
+                justify-content: center; z-index: 10000;
+            " onclick="if(event.target === this) this.remove()">
+                <div style="
+                    background: white; border-radius: 12px; padding: 25px;
+                    max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                " onclick="event.stopPropagation()">
+                    <h3 style="margin: 0 0 20px 0; color: #2c3e50; text-align: center;">
+                        Ajouter un match - ${poolName}
+                    </h3>
+                    <p style="color: #7f8c8d; font-size: 14px; text-align: center; margin-bottom: 20px;">
+                        Division ${division} - Journée ${dayNumber}
+                    </p>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #34495e;">
+                            Joueur 1
+                        </label>
+                        <select id="add-match-player1" style="
+                            width: 100%; padding: 10px; border: 2px solid #ecf0f1;
+                            border-radius: 8px; font-size: 14px;
+                        ">
+                            ${playerOptions}
+                        </select>
+                    </div>
+
+                    <div style="text-align: center; margin: 10px 0; font-weight: bold; color: #3498db;">
+                        VS
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #34495e;">
+                            Joueur 2
+                        </label>
+                        <select id="add-match-player2" style="
+                            width: 100%; padding: 10px; border: 2px solid #ecf0f1;
+                            border-radius: 8px; font-size: 14px;
+                        ">
+                            ${playerOptions}
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="document.getElementById('add-pool-match-modal').remove()" style="
+                            padding: 10px 25px; background: #95a5a6; color: white;
+                            border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
+                        ">Annuler</button>
+                        <button onclick="addManualPoolMatch(${dayNumber}, ${division}, ${poolIndex})" style="
+                            padding: 10px 25px; background: #27ae60; color: white;
+                            border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
+                        ">Ajouter</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Sélectionner le 2ème joueur par défaut pour éviter le même joueur
+        const select2 = document.getElementById('add-match-player2');
+        if (select2 && poolPlayers.length > 1) {
+            select2.selectedIndex = 1;
+        }
+    }
+    window.showAddPoolMatchModal = showAddPoolMatchModal;
+
+    function addManualPoolMatch(dayNumber, division, poolIndex) {
+        const player1 = document.getElementById('add-match-player1').value;
+        const player2 = document.getElementById('add-match-player2').value;
+
+        if (player1 === player2) {
+            showNotification('Veuillez sélectionner deux joueurs différents', 'error');
+            return;
+        }
+
+        const dayData = championship.days[dayNumber];
+        const poolDiv = dayData.pools.divisions[division];
+
+        // Créer le nouveau match (scores vides, à remplir manuellement)
+        const newMatch = {
+            id: 'manual-' + Date.now(),
+            player1: player1,
+            player2: player2,
+            poolIndex: poolIndex,
+            poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+            division: division,
+            dayNumber: dayNumber,
+            score1: '',
+            score2: '',
+            completed: false,
+            winner: null,
+            isPoolMatch: true,
+            isByeMatch: false,
+            isManualMatch: true
+        };
+
+        // Ajouter le match
+        poolDiv.matches.push(newMatch);
+
+        // Fermer le modal
+        const modal = document.getElementById('add-pool-match-modal');
+        if (modal) modal.remove();
+
+        // Sauvegarder et rafraîchir
+        saveToLocalStorage();
+        updatePoolsDisplay(dayNumber);
+        showNotification(`Match ajouté: ${player1} vs ${player2}`, 'success');
+    }
+    window.addManualPoolMatch = addManualPoolMatch;
+
     function deleteManualMatch(dayNumber, division, roundName, position) {
         const dayData = championship.days[dayNumber];
         if (!dayData || !dayData.pools || !dayData.pools.manualFinalPhase) return;
@@ -7573,6 +7711,15 @@ function updatePoolsDisplay(dayNumber) {
                             font-size: 20px;
                             transition: transform 0.3s;
                         ">▼</span>
+                        <button onclick="event.stopPropagation(); showAddPoolMatchModal(${dayNumber}, ${division}, ${poolIndex})"
+                                title="Ajouter un match"
+                                style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+                                       width: 28px; height: 28px; background: rgba(255,255,255,0.9);
+                                       color: #3498db; border: none; border-radius: 50%;
+                                       font-size: 20px; font-weight: bold; cursor: pointer;
+                                       display: flex; align-items: center; justify-content: center;"
+                                onmouseover="this.style.background='white'; this.style.transform='translateY(-50%) scale(1.1)'"
+                                onmouseout="this.style.background='rgba(255,255,255,0.9)'; this.style.transform='translateY(-50%)'">+</button>
                         <h4 style="margin: 0; font-size: 1.2rem;">${poolName}${isCompleted ? ' ✓' : ''}</h4>
                         <div style="font-size: 14px; margin-top: 5px;">
                             ${completedMatches}/${poolMatches.length} matchs terminés
@@ -8618,7 +8765,7 @@ window.generateFinalPhase = function(dayNumber) {
 // Extension de la structure pour les phases finales manuelles
 function initializeManualFinalPhase(dayNumber) {
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
     if (dayData.pools && !dayData.pools.manualFinalPhase) {
         const divisions = {};
@@ -8784,7 +8931,7 @@ function generateManualFinalPhase(dayNumber) {
 
     // Détecter le mode de configuration
     const configMode = dayData.pools.config?.mode || 'simple';
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
     let totalQualified = 0;
 
     // Qualifier les joueurs de chaque division
@@ -9350,26 +9497,29 @@ function updateManualFinalPhaseDisplay(dayNumber) {
         return;
     }
 
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || 3;
 
     for (let division = 1; division <= numDivisions; division++) {
         const container = document.getElementById(`division${dayNumber}-${division}-matches`);
         if (!container) continue;
-        
+
         const finalPhase = dayData.pools.manualFinalPhase.divisions[division];
-        
-        if (finalPhase.qualified.length === 0) continue;
-        
+
+        if (!finalPhase || finalPhase.qualified.length === 0) continue;
+
         let html = generateManualFinalPhaseHTML(dayNumber, division, finalPhase);
-        
-        // Ajouter après les poules
+
+        // Supprimer ancien affichage phase finale s'il existe
+        const existingFinal = container.querySelector('.manual-final-phase-container');
+        if (existingFinal) existingFinal.remove();
+
+        // Ajouter après les poules si elles existent, sinon directement dans le conteneur
         const poolsContainer = container.querySelector('.pools-container');
         if (poolsContainer) {
-            // Supprimer ancien affichage phase finale
-            const existingFinal = container.querySelector('.manual-final-phase-container');
-            if (existingFinal) existingFinal.remove();
-            
             poolsContainer.insertAdjacentHTML('afterend', html);
+        } else {
+            // Mode élimination directe - pas de poules, ajouter directement
+            container.insertAdjacentHTML('beforeend', html);
         }
     }
 }
@@ -9377,11 +9527,17 @@ function updateManualFinalPhaseDisplay(dayNumber) {
 function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
     const currentRound = championship.days[dayNumber].pools.manualFinalPhase.currentRound;
     const rounds = finalPhase.rounds;
-    
+    const isDirectMode = championship.days[dayNumber].pools.config?.mode === 'direct';
+
+    // Adapter les textes selon le mode
+    const headerTitle = isDirectMode ? '⚡ ÉLIMINATION DIRECTE' : '🏆 PHASE FINALE';
+    const headerBg = isDirectMode ? 'linear-gradient(135deg, #9b59b6, #8e44ad)' : 'linear-gradient(135deg, #16a085, #1abc9c)';
+    const playersTitle = isDirectMode ? '👥 Participants au Tournoi' : '✨ Joueurs Qualifiés des Poules';
+
     let html = `
         <div class="manual-final-phase-container" style="margin-top: 30px;">
             <div class="final-phase-header" style="
-                background: linear-gradient(135deg, #16a085, #1abc9c);
+                background: ${headerBg};
                 color: white;
                 padding: 25px;
                 border-radius: 15px;
@@ -9390,10 +9546,10 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
                 box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
             ">
                 <h3 style="margin: 0 0 10px 0; font-size: 1.5rem;">
-                    🏆 PHASE FINALE MANUELLE - Division ${division}
+                    ${headerTitle} - Division ${division}
                 </h3>
                 <div style="font-size: 16px; opacity: 0.9;">
-                    ${finalPhase.qualified.length} joueurs qualifiés
+                    ${finalPhase.qualified.length} joueurs en compétition
                 </div>
                 ${currentRound ? `
                     <div style="
@@ -9407,7 +9563,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
                     </div>
                 ` : ''}
             </div>
-            
+
             <div class="qualified-players" style="
                 background: linear-gradient(135deg, #e8f5e8, #d4edda);
                 border: 2px solid #28a745;
@@ -9416,7 +9572,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
                 margin-bottom: 25px;
             ">
                 <h4 style="color: #155724; margin-bottom: 15px; text-align: center;">
-                    ✨ Joueurs Qualifiés des Poules
+                    ${playersTitle}
                 </h4>
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
                     ${finalPhase.qualified.map(player => `
@@ -9429,7 +9585,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
                             font-weight: 600;
                             box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
                         ">
-                            #${player.seed} ${player.name} (${player.poolName})
+                            #${player.seed} ${player.name}${player.poolName && player.poolName !== '-' ? ` (${player.poolName})` : ''}
                         </span>
                     `).join('')}
                 </div>
