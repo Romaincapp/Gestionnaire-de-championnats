@@ -45,6 +45,34 @@ try {
 
     let importedChampionshipData = null;
 
+    // Variable pour afficher/masquer les boutons forfait (évite les clics accidentels)
+    let showForfaitButtons = false;
+    window.showForfaitButtons = showForfaitButtons;
+
+    function toggleForfaitButtons() {
+        showForfaitButtons = !showForfaitButtons;
+        window.showForfaitButtons = showForfaitButtons;
+
+        // Mettre à jour tous les boutons toggle (pour toutes les journées)
+        document.querySelectorAll('[id^="forfait-toggle-btn-"]').forEach(btn => {
+            btn.style.background = showForfaitButtons ? '#e74c3c' : '#95a5a6';
+            btn.innerHTML = showForfaitButtons ? '⚠️ Actions ON' : '⚠️ Actions OFF';
+        });
+
+        // Rafraîchir l'affichage des matchs
+        const currentDay = championship.currentDay;
+        updateMatchesDisplay(currentDay);
+        if (championship.days[currentDay]?.pools?.enabled) {
+            updatePoolsDisplay(currentDay);
+        }
+        if (championship.days[currentDay]?.pools?.manualFinalPhase) {
+            updateManualFinalPhaseDisplay(currentDay);
+        }
+
+        showNotification(showForfaitButtons ? 'Actions dangereuses activées (forfaits + suppressions)' : 'Actions dangereuses masquées', showForfaitButtons ? 'warning' : 'info');
+    }
+    window.toggleForfaitButtons = toggleForfaitButtons;
+
     // FONCTION SHOWNOTIFICATION (DÉFINIE AVANT TOUT)
     function showNotification(message, type = 'info') {
         if (typeof document === 'undefined') {
@@ -643,6 +671,9 @@ try {
                     </button>
                     <button class="btn btn-warning" onclick="clearDayData(${dayNumber})" style="padding: 8px 12px; font-size: 13px;">
                         🗑️ Vider J${dayNumber}
+                    </button>
+                    <button id="forfait-toggle-btn-${dayNumber}" class="btn" onclick="toggleForfaitButtons()" style="padding: 8px 12px; font-size: 13px; background: #95a5a6;">
+                        ⚠️ Actions OFF
                     </button>
                 </div>
                 </div><!-- Fin day-hub-content-${dayNumber} -->
@@ -1656,7 +1687,7 @@ try {
 
                         html += `
                             <div class="match ${matchStatus}" data-match-id="d${dayNumber}-div${division}-m${globalIndex}" style="position: relative;">
-                                <button onclick="event.stopPropagation(); deleteMatch(${dayNumber}, ${division}, ${globalIndex})"
+                                ${window.showForfaitButtons ? `<button onclick="event.stopPropagation(); deleteMatch(${dayNumber}, ${division}, ${globalIndex})"
                                         title="Supprimer ce match"
                                         style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
                                                width: 18px; height: 18px; z-index: 10;
@@ -1664,7 +1695,7 @@ try {
                                                font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
                                                opacity: 0.6; transition: opacity 0.2s;"
                                         onmouseover="this.style.opacity='1'"
-                                        onmouseout="this.style.opacity='0.6'">×</button>
+                                        onmouseout="this.style.opacity='0.6'">×</button>` : ''}
                                 ${match.completed || collapsedSummary ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="cursor: pointer;">
                                     ${match.completed ? `<div class="player-names">${collapsedSummary}</div>` : ''}
                                     ${match.completed ? `<div class="match-status ${statusClass}">${statusText}</div>` : ''}
@@ -1686,14 +1717,33 @@ try {
                                                    onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
                                             <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player2}</span>
                                         </div>
+                                        ${!match.completed && window.showForfaitButtons ? `
+                                        <div style="display: flex; gap: 4px; justify-content: center; margin-top: 6px;">
+                                            <button onclick="declareForfait('regular', ${dayNumber}, ${division}, ${globalIndex}, 'player1')"
+                                                    style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                                                           border: none; border-radius: 3px; cursor: pointer;"
+                                                    title="Forfait ${match.player1}">F1</button>
+                                            <button onclick="declareForfait('regular', ${dayNumber}, ${division}, ${globalIndex}, 'player2')"
+                                                    style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                                                           border: none; border-radius: 3px; cursor: pointer;"
+                                                    title="Forfait ${match.player2}">F2</button>
+                                        </div>
+                                        ` : ''}
                                     </div>
                                 </div>
                         `;
 
                         if (match.completed && match.winner) {
+                            const forfaitText = match.forfaitBy ? ' (forfait)' : '';
                             html += `
-                                <div class="match-result result-completed">
-                                    🏆 ${match.winner} remporte le match (${score1}-${score2})
+                                <div class="match-result result-completed" ${match.forfaitBy ? 'style="background: #fff3cd; color: #856404;"' : ''}>
+                                    ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${forfaitText} (${score1}-${score2})
+                                </div>
+                            `;
+                        } else if (match.completed && match.winner === null) {
+                            html += `
+                                <div class="match-result result-completed" style="background: #e3f2fd; color: #1565c0;">
+                                    🤝 Match nul (${score1}-${score2})
                                 </div>
                             `;
                         }
@@ -1832,7 +1882,12 @@ try {
     window.updateSetScore = updateSetScore;
 
     function updateMatchScore(dayNumber, division, matchIndex, scoreField, value) {
-        championship.days[dayNumber].matches[division][matchIndex][scoreField] = value;
+        const match = championship.days[dayNumber].matches[division][matchIndex];
+        match[scoreField] = value;
+        // Annuler le forfait si les scores sont modifiés manuellement
+        if (match.forfaitBy) {
+            delete match.forfaitBy;
+        }
         saveToLocalStorage();
     }
     window.updateMatchScore = updateMatchScore;
@@ -2234,6 +2289,66 @@ try {
         }
     }
 
+    // Déclarer un forfait pour un match (régulier, poule ou phase finale)
+    function declareForfait(matchType, dayNumber, division, matchId, forfaitPlayer) {
+        let match = null;
+
+        if (matchType === 'regular') {
+            // Match régulier
+            match = championship.days[dayNumber].matches[division][matchId];
+        } else if (matchType === 'pool') {
+            // Match de poule - rechercher par ID
+            const poolData = championship.days[dayNumber].pools?.divisions[division];
+            if (poolData && poolData.matches) {
+                match = poolData.matches.find(m => m.id === matchId);
+            }
+        } else if (matchType === 'final') {
+            // Match de phase finale manuelle - rechercher dans tous les tours
+            const manualFinalPhase = championship.days[dayNumber].pools?.manualFinalPhase?.divisions[division];
+            if (manualFinalPhase && manualFinalPhase.rounds) {
+                Object.values(manualFinalPhase.rounds).forEach(round => {
+                    if (round.matches) {
+                        const foundMatch = round.matches.find(m => m.id === matchId);
+                        if (foundMatch) match = foundMatch;
+                    }
+                });
+            }
+        }
+
+        if (!match) {
+            showNotification('Match non trouvé', 'error');
+            return;
+        }
+
+        // Appliquer le forfait
+        match.forfaitBy = forfaitPlayer; // 'player1' ou 'player2'
+        match.completed = true;
+
+        if (forfaitPlayer === 'player1') {
+            match.score1 = '0';
+            match.score2 = '3';
+            match.winner = match.player2;
+        } else {
+            match.score1 = '3';
+            match.score2 = '0';
+            match.winner = match.player1;
+        }
+
+        saveToLocalStorage();
+
+        // Rafraîchir l'affichage selon le type de match
+        if (matchType === 'regular') {
+            updateMatchesDisplay(dayNumber);
+        } else if (matchType === 'pool') {
+            updatePoolsDisplay(dayNumber);
+        } else if (matchType === 'final') {
+            updateManualFinalPhaseDisplay(dayNumber);
+        }
+
+        showNotification(`Forfait déclaré pour ${forfaitPlayer === 'player1' ? match.player1 : match.player2}`, 'warning');
+    }
+    window.declareForfait = declareForfait;
+
     // GESTION DES FICHIERS
     function handleFileImport(event) {
         const file = event.target.files[0];
@@ -2534,7 +2649,9 @@ try {
         }
 
         let wins = 0;
+        let draws = 0;
         let losses = 0;
+        let forfeits = 0;
         let pointsWon = 0;
         let pointsLost = 0;
         let matchesPlayed = 0;
@@ -2552,7 +2669,20 @@ try {
                 matchesPlayed++;
                 const isPlayer1 = match.player1 === playerName;
 
-                if (match.winner === playerName) {
+                // Cas forfait
+                if (match.forfaitBy) {
+                    if (match.forfaitBy === (isPlayer1 ? 'player1' : 'player2')) {
+                        forfeits++;  // Ce joueur a déclaré forfait
+                    } else {
+                        wins++;      // Victoire par forfait adverse
+                    }
+                }
+                // Cas match nul (score1 == score2, winner === null)
+                else if (match.winner === null) {
+                    draws++;
+                }
+                // Cas victoire/défaite normale
+                else if (match.winner === playerName) {
                     wins++;
                 } else {
                     losses++;
@@ -2572,12 +2702,14 @@ try {
         });
 
         const winRate = matchesPlayed > 0 ? Math.round((wins / matchesPlayed) * 100) : 0;
-        const totalPoints = wins * 3 + losses * 1;
+        const totalPoints = wins * 3 + draws * 2 + losses * 1 + forfeits * 0;
 
         return {
             matchesPlayed,
             wins,
+            draws,
             losses,
+            forfeits,
             pointsWon,
             pointsLost,
             winRate,
@@ -2602,9 +2734,21 @@ try {
                     <div class="overview-number">${stats.matchesPlayed}</div>
                     <div class="overview-label">Matchs joués</div>
                 </div>
-                <div class="overview-card">
-                    <div class="overview-number">${stats.wins}</div>
+                <div class="overview-card" style="background: #d4edda;">
+                    <div class="overview-number" style="color: #155724;">${stats.wins}</div>
                     <div class="overview-label">Victoires</div>
+                </div>
+                <div class="overview-card" style="background: #e3f2fd;">
+                    <div class="overview-number" style="color: #1565c0;">${stats.draws || 0}</div>
+                    <div class="overview-label">Nuls</div>
+                </div>
+                <div class="overview-card" style="background: #f8d7da;">
+                    <div class="overview-number" style="color: #721c24;">${stats.losses}</div>
+                    <div class="overview-label">Défaites</div>
+                </div>
+                <div class="overview-card" style="background: #fff3cd;">
+                    <div class="overview-number" style="color: #856404;">${stats.forfeits || 0}</div>
+                    <div class="overview-label">Forfaits</div>
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${stats.winRate}%</div>
@@ -2612,15 +2756,11 @@ try {
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${stats.pointsWon}/${stats.pointsLost}</div>
-                    <div class="overview-label">Points Pour/Contre</div>
-                </div>
-                <div class="overview-card">
-                    <div class="overview-number">${stats.pointsWon - stats.pointsLost > 0 ? '+' : ''}${stats.pointsWon - stats.pointsLost}</div>
-                    <div class="overview-label">Différence</div>
+                    <div class="overview-label">PP/PC</div>
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${stats.totalPoints}</div>
-                    <div class="overview-label">Points journée</div>
+                    <div class="overview-label">Points</div>
                 </div>
             `;
         }
@@ -2629,9 +2769,28 @@ try {
         stats.matches.forEach(match => {
             const isPlayer1 = match.player1 === playerName;
             const opponent = isPlayer1 ? match.player2 : match.player1;
-            const resultClass = match.completed ? (match.winner === playerName ? 'win' : 'loss') : '';
-            const resultText = match.completed ? (match.winner === playerName ? 'Victoire' : 'Défaite') : 'En cours';
-            
+
+            // Déterminer le résultat
+            let resultClass = '';
+            let resultText = 'En cours';
+
+            if (match.completed) {
+                if (match.forfaitBy) {
+                    const playerForfait = match.forfaitBy === (isPlayer1 ? 'player1' : 'player2');
+                    resultClass = playerForfait ? 'forfait' : 'win';
+                    resultText = playerForfait ? 'Forfait' : 'Victoire (forfait adv.)';
+                } else if (match.winner === null) {
+                    resultClass = 'draw';
+                    resultText = 'Match nul';
+                } else if (match.winner === playerName) {
+                    resultClass = 'win';
+                    resultText = 'Victoire';
+                } else {
+                    resultClass = 'loss';
+                    resultText = 'Défaite';
+                }
+            }
+
             let setsScore = '';
             if (match.completed) {
                 const score1 = parseInt(match.score1) || 0;
@@ -2640,12 +2799,17 @@ try {
                 const opponentScore = isPlayer1 ? score2 : score1;
                 setsScore = `(${playerScore}-${opponentScore})`;
             }
-            
+
+            const bgColor = resultClass === 'win' ? '#d4edda' :
+                           resultClass === 'draw' ? '#e3f2fd' :
+                           resultClass === 'loss' ? '#f8d7da' :
+                           resultClass === 'forfait' ? '#fff3cd' : '#f8f9fa';
+
             matchesHtml += `
-                <div class="history-match ${resultClass}">
+                <div class="history-match ${resultClass}" style="background: ${bgColor};">
                     <div>
                         <div class="history-opponent">VS ${opponent}</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Tour ${match.tour}</div>
+                        <div style="font-size: 12px; color: #7f8c8d;">Tour ${match.tour || '-'}</div>
                     </div>
                     <div class="history-score">
                         ${resultText} ${setsScore}
@@ -2910,7 +3074,7 @@ if (sortBy === 'points') {
                     <th>Joueur</th>
                     ${isPoolMode ? '<th>Étape</th>' : ''}
                     <th>Points</th>
-                    <th>V/D</th>
+                    <th>V/N/D/F</th>
                     <th>% Vict.</th>
                     <th>PP/PC</th>
                     <th>Diff</th>
@@ -2956,7 +3120,7 @@ playerStats.forEach((player, index) => {
             <td style="font-weight: 600;">${player.name}</td>
             ${isPoolMode ? `<td style="${stageStyle} text-align: center; border-radius: 4px;">${stageIcon}${player.stageLabel}</td>` : ''}
             <td class="stat-value">${player.totalPoints}</td>
-            <td>${player.wins}/${player.losses}</td>
+            <td>${player.wins}/${player.draws || 0}/${player.losses}/${player.forfeits || 0}</td>
             <td>${player.winRate}%</td>
             <td>${player.pointsWon}/${player.pointsLost}</td>
             <td style="${diffStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
@@ -3045,7 +3209,7 @@ playerStats.forEach((player, index) => {
                     ${isPoolMode ? '<th>Étape</th>' : ''}
                     <th>Points Total</th>
                     <th>Journées</th>
-                    <th>V/D/F</th>
+                    <th>V/N/D/F</th>
                     <th>% Vict. Moy.</th>
                     <th>PP/PC</th>
                     <th>Diff</th>
@@ -3091,7 +3255,7 @@ generalRanking.divisions[division].forEach((player, index) => {
             ${isPoolMode ? `<td style="${stageStyle} text-align: center; border-radius: 4px;">${stageIcon}${player.stageLabel}</td>` : ''}
             <td class="stat-value">${player.totalPoints}</td>
             <td>${player.daysPlayed}</td>
-            <td>${player.totalWins}/${player.totalLosses}/${player.totalForfaits}</td>
+            <td>${player.totalWins}/${player.totalDraws || 0}/${player.totalLosses}/${player.totalForfaits}</td>
             <td>${player.avgWinRate}%</td>
             <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
             <td style="${diffStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
@@ -3183,6 +3347,7 @@ generalRanking.divisions[division].forEach((player, index) => {
         daysPlayed: 0,
         totalPoints: 0,
         totalWins: 0,
+        totalDraws: 0,
         totalLosses: 0,
         totalForfaits: 0,
         totalPointsWon: 0,
@@ -3211,7 +3376,9 @@ if (dayStats && dayStats.matchesPlayed > 0) {
     playersData[playerName].daysPlayed++;
     playersData[playerName].totalPoints += dayStats.totalPoints;
     playersData[playerName].totalWins += dayStats.wins;
+    playersData[playerName].totalDraws += dayStats.draws || 0;
     playersData[playerName].totalLosses += dayStats.losses;
+    playersData[playerName].totalForfaits += dayStats.forfeits || 0;  // Forfaits par match
     playersData[playerName].totalPointsWon += dayStats.pointsWon;
     playersData[playerName].totalPointsLost += dayStats.pointsLost;
     playersData[playerName].totalMatchesPlayed += dayStats.matchesPlayed;
@@ -3318,6 +3485,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     day: dayNum,
                     totalPoints: 0,
                     wins: 0,
+                    draws: 0,
                     losses: 0,
                     forfaits: 4,
                     pointsWon: 0,
@@ -3353,6 +3521,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     day: dayNum,
                     totalPoints: 0,
                     wins: 0,
+                    draws: 0,
                     losses: 0,
                     forfaits: 4,
                     pointsWon: 0,
@@ -3375,6 +3544,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
         const totals = playerHistory.reduce((acc, day) => ({
             totalPoints: acc.totalPoints + day.totalPoints,
             totalWins: acc.totalWins + day.wins,
+            totalDraws: acc.totalDraws + (day.draws || 0),
             totalLosses: acc.totalLosses + day.losses,
             totalForfaits: acc.totalForfaits + (day.forfaits || 0),
             totalPointsWon: acc.totalPointsWon + day.pointsWon,
@@ -3383,6 +3553,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
         }), {
             totalPoints: 0,
             totalWins: 0,
+            totalDraws: 0,
             totalLosses: 0,
             totalForfaits: 0,
             totalPointsWon: 0,
@@ -3410,9 +3581,21 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     <div class="overview-number">${totals.totalPoints}</div>
                     <div class="overview-label">Points total</div>
                 </div>
-                <div class="overview-card">
-                    <div class="overview-number">${totals.totalWins}/${totals.totalLosses}/${totals.totalForfaits}</div>
-                    <div class="overview-label">V/D/F</div>
+                <div class="overview-card" style="background: #d4edda;">
+                    <div class="overview-number" style="color: #155724;">${totals.totalWins}</div>
+                    <div class="overview-label">Victoires</div>
+                </div>
+                <div class="overview-card" style="background: #e3f2fd;">
+                    <div class="overview-number" style="color: #1565c0;">${totals.totalDraws}</div>
+                    <div class="overview-label">Nuls</div>
+                </div>
+                <div class="overview-card" style="background: #f8d7da;">
+                    <div class="overview-number" style="color: #721c24;">${totals.totalLosses}</div>
+                    <div class="overview-label">Défaites</div>
+                </div>
+                <div class="overview-card" style="background: #fff3cd;">
+                    <div class="overview-number" style="color: #856404;">${totals.totalForfaits}</div>
+                    <div class="overview-label">Forfaits</div>
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${avgWinRate}%</div>
@@ -3420,11 +3603,11 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${totals.totalPointsWon}/${totals.totalPointsLost}</div>
-                    <div class="overview-label">Points Pour/Contre</div>
+                    <div class="overview-label">PP/PC</div>
                 </div>
                 <div class="overview-card">
                     <div class="overview-number">${diff > 0 ? '+' : ''}${diff}</div>
-                    <div class="overview-label">Différence</div>
+                    <div class="overview-label">Diff</div>
                 </div>
             `;
         }
@@ -3455,7 +3638,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                         <div>
                             <div class="history-opponent">Journée ${dayStats.day}</div>
                             <div style="font-size: 12px; color: #7f8c8d;">
-                                ${dayStats.wins}V/${dayStats.losses}D - ${dayStats.matchesPlayed} matchs
+                                ${dayStats.wins}V/${dayStats.draws || 0}N/${dayStats.losses}D/${dayStats.forfeits || 0}F - ${dayStats.matchesPlayed} matchs
                             </div>
                         </div>
                         <div class="history-score">
@@ -7857,7 +8040,7 @@ function generatePoolMatchHTML(match, dayNumber) {
             margin-bottom: 6px;
             position: relative;
         ">
-            <button onclick="event.stopPropagation(); deletePoolMatch(${dayNumber}, '${match.id}', ${match.division})"
+            ${window.showForfaitButtons ? `<button onclick="event.stopPropagation(); deletePoolMatch(${dayNumber}, '${match.id}', ${match.division})"
                     title="Supprimer ce match"
                     style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
                            width: 18px; height: 18px; z-index: 10;
@@ -7865,7 +8048,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                            font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
                            opacity: 0.6; transition: opacity 0.2s;"
                     onmouseover="this.style.opacity='1'"
-                    onmouseout="this.style.opacity='0.6'">×</button>
+                    onmouseout="this.style.opacity='0.6'">×</button>` : ''}
             ${match.completed ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="
                 display: flex;
                 justify-content: space-between;
@@ -7922,6 +8105,19 @@ function generatePoolMatchHTML(match, dayNumber) {
                       onmouseout="this.style.color='#2c3e50'">${match.player2}</span>
             </div>
 
+            ${!match.completed && window.showForfaitButtons ? `
+            <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: 8px;">
+                <button onclick="declareForfait('pool', ${dayNumber}, ${match.division}, '${match.id}', 'player1')"
+                        style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                               border: none; border-radius: 3px; cursor: pointer;"
+                        title="Forfait ${match.player1}">F1</button>
+                <button onclick="declareForfait('pool', ${dayNumber}, ${match.division}, '${match.id}', 'player2')"
+                        style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                               border: none; border-radius: 3px; cursor: pointer;"
+                        title="Forfait ${match.player2}">F2</button>
+            </div>
+            ` : ''}
+
             ${match.completed && match.winner ? `
             <div class="match-result" style="
                 text-align: center;
@@ -7929,10 +8125,22 @@ function generatePoolMatchHTML(match, dayNumber) {
                 padding: 6px;
                 border-radius: 6px;
                 font-size: 13px;
-                background: #a8e6cf;
-                color: #00b894;
+                background: ${match.forfaitBy ? '#fff3cd' : '#a8e6cf'};
+                color: ${match.forfaitBy ? '#856404' : '#00b894'};
             ">
-                🏆 ${match.winner} remporte le match (${score1}-${score2})
+                ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2})
+            </div>` : ''}
+            ${match.completed && match.winner === null ? `
+            <div class="match-result" style="
+                text-align: center;
+                font-weight: bold;
+                padding: 6px;
+                border-radius: 6px;
+                font-size: 13px;
+                background: #e3f2fd;
+                color: #1565c0;
+            ">
+                🤝 Match nul (${score1}-${score2})
             </div>` : ''}
         </div>
     `;
@@ -7950,6 +8158,10 @@ function updatePoolMatchScore(dayNumber, matchId, scoreField, value) {
         const match = dayData.pools.divisions[division].matches.find(m => m.id == matchId);
         if (match) {
             match[scoreField] = value;
+            // Annuler le forfait si les scores sont modifiés manuellement
+            if (match.forfaitBy) {
+                delete match.forfaitBy;
+            }
             // NE PAS régénérer le DOM ici pour permettre la navigation Tab naturelle
             // La régénération se fera dans handlePoolMatchEnter quand le match est validé
             saveToLocalStorage();
@@ -9702,7 +9914,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
             position: relative;
             ${match.isBye ? 'opacity: 0.7;' : ''}
         ">
-            ${!match.isBye ? `<button onclick="event.stopPropagation(); deleteManualMatch(${dayNumber}, ${division}, '${roundName}', ${match.position})"
+            ${!match.isBye && window.showForfaitButtons ? `<button onclick="event.stopPropagation(); deleteManualMatch(${dayNumber}, ${division}, '${roundName}', ${match.position})"
                     title="Supprimer ce match"
                     style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
                            width: 18px; height: 18px; z-index: 10;
@@ -9786,17 +9998,31 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                            style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
                     <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player2}</span>
                 </div>
-                
+
+                ${!isCompleted && window.showForfaitButtons ? `
+                <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: 8px;">
+                    <button onclick="declareForfait('final', ${dayNumber}, ${division}, '${match.id}', 'player1')"
+                            style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                                   border: none; border-radius: 3px; cursor: pointer;"
+                            title="Forfait ${match.player1}">F1</button>
+                    <button onclick="declareForfait('final', ${dayNumber}, ${division}, '${match.id}', 'player2')"
+                            style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                                   border: none; border-radius: 3px; cursor: pointer;"
+                            title="Forfait ${match.player2}">F2</button>
+                </div>
+                ` : ''}
+
                 <div class="match-result" style="
                     text-align: center;
                     padding: 6px;
                     border-radius: 6px;
                     font-weight: bold;
-                    background: ${isCompleted ? '#d4edda' : '#fff3cd'};
-                    color: ${isCompleted ? '#155724' : '#856404'};
+                    background: ${isCompleted ? (match.forfaitBy ? '#fff3cd' : (match.winner === null ? '#e3f2fd' : '#d4edda')) : '#fff3cd'};
+                    color: ${isCompleted ? (match.forfaitBy ? '#856404' : (match.winner === null ? '#1565c0' : '#155724')) : '#856404'};
                     font-size: 13px;
                 ">
-                    ${isCompleted && match.winner ? `🏆 ${match.winner} gagne (${score1}-${score2})` : 'En attente des scores'}
+                    ${isCompleted && match.winner ? `${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} gagne${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2})` :
+                      isCompleted && match.winner === null ? `🤝 Match nul (${score1}-${score2})` : 'En attente des scores'}
                 </div>
             `}
         </div>
@@ -9941,6 +10167,10 @@ function updateManualMatchScore(matchId, scoreField, value, dayNumber) {
 
             if (match && !match.isBye) {
                 match[scoreField] = value;
+                // Annuler le forfait si les scores sont modifiés manuellement
+                if (match.forfaitBy) {
+                    delete match.forfaitBy;
+                }
                 // NE PAS régénérer le DOM ici pour permettre la navigation Tab naturelle
                 // La régénération se fera dans handleManualMatchEnter quand le match est validé
                 matchFound = true;
