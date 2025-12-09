@@ -14170,7 +14170,7 @@ if (document.readyState === 'loading') {
     window.addParticipantToChrono = function() {
         const name = document.getElementById('participantName').value.trim();
         const category = document.getElementById('participantCategory').value.trim();
-        const bib = document.getElementById('participantBib').value.trim();
+        let bib = document.getElementById('participantBib').value.trim();
         const age = document.getElementById('participantAge').value.trim();
         const nationality = document.getElementById('participantNationality').value.trim();
         const club = document.getElementById('participantClub').value.trim();
@@ -14180,14 +14180,11 @@ if (document.readyState === 'loading') {
             return;
         }
 
-        if (!category) {
-            showNotification('Veuillez entrer une catégorie', 'warning');
-            return;
-        }
-
+        // Générer un dossard automatique si non fourni
         if (!bib) {
-            showNotification('Veuillez entrer un dossard', 'warning');
-            return;
+            const existingBibs = raceData.participants.map(p => parseInt(p.bib) || 0);
+            const maxBib = existingBibs.length > 0 ? Math.max(...existingBibs) : 0;
+            bib = String(maxBib + 1);
         }
 
         // Vérifier si le dossard existe déjà
@@ -14200,7 +14197,7 @@ if (document.readyState === 'loading') {
         const participant = {
             id: raceData.nextParticipantId++,
             name: name,
-            category: category,
+            category: category || '',  // Catégorie optionnelle
             bib: bib,
             age: age || null,
             nationality: nationality || null,
@@ -14370,43 +14367,23 @@ if (document.readyState === 'loading') {
         const hasNationality = document.getElementById('bulkCol_nationality').checked;
         const hasClub = document.getElementById('bulkCol_club').checked;
 
-        // Construire les colonnes
-        const columns = ['Dossard', 'Nom', 'Catégorie'];
-        const exampleTab = ['42', 'Jean Dupont', 'Senior'];
-        const exampleCSV = ['42', 'Jean Dupont', 'Senior'];
-
-        if (hasAge) {
-            columns.push('Âge');
-            exampleTab.push('28');
-            exampleCSV.push('28');
-        }
-        if (hasNationality) {
-            columns.push('Nationalité');
-            exampleTab.push('France');
-            exampleCSV.push('France');
-        }
-        if (hasClub) {
-            columns.push('Club');
-            exampleTab.push('AC Paris');
-            exampleCSV.push('AC Paris');
-        }
-
-        // Générer le HTML du format
+        // Générer le HTML du format (seul le nom est obligatoire)
         const formatHTML = `
-            <div style="margin-bottom: 5px;"><strong>Format 1 (avec tabulations) :</strong> ${columns.join(' &nbsp;&nbsp;&nbsp; ')}</div>
-            <div style="margin-bottom: 5px;">Exemple: ${exampleTab.join(' &nbsp;&nbsp;&nbsp; ')}</div>
-            <div style="margin: 10px 0;"><strong>Format 2 (avec virgules) :</strong> ${columns.join(',')}</div>
-            <div>Exemple: ${exampleCSV.join(',')}</div>
+            <div style="margin-bottom: 8px; padding: 8px; background: #e8f6f3; border-radius: 5px;">
+                <strong>Seul le nom est obligatoire</strong> - Dossard et catégorie sont optionnels
+            </div>
+            <div style="margin-bottom: 5px;"><strong>Format complet :</strong> Dossard*, Nom, Catégorie*${hasAge ? ', Âge' : ''}${hasNationality ? ', Nationalité' : ''}${hasClub ? ', Club' : ''}</div>
+            <div style="margin-bottom: 5px; color: #7f8c8d;">Exemple: 42, Jean Dupont, Senior${hasAge ? ', 28' : ''}${hasNationality ? ', France' : ''}${hasClub ? ', AC Paris' : ''}</div>
+            <div style="margin: 10px 0;"><strong>Format minimal :</strong> Nom</div>
+            <div style="color: #7f8c8d;">Exemple: Jean Dupont</div>
+            <div style="margin-top: 8px; font-size: 11px; color: #95a5a6;">* Si dossard non fourni = auto-généré | Si catégorie non fournie = vide</div>
         `;
 
         document.getElementById('bulkFormatExample').innerHTML = formatHTML;
 
         // Mettre à jour le placeholder du textarea
-        const placeholderTab = `${exampleTab.join('\t')}\n43\tMarie Martin\tU18${hasAge ? '\t25' : ''}${hasNationality ? '\tBelgique' : ''}${hasClub ? '\tRC Liège' : ''}`;
-        const placeholderCSV = `${exampleCSV.join(',')}\n43,Marie Martin,U18${hasAge ? ',25' : ''}${hasNationality ? ',Belgique' : ''}${hasClub ? ',RC Liège' : ''}`;
-
         document.getElementById('bulkParticipantsText').placeholder =
-            `Exemple avec tabulations:\n${placeholderTab}\n\nou avec virgules:\n${placeholderCSV}`;
+            `Format complet:\n42\tJean Dupont\tSenior${hasAge ? '\t28' : ''}${hasNationality ? '\tFrance' : ''}${hasClub ? '\tAC Paris' : ''}\n\nFormat minimal (nom seul):\nMarie Martin\nPierre Durand\nSophie Bernard`;
     };
 
     window.closeBulkParticipantsModal = function() {
@@ -14452,19 +14429,48 @@ if (document.readyState === 'loading') {
                 parts.pop();
             }
 
-            if (parts.length < 3) {
-                errors.push(`Ligne ${lineNum}: format invalide (minimum 3 colonnes: dossard, nom, catégorie)`);
+            // Minimum 1 colonne : nom (dossard et catégorie optionnels)
+            if (parts.length < 1 || !parts[0]) {
+                errors.push(`Ligne ${lineNum}: format invalide (minimum: nom)`);
                 return;
             }
 
-            const [bib, name, category, ...extraFields] = parts;
+            let bib, name, category, extraFields;
 
-            if (!bib || !name || !category) {
-                errors.push(`Ligne ${lineNum}: colonnes obligatoires vides`);
+            // Détecter si le premier champ est un dossard (numérique) ou un nom
+            const firstFieldIsNumeric = /^\d+$/.test(parts[0]);
+
+            if (firstFieldIsNumeric && parts.length >= 2) {
+                // Format avec dossard: dossard, nom, [catégorie], ...
+                bib = parts[0];
+                name = parts[1];
+                category = parts[2] || '';  // Catégorie optionnelle
+                extraFields = parts.slice(3);
+            } else {
+                // Format sans dossard: nom, [catégorie], ...
+                bib = null; // Sera généré automatiquement
+                name = parts[0];
+                category = parts[1] || '';  // Catégorie optionnelle
+                extraFields = parts.slice(2);
+            }
+
+            if (!name) {
+                errors.push(`Ligne ${lineNum}: nom obligatoire`);
                 return;
             }
 
-            // Vérifier si le dossard existe déjà
+            // Générer un dossard automatique si non fourni
+            if (!bib) {
+                // Trouver le plus grand dossard existant
+                const existingBibs = [
+                    ...raceData.participants.map(p => parseInt(p.bib) || 0),
+                    ...bulkParticipantsData.map(p => parseInt(p.bib) || 0)
+                ];
+                const maxBib = existingBibs.length > 0 ? Math.max(...existingBibs) : 0;
+                bib = String(maxBib + 1 + bulkParticipantsData.filter(p => !p.originalBib).length);
+            }
+
+            // Vérifier si le dossard existe déjà (seulement si fourni manuellement)
             const existingBib = raceData.participants.find(p => p.bib === bib);
             const duplicateBib = bulkParticipantsData.find(p => p.bib === bib);
 
@@ -14842,6 +14848,16 @@ if (document.readyState === 'loading') {
         // Réinitialiser le formulaire
         document.getElementById('serieName').value = '';
 
+        // Réinitialiser l'option mode couloirs
+        const laneModeCheckbox = document.getElementById('serieLaneMode');
+        if (laneModeCheckbox) {
+            laneModeCheckbox.checked = false;
+        }
+        const laneModeContainer = document.getElementById('laneModeContainer');
+        if (laneModeContainer) {
+            laneModeContainer.style.display = 'none';
+        }
+
         // Charger la liste des épreuves dans le select
         loadEventsListInSelect();
 
@@ -14897,24 +14913,118 @@ if (document.readyState === 'loading') {
 
         participantsCheckboxList.innerHTML = sortedParticipants.map(participant => {
             const isChecked = selectedParticipants.some(p => p.id === participant.id);
+            // Récupérer le numéro de couloir existant si en mode édition
+            const existingParticipant = selectedParticipants.find(p => p.id === participant.id);
+            const existingLane = existingParticipant?.laneNumber || '';
             return `
-                <label style="display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 5px; transition: background 0.2s; hover:background: #f0f0f0;">
-                    <input type="checkbox"
-                           class="participant-checkbox"
-                           data-id="${participant.id}"
-                           data-name="${participant.name}"
-                           data-category="${participant.category}"
-                           data-bib="${participant.bib}"
-                           ${isChecked ? 'checked' : ''}
-                           style="width: 18px; height: 18px; cursor: pointer;">
-                    <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 4px 8px; border-radius: 5px; font-weight: bold; min-width: 45px; text-align: center; font-size: 12px;">
-                        ${participant.bib}
+                <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 5px; transition: background 0.2s;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1;">
+                        <input type="checkbox"
+                               class="participant-checkbox"
+                               data-id="${participant.id}"
+                               data-name="${participant.name}"
+                               data-category="${participant.category}"
+                               data-bib="${participant.bib}"
+                               ${isChecked ? 'checked' : ''}
+                               onchange="updateLaneModeVisibility()"
+                               style="width: 18px; height: 18px; cursor: pointer;">
+                        <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 4px 8px; border-radius: 5px; font-weight: bold; min-width: 45px; text-align: center; font-size: 12px;">
+                            ${participant.bib}
+                        </div>
+                        <span style="font-weight: bold;">${participant.name}</span>
+                        <span style="font-size: 12px; color: #7f8c8d;">(${participant.category})</span>
+                    </label>
+                    <div class="lane-selector-container" style="display: none;">
+                        <select class="lane-selector" data-participant-id="${participant.id}"
+                                style="padding: 5px 10px; border-radius: 5px; border: 2px solid #3498db; font-weight: bold; background: #e8f4fc; min-width: 80px;">
+                            <option value="">--</option>
+                            <option value="1" ${existingLane === 1 ? 'selected' : ''}>Couloir 1</option>
+                            <option value="2" ${existingLane === 2 ? 'selected' : ''}>Couloir 2</option>
+                            <option value="3" ${existingLane === 3 ? 'selected' : ''}>Couloir 3</option>
+                            <option value="4" ${existingLane === 4 ? 'selected' : ''}>Couloir 4</option>
+                            <option value="5" ${existingLane === 5 ? 'selected' : ''}>Couloir 5</option>
+                            <option value="6" ${existingLane === 6 ? 'selected' : ''}>Couloir 6</option>
+                            <option value="7" ${existingLane === 7 ? 'selected' : ''}>Couloir 7</option>
+                            <option value="8" ${existingLane === 8 ? 'selected' : ''}>Couloir 8</option>
+                            <option value="9" ${existingLane === 9 ? 'selected' : ''}>Couloir 9</option>
+                        </select>
                     </div>
-                    <span style="font-weight: bold;">${participant.name}</span>
-                    <span style="font-size: 12px; color: #7f8c8d;">(${participant.category})</span>
-                </label>
+                </div>
             `;
         }).join('');
+
+        // Mettre à jour la visibilité de l'option mode couloirs
+        updateLaneModeVisibility();
+    }
+
+    // Fonction pour afficher/masquer l'option mode couloirs selon le nombre de participants
+    window.updateLaneModeVisibility = function() {
+        const checkedCount = document.querySelectorAll('.participant-checkbox:checked').length;
+        const laneModeContainer = document.getElementById('laneModeContainer');
+        const laneModeCheckbox = document.getElementById('serieLaneMode');
+
+        if (checkedCount >= 1 && checkedCount <= 9) {
+            laneModeContainer.style.display = 'block';
+        } else {
+            laneModeContainer.style.display = 'none';
+            if (laneModeCheckbox) {
+                laneModeCheckbox.checked = false;
+            }
+        }
+
+        // Mettre à jour l'affichage des sélecteurs de couloir
+        toggleLaneSelectors();
+    }
+
+    // Fonction pour afficher/masquer les sélecteurs de couloir
+    window.toggleLaneSelectors = function() {
+        const laneModeCheckbox = document.getElementById('serieLaneMode');
+        const laneAssignmentInfo = document.getElementById('laneAssignmentInfo');
+        const laneSelectors = document.querySelectorAll('.lane-selector-container');
+        const isLaneModeEnabled = laneModeCheckbox && laneModeCheckbox.checked;
+
+        // Afficher/masquer l'info d'assignation
+        if (laneAssignmentInfo) {
+            laneAssignmentInfo.style.display = isLaneModeEnabled ? 'block' : 'none';
+        }
+
+        // Afficher les sélecteurs uniquement pour les participants cochés
+        laneSelectors.forEach(container => {
+            const participantDiv = container.closest('div[style*="display: flex"]');
+            const checkbox = participantDiv ? participantDiv.querySelector('.participant-checkbox') : null;
+
+            if (isLaneModeEnabled && checkbox && checkbox.checked) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+                // Réinitialiser la valeur si non coché
+                const select = container.querySelector('.lane-selector');
+                if (select && (!checkbox || !checkbox.checked)) {
+                    select.value = '';
+                }
+            }
+        });
+
+        // Auto-assigner les couloirs si aucun n'est assigné
+        if (isLaneModeEnabled) {
+            autoAssignLanes();
+        }
+    }
+
+    // Auto-assigner les couloirs aux participants cochés
+    function autoAssignLanes() {
+        const checkedBoxes = document.querySelectorAll('.participant-checkbox:checked');
+        let laneNumber = 1;
+
+        checkedBoxes.forEach(checkbox => {
+            const participantDiv = checkbox.closest('div[style*="display: flex"]');
+            const select = participantDiv ? participantDiv.querySelector('.lane-selector') : null;
+
+            if (select && !select.value) {
+                select.value = laneNumber.toString();
+            }
+            laneNumber++;
+        });
     }
 
     // Mise à jour options relais dans modal série
@@ -14971,6 +15081,10 @@ if (document.readyState === 'loading') {
         const participants = Array.from(checkboxes).map(cb => {
             const participantId = parseInt(cb.dataset.id);
 
+            // Récupérer le numéro de couloir assigné (si mode couloirs activé)
+            const laneSelector = document.querySelector(`.lane-selector[data-participant-id="${participantId}"]`);
+            const laneNumber = laneSelector && laneSelector.value ? parseInt(laneSelector.value) : null;
+
             // Chercher si ce participant existait déjà dans la série
             const existingParticipant = existingSerieParticipants.find(p => p.id === participantId);
 
@@ -14981,7 +15095,8 @@ if (document.readyState === 'loading') {
                     // Mettre à jour les infos de base au cas où elles auraient changé
                     bib: cb.dataset.bib,
                     name: cb.dataset.name,
-                    category: cb.dataset.category
+                    category: cb.dataset.category,
+                    laneNumber: laneNumber  // Numéro de couloir assigné
                 };
             } else {
                 // Nouveau participant : créer avec des données vides
@@ -14996,7 +15111,8 @@ if (document.readyState === 'loading') {
                     totalDistance: 0,
                     bestLap: null,
                     finishTime: null,
-                    lastLapStartTime: 0
+                    lastLapStartTime: 0,
+                    laneNumber: laneNumber  // Numéro de couloir assigné
                 };
             }
         });
@@ -15022,6 +15138,31 @@ if (document.readyState === 'loading') {
             return { ...newData };
         }
 
+        // Récupérer l'option mode couloirs
+        const laneModeCheckbox = document.getElementById('serieLaneMode');
+        const laneMode = laneModeCheckbox ? laneModeCheckbox.checked : false;
+
+        // Validation des couloirs si mode couloirs activé
+        if (laneMode) {
+            const laneNumbers = participants
+                .filter(p => p.laneNumber)
+                .map(p => p.laneNumber);
+
+            // Vérifier les doublons
+            const duplicates = laneNumbers.filter((item, index) => laneNumbers.indexOf(item) !== index);
+            if (duplicates.length > 0) {
+                showNotification(`Erreur: Le couloir ${duplicates[0]} est assigné à plusieurs participants!`, 'error');
+                return;
+            }
+
+            // Vérifier que tous les participants ont un couloir assigné
+            const participantsWithoutLane = participants.filter(p => !p.laneNumber);
+            if (participantsWithoutLane.length > 0) {
+                showNotification(`Erreur: ${participantsWithoutLane.length} participant(s) n'ont pas de couloir assigné!`, 'error');
+                return;
+            }
+        }
+
         const serieData = {
             name,
             eventId,  // Lier la série à l'épreuve
@@ -15034,7 +15175,8 @@ if (document.readyState === 'loading') {
             startTime: null,
             isRunning: false,
             timerInterval: null,
-            currentTime: 0
+            currentTime: 0,
+            laneMode: laneMode  // Mode couloirs (1-9) pour natation/athlétisme
         };
 
         if (raceData.editingSerieId !== null) {
@@ -15119,6 +15261,12 @@ if (document.readyState === 'loading') {
 
         loadParticipantsList(serie.participants);
 
+        // Charger l'état du mode couloirs
+        const laneModeCheckbox = document.getElementById('serieLaneMode');
+        if (laneModeCheckbox) {
+            laneModeCheckbox.checked = serie.laneMode || false;
+        }
+
         document.getElementById('serieModal').style.display = 'block';
     };
 
@@ -15161,6 +15309,11 @@ if (document.readyState === 'loading') {
 
         raceData.currentSerie = serie;
         displayRaceInterface(serie);
+
+        // Réactiver l'écouteur clavier si mode couloirs et série en cours
+        if (serie.laneMode && serie.isRunning) {
+            addLaneModeKeyListener();
+        }
     };
 
     // Voir les résultats d'une série terminée
@@ -15225,8 +15378,45 @@ if (document.readyState === 'loading') {
                     </div>
                 </div>
 
-                <!-- Saisie rapide dossard (visible uniquement si course lancée) -->
-                ${serie.isRunning ? `
+                <!-- Mode Couloirs (visible si laneMode activé et course lancée) -->
+                ${serie.laneMode && serie.isRunning ? `
+                    <div style="background: linear-gradient(135deg, #2980b9, #3498db); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <h4 style="color: white; margin: 0 0 8px 0; font-size: 18px;">🏊 MODE COULOIRS ACTIF</h4>
+                            <p style="color: #ecf0f1; margin: 0; font-size: 13px;">Appuyez sur les touches <strong>1-9</strong> du clavier pour arrêter les chronos instantanément</p>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                            ${serie.participants
+                                .filter(p => p.laneNumber)
+                                .sort((a, b) => a.laneNumber - b.laneNumber)
+                                .map(p => {
+                                const laneNumber = p.laneNumber;
+                                const isFinished = p.status === 'finished';
+                                const bgColor = isFinished ? '#27ae60' : '#e74c3c';
+                                const statusIcon = isFinished ? '✅' : '🏃';
+                                return `
+                                    <div id="lane-${laneNumber}"
+                                         onclick="finishLane(${laneNumber})"
+                                         style="background: ${bgColor}; color: white; padding: 15px 20px; border-radius: 10px; cursor: ${isFinished ? 'default' : 'pointer'}; min-width: 120px; text-align: center; transition: transform 0.1s, background 0.2s; ${!isFinished ? 'box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);' : ''}">
+                                        <div style="font-size: 36px; font-weight: bold; line-height: 1;">${laneNumber}</div>
+                                        <div style="font-size: 12px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">${p.name}</div>
+                                        <div style="font-size: 11px; opacity: 0.9;">${p.bib}</div>
+                                        <div style="font-size: 18px; margin-top: 5px;">${statusIcon}</div>
+                                        ${isFinished ? `<div style="font-size: 11px; font-family: monospace; margin-top: 3px;">${formatTime(p.finishTime || p.totalTime)}</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <span style="color: #ecf0f1; font-size: 12px; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 15px;">
+                                Clavier: touches des couloirs assignés | Clic: sur le couloir
+                            </span>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Saisie rapide dossard (visible uniquement si course lancée ET pas en mode couloirs) -->
+                ${serie.isRunning && !serie.laneMode ? `
                     <div style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                             <label style="color: white; font-weight: bold; font-size: 16px;">⚡ Saisie Rapide:</label>
@@ -15303,8 +15493,147 @@ if (document.readyState === 'loading') {
         raceInterface.style.display = 'none';
         eventsList.style.display = 'block';
 
+        // Retirer l'écouteur clavier du mode couloirs
+        removeLaneModeKeyListener();
+
         displayEventsList();
     };
+
+    // ============================================
+    // MODE COULOIRS - ÉCOUTEUR CLAVIER
+    // ============================================
+
+    // Variable pour stocker la référence de l'écouteur clavier
+    let laneModeKeyHandler = null;
+
+    // Fonction pour arrêter le chrono d'un couloir (par numéro 1-9)
+    window.finishLane = function(laneNumber) {
+        const serie = raceData.currentSerie;
+        if (!serie || !serie.laneMode || !serie.isRunning) return;
+
+        // Vérifier que le numéro de couloir est valide (1-9)
+        if (laneNumber < 1 || laneNumber > 9) {
+            return;
+        }
+
+        // Récupérer le participant assigné à ce couloir
+        const participant = serie.participants.find(p => p.laneNumber === laneNumber);
+        if (!participant) {
+            // Aucun participant assigné à ce couloir
+            return;
+        }
+
+        // Vérifier si le participant n'a pas déjà terminé
+        if (participant.status === 'finished') {
+            showNotification(`Couloir ${laneNumber} (${participant.name}) a déjà terminé!`, 'warning');
+            return;
+        }
+
+        // Arrêter le chrono pour ce participant
+        const currentTime = serie.currentTime;
+
+        // Si le participant était en attente, le démarrer d'abord
+        if (participant.status === 'ready') {
+            participant.status = 'running';
+            participant.lastLapStartTime = 0;
+        }
+
+        // Calculer le temps du dernier tour
+        const lapTime = currentTime - participant.lastLapStartTime;
+
+        participant.laps.push({
+            lapNumber: participant.laps.length + 1,
+            time: lapTime,
+            timestamp: currentTime
+        });
+
+        participant.totalTime += lapTime;
+        participant.totalDistance += serie.distance;
+
+        if (!participant.bestLap || lapTime < participant.bestLap) {
+            participant.bestLap = lapTime;
+        }
+
+        participant.status = 'finished';
+        participant.finishTime = currentTime;
+
+        // Mettre à jour l'affichage du couloir
+        updateLaneDisplay(laneNumber, participant, currentTime);
+
+        // Mettre à jour la ligne du participant dans le tableau
+        updateParticipantRow(participant);
+
+        showNotification(`Couloir ${laneNumber} - ${participant.name}: ${formatTime(currentTime)}`, 'success');
+        saveChronoToLocalStorage();
+
+        // Vérifier si tous les participants ont terminé
+        checkAllFinished();
+    };
+
+    // Mettre à jour l'affichage d'un couloir après finish
+    function updateLaneDisplay(laneNumber, participant, finishTime) {
+        const laneElement = document.getElementById(`lane-${laneNumber}`);
+        if (!laneElement) return;
+
+        laneElement.style.background = '#27ae60';
+        laneElement.style.cursor = 'default';
+        laneElement.style.boxShadow = 'none';
+
+        // Mettre à jour le contenu
+        laneElement.innerHTML = `
+            <div style="font-size: 36px; font-weight: bold; line-height: 1;">${laneNumber}</div>
+            <div style="font-size: 12px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">${participant.name}</div>
+            <div style="font-size: 11px; opacity: 0.9;">${participant.bib}</div>
+            <div style="font-size: 18px; margin-top: 5px;">✅</div>
+            <div style="font-size: 11px; font-family: monospace; margin-top: 3px;">${formatTime(finishTime)}</div>
+        `;
+    }
+
+    // Vérifier si tous les participants ont terminé
+    function checkAllFinished() {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const allFinished = serie.participants.every(p => p.status === 'finished');
+        if (allFinished) {
+            showNotification('Tous les participants ont terminé!', 'success');
+        }
+    }
+
+    // Ajouter l'écouteur clavier pour le mode couloirs
+    function addLaneModeKeyListener() {
+        if (laneModeKeyHandler) return; // Déjà actif
+
+        laneModeKeyHandler = function(event) {
+            const serie = raceData.currentSerie;
+            if (!serie || !serie.laneMode || !serie.isRunning) return;
+
+            // Ignorer si on est dans un champ de saisie
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+            // Vérifier si c'est une touche 1-9
+            const key = event.key;
+            if (key >= '1' && key <= '9') {
+                const laneNumber = parseInt(key);
+                // Vérifier si un participant est assigné à ce couloir
+                const hasParticipant = serie.participants.some(p => p.laneNumber === laneNumber);
+                if (hasParticipant) {
+                    event.preventDefault();
+                    finishLane(laneNumber);
+                }
+            }
+        };
+
+        document.addEventListener('keydown', laneModeKeyHandler);
+    }
+
+    // Retirer l'écouteur clavier du mode couloirs
+    function removeLaneModeKeyListener() {
+        if (laneModeKeyHandler) {
+            document.removeEventListener('keydown', laneModeKeyHandler);
+            laneModeKeyHandler = null;
+        }
+    }
 
     // Terminer la série
     window.endSerie = function() {
@@ -15427,11 +15756,16 @@ if (document.readyState === 'loading') {
             // Rafraîchir l'affichage de tous les participants
             displayRaceInterface(serie);
 
-            // Focus automatique sur le champ de saisie rapide
-            setTimeout(() => {
-                const quickInput = document.getElementById('quickFinishInput');
-                if (quickInput) quickInput.focus();
-            }, 100);
+            // Activer l'écouteur clavier si mode couloirs
+            if (serie.laneMode) {
+                addLaneModeKeyListener();
+            } else {
+                // Focus automatique sur le champ de saisie rapide (mode normal)
+                setTimeout(() => {
+                    const quickInput = document.getElementById('quickFinishInput');
+                    if (quickInput) quickInput.focus();
+                }, 100);
+            }
 
             // Sauvegarder l'état dans le localStorage
             saveChronoToLocalStorage();
@@ -15440,9 +15774,17 @@ if (document.readyState === 'loading') {
             serie.isRunning = false;
             clearInterval(serie.timerInterval);
 
+            // Désactiver l'écouteur clavier du mode couloirs
+            if (serie.laneMode) {
+                removeLaneModeKeyListener();
+            }
+
             btn.textContent = '▶️ Reprendre';
             btn.className = 'btn btn-success';
             showNotification('Course en pause', 'warning');
+
+            // Rafraîchir l'affichage (pour cacher les couloirs pendant la pause)
+            displayRaceInterface(serie);
 
             // Sauvegarder l'état dans le localStorage
             saveChronoToLocalStorage();

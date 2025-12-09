@@ -399,6 +399,22 @@
                     </div>
                 </div>
 
+                <!-- Option Mode Couloirs -->
+                <div id="laneModeContainer" style="display: none; background: linear-gradient(135deg, #3498db, #2980b9); padding: 15px; border-radius: 8px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: white;">
+                        <input type="checkbox" id="serieLaneMode" onchange="toggleLaneSelectors()" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="font-weight: bold;">🏊 Mode Couloirs (1-9)</span>
+                    </label>
+                    <p style="margin: 8px 0 0 30px; font-size: 12px; color: #ecf0f1;">
+                        Activez ce mode pour les courses en couloirs (natation, athlétisme). Chaque touche 1-9 du clavier arrête instantanément le chrono du couloir correspondant.
+                    </p>
+                    <div id="laneAssignmentInfo" style="display: none; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.15); border-radius: 5px;">
+                        <p style="margin: 0; font-size: 12px; color: white;">
+                            Assignez un couloir (1-9) à chaque participant coché ci-dessus.
+                        </p>
+                    </div>
+                </div>
+
                 <div style="background: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #f39c12;">
                     <p style="margin: 0; font-size: 13px; color: #856404;">
                         <strong>💡 Astuce:</strong> Les paramètres (distance, type de sport) sont hérités de l'épreuve sélectionnée.
