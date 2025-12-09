@@ -14602,6 +14602,13 @@ if (document.readyState === 'loading') {
         document.getElementById('eventRelayDuration').value = '60';
         document.getElementById('eventRelayDurationSection').style.display = 'none';
 
+        // Réinitialiser section interclub
+        const interclubSection = document.getElementById('eventInterclubSection');
+        if (interclubSection) {
+            interclubSection.style.display = 'none';
+            document.getElementById('eventInterclubPoints').value = '10,8,6,5,4,3,2,1';
+        }
+
         document.getElementById('eventModal').style.display = 'block';
     };
 
@@ -14613,11 +14620,22 @@ if (document.readyState === 'loading') {
     window.updateEventRelayOptions = function() {
         const raceType = document.getElementById('eventRaceType').value;
         const relaySection = document.getElementById('eventRelayDurationSection');
+        const interclubSection = document.getElementById('eventInterclubSection');
 
+        // Afficher/masquer section relais
         if (raceType === 'relay') {
             relaySection.style.display = 'block';
         } else {
             relaySection.style.display = 'none';
+        }
+
+        // Afficher/masquer section interclub
+        if (interclubSection) {
+            if (raceType === 'interclub') {
+                interclubSection.style.display = 'block';
+            } else {
+                interclubSection.style.display = 'none';
+            }
         }
     };
 
@@ -14627,6 +14645,16 @@ if (document.readyState === 'loading') {
         const distance = parseInt(document.getElementById('eventDistance').value);
         const raceType = document.getElementById('eventRaceType').value;
         const relayDuration = raceType === 'relay' ? parseInt(document.getElementById('eventRelayDuration').value) : null;
+
+        // Récupérer le barème de points pour le mode interclub
+        let interclubPoints = null;
+        if (raceType === 'interclub') {
+            const pointsInput = document.getElementById('eventInterclubPoints').value.trim();
+            interclubPoints = pointsInput.split(',').map(p => parseInt(p.trim())).filter(p => !isNaN(p));
+            if (interclubPoints.length === 0) {
+                interclubPoints = [10, 8, 6, 5, 4, 3, 2, 1]; // Barème par défaut
+            }
+        }
 
         if (!name) {
             showNotification('Veuillez entrer un nom pour l\'épreuve', 'warning');
@@ -14645,6 +14673,7 @@ if (document.readyState === 'loading') {
             distance,
             raceType,
             relayDuration,
+            interclubPoints,  // Barème de points pour mode interclub
             series: [] // Chaque épreuve contient plusieurs séries
         };
 
@@ -14680,11 +14709,24 @@ if (document.readyState === 'loading') {
         document.getElementById('eventDistance').value = event.distance;
         document.getElementById('eventRaceType').value = event.raceType;
 
+        // Gérer section relais
         if (event.raceType === 'relay') {
             document.getElementById('eventRelayDuration').value = event.relayDuration;
             document.getElementById('eventRelayDurationSection').style.display = 'block';
         } else {
             document.getElementById('eventRelayDurationSection').style.display = 'none';
+        }
+
+        // Gérer section interclub
+        const interclubSection = document.getElementById('eventInterclubSection');
+        if (interclubSection) {
+            if (event.raceType === 'interclub') {
+                interclubSection.style.display = 'block';
+                const points = event.interclubPoints || [10, 8, 6, 5, 4, 3, 2, 1];
+                document.getElementById('eventInterclubPoints').value = points.join(',');
+            } else {
+                interclubSection.style.display = 'none';
+            }
         }
 
         document.getElementById('eventModal').style.display = 'block';
@@ -16364,7 +16406,119 @@ if (document.readyState === 'loading') {
             </div>
         `;
 
+        // Ajouter le classement par club si mode interclub
+        const parentEvent = raceData.events.find(e => e.id === serie.eventId);
+        if (parentEvent && parentEvent.raceType === 'interclub') {
+            html += generateInterclubRanking(ranked, parentEvent);
+        }
+
         rankingSection.innerHTML = html;
+    }
+
+    // Générer le classement par club pour le mode interclub
+    function generateInterclubRanking(rankedParticipants, event) {
+        const pointsScale = event.interclubPoints || [10, 8, 6, 5, 4, 3, 2, 1];
+
+        // Calculer les points par club
+        const clubPoints = {};
+        const clubDetails = {};
+
+        rankedParticipants.forEach((p, index) => {
+            if (p.status !== 'finished') return;
+
+            // Récupérer le club du participant
+            const participantData = raceData.participants.find(rp => rp.id === p.id);
+            const club = participantData?.club || p.club || 'Sans club';
+
+            if (!club || club.trim() === '') return;
+
+            const position = index + 1;
+            const points = position <= pointsScale.length ? pointsScale[position - 1] : 0;
+
+            if (!clubPoints[club]) {
+                clubPoints[club] = 0;
+                clubDetails[club] = [];
+            }
+
+            clubPoints[club] += points;
+            clubDetails[club].push({
+                name: p.name,
+                position: position,
+                points: points,
+                time: p.finishTime || p.totalTime
+            });
+        });
+
+        // Trier les clubs par points décroissants
+        const sortedClubs = Object.entries(clubPoints)
+            .sort((a, b) => b[1] - a[1])
+            .map(([club, points], index) => ({
+                club,
+                points,
+                position: index + 1,
+                athletes: clubDetails[club]
+            }));
+
+        if (sortedClubs.length === 0) {
+            return `
+                <div style="margin-top: 20px; background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 20px; border-radius: 10px;">
+                    <h3 style="color: white; text-align: center; margin-bottom: 15px;">🏅 Classement Interclub</h3>
+                    <div style="background: white; border-radius: 10px; padding: 20px; text-align: center; color: #7f8c8d;">
+                        Aucun club trouvé. Assurez-vous que les participants ont un club assigné.
+                    </div>
+                </div>
+            `;
+        }
+
+        const clubMedals = ['🥇', '🥈', '🥉'];
+
+        return `
+            <div style="margin-top: 20px; background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 20px; border-radius: 10px;">
+                <h3 style="color: white; text-align: center; margin-bottom: 15px;">🏅 Classement Interclub</h3>
+                <p style="color: rgba(255,255,255,0.8); text-align: center; margin-bottom: 15px; font-size: 13px;">
+                    Barème: ${pointsScale.map((p, i) => `${i + 1}er=${p}pts`).join(', ')}
+                </p>
+                <div style="background: white; border-radius: 10px; padding: 20px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 12px; text-align: center;">Pos.</th>
+                                <th style="padding: 12px; text-align: left;">Club</th>
+                                <th style="padding: 12px; text-align: center;">Points</th>
+                                <th style="padding: 12px; text-align: center;">Athlètes</th>
+                                <th style="padding: 12px; text-align: left;">Détails</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sortedClubs.map(c => {
+                                const medal = c.position <= 3 ? clubMedals[c.position - 1] : c.position;
+                                const rowBg = c.position <= 3 ? 'background: linear-gradient(135deg, #f5e6ff, #e8d4f8);' : '';
+
+                                return `
+                                    <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
+                                        <td style="padding: 12px; text-align: center; font-size: 24px; font-weight: bold;">
+                                            ${medal}
+                                        </td>
+                                        <td style="padding: 12px; font-weight: bold; font-size: 16px; color: #9b59b6;">
+                                            ${c.club}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 24px; color: #e74c3c;">
+                                            ${c.points}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-weight: bold;">
+                                            ${c.athletes.length}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 12px; color: #7f8c8d;">
+                                            ${c.athletes.map(a => `${a.name} (${a.position}e: ${a.points}pts)`).join(', ')}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
     }
 
     // Afficher le classement général de toutes les séries avec sélection intelligente
