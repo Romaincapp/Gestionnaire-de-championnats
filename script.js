@@ -5178,7 +5178,7 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
                 (m.player1 === player || m.player2 === player)
             );
 
-            let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
 
             playerPoolMatches.forEach(match => {
                 if (match.completed) {
@@ -5186,7 +5186,15 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
                     const score1 = parseInt(match.score1) || 0;
                     const score2 = parseInt(match.score2) || 0;
 
-                    if (match.winner === player) {
+                    if (match.forfaitBy) {
+                        if (match.forfaitBy === (isPlayer1 ? 'player1' : 'player2')) {
+                            forfeits++;
+                        } else {
+                            wins++;
+                        }
+                    } else if (match.winner === null) {
+                        draws++;
+                    } else if (match.winner === player) {
                         wins++;
                     } else {
                         losses++;
@@ -5205,12 +5213,14 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
             rankings.push({
                 name: player,
                 wins,
+                draws,
                 losses,
-                points: wins * 3 + losses * 1,
+                forfeits,
+                points: wins * 3 + draws * 2 + losses * 1,
                 pointsWon,
                 pointsLost,
                 goalAverage: pointsWon - pointsLost,
-                matchesPlayed: wins + losses
+                matchesPlayed: wins + draws + losses + forfeits
             });
         });
 
@@ -5332,7 +5342,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
             html += `
                 <div style="display: flex; justify-content: space-between; padding: 6px 8px; background: ${bgColor}; border-radius: 4px; margin-bottom: 4px; font-size: 12px;">
                     <span style="font-weight: ${isQualified ? '600' : '400'};">${idx + 1}. ${player.name}${checkMark}</span>
-                    <span style="color: #7f8c8d;">${player.points}pts (${player.wins}V-${player.losses}D)</span>
+                    <span style="color: #7f8c8d;">${player.points}pts (${player.wins}V/${player.draws || 0}N/${player.losses}D/${player.forfeits || 0}F)</span>
                 </div>
             `;
         });
@@ -8385,7 +8395,7 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
     }
 
     // Calculer les statistiques
-    let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+    let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
     const opponents = [];
 
     matches.forEach(match => {
@@ -8395,10 +8405,26 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
         const score2 = parseInt(match.score2) || 0;
         const playerScore = isPlayer1 ? score1 : score2;
         const opponentScore = isPlayer1 ? score2 : score1;
-        const isWin = match.winner === playerName;
 
-        if (isWin) wins++;
-        else losses++;
+        let result;
+        if (match.forfaitBy) {
+            if (match.forfaitBy === (isPlayer1 ? 'player1' : 'player2')) {
+                forfeits++;
+                result = 'F';
+            } else {
+                wins++;
+                result = 'V';
+            }
+        } else if (match.winner === null) {
+            draws++;
+            result = 'N';
+        } else if (match.winner === playerName) {
+            wins++;
+            result = 'V';
+        } else {
+            losses++;
+            result = 'D';
+        }
 
         pointsWon += playerScore;
         pointsLost += opponentScore;
@@ -8407,7 +8433,7 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
             name: opponent,
             playerScore: playerScore,
             opponentScore: opponentScore,
-            result: isWin ? 'V' : 'D',
+            result: result,
             matchType: match.roundName ? `${match.roundName}` : match.poolName || 'Poule',
             isBye: match.isBye || false
         });
@@ -8419,7 +8445,9 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
         dayNumber: dayNumber,
         totalMatches: matches.length,
         wins: wins,
+        draws: draws,
         losses: losses,
+        forfeits: forfeits,
         pointsWon: pointsWon,
         pointsLost: pointsLost,
         diff: pointsWon - pointsLost,
@@ -8645,7 +8673,7 @@ if (!document.getElementById('player-summary-animations')) {
 
 function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers = null, dayNumber = null, division = null) {
     const playerStats = pool.map(player => {
-        let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+        let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
 
         poolMatches.forEach(match => {
             if (!match.completed) return;
@@ -8654,8 +8682,19 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
             const isPlayer2 = match.player2 === player;
 
             if (isPlayer1 || isPlayer2) {
-                if (match.winner === player) wins++;
-                else losses++;
+                if (match.forfaitBy) {
+                    if (match.forfaitBy === (isPlayer1 ? 'player1' : 'player2')) {
+                        forfeits++;
+                    } else {
+                        wins++;
+                    }
+                } else if (match.winner === null) {
+                    draws++;
+                } else if (match.winner === player) {
+                    wins++;
+                } else {
+                    losses++;
+                }
 
                 const score1 = parseInt(match.score1) || 0;
                 const score2 = parseInt(match.score2) || 0;
@@ -8673,11 +8712,13 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
         return {
             name: player,
             wins,
+            draws,
             losses,
+            forfeits,
             pointsWon,
             pointsLost,
             diff: pointsWon - pointsLost,
-            points: wins * 3 + losses * 1
+            points: wins * 3 + draws * 2 + losses * 1
         };
     });
 
@@ -9013,7 +9054,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
 
     pools.forEach((pool, poolIndex) => {
         const playerStats = pool.map(player => {
-            let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
 
             const poolMatches = matches.filter(m => m.poolIndex === poolIndex && m.completed);
 
@@ -9022,8 +9063,19 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
                 const isPlayer2 = match.player2 === player;
 
                 if (isPlayer1 || isPlayer2) {
-                    if (match.winner === player) wins++;
-                    else losses++;
+                    if (match.forfaitBy) {
+                        if (match.forfaitBy === (isPlayer1 ? 'player1' : 'player2')) {
+                            forfeits++;
+                        } else {
+                            wins++;
+                        }
+                    } else if (match.winner === null) {
+                        draws++;
+                    } else if (match.winner === player) {
+                        wins++;
+                    } else {
+                        losses++;
+                    }
 
                     const score1 = parseInt(match.score1) || 0;
                     const score2 = parseInt(match.score2) || 0;
@@ -9040,9 +9092,9 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
 
             return {
                 name: player,
-                wins, losses, pointsWon, pointsLost,
+                wins, draws, losses, forfeits, pointsWon, pointsLost,
                 diff: pointsWon - pointsLost,
-                points: wins * 3 + losses * 1,
+                points: wins * 3 + draws * 2 + losses * 1,
                 poolIndex: poolIndex,
                 poolName: String.fromCharCode(65 + poolIndex)
             };
@@ -11252,7 +11304,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
 
     pools.forEach((pool, poolIndex) => {
         const playerStats = pool.map(player => {
-            let wins = 0, losses = 0, pointsWon = 0, pointsLost = 0;
+            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
 
             const poolMatches = matches.filter(m => m.poolIndex === poolIndex && m.completed);
 
@@ -11261,8 +11313,19 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
                 const isPlayer2 = match.player2 === player;
 
                 if (isPlayer1 || isPlayer2) {
-                    if (match.winner === player) wins++;
-                    else losses++;
+                    if (match.forfaitBy) {
+                        if (match.forfaitBy === (isPlayer1 ? 'player1' : 'player2')) {
+                            forfeits++;
+                        } else {
+                            wins++;
+                        }
+                    } else if (match.winner === null) {
+                        draws++;
+                    } else if (match.winner === player) {
+                        wins++;
+                    } else {
+                        losses++;
+                    }
 
                     const score1 = parseInt(match.score1) || 0;
                     const score2 = parseInt(match.score2) || 0;
@@ -11279,9 +11342,9 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
 
             return {
                 name: player,
-                wins, losses, pointsWon, pointsLost,
+                wins, draws, losses, forfeits, pointsWon, pointsLost,
                 diff: pointsWon - pointsLost,
-                points: wins * 3 + losses * 1,
+                points: wins * 3 + draws * 2 + losses * 1,
                 poolIndex: poolIndex,
                 poolName: String.fromCharCode(65 + poolIndex)
             };
