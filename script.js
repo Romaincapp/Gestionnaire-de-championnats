@@ -171,10 +171,13 @@ try {
                 const loadedData = JSON.parse(saved);
                 // Fusionner les données chargées avec la structure par défaut
                 raceData.events = loadedData.events || [];
+                raceData.series = loadedData.series || [];
                 raceData.participants = loadedData.participants || [];
                 raceData.nextEventId = loadedData.nextEventId || 1;
                 raceData.nextSerieId = loadedData.nextSerieId || 1;
                 raceData.nextParticipantId = loadedData.nextParticipantId || 1;
+                raceData.customFields = loadedData.customFields || [];
+                raceData.nextCustomFieldId = loadedData.nextCustomFieldId || 1;
                 return true;
             }
         } catch (error) {
@@ -183,6 +186,63 @@ try {
         return false;
     }
     window.loadChronoFromLocalStorage = loadChronoFromLocalStorage;
+
+    // Restaurer les chronos en cours après rechargement de page
+    function restoreRunningTimers() {
+        raceData.series.forEach(serie => {
+            if (serie.isRunning && serie.startTime) {
+                // Le chrono était en cours - le reprendre automatiquement
+                console.log('Restauration du chrono en cours pour:', serie.name);
+
+                // Recalculer le temps actuel basé sur startTime
+                serie.currentTime = Date.now() - serie.startTime;
+
+                // Redémarrer l'intervalle du timer
+                serie.timerInterval = setInterval(() => {
+                    serie.currentTime = Date.now() - serie.startTime;
+                    // Si l'interface de course est affichée, mettre à jour
+                    if (raceData.currentSerie && raceData.currentSerie.id === serie.id) {
+                        const display = document.getElementById('mainChronoDisplay');
+                        if (display) {
+                            display.textContent = formatTime(serie.currentTime || 0);
+                        }
+                        // Mettre à jour les temps des participants
+                        serie.participants.forEach(p => {
+                            if (p.status === 'running') {
+                                const timeDisplay = document.getElementById(`time-${p.bib}`);
+                                if (timeDisplay) {
+                                    timeDisplay.textContent = formatTime(serie.currentTime - p.lastLapStartTime + (p.totalTime || 0));
+                                }
+                            }
+                        });
+                    }
+                }, 100);
+
+                showNotification(`⚠️ Chrono "${serie.name}" restauré et en cours!`, 'warning');
+            }
+        });
+    }
+    window.restoreRunningTimers = restoreRunningTimers;
+
+    // Protection contre le rafraîchissement accidentel
+    function setupChronoProtection() {
+        window.addEventListener('beforeunload', function(e) {
+            // Vérifier si un chrono est en cours
+            const hasRunningTimer = raceData.series && raceData.series.some(s => s.isRunning);
+
+            if (hasRunningTimer) {
+                // Sauvegarder immédiatement avant le rechargement
+                saveChronoToLocalStorage();
+
+                // Message d'avertissement (le navigateur affiche son propre message)
+                const message = '⚠️ Un chrono est en cours! Êtes-vous sûr de vouloir quitter?';
+                e.preventDefault();
+                e.returnValue = message;
+                return message;
+            }
+        });
+    }
+    window.setupChronoProtection = setupChronoProtection;
 
     // GESTION DE LA CONFIGURATION
     function updateDivisionConfig() {
@@ -6142,6 +6202,13 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
         }
 
         setupEventListeners();
+
+        // Protection du mode chrono contre les rafraîchissements
+        setupChronoProtection();
+
+        // Charger et restaurer les données chrono (y compris les chronos en cours)
+        loadChronoFromLocalStorage();
+        restoreRunningTimers();
     });
 
     // ======================================
@@ -14065,6 +14132,15 @@ if (document.readyState === 'loading') {
 
             displayEventsList();
             displayParticipantsList();
+
+            // Vérifier s'il y a un chrono en cours et l'ouvrir automatiquement
+            const runningSerie = raceData.series.find(s => s.isRunning);
+            if (runningSerie) {
+                showNotification(`⚠️ Chrono "${runningSerie.name}" en cours - Reprise automatique`, 'warning');
+                setTimeout(() => {
+                    continueSerie(runningSerie.id);
+                }, 500);
+            }
         } else {
             // MODE CHAMPIONNAT
             chronoSection.style.display = 'none';
@@ -14609,6 +14685,9 @@ if (document.readyState === 'loading') {
             document.getElementById('eventInterclubPoints').value = '10,8,6,5,4,3,2,1';
         }
 
+        // Réinitialiser mode couloirs
+        document.getElementById('eventLaneMode').checked = false;
+
         document.getElementById('eventModal').style.display = 'block';
     };
 
@@ -14645,6 +14724,7 @@ if (document.readyState === 'loading') {
         const distance = parseInt(document.getElementById('eventDistance').value);
         const raceType = document.getElementById('eventRaceType').value;
         const relayDuration = raceType === 'relay' ? parseInt(document.getElementById('eventRelayDuration').value) : null;
+        const laneMode = document.getElementById('eventLaneMode').checked;
 
         // Récupérer le barème de points pour le mode interclub
         let interclubPoints = null;
@@ -14674,6 +14754,7 @@ if (document.readyState === 'loading') {
             raceType,
             relayDuration,
             interclubPoints,  // Barème de points pour mode interclub
+            laneMode,         // Mode couloirs (1-9)
             series: [] // Chaque épreuve contient plusieurs séries
         };
 
@@ -14729,6 +14810,9 @@ if (document.readyState === 'loading') {
             }
         }
 
+        // Charger mode couloirs
+        document.getElementById('eventLaneMode').checked = event.laneMode || false;
+
         document.getElementById('eventModal').style.display = 'block';
     };
 
@@ -14757,6 +14841,47 @@ if (document.readyState === 'loading') {
     function displayEventsList() {
         const eventsList = document.getElementById('eventsList');
         const noEventsMessage = document.getElementById('noEventsMessage');
+
+        // Vérifier s'il y a un chrono en cours
+        let runningSerieInfo = null;
+        for (const event of raceData.events) {
+            const runningSerie = event.series.find(s => s.isRunning);
+            if (runningSerie) {
+                runningSerieInfo = { event, serie: runningSerie };
+                break;
+            }
+        }
+
+        // Afficher ou masquer la bannière chrono en cours
+        let runningBanner = document.getElementById('runningChronoBanner');
+        if (runningSerieInfo) {
+            if (!runningBanner) {
+                runningBanner = document.createElement('div');
+                runningBanner.id = 'runningChronoBanner';
+                const chronoSection = document.getElementById('chronoModeSection');
+                chronoSection.insertBefore(runningBanner, chronoSection.firstChild);
+            }
+            runningBanner.innerHTML = `
+                <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; animation: pulse 2s infinite;">
+                    <div>
+                        <strong style="font-size: 16px;">⏱️ CHRONO EN COURS</strong>
+                        <span style="margin-left: 15px;">${runningSerieInfo.event.name} - ${runningSerieInfo.serie.name}</span>
+                    </div>
+                    <button onclick="continueSerie(${runningSerieInfo.serie.id})" style="background: white; color: #e74c3c; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        📊 Reprendre le chrono
+                    </button>
+                </div>
+                <style>
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.85; }
+                    }
+                </style>
+            `;
+            runningBanner.style.display = 'block';
+        } else if (runningBanner) {
+            runningBanner.style.display = 'none';
+        }
 
         if (raceData.events.length === 0) {
             eventsList.style.display = 'none';
@@ -14789,6 +14914,8 @@ if (document.readyState === 'loading') {
                                 <span>📊 ${event.series.length} série(s)</span>
                                 <span>👥 ${totalParticipants} participants au total</span>
                                 ${completedSeries > 0 ? `<span style="color: #27ae60;">✅ ${completedSeries} terminée(s)</span>` : ''}
+                                ${event.laneMode ? `<span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 4px;">🏊 Couloirs 1-9</span>` : ''}
+                                ${event.raceType === 'interclub' ? `<span style="background: #9b59b6; color: white; padding: 2px 8px; border-radius: 4px;">🏆 Interclub</span>` : ''}
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
@@ -14931,6 +15058,21 @@ if (document.readyState === 'loading') {
         // Suggérer un nom de série basé sur le nombre de séries existantes
         const serieNumber = event.series.length + 1;
         document.getElementById('serieName').value = `Série ${serieNumber}`;
+
+        // Hériter du mode couloirs de l'épreuve
+        const laneModeCheckbox = document.getElementById('serieLaneMode');
+        if (laneModeCheckbox && event.laneMode) {
+            laneModeCheckbox.checked = true;
+            // Activer les sélecteurs de couloirs
+            if (typeof toggleLaneSelectors === 'function') {
+                toggleLaneSelectors();
+            }
+            // Mettre à jour la visibilité du conteneur
+            const laneModeContainer = document.getElementById('laneModeContainer');
+            if (laneModeContainer) {
+                laneModeContainer.style.display = 'block';
+            }
+        }
     };
 
     // Charger la liste des participants avec checkboxes
