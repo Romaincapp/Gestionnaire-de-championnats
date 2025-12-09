@@ -4231,7 +4231,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                             <th>Joueur</th>
                             <th>Points</th>
                             <th>Journées</th>
-                            <th>V/D/F</th>
+                            <th>V/N/D/F</th>
                             <th>% Vict.</th>
                             <th>PP/PC</th>
                             <th>Diff</th>
@@ -4252,7 +4252,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                     <td class="player-name">${player.name}</td>
                     <td class="points-total">${player.totalPoints}</td>
                     <td style="text-align: center;">${player.daysPlayed}</td>
-                    <td style="text-align: center;">${player.totalWins}/${player.totalLosses}/${player.totalForfaits}</td>
+                    <td style="text-align: center;">${player.totalWins}/${player.totalDraws || 0}/${player.totalLosses}/${player.totalForfaits}</td>
                     <td style="text-align: center;">${player.avgWinRate}%</td>
                     <td style="text-align: center;">${player.totalPointsWon}/${player.totalPointsLost}</td>
                     <td style="text-align: center;">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
@@ -5483,7 +5483,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
                     <th style="padding: 8px; text-align: center; width: 50px;">Pos</th>
                     <th style="padding: 8px; text-align: left;">Joueur</th>
                     <th style="padding: 8px; text-align: center;">Pts</th>
-                    <th style="padding: 8px; text-align: center;">V/D</th>
+                    <th style="padding: 8px; text-align: center;">V/N/D/F</th>
                     <th style="padding: 8px; text-align: center;">PP/PC</th>
                     <th style="padding: 8px; text-align: center;">Diff</th>
                 </tr>
@@ -5507,7 +5507,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
                     ${player.label && player.position <= 4 ? `<span style="font-size: 10px; color: #666; margin-left: 5px;">(${player.label})</span>` : ''}
                 </td>
                 <td style="padding: 8px; text-align: center;">${player.totalPoints || 0}</td>
-                <td style="padding: 8px; text-align: center;">${player.wins || 0}/${player.losses || 0}</td>
+                <td style="padding: 8px; text-align: center;">${player.wins || 0}/${player.draws || 0}/${player.losses || 0}/${player.forfeits || 0}</td>
                 <td style="padding: 8px; text-align: center;">${player.pointsWon || 0}/${player.pointsLost || 0}</td>
                 <td style="padding: 8px; text-align: center; color: ${ga >= 0 ? '#27ae60' : '#e74c3c'};">${gaDisplay}</td>
             </tr>
@@ -5983,7 +5983,7 @@ function exportGeneralRankingToHTML() {
                             <th>Joueur</th>
                             <th>Points</th>
                             <th>Journées</th>
-                            <th>V/D/F</th>
+                            <th>V/N/D/F</th>
                             <th>% Vict.</th>
                             <th>PP/PC</th>
                             <th>Diff</th>
@@ -6000,7 +6000,7 @@ function exportGeneralRankingToHTML() {
                     <td>${player.name}</td>
                     <td>${player.totalPoints}</td>
                     <td>${player.daysPlayed}</td>
-                    <td>${player.totalWins}/${player.totalLosses}/${player.totalForfaits}</td>
+                    <td>${player.totalWins}/${player.totalDraws || 0}/${player.totalLosses}/${player.totalForfaits}</td>
                     <td>${player.avgWinRate}%</td>
                     <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
                     <td>${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
@@ -6019,7 +6019,7 @@ function exportGeneralRankingToHTML() {
     htmlContent += `
                 <div class="footer">
                     <p>Championnat Sportif - Gestion Esenca Sport</p>
-                    <p>Système de points: Victoire = 3pts, Défaite = 1pt</p>
+                    <p>Système de points: Victoire = 3pts, Nul = 2pts, Défaite = 1pt, Forfait = 0pt</p>
                 </div>
             </div>
         </body>
@@ -8719,7 +8719,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                         <th style="padding: 8px; text-align: left;">Rang</th>
                         <th style="padding: 8px; text-align: left;">Joueur</th>
                         <th style="padding: 8px; text-align: center;">Pts</th>
-                        <th style="padding: 8px; text-align: center;">V/D</th>
+                        <th style="padding: 8px; text-align: center;">V/N/D/F</th>
                         <th style="padding: 8px; text-align: center;">PP/PC</th>
                         <th style="padding: 8px; text-align: center;">Diff</th>
                     </tr>
@@ -8767,7 +8767,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                                           ${dayNumber && division ? `onmouseout="this.style.color='${textColor}'"` : ''}>${player.name}</span>${badge}
                                 </td>
                                 <td style="padding: 8px; text-align: center; font-weight: bold; color: ${textColor};">${player.points}</td>
-                                <td style="padding: 8px; text-align: center; color: ${textColor};">${player.wins}/${player.losses}</td>
+                                <td style="padding: 8px; text-align: center; color: ${textColor};">${player.wins}/${player.draws || 0}/${player.losses}/${player.forfeits || 0}</td>
                                 <td style="padding: 8px; text-align: center; color: ${textColor};">${player.pointsWon}/${player.pointsLost}</td>
                                 <td style="padding: 8px; text-align: center; color: ${textColor};">${player.diff > 0 ? '+' : ''}${player.diff}</td>
                             </tr>
