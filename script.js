@@ -18129,6 +18129,231 @@ if (document.readyState === 'loading') {
         showNotification('Compétition chrono exportée avec succès !', 'success');
     };
 
+    // Imprimer les épreuves et séries du mode chrono
+    window.printChronoCompetition = function() {
+        if (raceData.events.length === 0) {
+            showNotification('Aucune épreuve à imprimer', 'warning');
+            return;
+        }
+
+        const sportEmoji = {
+            running: '🏃',
+            cycling: '🚴',
+            swimming: '🏊',
+            multisport: '🏅'
+        };
+
+        const raceTypeLabels = {
+            individual: 'Individuelle',
+            relay: 'Relais',
+            interclub: 'Interclub'
+        };
+
+        // Générer le HTML pour l'impression
+        let printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Compétition Chrono - ${new Date().toLocaleDateString('fr-FR')}</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
+                    h1 { text-align: center; margin-bottom: 20px; font-size: 24px; }
+                    h2 { margin: 20px 0 10px 0; font-size: 18px; border-bottom: 2px solid #333; padding-bottom: 5px; }
+                    h3 { margin: 15px 0 8px 0; font-size: 14px; color: #555; }
+                    .event { margin-bottom: 30px; page-break-inside: avoid; }
+                    .serie { margin: 10px 0 20px 20px; }
+                    .info { color: #666; font-size: 11px; margin-bottom: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+                    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+                    th { background: #f0f0f0; font-weight: bold; }
+                    .rank { text-align: center; font-weight: bold; }
+                    .time { font-family: monospace; }
+                    .finished { color: green; }
+                    .running { color: orange; }
+                    .ready { color: gray; }
+                    .medal-1 { background: #fff9e6; }
+                    .medal-2 { background: #f5f5f5; }
+                    .medal-3 { background: #fdf5e6; }
+                    .club-ranking { margin-top: 15px; background: #f9f0ff; padding: 10px; border-radius: 5px; }
+                    .club-ranking h4 { margin-bottom: 8px; color: #8e44ad; }
+                    .stats { display: flex; gap: 20px; margin: 10px 0; flex-wrap: wrap; }
+                    .stat { background: #f5f5f5; padding: 8px 15px; border-radius: 5px; }
+                    .print-date { text-align: right; color: #999; font-size: 10px; margin-bottom: 10px; }
+                    @media print {
+                        .event { page-break-inside: avoid; }
+                        body { padding: 10px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-date">Imprimé le ${new Date().toLocaleString('fr-FR')}</div>
+                <h1>🏆 Compétition Chrono</h1>
+                <div class="stats">
+                    <div class="stat"><strong>${raceData.events.length}</strong> épreuve(s)</div>
+                    <div class="stat"><strong>${raceData.events.reduce((c, e) => c + e.series.length, 0)}</strong> série(s)</div>
+                    <div class="stat"><strong>${raceData.participants.length}</strong> participant(s)</div>
+                </div>
+        `;
+
+        // Parcourir les épreuves
+        raceData.events.forEach(event => {
+            printContent += `
+                <div class="event">
+                    <h2>${sportEmoji[event.sportType] || '🏅'} ${event.name}</h2>
+                    <div class="info">
+                        Distance: ${event.distance}m | Type: ${raceTypeLabels[event.raceType] || event.raceType}
+                        ${event.raceType === 'relay' ? ` | Durée: ${event.relayDuration} min` : ''}
+                        ${event.raceType === 'interclub' ? ` | Barème: ${(event.interclubPoints || [10,8,6,5,4,3,2,1]).join(', ')}` : ''}
+                    </div>
+            `;
+
+            if (event.series.length === 0) {
+                printContent += `<p style="color: #999; margin-left: 20px;">Aucune série</p>`;
+            } else {
+                // Parcourir les séries
+                event.series.forEach(serie => {
+                    const statusLabel = serie.status === 'completed' ? '✅ Terminée' :
+                                       serie.status === 'running' ? '⏳ En cours' : '⏸️ En attente';
+
+                    printContent += `
+                        <div class="serie">
+                            <h3>${serie.name} - ${statusLabel}</h3>
+                    `;
+
+                    if (serie.participants.length === 0) {
+                        printContent += `<p style="color: #999;">Aucun participant</p>`;
+                    } else {
+                        // Trier les participants par résultat
+                        const sorted = [...serie.participants].sort((a, b) => {
+                            if (a.status === 'finished' && b.status !== 'finished') return -1;
+                            if (b.status === 'finished' && a.status !== 'finished') return 1;
+                            if (a.totalDistance !== b.totalDistance) return b.totalDistance - a.totalDistance;
+                            return (a.finishTime || a.totalTime) - (b.finishTime || b.totalTime);
+                        });
+
+                        printContent += `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40px;">Pos.</th>
+                                        <th style="width: 60px;">Dossard</th>
+                                        <th>Nom</th>
+                                        <th>Club</th>
+                                        <th style="width: 60px;">Tours</th>
+                                        <th style="width: 80px;">Temps</th>
+                                        <th style="width: 70px;">Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        sorted.forEach((p, index) => {
+                            const position = index + 1;
+                            const medalClass = position === 1 ? 'medal-1' : position === 2 ? 'medal-2' : position === 3 ? 'medal-3' : '';
+                            const statusClass = p.status === 'finished' ? 'finished' : p.status === 'running' ? 'running' : 'ready';
+
+                            // Récupérer le club du participant
+                            const participantData = raceData.participants.find(rp => rp.id === p.id);
+                            const club = participantData?.club || p.club || '-';
+
+                            printContent += `
+                                <tr class="${medalClass}">
+                                    <td class="rank">${position}</td>
+                                    <td>${p.bib}</td>
+                                    <td>${p.name}</td>
+                                    <td>${club}</td>
+                                    <td style="text-align: center;">${p.laps ? p.laps.length : 0}</td>
+                                    <td class="time">${p.status === 'finished' ? formatTime(p.finishTime || p.totalTime) : '-'}</td>
+                                    <td class="${statusClass}">${p.status === 'finished' ? 'Terminé' : p.status === 'running' ? 'En cours' : 'Prêt'}</td>
+                                </tr>
+                            `;
+                        });
+
+                        printContent += `</tbody></table>`;
+
+                        // Ajouter classement interclub si applicable
+                        if (event.raceType === 'interclub' && serie.status === 'completed') {
+                            const clubRanking = calculateClubRanking(sorted, event.interclubPoints || [10,8,6,5,4,3,2,1]);
+                            if (clubRanking.length > 0) {
+                                printContent += `
+                                    <div class="club-ranking">
+                                        <h4>🏅 Classement Interclub</h4>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40px;">Pos.</th>
+                                                    <th>Club</th>
+                                                    <th style="width: 60px;">Points</th>
+                                                    <th style="width: 60px;">Athlètes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                `;
+                                clubRanking.forEach((c, i) => {
+                                    printContent += `
+                                        <tr>
+                                            <td class="rank">${i + 1}</td>
+                                            <td>${c.club}</td>
+                                            <td style="text-align: center; font-weight: bold;">${c.points}</td>
+                                            <td style="text-align: center;">${c.count}</td>
+                                        </tr>
+                                    `;
+                                });
+                                printContent += `</tbody></table></div>`;
+                            }
+                        }
+                    }
+
+                    printContent += `</div>`; // fin serie
+                });
+            }
+
+            printContent += `</div>`; // fin event
+        });
+
+        printContent += `
+            </body>
+            </html>
+        `;
+
+        // Ouvrir la fenêtre d'impression
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+        }, 250);
+    };
+
+    // Fonction helper pour calculer le classement par club (pour l'impression)
+    function calculateClubRanking(sortedParticipants, pointsScale) {
+        const clubPoints = {};
+
+        sortedParticipants.forEach((p, index) => {
+            if (p.status !== 'finished') return;
+
+            const participantData = raceData.participants.find(rp => rp.id === p.id);
+            const club = participantData?.club || p.club;
+            if (!club || club.trim() === '') return;
+
+            const position = index + 1;
+            const points = position <= pointsScale.length ? pointsScale[position - 1] : 0;
+
+            if (!clubPoints[club]) {
+                clubPoints[club] = { points: 0, count: 0 };
+            }
+            clubPoints[club].points += points;
+            clubPoints[club].count++;
+        });
+
+        return Object.entries(clubPoints)
+            .map(([club, data]) => ({ club, points: data.points, count: data.count }))
+            .sort((a, b) => b.points - a.points);
+    }
+
     // Importer une compétition chrono depuis JSON
     window.importChronoCompetition = function() {
         const input = document.createElement('input');
