@@ -1,0 +1,1905 @@
+{
+  "version": "1.0",
+  "exportDate": "2025-12-11T10:00:00.000Z",
+  "competitionName": "Competition_Natation_2025-12-11",
+  "raceData": {
+    "events": [
+      {
+        "id": 1,
+        "name": "25m Brasse",
+        "sportType": "swimming",
+        "distance": 25,
+        "series": [
+          {
+            "id": 1,
+            "name": "Série 1",
+            "eventId": 1,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 1,
+                "name": "GAI SEJOUR GIELDZYK Paul",
+                "category": "H",
+                "record": "00:22",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 2,
+                "name": "BOULAIE ROBIN Christophe",
+                "category": "H",
+                "record": "00:25",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 3,
+                "name": "GAI SEJOUR SAVOIE Frédéric",
+                "category": "H",
+                "record": "00:27",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 4,
+                "name": "TRUCKET POULAIN Thierry",
+                "category": "H",
+                "record": "00:32",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 5,
+                "name": "GAI SEJOUR STEVANCE Jean-Marie",
+                "category": "H",
+                "record": "00:33",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 2,
+            "name": "Série 2",
+            "eventId": 1,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 6,
+                "name": "TRUCKET BISCAUT Olivier",
+                "category": "H",
+                "record": "00:33",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 7,
+                "name": "brasseEmile",
+                "category": "H",
+                "record": "00:35,04",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 8,
+                "name": "TRUCKET DUPLICY Amélie",
+                "category": "F",
+                "record": "00:38",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 9,
+                "name": "BOULAIE AMEYE Christel",
+                "category": "F",
+                "record": "00:41",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 10,
+                "name": "BATOULU VERHAEGE Marie",
+                "category": "F",
+                "record": "00:41,7",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 3,
+            "name": "Série 3",
+            "eventId": 1,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 11,
+                "name": "RENARDS DROUARD Maureen",
+                "category": "F",
+                "record": "00:42,20",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 12,
+                "name": "TRUCKET DETAILLE Franck",
+                "category": "H",
+                "record": "00:43",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 13,
+                "name": "TRUCKET GIBOUX Johan",
+                "category": "H",
+                "record": "00:45",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 14,
+                "name": "RENARDS LEGRAND Colin",
+                "category": "H",
+                "record": "00:45,89",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 15,
+                "name": "TRUCKET SIMON Anita",
+                "category": "F",
+                "record": "00:51",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 4,
+            "name": "Série 4",
+            "eventId": 1,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 16,
+                "name": "RENARDS COLAS Benoît",
+                "category": "H",
+                "record": "00:51;48",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 17,
+                "name": "MARTHE ET MARIE DUMONT John",
+                "category": "H",
+                "record": "00:52,00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 18,
+                "name": "RENARDS ROSIERE Gilles",
+                "category": "H",
+                "record": "00:52,65",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 19,
+                "name": "TRUCKET Dury Ingrid",
+                "category": "F",
+                "record": "01:11",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 20,
+                "name": "RENARDS VANHAUWERMEIREN",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "25m Dos",
+        "sportType": "swimming",
+        "distance": 25,
+        "series": [
+          {
+            "id": 5,
+            "name": "Série 1",
+            "eventId": 2,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 21,
+                "name": "BOULAIE GENETELLI Gael",
+                "category": "H",
+                "record": "00:26",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 22,
+                "name": "TRUCKET DEMONTPELLIER Paul",
+                "category": "H",
+                "record": "00:34,05",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 23,
+                "name": "TRUCKET CORDY Stéphanie",
+                "category": "F",
+                "record": "00:43,02",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 24,
+                "name": "BATOULU DE CROMBRUGGHE Vincent",
+                "category": "H",
+                "record": "00:47,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 25,
+                "name": "BATOULU DELVENNE Samuel",
+                "category": "H",
+                "record": "00:48,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 6,
+            "name": "Série 2",
+            "eventId": 2,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 26,
+                "name": "MARTHE ET MARIE SEGERS Bruno",
+                "category": "H",
+                "record": "00:52,40",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 27,
+                "name": "TRUCKET LEJEUNE Steve",
+                "category": "H",
+                "record": "00:54,02",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 28,
+                "name": "BATOULU LOJKA Florence",
+                "category": "F",
+                "record": "01:01,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 29,
+                "name": "BATOULU VERHAEGE Marie",
+                "category": "F",
+                "record": "01:03,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 30,
+                "name": "BATOULU RENARD Sara",
+                "category": "F",
+                "record": "01:04,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "25m Libre",
+        "sportType": "swimming",
+        "distance": 25,
+        "series": [
+          {
+            "id": 7,
+            "name": "Série 1",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 31,
+                "name": "MARTHE ET MARIE NIVARLET Ludovic",
+                "category": "H",
+                "record": "00:21,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 32,
+                "name": "MARTHE ET MARIE REMY Bryan",
+                "category": "H",
+                "record": "00:21,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 33,
+                "name": "MARTHE ET MARIE HANS Yohan",
+                "category": "H",
+                "record": "00:22,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 34,
+                "name": "La Cordée Sports Gregoire Christophe",
+                "category": "H",
+                "record": "00:23,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 35,
+                "name": "MARTHE ET MARIE MAGERA Benjamin",
+                "category": "H",
+                "record": "00:23,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 8,
+            "name": "Série 2",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 36,
+                "name": "GAI SEJOUR WATHELET Jean-Philippe",
+                "category": "H",
+                "record": "00:25",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 37,
+                "name": "GAI SEJOUR RIPERT David",
+                "category": "H",
+                "record": "00:26",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 38,
+                "name": "GAI SEJOUR SALAHUN Olivier",
+                "category": "H",
+                "record": "00:27",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 39,
+                "name": "GAI SEJOUR LEBRUN Marc",
+                "category": "H",
+                "record": "00:28",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 40,
+                "name": "GAI SEJOUR KAISSER Eric",
+                "category": "H",
+                "record": "00:30",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 9,
+            "name": "Série 3",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 41,
+                "name": "TRUCKET GIBOUX Johaan",
+                "category": "H",
+                "record": "00:34,02",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 42,
+                "name": "RENARDS COLAS Benoît",
+                "category": "H",
+                "record": "00:46,41",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 43,
+                "name": "MARTHE ET MARIE SEGERS Bruno",
+                "category": "H",
+                "record": "00:47,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 44,
+                "name": "La Cordée Sports Manil Julien",
+                "category": "H",
+                "record": "00:49,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 45,
+                "name": "La Cordée Sports Bourotte Camille",
+                "category": "F",
+                "record": "00:51,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 10,
+            "name": "Série 4",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 46,
+                "name": "La Cordée Sports Debuisson Michael",
+                "category": "H",
+                "record": "00:52,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 47,
+                "name": "La Cordée Sports Sauvage Dominique",
+                "category": "H",
+                "record": "01:19,00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 48,
+                "name": "La Cordée Sports Sonnenberg Camille",
+                "category": "F",
+                "record": "01:40,00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 49,
+                "name": "GAI SEJOUR DELEU Kevin",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 50,
+                "name": "GAI SEJOUR BERTHELON Didier",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 11,
+            "name": "Série 5",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 51,
+                "name": "BOULAIE VERVEKKEN Jonathan",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 52,
+                "name": "BOULAIE Rogge Maxime",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "name": "50m Brasse",
+        "sportType": "swimming",
+        "distance": 50,
+        "series": [
+          {
+            "id": 12,
+            "name": "Série 1",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 53,
+                "name": "GAI SEJOUR GIELDZYK Paul",
+                "category": "H",
+                "record": "00:50",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 54,
+                "name": "BOULAIE ROBIN Christophe",
+                "category": "H",
+                "record": "00:58",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 55,
+                "name": "MARTHE ET MARIE HANS Yohan",
+                "category": "H",
+                "record": "01:02,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 56,
+                "name": "MARTHE ET MARIE NIVARLET Ludovic",
+                "category": "H",
+                "record": "01:04,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 57,
+                "name": "MARTHE ET MARIE REMY Bryan",
+                "category": "H",
+                "record": "01:06,50",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 13,
+            "name": "Série 2",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 58,
+                "name": "GAI SEJOUR SAVOIE Frédéric",
+                "category": "H",
+                "record": "01:07",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 59,
+                "name": "TRUCKET DEMONTPELLIER Paul",
+                "category": "H",
+                "record": "01:13",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 60,
+                "name": "BATOULU LOJKA Florence",
+                "category": "F",
+                "record": "01:27,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 61,
+                "name": "TRUCKET CORDY Stéphanie",
+                "category": "F",
+                "record": "01:28",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 62,
+                "name": "BOULAIE AMEYE Christel",
+                "category": "F",
+                "record": "01:32",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 14,
+            "name": "Série 3",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 63,
+                "name": "TRUCKET BISCAUT Olivier",
+                "category": "H",
+                "record": "01:33",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 64,
+                "name": "TRUCKET DUPLICY Amelie",
+                "category": "F",
+                "record": "01:34",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 65,
+                "name": "BATOULU RENARD Sara",
+                "category": "F",
+                "record": "01:36,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 66,
+                "name": "MARTHE ET MARIE DUMONT John",
+                "category": "H",
+                "record": "01:39,50",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 67,
+                "name": "BATOULU DELVENNE SAMUEL",
+                "category": "H",
+                "record": "01:42,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 15,
+            "name": "Série 4",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 68,
+                "name": "RENARDS ROSIERE Gilles",
+                "category": "H",
+                "record": "01:47,73",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 69,
+                "name": "BATOULU DE CROMBRUGGHE",
+                "category": "H",
+                "record": "01:48,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 70,
+                "name": "CORDEE POSTEAU Billy",
+                "category": "H",
+                "record": "01:50",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 71,
+                "name": "TRUCKET LEJEUNE Steve",
+                "category": "H",
+                "record": "01:52",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 72,
+                "name": "TRUCKET GIBOUX Johaan",
+                "category": "H",
+                "record": "01:53",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 16,
+            "name": "Série 5",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 73,
+                "name": "TRUCKET DETAILLE Franck",
+                "category": "H",
+                "record": "02:02",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 74,
+                "name": "TRUCKET SIMON Smita",
+                "category": "F",
+                "record": "02:11",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 75,
+                "name": "CORDEE DORMAL Guillaume",
+                "category": "H",
+                "record": "03:00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "name": "50m Dos",
+        "sportType": "swimming",
+        "distance": 50,
+        "series": [
+          {
+            "id": 17,
+            "name": "Série 1",
+            "eventId": 5,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 76,
+                "name": "GAI SEJOUR GRANDREMY Christophe",
+                "category": "H",
+                "record": "00:50,6",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 77,
+                "name": "BOULAIE GENETELLI Gael",
+                "category": "H",
+                "record": "01:00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 78,
+                "name": "MARTHE ET MARIE MAGERA Benjamin",
+                "category": "H",
+                "record": "01:22,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "name": "50m Libre",
+        "sportType": "swimming",
+        "distance": 50,
+        "series": [
+          {
+            "id": 18,
+            "name": "Série 1",
+            "eventId": 6,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 79,
+                "name": "GAI SEJOUR GRANDREMY Christophe",
+                "category": "H",
+                "record": "00:47,2",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 80,
+                "name": "La Cordée Sports GREGOIRE Christophe",
+                "category": "H",
+                "record": "00:50,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 81,
+                "name": "RENARDS LEGRAND Colin",
+                "category": "H",
+                "record": "01:12,52",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 82,
+                "name": "RENARDS VANHAUWERMEIREN Emile",
+                "category": "H",
+                "record": "01:21,47",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 83,
+                "name": "RENARDS DROUARD Maureen",
+                "category": "F",
+                "record": "01:25,57",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 19,
+            "name": "Série 2",
+            "eventId": 6,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 84,
+                "name": "CORDEE RENIER Brice",
+                "category": "H",
+                "record": "01:30.0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 85,
+                "name": "La Cordée Sports BOUROTTE Camille",
+                "category": "F",
+                "record": "01:40,00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 86,
+                "name": "La Cordée Sports MANIL Julien",
+                "category": "H",
+                "record": "01:44,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 87,
+                "name": "La Cordée Sports DEBUISSON Michael",
+                "category": "H",
+                "record": "01:53,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 88,
+                "name": "La Cordée Sports SAUVAGE Dominique",
+                "category": "H",
+                "record": "02:54,00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 20,
+            "name": "Série 3",
+            "eventId": 6,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 89,
+                "name": "BOULAIE VERVEKKEN Jonathan",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 90,
+                "name": "BOULAIE Rogge Maxime",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "name": "25m Assisté",
+        "sportType": "swimming",
+        "distance": 25,
+        "series": [
+          {
+            "id": 21,
+            "name": "Série 1",
+            "eventId": 7,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 91,
+                "name": "La Cordée Sports DETIENNE Natalie",
+                "category": "F",
+                "record": "00:56,00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 92,
+                "name": "BATOULU HEMPTINNE Elanor",
+                "category": "F",
+                "record": "02:00,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 93,
+                "name": "GAI SEJOUR CHAUVAUX Florian",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 94,
+                "name": "GAI SEJOUR LECOMTE Valentin",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 95,
+                "name": "GAI SEJOUR ARDINET Ludovic",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "id": 22,
+            "name": "Série 2",
+            "eventId": 7,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 96,
+                "name": "GAI SEJOUR HERMANN Marc Hermann",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 97,
+                "name": "GAI SEJOUR DESROZIERS Arnaud",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 98,
+                "name": "GAI SEJOUR FOURNIER Barry",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              },
+              {
+                "bib": 99,
+                "name": "GAI SEJOUR GIRARDOT Julien",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4
+              },
+              {
+                "bib": 100,
+                "name": "RENARDS HECHT Alexis",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "name": "50m Assisté",
+        "sportType": "swimming",
+        "distance": 50,
+        "series": [
+          {
+            "id": 23,
+            "name": "Série 1",
+            "eventId": 8,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 101,
+                "name": "Boulaie Canivet Frédéric",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1
+              },
+              {
+                "bib": 102,
+                "name": "Boulaie Leroy Christophe",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2
+              },
+              {
+                "bib": 103,
+                "name": "Boulaie Chtourou Anis",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      }
+    ],
+    "participants": [
+      {
+        "id": 1,
+        "name": "GAI SEJOUR GIELDZYK Paul",
+        "bib": 1,
+        "category": "H"
+      },
+      {
+        "id": 2,
+        "name": "BOULAIE ROBIN Christophe",
+        "bib": 2,
+        "category": "H"
+      },
+      {
+        "id": 3,
+        "name": "GAI SEJOUR SAVOIE Frédéric",
+        "bib": 3,
+        "category": "H"
+      },
+      {
+        "id": 4,
+        "name": "TRUCKET POULAIN Thierry",
+        "bib": 4,
+        "category": "H"
+      },
+      {
+        "id": 5,
+        "name": "GAI SEJOUR STEVANCE Jean-Marie",
+        "bib": 5,
+        "category": "H"
+      },
+      {
+        "id": 6,
+        "name": "TRUCKET BISCAUT Olivier",
+        "bib": 6,
+        "category": "H"
+      },
+      {
+        "id": 7,
+        "name": "brasseEmile",
+        "bib": 7,
+        "category": "H"
+      },
+      {
+        "id": 8,
+        "name": "TRUCKET DUPLICY Amélie",
+        "bib": 8,
+        "category": "F"
+      },
+      {
+        "id": 9,
+        "name": "BOULAIE AMEYE Christel",
+        "bib": 9,
+        "category": "F"
+      },
+      {
+        "id": 10,
+        "name": "BATOULU VERHAEGE Marie",
+        "bib": 10,
+        "category": "F"
+      },
+      {
+        "id": 11,
+        "name": "RENARDS DROUARD Maureen",
+        "bib": 11,
+        "category": "F"
+      },
+      {
+        "id": 12,
+        "name": "TRUCKET DETAILLE Franck",
+        "bib": 12,
+        "category": "H"
+      },
+      {
+        "id": 13,
+        "name": "TRUCKET GIBOUX Johan",
+        "bib": 13,
+        "category": "H"
+      },
+      {
+        "id": 14,
+        "name": "RENARDS LEGRAND Colin",
+        "bib": 14,
+        "category": "H"
+      },
+      {
+        "id": 15,
+        "name": "TRUCKET SIMON Anita",
+        "bib": 15,
+        "category": "F"
+      },
+      {
+        "id": 16,
+        "name": "RENARDS COLAS Benoît",
+        "bib": 16,
+        "category": "H"
+      },
+      {
+        "id": 17,
+        "name": "MARTHE ET MARIE DUMONT John",
+        "bib": 17,
+        "category": "H"
+      },
+      {
+        "id": 18,
+        "name": "RENARDS ROSIERE Gilles",
+        "bib": 18,
+        "category": "H"
+      },
+      {
+        "id": 19,
+        "name": "TRUCKET Dury Ingrid",
+        "bib": 19,
+        "category": "F"
+      },
+      {
+        "id": 20,
+        "name": "RENARDS VANHAUWERMEIREN",
+        "bib": 20,
+        "category": "H"
+      },
+      {
+        "id": 21,
+        "name": "BOULAIE GENETELLI Gael",
+        "bib": 21,
+        "category": "H"
+      },
+      {
+        "id": 22,
+        "name": "TRUCKET DEMONTPELLIER Paul",
+        "bib": 22,
+        "category": "H"
+      },
+      {
+        "id": 23,
+        "name": "TRUCKET CORDY Stéphanie",
+        "bib": 23,
+        "category": "F"
+      },
+      {
+        "id": 24,
+        "name": "BATOULU DE CROMBRUGGHE Vincent",
+        "bib": 24,
+        "category": "H"
+      },
+      {
+        "id": 25,
+        "name": "BATOULU DELVENNE Samuel",
+        "bib": 25,
+        "category": "H"
+      },
+      {
+        "id": 26,
+        "name": "MARTHE ET MARIE SEGERS Bruno",
+        "bib": 26,
+        "category": "H"
+      },
+      {
+        "id": 27,
+        "name": "TRUCKET LEJEUNE Steve",
+        "bib": 27,
+        "category": "H"
+      },
+      {
+        "id": 28,
+        "name": "BATOULU LOJKA Florence",
+        "bib": 28,
+        "category": "F"
+      },
+      {
+        "id": 29,
+        "name": "BATOULU VERHAEGE Marie",
+        "bib": 29,
+        "category": "F"
+      },
+      {
+        "id": 30,
+        "name": "BATOULU RENARD Sara",
+        "bib": 30,
+        "category": "F"
+      },
+      {
+        "id": 31,
+        "name": "MARTHE ET MARIE NIVARLET Ludovic",
+        "bib": 31,
+        "category": "H"
+      },
+      {
+        "id": 32,
+        "name": "MARTHE ET MARIE REMY Bryan",
+        "bib": 32,
+        "category": "H"
+      },
+      {
+        "id": 33,
+        "name": "MARTHE ET MARIE HANS Yohan",
+        "bib": 33,
+        "category": "H"
+      },
+      {
+        "id": 34,
+        "name": "La Cordée Sports Gregoire Christophe",
+        "bib": 34,
+        "category": "H"
+      },
+      {
+        "id": 35,
+        "name": "MARTHE ET MARIE MAGERA Benjamin",
+        "bib": 35,
+        "category": "H"
+      },
+      {
+        "id": 36,
+        "name": "GAI SEJOUR WATHELET Jean-Philippe",
+        "bib": 36,
+        "category": "H"
+      },
+      {
+        "id": 37,
+        "name": "GAI SEJOUR RIPERT David",
+        "bib": 37,
+        "category": "H"
+      },
+      {
+        "id": 38,
+        "name": "GAI SEJOUR SALAHUN Olivier",
+        "bib": 38,
+        "category": "H"
+      },
+      {
+        "id": 39,
+        "name": "GAI SEJOUR LEBRUN Marc",
+        "bib": 39,
+        "category": "H"
+      },
+      {
+        "id": 40,
+        "name": "GAI SEJOUR KAISSER Eric",
+        "bib": 40,
+        "category": "H"
+      },
+      {
+        "id": 41,
+        "name": "TRUCKET GIBOUX Johaan",
+        "bib": 41,
+        "category": "H"
+      },
+      {
+        "id": 42,
+        "name": "RENARDS COLAS Benoît",
+        "bib": 42,
+        "category": "H"
+      },
+      {
+        "id": 43,
+        "name": "MARTHE ET MARIE SEGERS Bruno",
+        "bib": 43,
+        "category": "H"
+      },
+      {
+        "id": 44,
+        "name": "La Cordée Sports Manil Julien",
+        "bib": 44,
+        "category": "H"
+      },
+      {
+        "id": 45,
+        "name": "La Cordée Sports Bourotte Camille",
+        "bib": 45,
+        "category": "F"
+      },
+      {
+        "id": 46,
+        "name": "La Cordée Sports Debuisson Michael",
+        "bib": 46,
+        "category": "H"
+      },
+      {
+        "id": 47,
+        "name": "La Cordée Sports Sauvage Dominique",
+        "bib": 47,
+        "category": "H"
+      },
+      {
+        "id": 48,
+        "name": "La Cordée Sports Sonnenberg Camille",
+        "bib": 48,
+        "category": "F"
+      },
+      {
+        "id": 49,
+        "name": "GAI SEJOUR DELEU Kevin",
+        "bib": 49,
+        "category": "H"
+      },
+      {
+        "id": 50,
+        "name": "GAI SEJOUR BERTHELON Didier",
+        "bib": 50,
+        "category": "H"
+      },
+      {
+        "id": 51,
+        "name": "BOULAIE VERVEKKEN Jonathan",
+        "bib": 51,
+        "category": "H"
+      },
+      {
+        "id": 52,
+        "name": "BOULAIE Rogge Maxime",
+        "bib": 52,
+        "category": "H"
+      },
+      {
+        "id": 53,
+        "name": "GAI SEJOUR GIELDZYK Paul",
+        "bib": 53,
+        "category": "H"
+      },
+      {
+        "id": 54,
+        "name": "BOULAIE ROBIN Christophe",
+        "bib": 54,
+        "category": "H"
+      },
+      {
+        "id": 55,
+        "name": "MARTHE ET MARIE HANS Yohan",
+        "bib": 55,
+        "category": "H"
+      },
+      {
+        "id": 56,
+        "name": "MARTHE ET MARIE NIVARLET Ludovic",
+        "bib": 56,
+        "category": "H"
+      },
+      {
+        "id": 57,
+        "name": "MARTHE ET MARIE REMY Bryan",
+        "bib": 57,
+        "category": "H"
+      },
+      {
+        "id": 58,
+        "name": "GAI SEJOUR SAVOIE Frédéric",
+        "bib": 58,
+        "category": "H"
+      },
+      {
+        "id": 59,
+        "name": "TRUCKET DEMONTPELLIER Paul",
+        "bib": 59,
+        "category": "H"
+      },
+      {
+        "id": 60,
+        "name": "BATOULU LOJKA Florence",
+        "bib": 60,
+        "category": "F"
+      },
+      {
+        "id": 61,
+        "name": "TRUCKET CORDY Stéphanie",
+        "bib": 61,
+        "category": "F"
+      },
+      {
+        "id": 62,
+        "name": "BOULAIE AMEYE Christel",
+        "bib": 62,
+        "category": "F"
+      },
+      {
+        "id": 63,
+        "name": "TRUCKET BISCAUT Olivier",
+        "bib": 63,
+        "category": "H"
+      },
+      {
+        "id": 64,
+        "name": "TRUCKET DUPLICY Amelie",
+        "bib": 64,
+        "category": "F"
+      },
+      {
+        "id": 65,
+        "name": "BATOULU RENARD Sara",
+        "bib": 65,
+        "category": "F"
+      },
+      {
+        "id": 66,
+        "name": "MARTHE ET MARIE DUMONT John",
+        "bib": 66,
+        "category": "H"
+      },
+      {
+        "id": 67,
+        "name": "BATOULU DELVENNE SAMUEL",
+        "bib": 67,
+        "category": "H"
+      },
+      {
+        "id": 68,
+        "name": "RENARDS ROSIERE Gilles",
+        "bib": 68,
+        "category": "H"
+      },
+      {
+        "id": 69,
+        "name": "BATOULU DE CROMBRUGGHE",
+        "bib": 69,
+        "category": "H"
+      },
+      {
+        "id": 70,
+        "name": "CORDEE POSTEAU Billy",
+        "bib": 70,
+        "category": "H"
+      },
+      {
+        "id": 71,
+        "name": "TRUCKET LEJEUNE Steve",
+        "bib": 71,
+        "category": "H"
+      },
+      {
+        "id": 72,
+        "name": "TRUCKET GIBOUX Johaan",
+        "bib": 72,
+        "category": "H"
+      },
+      {
+        "id": 73,
+        "name": "TRUCKET DETAILLE Franck",
+        "bib": 73,
+        "category": "H"
+      },
+      {
+        "id": 74,
+        "name": "TRUCKET SIMON Smita",
+        "bib": 74,
+        "category": "F"
+      },
+      {
+        "id": 75,
+        "name": "CORDEE DORMAL Guillaume",
+        "bib": 75,
+        "category": "H"
+      },
+      {
+        "id": 76,
+        "name": "GAI SEJOUR GRANDREMY Christophe",
+        "bib": 76,
+        "category": "H"
+      },
+      {
+        "id": 77,
+        "name": "BOULAIE GENETELLI Gael",
+        "bib": 77,
+        "category": "H"
+      },
+      {
+        "id": 78,
+        "name": "MARTHE ET MARIE MAGERA Benjamin",
+        "bib": 78,
+        "category": "H"
+      },
+      {
+        "id": 79,
+        "name": "GAI SEJOUR GRANDREMY Christophe",
+        "bib": 79,
+        "category": "H"
+      },
+      {
+        "id": 80,
+        "name": "La Cordée Sports GREGOIRE Christophe",
+        "bib": 80,
+        "category": "H"
+      },
+      {
+        "id": 81,
+        "name": "RENARDS LEGRAND Colin",
+        "bib": 81,
+        "category": "H"
+      },
+      {
+        "id": 82,
+        "name": "RENARDS VANHAUWERMEIREN Emile",
+        "bib": 82,
+        "category": "H"
+      },
+      {
+        "id": 83,
+        "name": "RENARDS DROUARD Maureen",
+        "bib": 83,
+        "category": "F"
+      },
+      {
+        "id": 84,
+        "name": "CORDEE RENIER Brice",
+        "bib": 84,
+        "category": "H"
+      },
+      {
+        "id": 85,
+        "name": "La Cordée Sports BOUROTTE Camille",
+        "bib": 85,
+        "category": "F"
+      },
+      {
+        "id": 86,
+        "name": "La Cordée Sports MANIL Julien",
+        "bib": 86,
+        "category": "H"
+      },
+      {
+        "id": 87,
+        "name": "La Cordée Sports DEBUISSON Michael",
+        "bib": 87,
+        "category": "H"
+      },
+      {
+        "id": 88,
+        "name": "La Cordée Sports SAUVAGE Dominique",
+        "bib": 88,
+        "category": "H"
+      },
+      {
+        "id": 89,
+        "name": "BOULAIE VERVEKKEN Jonathan",
+        "bib": 89,
+        "category": "H"
+      },
+      {
+        "id": 90,
+        "name": "BOULAIE Rogge Maxime",
+        "bib": 90,
+        "category": "H"
+      },
+      {
+        "id": 91,
+        "name": "La Cordée Sports DETIENNE Natalie",
+        "bib": 91,
+        "category": "F"
+      },
+      {
+        "id": 92,
+        "name": "BATOULU HEMPTINNE Elanor",
+        "bib": 92,
+        "category": "F"
+      },
+      {
+        "id": 93,
+        "name": "GAI SEJOUR CHAUVAUX Florian",
+        "bib": 93,
+        "category": "H"
+      },
+      {
+        "id": 94,
+        "name": "GAI SEJOUR LECOMTE Valentin",
+        "bib": 94,
+        "category": "H"
+      },
+      {
+        "id": 95,
+        "name": "GAI SEJOUR ARDINET Ludovic",
+        "bib": 95,
+        "category": "H"
+      },
+      {
+        "id": 96,
+        "name": "GAI SEJOUR HERMANN Marc Hermann",
+        "bib": 96,
+        "category": "H"
+      },
+      {
+        "id": 97,
+        "name": "GAI SEJOUR DESROZIERS Arnaud",
+        "bib": 97,
+        "category": "H"
+      },
+      {
+        "id": 98,
+        "name": "GAI SEJOUR FOURNIER Barry",
+        "bib": 98,
+        "category": "H"
+      },
+      {
+        "id": 99,
+        "name": "GAI SEJOUR GIRARDOT Julien",
+        "bib": 99,
+        "category": "H"
+      },
+      {
+        "id": 100,
+        "name": "RENARDS HECHT Alexis",
+        "bib": 100,
+        "category": "H"
+      },
+      {
+        "id": 101,
+        "name": "Boulaie Canivet Frédéric",
+        "bib": 101,
+        "category": "H"
+      },
+      {
+        "id": 102,
+        "name": "Boulaie Leroy Christophe",
+        "bib": 102,
+        "category": "H"
+      },
+      {
+        "id": 103,
+        "name": "Boulaie Chtourou Anis",
+        "bib": 103,
+        "category": "H"
+      }
+    ],
+    "nextEventId": 9,
+    "nextSerieId": 24,
+    "nextParticipantId": 104
+  },
+  "stats": {
+    "totalEvents": 8,
+    "totalParticipants": 103,
+    "totalSeries": 23,
+    "completedSeries": 0
+  }
+}
