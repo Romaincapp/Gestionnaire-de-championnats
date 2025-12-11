@@ -1,0 +1,3181 @@
+{
+  "version": "1.0",
+  "exportDate": "2025-12-11T10:55:06.721Z",
+  "competitionName": "Competition_Chrono_2025-12-11",
+  "raceData": {
+    "events": [
+      {
+        "id": 1,
+        "name": "25m Brasse",
+        "sportType": "swimming",
+        "distance": 25,
+        "series": [
+          {
+            "id": 1,
+            "name": "Série 1",
+            "eventId": 1,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 1,
+                "name": "GAI SEJOUR GIELDZYK Paul",
+                "category": "H",
+                "record": "00:22",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 26410
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 26410,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 2,
+                "name": "BOULAIE ROBIN Christophe",
+                "category": "H",
+                "record": "00:25",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 29800
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 29800,
+                "club": "Boulaie"
+              },
+              {
+                "bib": 3,
+                "name": "GAI SEJOUR SAVOIE Frédéric",
+                "category": "H",
+                "record": "00:27",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 35900
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 35900,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 4,
+                "name": "TRUCKET POULAIN Thierry",
+                "category": "H",
+                "record": "00:32",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 40612
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 40612,
+                "club": "Trucket"
+              },
+              {
+                "bib": 5,
+                "name": "GAI SEJOUR STEVANCE Jean-Marie",
+                "category": "H",
+                "record": "00:33",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 41605
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 41605,
+                "club": "Gai Sejour"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765445973647,
+            "timerInterval": 18,
+            "currentTime": 160109
+          },
+          {
+            "id": 2,
+            "name": "Série 2",
+            "eventId": 1,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 6,
+                "name": "TRUCKET BISCAUT Olivier",
+                "category": "H",
+                "record": "00:33",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 36411
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 36411,
+                "club": "Trucket"
+              },
+              {
+                "bib": 7,
+                "name": "brasseEmile",
+                "category": "H",
+                "record": "00:35,04",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 2,
+                "club": ""
+              },
+              {
+                "bib": 8,
+                "name": "TRUCKET DUPLICY Amélie",
+                "category": "F",
+                "record": "00:38",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 41610
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 41610,
+                "club": "Trucket"
+              },
+              {
+                "bib": 9,
+                "name": "BOULAIE AMEYE Christel",
+                "category": "F",
+                "record": "00:41",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 45607
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 45607,
+                "club": "Boulaie"
+              },
+              {
+                "bib": 10,
+                "name": "BATOULU VERHAEGE Marie",
+                "category": "F",
+                "record": "00:41,7",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 56302
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 56302,
+                "club": "Batoulu"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765446151761,
+            "timerInterval": 35,
+            "currentTime": 89701
+          },
+          {
+            "id": 3,
+            "name": "Série 3",
+            "eventId": 1,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 11,
+                "name": "RENARDS DROUARD Maureen",
+                "category": "F",
+                "record": "00:42,20",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 1,
+                "club": "Renards"
+              },
+              {
+                "bib": 12,
+                "name": "TRUCKET DETAILLE Franck",
+                "category": "H",
+                "record": "00:43",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 41900
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 41900,
+                "club": "Trucket"
+              },
+              {
+                "bib": 13,
+                "name": "TRUCKET GIBOUX Johan",
+                "category": "H",
+                "record": "00:45",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 54814
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 54814,
+                "club": "Trucket"
+              },
+              {
+                "bib": 14,
+                "name": "RENARDS LEGRAND Colin",
+                "category": "H",
+                "record": "00:45,89",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 24403
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 24403,
+                "club": "Renards"
+              },
+              {
+                "bib": 15,
+                "name": "TRUCKET SIMON Anita",
+                "category": "F",
+                "record": "00:51",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 52402
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 52402,
+                "club": "Trucket"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765446255895,
+            "timerInterval": 48,
+            "currentTime": 104304
+          },
+          {
+            "id": 4,
+            "name": "Série 4",
+            "eventId": 1,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 16,
+                "name": "RENARDS COLAS Benoît",
+                "category": "H",
+                "record": "00:51;48",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 44603
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 44603,
+                "club": "Renards"
+              },
+              {
+                "bib": 17,
+                "name": "MARTHE ET MARIE DUMONT John",
+                "category": "H",
+                "record": "00:52,00",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 49807
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 49807,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 18,
+                "name": "RENARDS ROSIERE Gilles",
+                "category": "H",
+                "record": "00:52,65",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 49403
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 49403,
+                "club": "Renards"
+              },
+              {
+                "bib": 19,
+                "name": "TRUCKET Dury Ingrid",
+                "category": "F",
+                "record": "01:11",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 4,
+                "club": "Trucket"
+              },
+              {
+                "bib": 20,
+                "name": "RENARDS VANHAUWERMEIREN",
+                "category": "H",
+                "record": "N/A",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 33904
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 33904,
+                "club": "Renards"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765446399212,
+            "timerInterval": 61,
+            "currentTime": 77513
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "25m Dos",
+        "sportType": "swimming",
+        "distance": 25,
+        "series": [
+          {
+            "name": "Série 1",
+            "eventId": 2,
+            "sportType": "swimming",
+            "distance": 25,
+            "participants": [
+              {
+                "id": 21,
+                "bib": "21",
+                "name": "BOULAIE GENETELLI Gael",
+                "category": "H",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": 26701,
+                    "timestamp": 26701
+                  }
+                ],
+                "status": "finished",
+                "totalTime": 26701,
+                "totalDistance": 25,
+                "bestLap": 26701,
+                "finishTime": 26701,
+                "lastLapStartTime": 0,
+                "laneNumber": 1,
+                "club": "Boulaie"
+              },
+              {
+                "id": 24,
+                "bib": "24",
+                "name": "BATOULU DE CROMBRUGGHE Vincent",
+                "category": "H",
+                "laps": [],
+                "status": "running",
+                "totalTime": 0,
+                "totalDistance": 0,
+                "bestLap": null,
+                "finishTime": null,
+                "lastLapStartTime": 0,
+                "laneNumber": 4,
+                "club": "Batoulu"
+              },
+              {
+                "id": 25,
+                "bib": "25",
+                "name": "BATOULU DELVENNE Samuel",
+                "category": "H",
+                "laps": [],
+                "status": "running",
+                "totalTime": 0,
+                "totalDistance": 0,
+                "bestLap": null,
+                "finishTime": null,
+                "lastLapStartTime": 0,
+                "laneNumber": 5,
+                "club": "Batoulu"
+              },
+              {
+                "id": 36,
+                "bib": "36",
+                "name": "GAI SEJOUR WATHELET Jean-Philippe",
+                "category": "H",
+                "laps": [],
+                "status": "running",
+                "totalTime": 0,
+                "totalDistance": 0,
+                "bestLap": null,
+                "finishTime": null,
+                "lastLapStartTime": 0,
+                "laneNumber": 6,
+                "club": "Gai Sejour"
+              },
+              {
+                "id": 59,
+                "bib": "59",
+                "name": "TRUCKET DEMONTPELLIER Paul",
+                "category": "H",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": 32401,
+                    "timestamp": 32401
+                  }
+                ],
+                "status": "finished",
+                "totalTime": 32401,
+                "totalDistance": 25,
+                "bestLap": 32401,
+                "finishTime": 32401,
+                "lastLapStartTime": 0,
+                "laneNumber": 2,
+                "club": "Trucket"
+              },
+              {
+                "id": 61,
+                "bib": "61",
+                "name": "TRUCKET CORDY Stéphanie",
+                "category": "F",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": 40803,
+                    "timestamp": 40803
+                  }
+                ],
+                "status": "finished",
+                "totalTime": 40803,
+                "totalDistance": 25,
+                "bestLap": 40803,
+                "finishTime": 40803,
+                "lastLapStartTime": 0,
+                "laneNumber": 3,
+                "club": "Trucket"
+              }
+            ],
+            "status": "completed",
+            "startTime": 1765446672833,
+            "isRunning": false,
+            "timerInterval": 74,
+            "currentTime": 137304,
+            "laneMode": true,
+            "id": 5
+          },
+          {
+            "id": 6,
+            "name": "Série 2",
+            "eventId": 2,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 26,
+                "name": "MARTHE ET MARIE SEGERS Bruno",
+                "category": "H",
+                "record": "00:52,40",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 39403
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 39403,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 27,
+                "name": "TRUCKET LEJEUNE Steve",
+                "category": "H",
+                "record": "00:54,02",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 59212
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 59212,
+                "club": "Trucket"
+              },
+              {
+                "bib": 28,
+                "name": "BATOULU LOJKA Florence",
+                "category": "F",
+                "record": "01:01,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 48901
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 48901,
+                "club": "Batoulu"
+              },
+              {
+                "bib": 29,
+                "name": "BATOULU VERHAEGE Marie",
+                "category": "F",
+                "record": "01:03,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 58704
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 58704,
+                "club": "Batoulu"
+              },
+              {
+                "bib": 30,
+                "name": "BATOULU RENARD Sara",
+                "category": "F",
+                "record": "01:04,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 67006
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 67006,
+                "club": "Batoulu"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765446826122,
+            "timerInterval": 85,
+            "currentTime": 114004
+          },
+          {
+            "name": "Série 3",
+            "eventId": 2,
+            "sportType": "swimming",
+            "distance": 25,
+            "participants": [
+              {
+                "id": 105,
+                "bib": "105",
+                "name": "Gai séjour Belaid 25 dos",
+                "category": "",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": 35010,
+                    "timestamp": 35010
+                  }
+                ],
+                "status": "finished",
+                "totalTime": 35010,
+                "totalDistance": 25,
+                "bestLap": 35010,
+                "finishTime": 35010,
+                "lastLapStartTime": 0,
+                "laneNumber": null,
+                "club": "Gai Sejour"
+              },
+              {
+                "id": 106,
+                "bib": "107",
+                "name": "Gai séjour David Ripert 25 dos",
+                "category": "",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": 31501,
+                    "timestamp": 31501
+                  }
+                ],
+                "status": "finished",
+                "totalTime": 31501,
+                "totalDistance": 25,
+                "bestLap": 31501,
+                "finishTime": 31501,
+                "lastLapStartTime": 0,
+                "laneNumber": null,
+                "club": "Gai Sejour"
+              },
+              {
+                "id": 108,
+                "bib": "114",
+                "name": "Gai séjour Jean Marie 25 dos",
+                "category": "",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": 62914,
+                    "timestamp": 62914
+                  }
+                ],
+                "status": "finished",
+                "totalTime": 62914,
+                "totalDistance": 25,
+                "bestLap": 62914,
+                "finishTime": 62914,
+                "lastLapStartTime": 0,
+                "laneNumber": null,
+                "club": "Gai Sejour"
+              }
+            ],
+            "status": "completed",
+            "startTime": 1765446989586,
+            "isRunning": false,
+            "timerInterval": 102,
+            "currentTime": 62914,
+            "laneMode": false,
+            "id": 24
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "25m Libre",
+        "sportType": "swimming",
+        "distance": 25,
+        "series": [
+          {
+            "id": 7,
+            "name": "Série 1",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 31,
+                "name": "MARTHE ET MARIE NIVARLET Ludovic",
+                "category": "H",
+                "record": "00:21,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 25003
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 25003,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 32,
+                "name": "MARTHE ET MARIE REMY Bryan",
+                "category": "H",
+                "record": "00:21,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 25203
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 25203,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 33,
+                "name": "MARTHE ET MARIE HANS Yohan",
+                "category": "H",
+                "record": "00:22,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 19613
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 19613,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 34,
+                "name": "La Cordée Sports Gregoire Christophe",
+                "category": "H",
+                "record": "00:23,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 24407
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 24407,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 35,
+                "name": "MARTHE ET MARIE MAGERA Benjamin",
+                "category": "H",
+                "record": "00:23,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 24603
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 24603,
+                "club": "Marthe Et Marie"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765447079215,
+            "timerInterval": 118,
+            "currentTime": 63902
+          },
+          {
+            "id": 8,
+            "name": "Série 2",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 36,
+                "name": "GAI SEJOUR WATHELET Jean-Philippe",
+                "category": "H",
+                "record": "00:25",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 28003
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 28003,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 37,
+                "name": "GAI SEJOUR RIPERT David",
+                "category": "H",
+                "record": "00:26",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 37504
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 37504,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 38,
+                "name": "GAI SEJOUR SALAHUN Olivier",
+                "category": "H",
+                "record": "00:27",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 3,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 39,
+                "name": "GAI SEJOUR LEBRUN Marc",
+                "category": "H",
+                "record": "00:28",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 31301
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 31301,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 40,
+                "name": "GAI SEJOUR KAISSER Eric",
+                "category": "H",
+                "record": "00:30",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 39612
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 39612,
+                "club": "Gai Sejour"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765447239306,
+            "timerInterval": 135,
+            "currentTime": 57301
+          },
+          {
+            "id": 9,
+            "name": "Série 3",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 41,
+                "name": "TRUCKET GIBOUX Johaan",
+                "category": "H",
+                "record": "00:34,02",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 33212
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 33212,
+                "club": "Trucket"
+              },
+              {
+                "bib": 42,
+                "name": "RENARDS COLAS Benoît",
+                "category": "H",
+                "record": "00:46,41",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 43904
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 43904,
+                "club": "Renards"
+              },
+              {
+                "bib": 43,
+                "name": "MARTHE ET MARIE SEGERS Bruno",
+                "category": "H",
+                "record": "00:47,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 42601
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 42601,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 44,
+                "name": "La Cordée Sports Manil Julien",
+                "category": "H",
+                "record": "00:49,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 42903
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 42903,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 45,
+                "name": "La Cordée Sports Bourotte Camille",
+                "category": "F",
+                "record": "00:51,0",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 5,
+                "club": "La Cordee Sports"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765447353890,
+            "timerInterval": 148,
+            "currentTime": 57201
+          },
+          {
+            "id": 10,
+            "name": "Série 4",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 46,
+                "name": "La Cordée Sports Debuisson Michael",
+                "category": "H",
+                "record": "00:52,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 41404
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 41404,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 47,
+                "name": "La Cordée Sports Sauvage Dominique",
+                "category": "H",
+                "record": "01:19,00",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 76900
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 76900,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 48,
+                "name": "La Cordée Sports Sonnenberg Camille",
+                "category": "F",
+                "record": "01:40,00",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 3,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 49,
+                "name": "GAI SEJOUR DELEU Kevin",
+                "category": "H",
+                "record": "N/A",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 43003
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 43003,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 50,
+                "name": "GAI SEJOUR BERTHELON Didier",
+                "category": "H",
+                "record": "N/A",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 36300
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 36300,
+                "club": "Gai Sejour"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765447582173,
+            "timerInterval": 161,
+            "currentTime": 78803
+          },
+          {
+            "id": 11,
+            "name": "Série 5",
+            "eventId": 3,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 51,
+                "name": "BOULAIE VERVEKKEN Jonathan",
+                "category": "H",
+                "record": "N/A",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 20313
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 20313,
+                "club": "Boulaie"
+              },
+              {
+                "bib": 52,
+                "name": "BOULAIE Rogge Maxime",
+                "category": "H",
+                "record": "N/A",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 20802
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 20802,
+                "club": "Boulaie"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765447700829,
+            "timerInterval": 174,
+            "currentTime": 37401
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "name": "50m Brasse",
+        "sportType": "swimming",
+        "distance": 50,
+        "series": [
+          {
+            "id": 12,
+            "name": "Série 1",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 53,
+                "name": "GAI SEJOUR GIELDZYK Paul",
+                "category": "H",
+                "record": "00:50",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 59800
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 59800,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 54,
+                "name": "BOULAIE ROBIN Christophe",
+                "category": "H",
+                "record": "00:58",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 63708
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 63708,
+                "club": "Boulaie"
+              },
+              {
+                "bib": 55,
+                "name": "MARTHE ET MARIE HANS Yohan",
+                "category": "H",
+                "record": "01:02,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 53303
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 53303,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 56,
+                "name": "MARTHE ET MARIE NIVARLET Ludovic",
+                "category": "H",
+                "record": "01:04,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 112516
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 112516,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 57,
+                "name": "MARTHE ET MARIE REMY Bryan",
+                "category": "H",
+                "record": "01:06,50",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 60503
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 60503,
+                "club": "Marthe Et Marie"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765447859326,
+            "timerInterval": 185,
+            "currentTime": 125301
+          },
+          {
+            "id": 13,
+            "name": "Série 2",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 58,
+                "name": "GAI SEJOUR SAVOIE Frédéric",
+                "category": "H",
+                "record": "01:07",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 80407
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 80407,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 59,
+                "name": "TRUCKET DEMONTPELLIER Paul",
+                "category": "H",
+                "record": "01:13",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 68211
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 68211,
+                "club": "Trucket"
+              },
+              {
+                "bib": 60,
+                "name": "BATOULU LOJKA Florence",
+                "category": "F",
+                "record": "01:27,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 89903
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 89903,
+                "club": "Batoulu"
+              },
+              {
+                "bib": 61,
+                "name": "TRUCKET CORDY Stéphanie",
+                "category": "F",
+                "record": "01:28",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 74812
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 74812,
+                "club": "Trucket"
+              },
+              {
+                "bib": 62,
+                "name": "BOULAIE AMEYE Christel",
+                "category": "F",
+                "record": "01:32",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 108014
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 108014,
+                "club": "Boulaie"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765448066159,
+            "timerInterval": 202,
+            "currentTime": 110207
+          },
+          {
+            "id": 14,
+            "name": "Série 3",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 63,
+                "name": "TRUCKET BISCAUT Olivier",
+                "category": "H",
+                "record": "01:33",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 87104
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 87104,
+                "club": "Trucket"
+              },
+              {
+                "bib": 64,
+                "name": "TRUCKET DUPLICY Amelie",
+                "category": "F",
+                "record": "01:34",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 94804
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 94804,
+                "club": "Trucket"
+              },
+              {
+                "bib": 65,
+                "name": "BATOULU RENARD Sara",
+                "category": "F",
+                "record": "01:36,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 95613
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 95613,
+                "club": "Batoulu"
+              },
+              {
+                "bib": 66,
+                "name": "MARTHE ET MARIE DUMONT John",
+                "category": "H",
+                "record": "01:39,50",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 113305
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 113305,
+                "club": "Marthe Et Marie"
+              },
+              {
+                "bib": 67,
+                "name": "BATOULU DELVENNE SAMUEL",
+                "category": "H",
+                "record": "01:42,0",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 5,
+                "club": "Batoulu"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765448230331,
+            "timerInterval": 219,
+            "currentTime": 115213
+          },
+          {
+            "id": 15,
+            "name": "Série 4",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 68,
+                "name": "RENARDS ROSIERE Gilles",
+                "category": "H",
+                "record": "01:47,73",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 109103
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 109103,
+                "club": "Renards"
+              },
+              {
+                "bib": 69,
+                "name": "BATOULU DE CROMBRUGGHE",
+                "category": "H",
+                "record": "01:48,0",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 2,
+                "club": "Batoulu"
+              },
+              {
+                "bib": 70,
+                "name": "CORDEE POSTEAU Billy",
+                "category": "H",
+                "record": "01:50",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 105701
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 105701,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 71,
+                "name": "TRUCKET LEJEUNE Steve",
+                "category": "H",
+                "record": "01:52",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 110300
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 110300,
+                "club": "Trucket"
+              },
+              {
+                "bib": 72,
+                "name": "TRUCKET GIBOUX Johaan",
+                "category": "H",
+                "record": "01:53",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 115315
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 115315,
+                "club": "Trucket"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765448465572,
+            "timerInterval": 232,
+            "currentTime": 117700
+          },
+          {
+            "id": 16,
+            "name": "Série 5",
+            "eventId": 4,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 73,
+                "name": "TRUCKET DETAILLE Franck",
+                "category": "H",
+                "record": "02:02",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 99912
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 99912,
+                "club": "Trucket"
+              },
+              {
+                "bib": 74,
+                "name": "TRUCKET SIMON Smita",
+                "category": "F",
+                "record": "02:11",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 115808
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 115808,
+                "club": "Trucket"
+              },
+              {
+                "bib": 75,
+                "name": "CORDEE DORMAL Guillaume",
+                "category": "H",
+                "record": "03:00",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 122507
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 122507,
+                "club": "La Cordee Sports"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765448666557,
+            "timerInterval": 245,
+            "currentTime": 123905
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "name": "50m Dos",
+        "sportType": "swimming",
+        "distance": 50,
+        "series": [
+          {
+            "id": 17,
+            "name": "Série 1",
+            "eventId": 5,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 76,
+                "name": "GAI SEJOUR GRANDREMY Christophe",
+                "category": "H",
+                "record": "00:50,6",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 51703
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 51703,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 77,
+                "name": "BOULAIE GENETELLI Gael",
+                "category": "H",
+                "record": "01:00",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 67201
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 67201,
+                "club": "Boulaie"
+              },
+              {
+                "bib": 78,
+                "name": "MARTHE ET MARIE MAGERA Benjamin",
+                "category": "H",
+                "record": "01:22,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 81309
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 81309,
+                "club": "Marthe Et Marie"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765448855407,
+            "timerInterval": 258,
+            "currentTime": 86501
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "name": "50m Libre",
+        "sportType": "swimming",
+        "distance": 50,
+        "series": [
+          {
+            "id": 18,
+            "name": "Série 1",
+            "eventId": 6,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 79,
+                "name": "GAI SEJOUR GRANDREMY Christophe",
+                "category": "H",
+                "record": "00:47,2",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 45805
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 45805,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 80,
+                "name": "La Cordée Sports GREGOIRE Christophe",
+                "category": "H",
+                "record": "00:50,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 46103
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 46103,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 81,
+                "name": "RENARDS LEGRAND Colin",
+                "category": "H",
+                "record": "01:12,52",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 52406
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 52406,
+                "club": "Renards"
+              },
+              {
+                "bib": 82,
+                "name": "RENARDS VANHAUWERMEIREN Emile",
+                "category": "H",
+                "record": "01:21,47",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 81114
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 81114,
+                "club": "Renards"
+              },
+              {
+                "bib": 83,
+                "name": "RENARDS DROUARD Maureen",
+                "category": "F",
+                "record": "01:25,57",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 5,
+                "club": "Renards"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765449452428,
+            "timerInterval": 295,
+            "currentTime": 87108
+          },
+          {
+            "id": 19,
+            "name": "Série 2",
+            "eventId": 6,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 84,
+                "name": "CORDEE RENIER Brice",
+                "category": "H",
+                "record": "01:30.0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 90003
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 90003,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 85,
+                "name": "La Cordée Sports BOUROTTE Camille",
+                "category": "F",
+                "record": "01:40,00",
+                "status": "running",
+                "laps": [],
+                "laneNumber": 2,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 86,
+                "name": "La Cordée Sports MANIL Julien",
+                "category": "H",
+                "record": "01:44,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 110803
+                  }
+                ],
+                "laneNumber": 3,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 110803,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 87,
+                "name": "La Cordée Sports DEBUISSON Michael",
+                "category": "H",
+                "record": "01:53,0",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 105104
+                  }
+                ],
+                "laneNumber": 4,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 105104,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 88,
+                "name": "La Cordée Sports SAUVAGE Dominique",
+                "category": "H",
+                "record": "02:54,00",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 164203
+                  }
+                ],
+                "laneNumber": 5,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 164203,
+                "club": "La Cordee Sports"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765449139639,
+            "timerInterval": 271,
+            "currentTime": 165504
+          },
+          {
+            "id": 20,
+            "name": "Série 3",
+            "eventId": 6,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 89,
+                "name": "BOULAIE VERVEKKEN Jonathan",
+                "category": "H",
+                "record": "N/A",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 43012
+                  }
+                ],
+                "laneNumber": 1,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 43012,
+                "club": "Boulaie"
+              },
+              {
+                "bib": 90,
+                "name": "BOULAIE Rogge Maxime",
+                "category": "H",
+                "record": "N/A",
+                "status": "finished",
+                "laps": [
+                  {
+                    "lapNumber": 1,
+                    "time": null,
+                    "timestamp": 53800
+                  }
+                ],
+                "laneNumber": 2,
+                "totalTime": null,
+                "totalDistance": null,
+                "bestLap": null,
+                "finishTime": 53800,
+                "club": "Boulaie"
+              }
+            ],
+            "status": "completed",
+            "laneMode": true,
+            "isRunning": false,
+            "startTime": 1765449346810,
+            "timerInterval": 284,
+            "currentTime": 54908
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "name": "25m Assisté",
+        "sportType": "swimming",
+        "distance": 25,
+        "series": [
+          {
+            "id": 21,
+            "name": "Série 1",
+            "eventId": 7,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 91,
+                "name": "La Cordée Sports DETIENNE Natalie",
+                "category": "F",
+                "record": "00:56,00",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1,
+                "club": "La Cordee Sports"
+              },
+              {
+                "bib": 92,
+                "name": "BATOULU HEMPTINNE Elanor",
+                "category": "F",
+                "record": "02:00,0",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2,
+                "club": "Batoulu"
+              },
+              {
+                "bib": 93,
+                "name": "GAI SEJOUR CHAUVAUX Florian",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 94,
+                "name": "GAI SEJOUR LECOMTE Valentin",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 95,
+                "name": "GAI SEJOUR ARDINET Ludovic",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5,
+                "club": "Gai Sejour"
+              }
+            ],
+            "status": "running",
+            "laneMode": true
+          },
+          {
+            "id": 22,
+            "name": "Série 2",
+            "eventId": 7,
+            "sportType": "swimming",
+            "distance": 25,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 96,
+                "name": "GAI SEJOUR HERMANN Marc Hermann",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 97,
+                "name": "GAI SEJOUR DESROZIERS Arnaud",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 98,
+                "name": "GAI SEJOUR FOURNIER Barry",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 99,
+                "name": "GAI SEJOUR GIRARDOT Julien",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 4,
+                "club": "Gai Sejour"
+              },
+              {
+                "bib": 100,
+                "name": "RENARDS HECHT Alexis",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 5,
+                "club": "Renards"
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          },
+          {
+            "name": "Série 3",
+            "eventId": 7,
+            "sportType": "swimming",
+            "distance": 25,
+            "participants": [
+              {
+                "id": 101,
+                "bib": "101",
+                "name": "Boulaie Canivet Frédéric",
+                "category": "H",
+                "laps": [],
+                "status": "ready",
+                "totalTime": 0,
+                "totalDistance": 0,
+                "bestLap": null,
+                "finishTime": null,
+                "lastLapStartTime": 0,
+                "laneNumber": null,
+                "club": "Boulaie"
+              },
+              {
+                "id": 102,
+                "bib": "102",
+                "name": "Boulaie Leroy Christophe",
+                "category": "H",
+                "laps": [],
+                "status": "ready",
+                "totalTime": 0,
+                "totalDistance": 0,
+                "bestLap": null,
+                "finishTime": null,
+                "lastLapStartTime": 0,
+                "laneNumber": null,
+                "club": "Boulaie"
+              },
+              {
+                "id": 103,
+                "bib": "103",
+                "name": "Boulaie Chtourou Anis",
+                "category": "H",
+                "laps": [],
+                "status": "ready",
+                "totalTime": 0,
+                "totalDistance": 0,
+                "bestLap": null,
+                "finishTime": null,
+                "lastLapStartTime": 0,
+                "laneNumber": null,
+                "club": "Boulaie"
+              }
+            ],
+            "status": "pending",
+            "startTime": null,
+            "isRunning": false,
+            "timerInterval": null,
+            "currentTime": 0,
+            "laneMode": false,
+            "id": 25
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "name": "50m Assisté",
+        "sportType": "swimming",
+        "distance": 50,
+        "series": [
+          {
+            "id": 23,
+            "name": "Série 1",
+            "eventId": 8,
+            "sportType": "swimming",
+            "distance": 50,
+            "raceType": "individual",
+            "participants": [
+              {
+                "bib": 101,
+                "name": "Boulaie Canivet Frédéric",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 1,
+                "club": "Boulaie"
+              },
+              {
+                "bib": 102,
+                "name": "Boulaie Leroy Christophe",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 2,
+                "club": "Boulaie"
+              },
+              {
+                "bib": 103,
+                "name": "Boulaie Chtourou Anis",
+                "category": "H",
+                "record": "N/A",
+                "status": "ready",
+                "laps": [],
+                "laneNumber": 3,
+                "club": "Boulaie"
+              }
+            ],
+            "status": "pending",
+            "laneMode": true
+          }
+        ]
+      }
+    ],
+    "participants": [
+      {
+        "id": 1,
+        "name": "GAI SEJOUR GIELDZYK Paul",
+        "bib": 1,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 2,
+        "name": "BOULAIE ROBIN Christophe",
+        "bib": 2,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 3,
+        "name": "GAI SEJOUR SAVOIE Frédéric",
+        "bib": 3,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 4,
+        "name": "TRUCKET POULAIN Thierry",
+        "bib": 4,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 5,
+        "name": "GAI SEJOUR STEVANCE Jean-Marie",
+        "bib": 5,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 6,
+        "name": "TRUCKET BISCAUT Olivier",
+        "bib": 6,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 7,
+        "name": "brasseEmile",
+        "bib": 7,
+        "category": "H",
+        "club": ""
+      },
+      {
+        "id": 8,
+        "name": "TRUCKET DUPLICY Amélie",
+        "bib": 8,
+        "category": "F",
+        "club": "Trucket"
+      },
+      {
+        "id": 9,
+        "name": "BOULAIE AMEYE Christel",
+        "bib": 9,
+        "category": "F",
+        "club": "Boulaie"
+      },
+      {
+        "id": 10,
+        "name": "BATOULU VERHAEGE Marie",
+        "bib": 10,
+        "category": "F",
+        "club": "Batoulu"
+      },
+      {
+        "id": 11,
+        "name": "RENARDS DROUARD Maureen",
+        "bib": 11,
+        "category": "F",
+        "club": "Renards"
+      },
+      {
+        "id": 12,
+        "name": "TRUCKET DETAILLE Franck",
+        "bib": 12,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 13,
+        "name": "TRUCKET GIBOUX Johan",
+        "bib": 13,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 14,
+        "name": "RENARDS LEGRAND Colin",
+        "bib": 14,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 15,
+        "name": "TRUCKET SIMON Anita",
+        "bib": 15,
+        "category": "F",
+        "club": "Trucket"
+      },
+      {
+        "id": 16,
+        "name": "RENARDS COLAS Benoît",
+        "bib": 16,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 17,
+        "name": "MARTHE ET MARIE DUMONT John",
+        "bib": 17,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 18,
+        "name": "RENARDS ROSIERE Gilles",
+        "bib": 18,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 19,
+        "name": "TRUCKET Dury Ingrid",
+        "bib": 19,
+        "category": "F",
+        "club": "Trucket"
+      },
+      {
+        "id": 20,
+        "name": "RENARDS VANHAUWERMEIREN",
+        "bib": 20,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 21,
+        "name": "BOULAIE GENETELLI Gael",
+        "bib": 21,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 22,
+        "name": "TRUCKET DEMONTPELLIER Paul",
+        "bib": 22,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 23,
+        "name": "TRUCKET CORDY Stéphanie",
+        "bib": 23,
+        "category": "F",
+        "club": "Trucket"
+      },
+      {
+        "id": 24,
+        "name": "BATOULU DE CROMBRUGGHE Vincent",
+        "bib": 24,
+        "category": "H",
+        "club": "Batoulu"
+      },
+      {
+        "id": 25,
+        "name": "BATOULU DELVENNE Samuel",
+        "bib": 25,
+        "category": "H",
+        "club": "Batoulu"
+      },
+      {
+        "id": 26,
+        "name": "MARTHE ET MARIE SEGERS Bruno",
+        "bib": 26,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 27,
+        "name": "TRUCKET LEJEUNE Steve",
+        "bib": 27,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 28,
+        "name": "BATOULU LOJKA Florence",
+        "bib": 28,
+        "category": "F",
+        "club": "Batoulu"
+      },
+      {
+        "id": 29,
+        "name": "BATOULU VERHAEGE Marie",
+        "bib": 29,
+        "category": "F",
+        "club": "Batoulu"
+      },
+      {
+        "id": 30,
+        "name": "BATOULU RENARD Sara",
+        "bib": 30,
+        "category": "F",
+        "club": "Batoulu"
+      },
+      {
+        "id": 31,
+        "name": "MARTHE ET MARIE NIVARLET Ludovic",
+        "bib": 31,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 32,
+        "name": "MARTHE ET MARIE REMY Bryan",
+        "bib": 32,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 33,
+        "name": "MARTHE ET MARIE HANS Yohan",
+        "bib": 33,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 34,
+        "name": "La Cordée Sports Gregoire Christophe",
+        "bib": 34,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 35,
+        "name": "MARTHE ET MARIE MAGERA Benjamin",
+        "bib": 35,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 36,
+        "name": "GAI SEJOUR WATHELET Jean-Philippe",
+        "bib": 36,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 37,
+        "name": "GAI SEJOUR RIPERT David",
+        "bib": 37,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 38,
+        "name": "GAI SEJOUR SALAHUN Olivier",
+        "bib": 38,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 39,
+        "name": "GAI SEJOUR LEBRUN Marc",
+        "bib": 39,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 40,
+        "name": "GAI SEJOUR KAISSER Eric",
+        "bib": 40,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 41,
+        "name": "TRUCKET GIBOUX Johaan",
+        "bib": 41,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 42,
+        "name": "RENARDS COLAS Benoît",
+        "bib": 42,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 43,
+        "name": "MARTHE ET MARIE SEGERS Bruno",
+        "bib": 43,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 44,
+        "name": "La Cordée Sports Manil Julien",
+        "bib": 44,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 45,
+        "name": "La Cordée Sports Bourotte Camille",
+        "bib": 45,
+        "category": "F",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 46,
+        "name": "La Cordée Sports Debuisson Michael",
+        "bib": 46,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 47,
+        "name": "La Cordée Sports Sauvage Dominique",
+        "bib": 47,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 48,
+        "name": "La Cordée Sports Sonnenberg Camille",
+        "bib": 48,
+        "category": "F",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 49,
+        "name": "GAI SEJOUR DELEU Kevin",
+        "bib": 49,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 50,
+        "name": "GAI SEJOUR BERTHELON Didier",
+        "bib": 50,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 51,
+        "name": "BOULAIE VERVEKKEN Jonathan",
+        "bib": 51,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 52,
+        "name": "BOULAIE Rogge Maxime",
+        "bib": 52,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 53,
+        "name": "GAI SEJOUR GIELDZYK Paul",
+        "bib": 53,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 54,
+        "name": "BOULAIE ROBIN Christophe",
+        "bib": 54,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 55,
+        "name": "MARTHE ET MARIE HANS Yohan",
+        "bib": 55,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 56,
+        "name": "MARTHE ET MARIE NIVARLET Ludovic",
+        "bib": 56,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 57,
+        "name": "MARTHE ET MARIE REMY Bryan",
+        "bib": 57,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 58,
+        "name": "GAI SEJOUR SAVOIE Frédéric",
+        "bib": 58,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 59,
+        "name": "TRUCKET DEMONTPELLIER Paul",
+        "bib": 59,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 60,
+        "name": "BATOULU LOJKA Florence",
+        "bib": 60,
+        "category": "F",
+        "club": "Batoulu"
+      },
+      {
+        "id": 61,
+        "name": "TRUCKET CORDY Stéphanie",
+        "bib": 61,
+        "category": "F",
+        "club": "Trucket"
+      },
+      {
+        "id": 62,
+        "name": "BOULAIE AMEYE Christel",
+        "bib": 62,
+        "category": "F",
+        "club": "Boulaie"
+      },
+      {
+        "id": 63,
+        "name": "TRUCKET BISCAUT Olivier",
+        "bib": 63,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 64,
+        "name": "TRUCKET DUPLICY Amelie",
+        "bib": 64,
+        "category": "F",
+        "club": "Trucket"
+      },
+      {
+        "id": 65,
+        "name": "BATOULU RENARD Sara",
+        "bib": 65,
+        "category": "F",
+        "club": "Batoulu"
+      },
+      {
+        "id": 66,
+        "name": "MARTHE ET MARIE DUMONT John",
+        "bib": 66,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 67,
+        "name": "BATOULU DELVENNE SAMUEL",
+        "bib": 67,
+        "category": "H",
+        "club": "Batoulu"
+      },
+      {
+        "id": 68,
+        "name": "RENARDS ROSIERE Gilles",
+        "bib": 68,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 69,
+        "name": "BATOULU DE CROMBRUGGHE",
+        "bib": 69,
+        "category": "H",
+        "club": "Batoulu"
+      },
+      {
+        "id": 70,
+        "name": "CORDEE POSTEAU Billy",
+        "bib": 70,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 71,
+        "name": "TRUCKET LEJEUNE Steve",
+        "bib": 71,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 72,
+        "name": "TRUCKET GIBOUX Johaan",
+        "bib": 72,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 73,
+        "name": "TRUCKET DETAILLE Franck",
+        "bib": 73,
+        "category": "H",
+        "club": "Trucket"
+      },
+      {
+        "id": 74,
+        "name": "TRUCKET SIMON Smita",
+        "bib": 74,
+        "category": "F",
+        "club": "Trucket"
+      },
+      {
+        "id": 75,
+        "name": "CORDEE DORMAL Guillaume",
+        "bib": 75,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 76,
+        "name": "GAI SEJOUR GRANDREMY Christophe",
+        "bib": 76,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 77,
+        "name": "BOULAIE GENETELLI Gael",
+        "bib": 77,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 78,
+        "name": "MARTHE ET MARIE MAGERA Benjamin",
+        "bib": 78,
+        "category": "H",
+        "club": "Marthe Et Marie"
+      },
+      {
+        "id": 79,
+        "name": "GAI SEJOUR GRANDREMY Christophe",
+        "bib": 79,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 80,
+        "name": "La Cordée Sports GREGOIRE Christophe",
+        "bib": 80,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 81,
+        "name": "RENARDS LEGRAND Colin",
+        "bib": 81,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 82,
+        "name": "RENARDS VANHAUWERMEIREN Emile",
+        "bib": 82,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 83,
+        "name": "RENARDS DROUARD Maureen",
+        "bib": 83,
+        "category": "F",
+        "club": "Renards"
+      },
+      {
+        "id": 84,
+        "name": "CORDEE RENIER Brice",
+        "bib": 84,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 85,
+        "name": "La Cordée Sports BOUROTTE Camille",
+        "bib": 85,
+        "category": "F",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 86,
+        "name": "La Cordée Sports MANIL Julien",
+        "bib": 86,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 87,
+        "name": "La Cordée Sports DEBUISSON Michael",
+        "bib": 87,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 88,
+        "name": "La Cordée Sports SAUVAGE Dominique",
+        "bib": 88,
+        "category": "H",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 89,
+        "name": "BOULAIE VERVEKKEN Jonathan",
+        "bib": 89,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 90,
+        "name": "BOULAIE Rogge Maxime",
+        "bib": 90,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 91,
+        "name": "La Cordée Sports DETIENNE Natalie",
+        "bib": 91,
+        "category": "F",
+        "club": "La Cordee Sports"
+      },
+      {
+        "id": 92,
+        "name": "BATOULU HEMPTINNE Elanor",
+        "bib": 92,
+        "category": "F",
+        "club": "Batoulu"
+      },
+      {
+        "id": 93,
+        "name": "GAI SEJOUR CHAUVAUX Florian",
+        "bib": 93,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 94,
+        "name": "GAI SEJOUR LECOMTE Valentin",
+        "bib": 94,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 95,
+        "name": "GAI SEJOUR ARDINET Ludovic",
+        "bib": 95,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 96,
+        "name": "GAI SEJOUR HERMANN Marc Hermann",
+        "bib": 96,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 97,
+        "name": "GAI SEJOUR DESROZIERS Arnaud",
+        "bib": 97,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 98,
+        "name": "GAI SEJOUR FOURNIER Barry",
+        "bib": 98,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 99,
+        "name": "GAI SEJOUR GIRARDOT Julien",
+        "bib": 99,
+        "category": "H",
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 100,
+        "name": "RENARDS HECHT Alexis",
+        "bib": 100,
+        "category": "H",
+        "club": "Renards"
+      },
+      {
+        "id": 101,
+        "name": "Boulaie Canivet Frédéric",
+        "bib": 101,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 102,
+        "name": "Boulaie Leroy Christophe",
+        "bib": 102,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 103,
+        "name": "Boulaie Chtourou Anis",
+        "bib": 103,
+        "category": "H",
+        "club": "Boulaie"
+      },
+      {
+        "id": 104,
+        "name": "Belaid",
+        "category": "",
+        "bib": "104",
+        "age": null,
+        "nationality": null,
+        "club": ""
+      },
+      {
+        "id": 105,
+        "name": "Gai séjour Belaid 25 dos",
+        "category": "",
+        "bib": "105",
+        "age": null,
+        "nationality": null,
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 106,
+        "name": "Gai séjour David Ripert 25 dos",
+        "category": "",
+        "bib": "107",
+        "age": null,
+        "nationality": null,
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 107,
+        "name": "Gai Séjour Jean Philippe 25 dos",
+        "category": "",
+        "bib": "110",
+        "age": null,
+        "nationality": null,
+        "club": "Gai Sejour"
+      },
+      {
+        "id": 108,
+        "name": "Gai séjour Jean Marie 25 dos",
+        "category": "",
+        "bib": "114",
+        "age": null,
+        "nationality": null,
+        "club": "Gai Sejour"
+      }
+    ],
+    "nextEventId": 9,
+    "nextSerieId": 26,
+    "nextParticipantId": 109
+  },
+  "stats": {
+    "totalEvents": 8,
+    "totalParticipants": 108,
+    "totalSeries": 25,
+    "completedSeries": 21
+  }
+}

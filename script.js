@@ -15095,11 +15095,50 @@ if (document.readyState === 'loading') {
             return String(a.bib).localeCompare(String(b.bib));
         });
 
+        // Déterminer les couloirs déjà utilisés
+        const usedLanes = selectedParticipants
+            .filter(p => p.laneNumber)
+            .map(p => p.laneNumber);
+
+        // Trouver le prochain couloir disponible (de 1 à 9)
+        const getNextAvailableLane = () => {
+            for (let i = 1; i <= 9; i++) {
+                if (!usedLanes.includes(i)) {
+                    return i;
+                }
+            }
+            return null; // Tous les couloirs sont pris
+        };
+
         participantsCheckboxList.innerHTML = sortedParticipants.map(participant => {
-            const isChecked = selectedParticipants.some(p => p.id === participant.id);
+            // Correspondance par ID si disponible, sinon par bib (pour JSON importés)
+            const isChecked = selectedParticipants.some(p =>
+                p.id === participant.id || (p.bib && p.bib === participant.bib)
+            );
             // Récupérer le numéro de couloir existant si en mode édition
-            const existingParticipant = selectedParticipants.find(p => p.id === participant.id);
+            const existingParticipant = selectedParticipants.find(p =>
+                p.id === participant.id || (p.bib && p.bib === participant.bib)
+            );
             const existingLane = existingParticipant?.laneNumber || '';
+
+            // Si pas de couloir existant, suggérer le prochain disponible
+            const suggestedLane = existingLane || (isChecked ? getNextAvailableLane() : null);
+
+            // Générer les options avec indication des couloirs disponibles/occupés
+            const laneOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(laneNum => {
+                const isOccupied = usedLanes.includes(laneNum) && existingLane !== laneNum;
+                const isSelected = (existingLane === laneNum) || (suggestedLane === laneNum && !existingLane);
+                const occupiedBy = isOccupied ? selectedParticipants.find(p => p.laneNumber === laneNum)?.name : null;
+                const label = isOccupied ?
+                    `Couloir ${laneNum} (occupé)` :
+                    `Couloir ${laneNum}`;
+
+                return `<option value="${laneNum}"
+                    ${isSelected ? 'selected' : ''}
+                    ${isOccupied ? 'disabled style="color: #999; background: #f5f5f5;"' : ''}
+                    title="${occupiedBy ? 'Occupé par: ' + occupiedBy : 'Disponible'}">${label}</option>`;
+            }).join('');
+
             return `
                 <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 5px; transition: background 0.2s;">
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1;">
@@ -15109,28 +15148,22 @@ if (document.readyState === 'loading') {
                                data-name="${participant.name}"
                                data-category="${participant.category}"
                                data-bib="${participant.bib}"
+                               data-club="${participant.club || ''}"
                                ${isChecked ? 'checked' : ''}
-                               onchange="updateLaneModeVisibility()"
+                               onchange="updateLaneModeVisibility(); autoAssignLane(${participant.id})"
                                style="width: 18px; height: 18px; cursor: pointer;">
                         <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 4px 8px; border-radius: 5px; font-weight: bold; min-width: 45px; text-align: center; font-size: 12px;">
                             ${participant.bib}
                         </div>
                         <span style="font-weight: bold;">${participant.name}</span>
                         <span style="font-size: 12px; color: #7f8c8d;">(${participant.category})</span>
+                        ${participant.club ? `<span style="font-size: 11px; color: #16a085; font-weight: bold;">🏅 ${participant.club}</span>` : ''}
                     </label>
                     <div class="lane-selector-container" style="display: none;">
                         <select class="lane-selector" data-participant-id="${participant.id}"
                                 style="padding: 5px 10px; border-radius: 5px; border: 2px solid #3498db; font-weight: bold; background: #e8f4fc; min-width: 80px;">
                             <option value="">--</option>
-                            <option value="1" ${existingLane === 1 ? 'selected' : ''}>Couloir 1</option>
-                            <option value="2" ${existingLane === 2 ? 'selected' : ''}>Couloir 2</option>
-                            <option value="3" ${existingLane === 3 ? 'selected' : ''}>Couloir 3</option>
-                            <option value="4" ${existingLane === 4 ? 'selected' : ''}>Couloir 4</option>
-                            <option value="5" ${existingLane === 5 ? 'selected' : ''}>Couloir 5</option>
-                            <option value="6" ${existingLane === 6 ? 'selected' : ''}>Couloir 6</option>
-                            <option value="7" ${existingLane === 7 ? 'selected' : ''}>Couloir 7</option>
-                            <option value="8" ${existingLane === 8 ? 'selected' : ''}>Couloir 8</option>
-                            <option value="9" ${existingLane === 9 ? 'selected' : ''}>Couloir 9</option>
+                            ${laneOptions}
                         </select>
                     </div>
                 </div>
@@ -15140,6 +15173,32 @@ if (document.readyState === 'loading') {
         // Mettre à jour la visibilité de l'option mode couloirs
         updateLaneModeVisibility();
     }
+
+    // Fonction pour auto-assigner un couloir disponible quand on coche un participant
+    window.autoAssignLane = function(participantId) {
+        const checkbox = document.querySelector(`.participant-checkbox[data-id="${participantId}"]`);
+        const laneSelector = document.querySelector(`.lane-selector[data-participant-id="${participantId}"]`);
+
+        if (!checkbox || !laneSelector) return;
+
+        // Si le participant vient d'être coché et n'a pas encore de couloir
+        if (checkbox.checked && !laneSelector.value) {
+            // Récupérer tous les couloirs déjà assignés
+            const allLaneSelectors = document.querySelectorAll('.lane-selector');
+            const usedLanes = Array.from(allLaneSelectors)
+                .filter(sel => sel.value && sel !== laneSelector)
+                .map(sel => parseInt(sel.value));
+
+            // Trouver le premier couloir disponible
+            for (let i = 1; i <= 9; i++) {
+                if (!usedLanes.includes(i)) {
+                    laneSelector.value = i;
+                    console.log(`✨ Couloir ${i} auto-assigné à ${checkbox.dataset.name}`);
+                    break;
+                }
+            }
+        }
+    };
 
     // Fonction pour afficher/masquer l'option mode couloirs selon le nombre de participants
     window.updateLaneModeVisibility = function() {
@@ -15255,40 +15314,108 @@ if (document.readyState === 'loading') {
 
         // Si on édite une série existante, récupérer les données actuelles des participants
         let existingSerieParticipants = [];
+        let oldSerie = null;
         if (raceData.editingSerieId !== null) {
             const result = findSerieById(raceData.editingSerieId);
             if (result && result.serie) {
                 existingSerieParticipants = result.serie.participants;
+                oldSerie = result.serie;
             }
         }
 
-        const participants = Array.from(checkboxes).map(cb => {
-            const participantId = parseInt(cb.dataset.id);
+        // Collecter les IDs des participants cochés
+        const checkedParticipantIds = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
 
-            // Récupérer le numéro de couloir assigné (si mode couloirs activé)
-            const laneSelector = document.querySelector(`.lane-selector[data-participant-id="${participantId}"]`);
-            const laneNumber = laneSelector && laneSelector.value ? parseInt(laneSelector.value) : null;
+        // Construire la liste finale des participants
+        const participants = [];
 
-            // Chercher si ce participant existait déjà dans la série
-            const existingParticipant = existingSerieParticipants.find(p => p.id === participantId);
+        // IMPORTANT: Si on édite une série existante, commencer par TOUS les participants existants
+        if (oldSerie) {
+            // 1. Conserver TOUS les participants existants de la série
+            existingSerieParticipants.forEach(existingP => {
+                // Vérifier si ce participant est coché dans la liste (pour mettre à jour ses infos)
+                // Correspondance par ID si disponible, sinon par bib (pour JSON importés)
+                const checkbox = Array.from(checkboxes).find(cb =>
+                    parseInt(cb.dataset.id) === existingP.id ||
+                    (existingP.bib && cb.dataset.bib == existingP.bib)
+                );
 
-            if (existingParticipant) {
-                // Conserver toutes les données existantes du participant
-                return {
-                    ...existingParticipant,
-                    // Mettre à jour les infos de base au cas où elles auraient changé
-                    bib: cb.dataset.bib,
-                    name: cb.dataset.name,
-                    category: cb.dataset.category,
-                    laneNumber: laneNumber  // Numéro de couloir assigné
-                };
-            } else {
-                // Nouveau participant : créer avec des données vides
-                return {
+                if (checkbox) {
+                    // Le participant existant est coché : mettre à jour ses infos de base et couloir
+                    const participantId = parseInt(checkbox.dataset.id);
+                    const laneSelector = document.querySelector(`.lane-selector[data-participant-id="${participantId}"]`);
+                    const laneNumber = laneSelector && laneSelector.value ? parseInt(laneSelector.value) : existingP.laneNumber;
+
+                    participants.push({
+                        ...existingP,
+                        id: participantId,  // S'assurer que l'ID est présent (important pour les imports JSON)
+                        // Mettre à jour les infos de base au cas où elles auraient changé
+                        bib: checkbox.dataset.bib,
+                        name: checkbox.dataset.name,
+                        category: checkbox.dataset.category,
+                        club: checkbox.dataset.club || existingP.club || '',
+                        laneNumber: laneNumber
+                    });
+                } else {
+                    // Le participant existant n'est pas coché : le conserver tel quel
+                    // Ajouter l'ID s'il manque (pour JSON importés)
+                    if (!existingP.id) {
+                        const globalParticipant = raceData.participants.find(p => p.bib == existingP.bib);
+                        if (globalParticipant) {
+                            existingP.id = globalParticipant.id;
+                        }
+                    }
+                    participants.push(existingP);
+                    console.log(`✅ Participant existant "${existingP.name}" préservé automatiquement`);
+                }
+            });
+
+            // 2. Ajouter les NOUVEAUX participants cochés (qui n'étaient pas dans la série)
+            Array.from(checkboxes).forEach(cb => {
+                const participantId = parseInt(cb.dataset.id);
+                const participantBib = cb.dataset.bib;
+
+                // Vérifier si c'est un nouveau participant (pas dans la série existante)
+                // Correspondance par ID ou par bib
+                const isNewParticipant = !existingSerieParticipants.find(p =>
+                    p.id === participantId || (p.bib && p.bib == participantBib)
+                );
+
+                if (isNewParticipant) {
+                    const laneSelector = document.querySelector(`.lane-selector[data-participant-id="${participantId}"]`);
+                    const laneNumber = laneSelector && laneSelector.value ? parseInt(laneSelector.value) : null;
+
+                    participants.push({
+                        id: participantId,
+                        bib: participantBib,
+                        name: cb.dataset.name,
+                        category: cb.dataset.category,
+                        club: cb.dataset.club || '',
+                        laps: [],
+                        status: 'ready',
+                        totalTime: 0,
+                        totalDistance: 0,
+                        bestLap: null,
+                        finishTime: null,
+                        lastLapStartTime: 0,
+                        laneNumber: laneNumber
+                    });
+                    console.log(`➕ Nouveau participant "${cb.dataset.name}" ajouté à la série`);
+                }
+            });
+        } else {
+            // Création d'une nouvelle série : ajouter tous les participants cochés
+            Array.from(checkboxes).forEach(cb => {
+                const participantId = parseInt(cb.dataset.id);
+                const laneSelector = document.querySelector(`.lane-selector[data-participant-id="${participantId}"]`);
+                const laneNumber = laneSelector && laneSelector.value ? parseInt(laneSelector.value) : null;
+
+                participants.push({
                     id: participantId,
                     bib: cb.dataset.bib,
                     name: cb.dataset.name,
                     category: cb.dataset.category,
+                    club: cb.dataset.club || '',
                     laps: [],
                     status: 'ready',
                     totalTime: 0,
@@ -15296,10 +15423,10 @@ if (document.readyState === 'loading') {
                     bestLap: null,
                     finishTime: null,
                     lastLapStartTime: 0,
-                    laneNumber: laneNumber  // Numéro de couloir assigné
-                };
-            }
-        });
+                    laneNumber: laneNumber
+                });
+            });
+        }
 
         if (participants.length === 0) {
             showNotification('Sélectionnez au moins un participant', 'warning');
@@ -15646,6 +15773,7 @@ if (document.readyState === 'loading') {
                             <tr style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
                                 <th style="padding: 12px; text-align: center;">Dossard</th>
                                 <th style="padding: 12px; text-align: left;">Participant</th>
+                                <th style="padding: 12px; text-align: left;">Club</th>
                                 <th style="padding: 12px; text-align: center;">Tours</th>
                                 <th style="padding: 12px; text-align: center;">Distance</th>
                                 <th style="padding: 12px; text-align: center;">Temps Total</th>
@@ -15863,6 +15991,9 @@ if (document.readyState === 'loading') {
                     <td style="padding: 12px;">
                         <div style="font-weight: bold;">${p.name}</div>
                         <div style="font-size: 12px; color: #7f8c8d;">${p.category || 'Division ' + (p.division || '-')}</div>
+                    </td>
+                    <td style="padding: 12px;">
+                        <div style="font-weight: bold; color: #16a085;">${p.club || '-'}</div>
                     </td>
                     <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
                         ${p.laps.length}
@@ -16471,6 +16602,7 @@ if (document.readyState === 'loading') {
                                 <th style="padding: 12px; text-align: center;">Pos.</th>
                                 <th style="padding: 12px; text-align: center;">Dossard</th>
                                 <th style="padding: 12px; text-align: left;">Participant</th>
+                                <th style="padding: 12px; text-align: left;">Club</th>
                                 <th style="padding: 12px; text-align: center;">Tours</th>
                                 <th style="padding: 12px; text-align: center;">Distance Totale</th>
                                 <th style="padding: 12px; text-align: center;">Temps Total</th>
@@ -16494,7 +16626,10 @@ if (document.readyState === 'loading') {
                                         </td>
                                         <td style="padding: 12px;">
                                             <div style="font-weight: bold; font-size: 16px;">${p.name}</div>
-                                            <div style="font-size: 12px; color: #7f8c8d;">Division ${p.division}</div>
+                                            <div style="font-size: 12px; color: #7f8c8d;">${p.category || 'Division ' + (p.division || '-')}</div>
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            <div style="font-weight: bold; color: #16a085; font-size: 14px;">${p.club || '-'}</div>
                                         </td>
                                         <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
                                             ${p.laps.length}
@@ -16556,6 +16691,145 @@ if (document.readyState === 'loading') {
 
         rankingSection.innerHTML = html;
     }
+
+    // Afficher le classement par club pour une série
+    window.showSerieClubRanking = function() {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const rankingSection = document.getElementById('raceRankingSection');
+
+        // Trier les participants terminés
+        const rankedFinished = [...serie.participants]
+            .filter(p => p.status === 'finished')
+            .sort((a, b) => {
+                if (serie.raceType === 'relay') {
+                    if (a.totalDistance !== b.totalDistance) {
+                        return b.totalDistance - a.totalDistance;
+                    }
+                    return a.totalTime - b.totalTime;
+                } else {
+                    if (a.totalDistance !== b.totalDistance) {
+                        return b.totalDistance - a.totalDistance;
+                    }
+                    return a.totalTime - b.totalTime;
+                }
+            });
+
+        // Barème de points (comme en F1 ou athlétisme)
+        const pointsScale = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+
+        // Calculer les points par club
+        const clubStats = {};
+
+        rankedFinished.forEach((p, index) => {
+            const club = p.club || 'Sans club';
+            const points = pointsScale[index] || 0; // 0 points après la 10e place
+
+            if (!clubStats[club]) {
+                clubStats[club] = {
+                    clubName: club,
+                    totalPoints: 0,
+                    participants: [],
+                    positions: []
+                };
+            }
+
+            clubStats[club].totalPoints += points;
+            clubStats[club].participants.push(p.name);
+            clubStats[club].positions.push({ position: index + 1, points: points, name: p.name });
+        });
+
+        // Trier les clubs par points
+        const rankedClubs = Object.values(clubStats).sort((a, b) => b.totalPoints - a.totalPoints);
+
+        const medals = ['🥇', '🥈', '🥉'];
+
+        let html = `
+            <div style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); padding: 20px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="color: white; margin: 0;">🏅 Classement par Club</h3>
+                    <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; font-weight: bold;">
+                        👤 Classement Individuel
+                    </button>
+                </div>
+
+                <div style="background: white; border-radius: 10px; padding: 20px;">
+                    <p style="color: #7f8c8d; margin-bottom: 20px; text-align: center;">
+                        Attribution de points selon la position : 1er=25pts, 2e=18pts, 3e=15pts, 4e=12pts, 5e=10pts, 6e=8pts, 7e=6pts, 8e=4pts, 9e=2pts, 10e=1pt
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white;">
+                                <th style="padding: 12px; text-align: center;">Position</th>
+                                <th style="padding: 12px; text-align: left;">Club</th>
+                                <th style="padding: 12px; text-align: center;">Points</th>
+                                <th style="padding: 12px; text-align: center;">Participants</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rankedClubs.map((club, index) => {
+                                const position = index + 1;
+                                const medal = position <= 3 ? medals[position - 1] : position;
+                                const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : (index % 2 === 0 ? 'background: #f8f9fa;' : '');
+
+                                return `
+                                    <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
+                                        <td style="padding: 12px; text-align: center; font-size: 24px; font-weight: bold;">
+                                            ${medal}
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            <div style="font-weight: bold; font-size: 18px; color: #2ecc71;">
+                                                🏅 ${club.clubName}
+                                            </div>
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 24px; color: #27ae60;">
+                                            ${club.totalPoints} pts
+                                        </td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            <div style="font-weight: bold; color: #3498db; font-size: 16px;">
+                                                ${club.participants.length} participant(s)
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr style="${rowBg}">
+                                        <td colspan="4" style="padding: 0 12px 12px 60px;">
+                                            <div style="font-size: 13px; color: #7f8c8d;">
+                                                ${club.positions.map(pos =>
+                                                    `<span style="display: inline-block; margin-right: 15px; margin-bottom: 5px;">
+                                                        <strong>${pos.position}e</strong> - ${pos.name}
+                                                        <span style="color: #27ae60;">(${pos.points} pts)</span>
+                                                    </span>`
+                                                ).join('')}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0; color: #2c3e50;">📊 Statistiques</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <div>
+                                <strong>Clubs présents:</strong> ${rankedClubs.length}
+                            </div>
+                            <div>
+                                <strong>Participants terminés:</strong> ${rankedFinished.length}
+                            </div>
+                            <div>
+                                <strong>Points attribués:</strong> ${rankedClubs.reduce((sum, c) => sum + c.totalPoints, 0)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        rankingSection.innerHTML = html;
+    };
 
     // Générer le classement par club pour le mode interclub
     function generateInterclubRanking(rankedParticipants, event) {
@@ -16785,6 +17059,13 @@ if (document.readyState === 'loading') {
                 '#27ae60',
                 `${analysis.clubs.length} club(s)`
             );
+            optionsHTML += createRankingOption(
+                '🏆 Classement Interclub',
+                'Classement des clubs par points (système équitable : chaque club ne marque qu\'une fois par série)',
+                'interclub',
+                '#2ecc71',
+                `${analysis.clubs.length} club(s) en compétition`
+            );
         }
 
         optionsContainer.innerHTML = optionsHTML;
@@ -16968,6 +17249,8 @@ if (document.readyState === 'loading') {
             generateRankingByNationality();
         } else if (type === 'by-club') {
             generateRankingByClub();
+        } else if (type === 'interclub') {
+            generateInterclubRanking();
         }
     };
 
@@ -17214,6 +17497,171 @@ if (document.readyState === 'loading') {
         });
 
         displayRankingByCategories(clubsMap, '🏅 Classements par Club');
+    }
+
+    // Classement interclub (système de points - chaque club ne marque qu'une fois par série)
+    function generateInterclubRanking() {
+        const clubStats = {};
+        const pointsScale = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+
+        // Pour chaque série terminée
+        raceData.events.forEach(event => {
+            event.series.forEach(serie => {
+                if (serie.status === 'completed') {
+                    // Trier les participants terminés de la série
+                    const rankedFinished = [...serie.participants]
+                        .filter(p => p.status === 'finished')
+                        .sort((a, b) => {
+                            if (serie.raceType === 'relay') {
+                                if (a.totalDistance !== b.totalDistance) {
+                                    return b.totalDistance - a.totalDistance;
+                                }
+                                return a.totalTime - b.totalTime;
+                            } else {
+                                if (a.totalDistance !== b.totalDistance) {
+                                    return b.totalDistance - a.totalDistance;
+                                }
+                                return (a.finishTime || a.totalTime) - (b.finishTime || b.totalTime);
+                            }
+                        });
+
+                    // Pour cette série, trouver le MEILLEUR représentant de chaque club
+                    const clubBestInSerie = {};
+                    rankedFinished.forEach((participant, index) => {
+                        const club = participant.club || 'Sans club';
+
+                        // Ne garder que le premier (meilleur) de chaque club dans cette série
+                        if (!clubBestInSerie[club]) {
+                            clubBestInSerie[club] = {
+                                position: index + 1,
+                                points: pointsScale[index] || 0,
+                                participant: participant,
+                                serieName: serie.name,
+                                eventName: event.name
+                            };
+                        }
+                    });
+
+                    // Attribuer les points au club
+                    Object.entries(clubBestInSerie).forEach(([club, data]) => {
+                        if (!clubStats[club]) {
+                            clubStats[club] = {
+                                clubName: club,
+                                totalPoints: 0,
+                                seriesScored: [],
+                                participants: new Set()
+                            };
+                        }
+
+                        clubStats[club].totalPoints += data.points;
+                        clubStats[club].seriesScored.push({
+                            eventName: event.name,
+                            serieName: serie.name,
+                            participantName: data.participant.name,
+                            position: data.position,
+                            points: data.points
+                        });
+                        clubStats[club].participants.add(data.participant.bib);
+                    });
+                }
+            });
+        });
+
+        // Convertir en array et trier par points
+        const rankedClubs = Object.values(clubStats).map(club => ({
+            ...club,
+            totalParticipants: club.participants.size,
+            participants: undefined // Retirer le Set pour l'affichage
+        })).sort((a, b) => {
+            // Trier par points totaux
+            if (a.totalPoints !== b.totalPoints) {
+                return b.totalPoints - a.totalPoints;
+            }
+            // En cas d'égalité, trier par nombre de séries gagnées
+            return b.seriesScored.length - a.seriesScored.length;
+        });
+
+        // Afficher le classement interclub
+        const rankingSection = document.getElementById('overallChronoRanking');
+        const medals = ['🥇', '🥈', '🥉'];
+
+        let html = `
+            <div style="background: white; padding: 20px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0; color: #2c3e50;">🏆 Classement Interclub</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
+                            ⬅️ Retour aux séries
+                        </button>
+                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #16a085;">
+                            🔄 Changer de type
+                        </button>
+                    </div>
+                </div>
+
+                <p style="color: #7f8c8d; margin-bottom: 20px; text-align: center;">
+                    <strong>Système de points équitable :</strong> Chaque club ne marque qu'une seule fois par série (meilleur résultat du club)
+                    <br>
+                    <span style="font-size: 13px;">Barème : 1er=25pts, 2e=18pts, 3e=15pts, 4e=12pts, 5e=10pts, 6e=8pts, 7e=6pts, 8e=4pts, 9e=2pts, 10e=1pt</span>
+                </p>
+
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white;">
+                            <th style="padding: 12px; text-align: center;">Position</th>
+                            <th style="padding: 12px; text-align: left;">Club</th>
+                            <th style="padding: 12px; text-align: center;">Points</th>
+                            <th style="padding: 12px; text-align: center;">Séries Comptées</th>
+                            <th style="padding: 12px; text-align: center;">Participants</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rankedClubs.map((club, index) => {
+                            const position = index + 1;
+                            const medal = position <= 3 ? medals[position - 1] : position;
+                            const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : (index % 2 === 0 ? 'background: #f8f9fa;' : '');
+
+                            return `
+                                <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
+                                    <td style="padding: 12px; text-align: center; font-size: 24px; font-weight: bold;">
+                                        ${medal}
+                                    </td>
+                                    <td style="padding: 12px;">
+                                        <div style="font-weight: bold; font-size: 18px; color: #2ecc71;">
+                                            🏅 ${club.clubName}
+                                        </div>
+                                    </td>
+                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 28px; color: #27ae60;">
+                                        ${club.totalPoints}
+                                    </td>
+                                    <td style="padding: 12px; text-align: center; font-weight: bold; color: #9b59b6; font-size: 16px;">
+                                        ${club.seriesScored.length}
+                                    </td>
+                                    <td style="padding: 12px; text-align: center; font-weight: bold; color: #3498db; font-size: 16px;">
+                                        ${club.totalParticipants}
+                                    </td>
+                                </tr>
+                                <tr style="${rowBg}">
+                                    <td colspan="5" style="padding: 0 12px 12px 60px;">
+                                        <div style="font-size: 13px; color: #7f8c8d;">
+                                            <strong>Détail des points :</strong><br>
+                                            ${club.seriesScored.map(score =>
+                                                `<span style="display: inline-block; margin-right: 15px; margin-top: 5px;">
+                                                    📍 ${score.eventName} - ${score.serieName}: <strong>${score.position}e</strong> (${score.participantName})
+                                                    <span style="color: #27ae60; font-weight: bold;">+${score.points} pts</span>
+                                                </span>`
+                                            ).join('')}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        rankingSection.innerHTML = html;
     }
 
     // Fonction générique pour générer un classement filtré
