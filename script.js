@@ -29,6 +29,16 @@ try {
     }
     window.formatProperName = formatProperName;
 
+    // Fonction pour vérifier si un match aller-retour existe déjà dans une liste de matchs
+    // Retourne true si player1 vs player2 OU player2 vs player1 existe déjà
+    function hasReverseMatchInDay(matches, player1, player2) {
+        return matches.some(match => {
+            return (match.player1 === player1 && match.player2 === player2) ||
+                   (match.player1 === player2 && match.player2 === player1);
+        });
+    }
+    window.hasReverseMatchInDay = hasReverseMatchInDay;
+
     // STRUCTURE DE DONNÉES CHAMPIONNAT
     let championship = {
         currentDay: 1,
@@ -909,7 +919,7 @@ try {
         if (!dayNumber) {
             dayNumber = championship.currentDay;
         }
-        
+
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
@@ -918,14 +928,43 @@ try {
         alert('⚠️ Mode Poules activé !\n\nUtilisez les boutons "Générer les Poules" dans la section bleue ci-dessus.');
         return;
         }
-        
+
+        // NOUVEAU: Détecter si certaines divisions ont exactement 4 joueurs
+        const numDivisions = getNumberOfDivisions();
+        let hasFourPlayerDivision = false;
+        for (let div = 1; div <= numDivisions; div++) {
+            const divPlayers = dayData.players[div] || [];
+            if (divPlayers.length === 4) {
+                hasFourPlayerDivision = true;
+                break;
+            }
+        }
+
+        // Demander le nombre de matchs par équipe avec un message adapté
+        let promptMessage = 'Combien de matchs par équipe voulez-vous générer ?\n\n';
+        if (hasFourPlayerDivision) {
+            promptMessage += 'ATTENTION : Avec 4 équipes :\n';
+            promptMessage += '• 3 matchs = chaque équipe affronte les 3 autres UNE fois\n';
+            promptMessage += '• 4+ matchs = au moins 1 match aller-retour par équipe\n';
+            promptMessage += '• 6 matchs = matchs aller-retour complets\n\n';
+        }
+        promptMessage += '(Recommandé: 4 matchs)\n(Min: 1, Max: 6)';
+
+        const userInput = prompt(promptMessage, '4');
+        if (userInput === null) {
+            return; // Utilisateur a annulé
+        }
+        const targetMatchesPerPlayer = parseInt(userInput);
+        if (isNaN(targetMatchesPerPlayer) || targetMatchesPerPlayer < 1 || targetMatchesPerPlayer > 6) {
+            alert('⚠️ Veuillez entrer un nombre entre 1 et 6');
+            return;
+        }
+
         let reportDetails = {
             totalNewMatches: 0,
             totalRematches: 0,
             divisions: {}
         };
-        
-        const numDivisions = getNumberOfDivisions();
 
         for (let division = 1; division <= numDivisions; division++) {
             const divisionPlayers = [...(dayData.players[division] || [])];
@@ -938,9 +977,12 @@ try {
             }
 
             dayData.matches[division] = [];
-            
+
+            // NOUVEAU: Détecter si on a exactement 4 joueurs (autoriser aller-retour seulement si 4+ matchs demandés)
+            const allowReverseMatches = (divisionPlayers.length === 4) && (targetMatchesPerPlayer >= 4);
+
             const matchHistory = new Map();
-            
+
             for (let i = 0; i < divisionPlayers.length; i++) {
                 for (let j = i + 1; j < divisionPlayers.length; j++) {
                     const key = [divisionPlayers[i], divisionPlayers[j]].sort().join('|vs|');
@@ -993,52 +1035,59 @@ try {
             
             const playersMatchCount = new Map();
             divisionPlayers.forEach(p => playersMatchCount.set(p, 0));
-            
-            const targetMatchesPerPlayer = 4;
+
             const matchesByTour = { 1: [], 2: [], 3: [], 4: [] };
             const usedMatches = new Set();
             
             for (let tour = 1; tour <= 4; tour++) {
                 const playersInThisTour = new Set();
-                
+
                 for (const matchPair of possibleMatches) {
                     if (usedMatches.has(matchPair.key)) continue;
-                    
-                    if (!playersInThisTour.has(matchPair.player1) && 
+
+                    if (!playersInThisTour.has(matchPair.player1) &&
                         !playersInThisTour.has(matchPair.player2)) {
-                        
+
                         const p1Count = playersMatchCount.get(matchPair.player1) || 0;
                         const p2Count = playersMatchCount.get(matchPair.player2) || 0;
-                        
+
                         if (p1Count < targetMatchesPerPlayer && p2Count < targetMatchesPerPlayer) {
-                            
-                            const matchData = {
-                                player1: matchPair.player1,
-                                player2: matchPair.player2,
-                                tour: tour,
-                                score1: '',
-                                score2: '',
-                                completed: false,
-                                winner: null,
-                                timesPlayedBefore: matchPair.timesPlayed,
-                                isRematch: matchPair.timesPlayed > 0
-                            };
-                            
-                            matchesByTour[tour].push(matchData);
-                            playersInThisTour.add(matchPair.player1);
-                            playersInThisTour.add(matchPair.player2);
-                            playersMatchCount.set(matchPair.player1, p1Count + 1);
-                            playersMatchCount.set(matchPair.player2, p2Count + 1);
-                            usedMatches.add(matchPair.key);
-                            
-                            if (matchPair.timesPlayed === 0) {
-                                reportDetails.totalNewMatches++;
-                            } else {
-                                reportDetails.totalRematches++;
+                            // NOUVEAU: Vérifier qu'un match aller-retour n'existe pas déjà dans cette journée
+                            // SAUF si on a exactement 4 joueurs (autoriser aller-retour)
+                            const allMatchesThisDay = [];
+                            for (let t = 1; t <= 4; t++) {
+                                allMatchesThisDay.push(...matchesByTour[t]);
+                            }
+
+                            if (allowReverseMatches || !hasReverseMatchInDay(allMatchesThisDay, matchPair.player1, matchPair.player2)) {
+                                const matchData = {
+                                    player1: matchPair.player1,
+                                    player2: matchPair.player2,
+                                    tour: tour,
+                                    score1: '',
+                                    score2: '',
+                                    completed: false,
+                                    winner: null,
+                                    timesPlayedBefore: matchPair.timesPlayed,
+                                    isRematch: matchPair.timesPlayed > 0
+                                };
+
+                                matchesByTour[tour].push(matchData);
+                                playersInThisTour.add(matchPair.player1);
+                                playersInThisTour.add(matchPair.player2);
+                                playersMatchCount.set(matchPair.player1, p1Count + 1);
+                                playersMatchCount.set(matchPair.player2, p2Count + 1);
+                                usedMatches.add(matchPair.key);
+
+                                if (matchPair.timesPlayed === 0) {
+                                    reportDetails.totalNewMatches++;
+                                } else {
+                                    reportDetails.totalRematches++;
+                                }
                             }
                         }
                     }
-                    
+
                     if (matchesByTour[tour].length >= Math.ceil(divisionPlayers.length / 2)) {
                         break;
                     }
@@ -1100,12 +1149,12 @@ try {
             return;
         }
 
+        const numDivisions = getNumberOfDivisions();
+
         let reportDetails = {
             totalNewMatches: 0,
             divisions: {}
         };
-
-        const numDivisions = getNumberOfDivisions();
 
         for (let division = 1; division <= numDivisions; division++) {
             const divisionPlayers = [...(dayData.players[division] || [])];
@@ -1190,20 +1239,26 @@ try {
             schema.forEach((tour, tourIndex) => {
                 tour.forEach(([idx1, idx2]) => {
                     if (idx1 < divisionPlayers.length && idx2 < divisionPlayers.length) {
-                        const matchData = {
-                            player1: divisionPlayers[idx1],
-                            player2: divisionPlayers[idx2],
-                            tour: tourIndex + 1,
-                            score1: '',
-                            score2: '',
-                            completed: false,
-                            winner: null,
-                            timesPlayedBefore: 0,
-                            isRematch: false
-                        };
+                        const player1 = divisionPlayers[idx1];
+                        const player2 = divisionPlayers[idx2];
 
-                        dayData.matches[division].push(matchData);
-                        reportDetails.totalNewMatches++;
+                        // Ajouter le match directement (pas de filtrage des doublons dans Optimized 4-10)
+                        {
+                            const matchData = {
+                                player1: player1,
+                                player2: player2,
+                                tour: tourIndex + 1,
+                                score1: '',
+                                score2: '',
+                                completed: false,
+                                winner: null,
+                                timesPlayedBefore: 0,
+                                isRematch: false
+                            };
+
+                            dayData.matches[division].push(matchData);
+                            reportDetails.totalNewMatches++;
+                        }
                     }
                 });
 
@@ -1265,12 +1320,12 @@ try {
             return;
         }
 
+        const numDivisions = getNumberOfDivisions();
+
         let reportDetails = {
             totalMatches: 0,
             divisions: {}
         };
-
-        const numDivisions = getNumberOfDivisions();
 
         // Schémas prédéfinis pour chaque nombre de joueurs
         const schemas = {
@@ -1415,21 +1470,27 @@ try {
                 schema.forEach((tour, tourIndex) => {
                     tour.forEach(([idx1, idx2]) => {
                         if (idx1 < players.length && idx2 < players.length) {
-                            const matchData = {
-                                player1: players[idx1],
-                                player2: players[idx2],
-                                tour: tourIndex + 1,
-                                court: court,
-                                score1: '',
-                                score2: '',
-                                completed: false,
-                                winner: null,
-                                timesPlayedBefore: 0,
-                                isRematch: false
-                            };
+                            const player1 = players[idx1];
+                            const player2 = players[idx2];
 
-                            dayData.matches[division].push(matchData);
-                            totalMatchesGenerated++;
+                            // Ajouter le match directement (pas de filtrage des doublons dans By Court)
+                            {
+                                const matchData = {
+                                    player1: player1,
+                                    player2: player2,
+                                    tour: tourIndex + 1,
+                                    court: court,
+                                    score1: '',
+                                    score2: '',
+                                    completed: false,
+                                    winner: null,
+                                    timesPlayedBefore: 0,
+                                    isRematch: false
+                                };
+
+                                dayData.matches[division].push(matchData);
+                                totalMatchesGenerated++;
+                            }
                         }
                     });
 
