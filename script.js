@@ -448,6 +448,46 @@ try {
     }
     window.addBulkPlayers = addBulkPlayers;
 
+    // Fonction pour vérifier si un joueur a au moins un match BYE
+    function playerHasByeMatch(dayNumber, division, playerName) {
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return false;
+
+        // Vérifier dans les matchs classiques
+        const regularMatches = dayData.matches[division] || [];
+        const hasByeInRegular = regularMatches.some(match =>
+            (match.player1 === playerName && match.player2 === 'BYE') ||
+            (match.player2 === playerName && match.player1 === 'BYE')
+        );
+
+        if (hasByeInRegular) return true;
+
+        // Vérifier dans les matchs de poules
+        if (dayData.pools?.enabled && dayData.pools.divisions[division]) {
+            const poolMatches = dayData.pools.divisions[division].matches || [];
+            const hasByeInPools = poolMatches.some(match =>
+                (match.player1 === playerName && match.player2 === 'BYE') ||
+                (match.player2 === playerName && match.player1 === 'BYE')
+            );
+
+            if (hasByeInPools) return true;
+        }
+
+        // Vérifier dans la phase finale
+        if (dayData.pools?.divisions[division]?.finalPhase) {
+            const finalMatches = dayData.pools.divisions[division].finalPhase || [];
+            const hasByeInFinal = finalMatches.some(match =>
+                (match.player1 === playerName && match.player2 === 'BYE') ||
+                (match.player2 === playerName && match.player1 === 'BYE')
+            );
+
+            if (hasByeInFinal) return true;
+        }
+
+        return false;
+    }
+    window.playerHasByeMatch = playerHasByeMatch;
+
     function updatePlayersDisplay(dayNumber) {
         if (!championship.days[dayNumber]) return;
 
@@ -464,7 +504,12 @@ try {
                 container.innerHTML = players.map(player => {
                     // Utiliser JSON.stringify pour échapper correctement tous les caractères spéciaux
                     const escapedPlayer = JSON.stringify(player).slice(1, -1);
-                    return `<div class="player-tag" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayer}')">
+
+                    // Vérifier si le joueur a un match BYE
+                    const hasBye = playerHasByeMatch(dayNumber, division, player);
+                    const byeClass = hasBye ? ' player-has-bye' : '';
+
+                    return `<div class="player-tag${byeClass}" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayer}')">
                         ${player}
                         <div class="player-actions">
                             <button class="edit-player" onclick="event.stopPropagation(); editPlayer(${dayNumber}, ${division}, '${escapedPlayer}')" title="Modifier">✏️</button>
@@ -1242,8 +1287,8 @@ try {
                         const player1 = divisionPlayers[idx1];
                         const player2 = divisionPlayers[idx2];
 
-                        // Ajouter le match directement (pas de filtrage des doublons dans Optimized 4-10)
-                        {
+                        // NOUVEAU: Vérifier qu'un match aller-retour n'existe pas déjà dans cette journée
+                        if (!hasReverseMatchInDay(dayData.matches[division], player1, player2)) {
                             const matchData = {
                                 player1: player1,
                                 player2: player2,
@@ -1473,8 +1518,8 @@ try {
                             const player1 = players[idx1];
                             const player2 = players[idx2];
 
-                            // Ajouter le match directement (pas de filtrage des doublons dans By Court)
-                            {
+                            // NOUVEAU: Vérifier qu'un match aller-retour n'existe pas déjà dans cette journée
+                            if (!hasReverseMatchInDay(dayData.matches[division], player1, player2)) {
                                 const matchData = {
                                     player1: player1,
                                     player2: player2,
@@ -4930,13 +4975,14 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             winner: playerName,
             isBye: true
         };
-        
+
         dayData.matches[division].push(byeMatch);
-        
+
         updateMatchesDisplay(dayNumber);
+        updatePlayersDisplay(dayNumber); // Mettre à jour l'affichage des joueurs pour refléter le BYE
         updateStats(dayNumber);
         saveToLocalStorage();
-        
+
         showNotification(`Match BYE ajouté pour ${playerName} en D${division}`, 'success');
     }
     window.addByeMatchForPlayer = addByeMatchForPlayer;
@@ -5724,20 +5770,21 @@ function showByeManagementModal(dayNumber) {
 
         for (let division = 1; division <= numDivisions; division++) {
             const players = dayData.players[division];
-            
+
             players.forEach(player => {
-                const playerMatches = dayData.matches[division].filter(m => 
+                const playerMatches = dayData.matches[division].filter(m =>
                     m.player1 === player || m.player2 === player
                 );
-                
+
                 const matchCount = playerMatches.length;
-                
+
                 if (matchCount < 4) {
                     playersNeedingBye.push({
                         name: player,
                         division: division,
                         currentMatches: matchCount,
-                        missingMatches: 4 - matchCount
+                        missingMatches: 4 - matchCount,
+                        hasBye: playerHasByeMatch(dayNumber, division, player)
                     });
                 }
             });
@@ -5769,16 +5816,23 @@ function showByeManagementModal(dayNumber) {
         
         playersNeedingBye.forEach((player, index) => {
             const escapedPlayerName = JSON.stringify(player.name).slice(1, -1);
+            // Style conditionnel : fond orange si le joueur a déjà un BYE
+            const rowStyle = player.hasBye
+                ? 'background: linear-gradient(135deg, #f39c12, #e67e22); color: white;'
+                : (index % 2 === 0 ? 'background: #f8f9fa;' : '');
+
             modalHTML += `
-                <tr style="border-bottom: 1px solid #ddd; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
-                    <td style="padding: 10px; font-weight: bold;">${player.name}</td>
+                <tr style="border-bottom: 1px solid #ddd; ${rowStyle}">
+                    <td style="padding: 10px; font-weight: bold;">
+                        ${player.hasBye ? '🎯 ' : ''}${player.name}${player.hasBye ? ' (a déjà un BYE)' : ''}
+                    </td>
                     <td style="padding: 10px; text-align: center;">D${player.division}</td>
                     <td style="padding: 10px; text-align: center;">${player.currentMatches}/4</td>
-                    <td style="padding: 10px; text-align: center; color: #e74c3c; font-weight: bold;">
+                    <td style="padding: 10px; text-align: center; ${player.hasBye ? 'color: white;' : 'color: #e74c3c;'} font-weight: bold;">
                         ${player.missingMatches}
                     </td>
                     <td style="padding: 10px; text-align: center;">
-                        <button onclick="addByeMatchForPlayer(${dayNumber}, ${player.division}, '${escapedPlayerName}'); closeByeModal();" 
+                        <button onclick="addByeMatchForPlayer(${dayNumber}, ${player.division}, '${escapedPlayerName}'); setTimeout(() => showByeManagementModal(${dayNumber}), 200);"
                                 style="
                             background: linear-gradient(135deg, #27ae60, #2ecc71);
                             color: white;
@@ -5808,7 +5862,8 @@ function showByeManagementModal(dayNumber) {
                 ">
                     <strong>💡 Explication :</strong><br>
                     Un match BYE donne automatiquement 3 points (victoire) + 2 sets gagnés au joueur.<br>
-                    Cela compense l'absence de 4ème adversaire avec un nombre impair de joueurs.
+                    Cela compense l'absence de 4ème adversaire avec un nombre impair de joueurs.<br>
+                    <strong style="color: #f39c12;">🎯 Les lignes oranges</strong> indiquent les joueurs ayant déjà au moins un match BYE.
                 </div>
             </div>
         `;
@@ -5831,7 +5886,7 @@ function showByeManagementModal(dayNumber) {
                 </div>
                 ${modalHTML}
                 <div class="modal-buttons" style="margin-top: 20px;">
-                    <button onclick="addByeToAll(${dayNumber}); closeByeModal();" class="btn btn-success">
+                    <button onclick="addByeToAll(${dayNumber}); setTimeout(() => showByeManagementModal(${dayNumber}), 200);" class="btn btn-success">
                         ✅ Ajouter BYE à TOUS
                     </button>
                     <button onclick="closeByeModal()" class="btn" style="background: #95a5a6;">

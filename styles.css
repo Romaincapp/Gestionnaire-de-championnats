@@ -369,10 +369,21 @@ body   * {
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .player-tag:hover {
             transform: translateY(-2px);
             box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Style pour les joueurs ayant au moins un match BYE */
+        .player-tag.player-has-bye {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+        }
+
+        .player-tag.player-has-bye:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(243, 156, 18, 0.5);
         }
         
         .player-actions {
