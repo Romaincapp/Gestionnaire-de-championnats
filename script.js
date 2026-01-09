@@ -340,7 +340,7 @@ try {
     function addPlayer() {
         const name = formatProperName(document.getElementById('playerName').value);
         const division = parseInt(document.getElementById('playerDivision').value);
-        const targetDay = parseInt(document.getElementById('targetDay').value);
+        const targetDay = 1; // Toujours ajouter à la journée 1 depuis le formulaire de J1
 
         if (!name || name === '') {
             showNotification('Veuillez entrer un nom de joueur', 'warning');
@@ -362,26 +362,263 @@ try {
         }
 
         if (championship.days[targetDay].players[division].includes(name)) {
-            showNotification(`${name} est déjà inscrit en D${division} - J${targetDay}`, 'warning');
+            showNotification(`${name} est déjà inscrit en D${division}`, 'warning');
             return;
         }
 
         championship.days[targetDay].players[division].push(name);
         saveToLocalStorage();
-        showNotification(`${name} ajouté à D${division} - J${targetDay}`, 'success');
+        showNotification(`${name} ajouté à D${division}`, 'success');
 
         updatePlayersDisplay(targetDay);
         document.getElementById('playerName').value = '';
     }
     window.addPlayer = addPlayer;
 
-    function showBulkInput() {
-        const division = document.getElementById('bulkDivision').value;
-        const targetDay = document.getElementById('bulkTargetDay').value;
-        document.getElementById('selectedDivision').textContent = `Division ${division} - Journée ${targetDay}`;
+    // Fonction pour ajouter un joueur directement depuis une journée spécifique
+    function addPlayerToDay(dayNumber) {
+        const name = formatProperName(document.getElementById(`playerName-${dayNumber}`).value);
+        const division = parseInt(document.getElementById(`playerDivision-${dayNumber}`).value);
+
+        if (!name || name === '') {
+            showNotification('Veuillez entrer un nom de joueur', 'warning');
+            return;
+        }
+
+        if (!championship.days[dayNumber]) {
+            const numDivisions = championship.config?.numberOfDivisions || 3;
+            const players = {};
+            const matches = {};
+            for (let div = 1; div <= numDivisions; div++) {
+                players[div] = [];
+                matches[div] = [];
+            }
+            championship.days[dayNumber] = {
+                players: players,
+                matches: matches
+            };
+        }
+
+        if (championship.days[dayNumber].players[division].includes(name)) {
+            showNotification(`${name} est déjà inscrit en D${division} - J${dayNumber}`, 'warning');
+            return;
+        }
+
+        championship.days[dayNumber].players[division].push(name);
+        saveToLocalStorage();
+        showNotification(`${name} ajouté à D${division} - J${dayNumber}`, 'success');
+
+        updatePlayersDisplay(dayNumber);
+        document.getElementById(`playerName-${dayNumber}`).value = '';
+    }
+    window.addPlayerToDay = addPlayerToDay;
+
+    // Fonction pour ouvrir le modal bulk depuis une journée spécifique
+    function showBulkInputForDay(dayNumber) {
+        const division = document.getElementById(`bulkDivision-${dayNumber}`).value;
+        document.getElementById('selectedDivision').textContent = `Division ${division} - Journée ${dayNumber}`;
         document.getElementById('bulkModal').style.display = 'block';
         document.getElementById('bulkText').focus();
-        
+
+        document.getElementById('bulkModal').dataset.dayNumber = dayNumber;
+        document.getElementById('bulkModal').dataset.division = division;
+    }
+    window.showBulkInputForDay = showBulkInputForDay;
+
+    // Fonction pour gérer l'import de fichier depuis une journée spécifique
+    function handleFileInputForDay(dayNumber, event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+
+        reader.onload = function(e) {
+            try {
+                let players = [];
+
+                if (fileExtension === 'csv') {
+                    const csvData = e.target.result;
+                    const lines = csvData.split('\n').filter(line => line.trim());
+
+                    lines.forEach(line => {
+                        const parts = line.split(/[,;]/);
+                        const name = formatProperName(parts[0]?.trim());
+                        const division = parseInt(parts[1]?.trim()) || 1;
+                        if (name) {
+                            players.push({ name, division });
+                        }
+                    });
+                } else if (['xlsx', 'xls'].includes(fileExtension)) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                    jsonData.forEach(row => {
+                        const name = formatProperName(row[0]?.toString()?.trim());
+                        const division = parseInt(row[1]) || 1;
+                        if (name) {
+                            players.push({ name, division });
+                        }
+                    });
+                }
+
+                if (players.length === 0) {
+                    showNotification('Aucun joueur trouvé dans le fichier', 'warning');
+                    return;
+                }
+
+                // Créer la journée si elle n'existe pas
+                if (!championship.days[dayNumber]) {
+                    const numDivisions = championship.config?.numberOfDivisions || 3;
+                    const playersObj = {};
+                    const matches = {};
+                    for (let div = 1; div <= numDivisions; div++) {
+                        playersObj[div] = [];
+                        matches[div] = [];
+                    }
+                    championship.days[dayNumber] = {
+                        players: playersObj,
+                        matches: matches
+                    };
+                }
+
+                const numDivisions = championship.config?.numberOfDivisions || 3;
+                let added = 0;
+                let skipped = 0;
+
+                players.forEach(player => {
+                    const div = Math.min(Math.max(player.division, 1), numDivisions);
+                    if (!championship.days[dayNumber].players[div].includes(player.name)) {
+                        championship.days[dayNumber].players[div].push(player.name);
+                        added++;
+                    } else {
+                        skipped++;
+                    }
+                });
+
+                saveToLocalStorage();
+                updatePlayersDisplay(dayNumber);
+                showNotification(`${added} joueur(s) importé(s) dans J${dayNumber}${skipped > 0 ? `, ${skipped} doublon(s) ignoré(s)` : ''}`, 'success');
+
+            } catch (error) {
+                console.error('Erreur lors de l\'import:', error);
+                showNotification('Erreur lors de la lecture du fichier', 'error');
+            }
+        };
+
+        if (fileExtension === 'csv') {
+            reader.readAsText(file);
+        } else {
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Réinitialiser l'input file pour permettre de réimporter le même fichier
+        event.target.value = '';
+    }
+    window.handleFileInputForDay = handleFileInputForDay;
+
+    // Variable globale pour stocker la journée cible du modal
+    let addPlayerModalDayNumber = 1;
+
+    // Fonction pour ouvrir le modal d'ajout de joueurs
+    function showAddPlayerModal(dayNumber) {
+        addPlayerModalDayNumber = dayNumber;
+        const modal = document.getElementById('addPlayerModal');
+        const dayLabel = document.getElementById('addPlayerDayLabel');
+
+        dayLabel.textContent = `- Journée ${dayNumber}`;
+
+        // Initialiser les sélecteurs de division
+        const numDivisions = championship.config?.numberOfDivisions || 3;
+        ['addPlayerDivision', 'modalBulkDivision'].forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (select) {
+                select.innerHTML = '';
+                for (let i = 1; i <= numDivisions; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `Division ${i}`;
+                    select.appendChild(option);
+                }
+            }
+        });
+
+        modal.style.display = 'block';
+        document.getElementById('addPlayerName').focus();
+    }
+    window.showAddPlayerModal = showAddPlayerModal;
+
+    // Fermer le modal
+    function closeAddPlayerModal() {
+        document.getElementById('addPlayerModal').style.display = 'none';
+        document.getElementById('addPlayerName').value = '';
+    }
+    window.closeAddPlayerModal = closeAddPlayerModal;
+
+    // Ajouter un joueur depuis le modal
+    function addPlayerFromModal() {
+        const name = formatProperName(document.getElementById('addPlayerName').value);
+        const division = parseInt(document.getElementById('addPlayerDivision').value);
+        const dayNumber = addPlayerModalDayNumber;
+
+        if (!name || name === '') {
+            showNotification('Veuillez entrer un nom de joueur', 'warning');
+            return;
+        }
+
+        if (!championship.days[dayNumber]) {
+            const numDivisions = championship.config?.numberOfDivisions || 3;
+            const players = {};
+            const matches = {};
+            for (let div = 1; div <= numDivisions; div++) {
+                players[div] = [];
+                matches[div] = [];
+            }
+            championship.days[dayNumber] = { players, matches };
+        }
+
+        if (championship.days[dayNumber].players[division].includes(name)) {
+            showNotification(`${name} est déjà inscrit en D${division}`, 'warning');
+            return;
+        }
+
+        championship.days[dayNumber].players[division].push(name);
+        saveToLocalStorage();
+        showNotification(`${name} ajouté à D${division}`, 'success');
+        updatePlayersDisplay(dayNumber);
+
+        document.getElementById('addPlayerName').value = '';
+        document.getElementById('addPlayerName').focus();
+    }
+    window.addPlayerFromModal = addPlayerFromModal;
+
+    // Ouvrir le bulk modal depuis le modal d'ajout
+    function showBulkFromModal() {
+        const division = document.getElementById('modalBulkDivision').value;
+        document.getElementById('selectedDivision').textContent = `Division ${division} - Journée ${addPlayerModalDayNumber}`;
+        document.getElementById('bulkModal').style.display = 'block';
+        document.getElementById('bulkText').focus();
+
+        document.getElementById('bulkModal').dataset.dayNumber = addPlayerModalDayNumber;
+        document.getElementById('bulkModal').dataset.division = division;
+    }
+    window.showBulkFromModal = showBulkFromModal;
+
+    // Import fichier depuis le modal
+    function handleModalFileInput(event) {
+        handleFileInputForDay(addPlayerModalDayNumber, event);
+    }
+    window.handleModalFileInput = handleModalFileInput;
+
+    function showBulkInput() {
+        const division = document.getElementById('bulkDivision').value;
+        const targetDay = 1; // Toujours ajouter à la journée 1 depuis le formulaire de J1
+        document.getElementById('selectedDivision').textContent = `Division ${division}`;
+        document.getElementById('bulkModal').style.display = 'block';
+        document.getElementById('bulkText').focus();
+
         document.getElementById('bulkModal').dataset.dayNumber = targetDay;
         document.getElementById('bulkModal').dataset.division = division;
     }
@@ -664,6 +901,9 @@ try {
             initializePoolsForDay(newDayNumber);
         }
 
+        // Initialiser les sélecteurs de division pour la nouvelle journée
+        initializeDivisionSelects();
+
         updateDaySelectors();
         updateTabsDisplay();
         switchTab(newDayNumber);
@@ -762,35 +1002,47 @@ try {
                 </h2>
 
                 <div id="day-hub-content-${dayNumber}">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <p style="color: #7f8c8d; font-style: italic;">
-                        Utilisez la <strong>Journée 1 (Hub Central)</strong> pour ajouter des joueurs à cette journée
-                    </p>
-                    <button class="btn" onclick="switchTab(1)" style="margin: 10px;">
-                        ← Retour au Hub Central
+                <!-- Ligne unique de boutons -->
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <!-- Ajout joueurs -->
+                    <button onclick="showAddPlayerModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        ➕ Joueurs
                     </button>
-                </div>
-
-                <div class="control-buttons" style="gap: 8px; flex-wrap: wrap; margin-top: 15px;">
-                    <button class="btn btn-success" onclick="updateRankingsForDay(${dayNumber})" style="padding: 8px 12px; font-size: 13px;">
-                        🏆 Classements J${dayNumber}
-                    </button>
-                    <button class="btn" onclick="showMatchGenerationModal(${dayNumber})" style="padding: 8px 12px; font-size: 13px;">
-                        🎯 Générer Matchs
-                    </button>
-                    <button class="btn" onclick="showByeManagementModal(${dayNumber})" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 8px 12px; font-size: 13px;">
-                        🎯 Gérer BYE
-                    </button>
-                    <button class="btn" onclick="copyPlayersFromPreviousDay(${dayNumber})" style="padding: 8px 12px; font-size: 13px;">
+                    <button onclick="copyPlayersFromPreviousDay(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         👥 Copier J${dayNumber-1}
                     </button>
-                    <button class="btn btn-warning" onclick="clearDayData(${dayNumber})" style="padding: 8px 12px; font-size: 13px;">
-                        🗑️ Vider J${dayNumber}
+                    <!-- Actions matchs -->
+                    <button onclick="showMatchGenerationModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        🎯 Matchs
                     </button>
-                    <button id="forfait-toggle-btn-${dayNumber}" class="btn" onclick="toggleForfaitButtons()" style="padding: 8px 12px; font-size: 13px; background: #95a5a6;">
-                        ⚠️ Actions OFF
+                    <button onclick="togglePoolSection(${dayNumber})" id="show-pool-btn-${dayNumber}" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        🏊 Poules
+                    </button>
+                    <button onclick="updateRankingsForDay(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        🏆 Classements
+                    </button>
+                    <button onclick="showByeManagementModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        👋 BYE
+                    </button>
+                    <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-${dayNumber}" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        ⚠️ Actions
+                    </button>
+                    <!-- Séparateur visuel -->
+                    <span style="color: #cbd5e1;">|</span>
+                    <!-- Actions données -->
+                    <button onclick="exportChampionship()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        💾 Exporter
+                    </button>
+                    <button onclick="showImportModal()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        📥 Importer
+                    </button>
+                    <button onclick="clearDayData(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        🗑️
                     </button>
                 </div>
+                <!-- Inputs cachés pour les sélecteurs -->
+                <select id="playerDivision-${dayNumber}" style="display: none;"></select>
+                <select id="bulkDivision-${dayNumber}" style="display: none;"></select>
                 </div><!-- Fin day-hub-content-${dayNumber} -->
             </div>
 
@@ -2519,23 +2771,24 @@ try {
     function handleFileImport(event) {
         const file = event.target.files[0];
         if (!file) return;
-        
+
+        const targetDay = 1; // Toujours importer dans la journée 1 depuis le formulaire de J1
+
         // Vérifier si XLSX est disponible
         if (typeof XLSX === 'undefined') {
             alert('La bibliothèque XLSX n\'est pas chargée. Seuls les fichiers CSV sont supportés pour le moment.');
-            
+
             // Traiter seulement les CSV
             if (!file.name.endsWith('.csv')) {
                 alert('Veuillez utiliser un fichier CSV (.csv) pour l\'instant.');
                 return;
             }
-            
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const text = e.target.result;
                     const data = parseCSV(text);
-                    const targetDay = parseInt(document.getElementById('fileTargetDay').value);
                     importPlayersFromData(data, targetDay);
                 } catch (error) {
                     alert('Erreur lors de la lecture du fichier : ' + error.message);
@@ -2544,8 +2797,6 @@ try {
             reader.readAsText(file);
             return;
         }
-        
-        const targetDay = parseInt(document.getElementById('fileTargetDay').value);
         
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -6270,9 +6521,11 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
     // Fonction pour initialiser les selects de division dynamiquement
     function initializeDivisionSelects() {
         const numDivisions = getNumberOfDivisions();
-        const selects = ['playerDivision', 'bulkDivision'];
 
-        selects.forEach(selectId => {
+        // Sélecteurs statiques de J1
+        const staticSelects = ['playerDivision', 'bulkDivision'];
+
+        staticSelects.forEach(selectId => {
             const select = document.getElementById(selectId);
             if (select) {
                 select.innerHTML = '';
@@ -6284,6 +6537,28 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
                 }
             }
         });
+
+        // Sélecteurs dynamiques pour les journées J2+
+        if (championship && championship.days) {
+            Object.keys(championship.days).forEach(dayNum => {
+                const dayNumber = parseInt(dayNum);
+                if (dayNumber > 1) {
+                    const dynamicSelects = [`playerDivision-${dayNumber}`, `bulkDivision-${dayNumber}`];
+                    dynamicSelects.forEach(selectId => {
+                        const select = document.getElementById(selectId);
+                        if (select) {
+                            select.innerHTML = '';
+                            for (let i = 1; i <= numDivisions; i++) {
+                                const option = document.createElement('option');
+                                option.value = i;
+                                option.textContent = `Division ${i}`;
+                                select.appendChild(option);
+                            }
+                        }
+                    });
+                }
+            });
+        }
 
         // Mettre à jour les selects de configuration
         const divisionConfig = document.getElementById('divisionConfig');
@@ -6367,23 +6642,12 @@ function addPoolToggleToInterface(dayNumber) {
     const section = document.querySelector(`#day-${dayNumber} .section`);
     if (!section) return;
 
-    // Chercher le conteneur control-buttons pour insérer le mode pool après
-    const controlButtons = section.querySelector('.control-buttons');
-    if (!controlButtons) return;
+    // Chercher le conteneur day-hub-content pour insérer le mode pool après
+    const dayHubContent = document.getElementById(`day-hub-content-${dayNumber}`);
+    if (!dayHubContent) return;
 
     const poolToggleHTML = `
-        <!-- Bouton Mode Poules (masqué par défaut) -->
-        <div style="text-align: center; margin: 15px auto; max-width: 800px;">
-            <button class="btn" onclick="togglePoolSection(${dayNumber})" id="show-pool-btn-${dayNumber}" style="
-                background: linear-gradient(135deg, #f39c12, #e67e22);
-                color: white;
-                padding: 8px 15px;
-                font-size: 13px;
-            ">
-                🏊 Mode Poules Avancé
-            </button>
-        </div>
-
+        <!-- Section Mode Poules (bouton déplacé dans la barre d'action) -->
         <div class="pool-toggle-section" id="pool-toggle-${dayNumber}" style="
             background: linear-gradient(135deg, #fff8e1, #ffe082);
             border: 2px solid #f39c12;
@@ -6573,7 +6837,7 @@ function addPoolToggleToInterface(dayNumber) {
         </div>
     `;
 
-    controlButtons.insertAdjacentHTML('afterend', poolToggleHTML);
+    dayHubContent.insertAdjacentHTML('afterend', poolToggleHTML);
 }
 
 // ======================================
@@ -6858,13 +7122,19 @@ function togglePoolSection(dayNumber) {
     const poolSection = document.getElementById(`pool-toggle-${dayNumber}`);
     const toggleBtn = document.getElementById(`show-pool-btn-${dayNumber}`);
 
-    if (poolSection && toggleBtn) {
+    if (poolSection) {
         if (poolSection.style.display === 'none') {
             poolSection.style.display = 'block';
-            toggleBtn.textContent = '🏊 Masquer Mode Poules';
+            if (toggleBtn) {
+                toggleBtn.textContent = '🏊 Masquer';
+                toggleBtn.style.background = '#dc2626';
+            }
         } else {
             poolSection.style.display = 'none';
-            toggleBtn.textContent = '🏊 Mode Poules Avancé';
+            if (toggleBtn) {
+                toggleBtn.textContent = '🏊 Poules';
+                toggleBtn.style.background = '#f59e0b';
+            }
         }
     }
 }

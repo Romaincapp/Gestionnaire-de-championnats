@@ -132,75 +132,54 @@
                     </h2>
 
                     <div id="day-hub-content-1">
-                    <div class="input-group" style="align-items: center; gap: 10px;">
-                        <input type="text" id="playerName" placeholder="Nom du joueur" style="flex: 1; min-width: 150px;">
-                        <select id="playerDivision" style="min-width: 120px;">
-                            <option value="1">Division 1</option>
-                            <option value="2">Division 2</option>
-                            <option value="3">Division 3</option>
-                        </select>
-                        <select id="targetDay" style="background: #16a085; color: white; font-weight: bold; border: 2px solid #1abc9c; padding: 10px; border-radius: 6px; min-width: 130px;">
-                            <option value="1">→ Journée 1</option>
-                        </select>
-                        <button class="btn btn-success" onclick="addPlayer()" style="white-space: nowrap;">Ajouter</button>
-                    </div>
-
-                    <div class="import-section" style="gap: 12px; margin-top: 15px;">
-                        <div class="import-box" style="padding: 15px;">
-                            <h4 style="margin: 0 0 10px 0; font-size: 15px;">📁 Import Excel/CSV</h4>
-                            <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 10px;">
-                                A = Noms, B = Division (1,2,3)
-                            </p>
-                            <select id="fileTargetDay" style="width: 100%; background: #16a085; color: white; font-weight: bold; border: 2px solid #1abc9c; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 13px;">
-                                <option value="1">→ Journée 1</option>
-                            </select>
-                            <div class="file-input-wrapper">
-                                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-                                <label for="fileInput" class="file-input-label" style="padding: 8px 12px; font-size: 13px;">
-                                    📎 Choisir fichier
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="import-box" style="padding: 15px;">
-                            <h4 style="margin: 0 0 10px 0; font-size: 15px;">📋 Copier-coller</h4>
-                            <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 10px;">
-                                Liste de noms (un par ligne)
-                            </p>
-                            <select id="bulkDivision" style="width: 100%; margin-bottom: 8px; padding: 8px; font-size: 13px;">
-                                <option value="1">Division 1</option>
-                                <option value="2">Division 2</option>
-                                <option value="3">Division 3</option>
-                            </select>
-                            <select id="bulkTargetDay" style="width: 100%; background: #16a085; color: white; font-weight: bold; border: 2px solid #1abc9c; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 13px;">
-                                <option value="1">→ Journée 1</option>
-                            </select>
-                            <button class="btn" onclick="showBulkInput()" style="width: 100%; padding: 8px; font-size: 13px;">
-                                📝 Ajouter en masse
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="control-buttons" style="gap: 8px; flex-wrap: wrap; margin-top: 15px;">
-                        <button class="btn btn-success" onclick="updateRankings()" style="padding: 8px 12px; font-size: 13px;">
+                    <!-- Ligne unique de boutons -->
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <!-- Ajout joueurs -->
+                        <button onclick="showAddPlayerModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            ➕ Joueurs
+                        </button>
+                        <!-- Actions matchs -->
+                        <button onclick="showMatchGenerationModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            🎯 Matchs
+                        </button>
+                        <button onclick="togglePoolSection(1)" id="show-pool-btn-1" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            🏊 Poules
+                        </button>
+                        <button onclick="updateRankings()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             🏆 Classements
                         </button>
-                        <button class="btn" onclick="showMatchGenerationModal(1)" style="padding: 8px 12px; font-size: 13px;">
-                            🎯 Générer Matchs
+                        <button onclick="showByeManagementModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            👋 BYE
                         </button>
-                        <button class="btn" onclick="showByeManagementModal(1)" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 8px 12px; font-size: 13px;">
-                            🎯 Gérer BYE
+                        <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-1" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            ⚠️ Actions
                         </button>
-                        <button class="btn btn-danger" onclick="clearAllData()" style="padding: 8px 12px; font-size: 13px;">
-                            🗑️ Réinitialiser
-                        </button>
-                        <button class="btn" onclick="exportChampionship()" style="padding: 8px 12px; font-size: 13px;">
+                        <!-- Séparateur visuel -->
+                        <span style="color: #cbd5e1;">|</span>
+                        <!-- Actions données -->
+                        <button onclick="exportChampionship()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             💾 Exporter
                         </button>
-                        <button class="btn" onclick="showImportModal()" style="padding: 8px 12px; font-size: 13px;">
+                        <button onclick="showImportModal()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             📥 Importer
                         </button>
+                        <button onclick="clearAllData()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            🗑️
+                        </button>
                     </div>
+                    <!-- Inputs cachés pour import fichier -->
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                    <select id="bulkDivision" style="display: none;">
+                        <option value="1">Division 1</option>
+                        <option value="2">Division 2</option>
+                        <option value="3">Division 3</option>
+                    </select>
+                    <select id="playerDivision" style="display: none;">
+                        <option value="1">Division 1</option>
+                        <option value="2">Division 2</option>
+                        <option value="3">Division 3</option>
+                    </select>
+                    <input type="hidden" id="playerName">
                     </div><!-- Fin day-hub-content-1 -->
                 </div>
                 <!-- Fin de la section "Gestion des Joueurs" -->
@@ -288,6 +267,46 @@
             <div class="modal-buttons">
                 <button class="btn btn-danger" onclick="closeImportModal()">Annuler</button>
                 <button class="btn btn-success" onclick="processImport()">Importer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ajout Joueurs -->
+    <div id="addPlayerModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">➕ Ajouter des joueurs <span id="addPlayerDayLabel" style="font-size: 14px; color: #64748b;"></span></h3>
+
+            <!-- Ajout individuel -->
+            <div style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px;">
+                <div style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500;">Ajout individuel</div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="addPlayerName" placeholder="Nom du joueur" style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" onkeypress="if(event.key==='Enter')addPlayerFromModal()">
+                    <select id="addPlayerDivision" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;"></select>
+                    <button onclick="addPlayerFromModal()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px;">Ajouter</button>
+                </div>
+            </div>
+
+            <!-- Import en masse -->
+            <div style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px;">
+                <div style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500;">Import en masse</div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <div class="file-input-wrapper" style="display: inline-block;">
+                        <input type="file" id="modalFileInput" accept=".xlsx,.xls,.csv" onchange="handleModalFileInput(event)">
+                        <label for="modalFileInput" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            📁 CSV/Excel
+                        </label>
+                    </div>
+                    <span style="color: #94a3b8; font-size: 11px;">A=Nom, B=Division</span>
+                    <span style="color: #cbd5e1;">|</span>
+                    <select id="modalBulkDivision" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;"></select>
+                    <button onclick="showBulkFromModal()" style="padding: 8px 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 12px;">
+                        📋 Coller liste
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                <button onclick="closeAddPlayerModal()" style="padding: 8px 16px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">Fermer</button>
             </div>
         </div>
     </div>
