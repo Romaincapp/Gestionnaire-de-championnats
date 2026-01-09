@@ -4732,27 +4732,86 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
 
     // EXPORT / IMPORT
     function exportChampionship() {
+        // Afficher une modale pour choisir le nom du fichier
+        const defaultName = `championnat_${new Date().toISOString().slice(0,10)}`;
+
+        const modal = document.createElement('div');
+        modal.id = 'exportChampionshipModal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+
+        modal.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%;">
+                <h3 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 16px;">Exporter le championnat</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555;">Nom du fichier :</label>
+                    <input type="text" id="exportFileName" value="${defaultName}"
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
+                    <span style="font-size: 11px; color: #888;">.json</span>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="document.getElementById('exportChampionshipModal').remove()"
+                            style="padding: 8px 15px; border: 1px solid #ddd; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                        Annuler
+                    </button>
+                    <button onclick="confirmExportChampionship()"
+                            style="padding: 8px 15px; border: none; background: #3498db; color: white; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                        Exporter
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Focus sur le champ de saisie et sélectionner le texte
+        const input = document.getElementById('exportFileName');
+        input.focus();
+        input.select();
+
+        // Permettre l'export avec Entrée
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                confirmExportChampionship();
+            }
+        });
+    }
+    window.exportChampionship = exportChampionship;
+
+    function confirmExportChampionship() {
+        const input = document.getElementById('exportFileName');
+        let fileName = input.value.trim();
+
+        if (!fileName) {
+            fileName = `championnat_${new Date().toISOString().slice(0,10)}`;
+        }
+
+        // Retirer l'extension .json si l'utilisateur l'a ajoutée
+        fileName = fileName.replace(/\.json$/i, '');
+
         const championshipData = {
             version: "2.0",
             exportDate: new Date().toISOString(),
-            championshipName: `Championnat_${new Date().toISOString().slice(0,10)}`,
+            championshipName: fileName,
             championship: championship,
             stats: calculateChampionshipStats()
         };
 
         const dataStr = JSON.stringify(championshipData, null, 2);
         const dataBlob = new Blob([dataStr], {type: 'application/json'});
-        
+
         const link = document.createElement('a');
         link.href = URL.createObjectURL(dataBlob);
-        link.download = `championnat_${new Date().toISOString().slice(0,10)}.json`;
+        link.download = `${fileName}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
+        // Fermer la modale
+        document.getElementById('exportChampionshipModal').remove();
+
         showNotification('Championnat exporté avec succès !', 'success');
     }
-    window.exportChampionship = exportChampionship;
+    window.confirmExportChampionship = confirmExportChampionship;
 
     function calculateChampionshipStats() {
         let totalPlayers = new Set();
@@ -16231,6 +16290,12 @@ if (document.readyState === 'loading') {
             participant.lastLapStartTime = 0;
         }
 
+        // Initialiser les valeurs si elles sont null/undefined
+        if (participant.totalTime == null) participant.totalTime = 0;
+        if (participant.totalDistance == null) participant.totalDistance = 0;
+        if (!participant.laps) participant.laps = [];
+        if (participant.lastLapStartTime == null) participant.lastLapStartTime = 0;
+
         // Calculer le temps du dernier tour
         const lapTime = currentTime - participant.lastLapStartTime;
 
@@ -16240,8 +16305,8 @@ if (document.readyState === 'loading') {
             timestamp: currentTime
         });
 
-        participant.totalTime += lapTime;
-        participant.totalDistance += serie.distance;
+        participant.totalTime = (participant.totalTime || 0) + lapTime;
+        participant.totalDistance = (participant.totalDistance || 0) + serie.distance;
 
         if (!participant.bestLap || lapTime < participant.bestLap) {
             participant.bestLap = lapTime;
@@ -16355,13 +16420,15 @@ if (document.readyState === 'loading') {
             const statusColor = {
                 ready: '#95a5a6',
                 running: '#3498db',
-                finished: '#27ae60'
+                finished: '#27ae60',
+                dns: '#e74c3c'
             };
 
             const statusText = {
                 ready: '⏸️ Prêt',
                 running: '▶️ En course',
-                finished: '🏁 Terminé'
+                finished: '🏁 Terminé',
+                dns: '🚫 DNS'
             };
 
             return `
@@ -16377,39 +16444,37 @@ if (document.readyState === 'loading') {
                         <div style="font-weight: bold; color: #16a085;">${p.club || '-'}</div>
                     </td>
                     <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
-                        ${p.laps.length}
+                        ${(p.laps || []).length}
                     </td>
                     <td style="padding: 12px; text-align: center; font-weight: bold;">
-                        ${(p.totalDistance / 1000).toFixed(2)} km
+                        ${((p.totalDistance || 0) / 1000).toFixed(2)} km
                     </td>
                     <td id="time-${p.bib}" style="padding: 12px; text-align: center; font-family: monospace; font-weight: bold;">
-                        ${formatTime(p.totalTime)}
+                        ${formatTime(p.totalTime || p.finishTime || 0)}
                     </td>
                     <td style="padding: 12px; text-align: center; font-family: monospace;">
-                        ${p.bestLap ? formatTime(p.bestLap) : '-'}
+                        ${p.bestLap ? formatTime(p.bestLap) : (p.finishTime ? formatTime(p.finishTime) : '-')}
                     </td>
                     <td style="padding: 12px; text-align: center;">
                         <span style="background: ${statusColor[p.status]}; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">
                             ${statusText[p.status]}
                         </span>
                     </td>
-                    <td style="padding: 12px; text-align: center;">
-                        ${p.status !== 'finished' ? `
-                            <button class="btn" onclick="recordLap('${p.bib}')" style="background: #3498db; margin-right: 5px; padding: 8px 15px;">
-                                ⏱️ LAP
-                            </button>
-                            <button class="btn btn-success" onclick="finishParticipant('${p.bib}')" style="padding: 8px 15px;">
-                                🏁 FINISH
-                            </button>
+                    <td style="padding: 8px; text-align: center;">
+                        ${p.status === 'dns' ? `
+                            <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                                <button onclick="cancelDNS('${p.bib}')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler DNS">↩️</button>
+                            </div>
+                        ` : p.status === 'finished' ? `
+                            <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                                <button onclick="editParticipantTime('${p.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer le temps">✏️</button>
+                                <button onclick="restartParticipant('${p.bib}')" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Relancer">🔄</button>
+                            </div>
                         ` : `
-                            <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
-                                <span style="color: #27ae60; font-weight: bold; padding: 8px; white-space: nowrap;">✅ Terminé</span>
-                                <button class="btn" onclick="editParticipantTime('${p.bib}')" style="background: #f39c12; padding: 6px 12px; font-size: 13px;">
-                                    ✏️ Éditer
-                                </button>
-                                <button class="btn" onclick="restartParticipant('${p.bib}')" style="background: #e74c3c; color: white; padding: 6px 12px; font-size: 13px;">
-                                    🔄 Relancer
-                                </button>
+                            <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                                <button onclick="recordLap('${p.bib}')" style="background: #3498db; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
+                                <button onclick="finishParticipant('${p.bib}')" style="background: #27ae60; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
+                                <button onclick="markAsDNS('${p.bib}')" style="background: none; border: 1px solid #ccc; color: #999; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
                             </div>
                         `}
                     </td>
@@ -16577,6 +16642,12 @@ if (document.readyState === 'loading') {
         const participant = serie.participants.find(p => String(p.bib) === String(bib));
         if (!participant || participant.status === 'finished') return;
 
+        // Initialiser les valeurs si elles sont null/undefined
+        if (participant.totalTime == null) participant.totalTime = 0;
+        if (participant.totalDistance == null) participant.totalDistance = 0;
+        if (!participant.laps) participant.laps = [];
+        if (participant.lastLapStartTime == null) participant.lastLapStartTime = 0;
+
         // Enregistrer le dernier tour si en cours
         if (participant.status === 'running') {
             const lapTime = serie.currentTime - participant.lastLapStartTime;
@@ -16587,8 +16658,8 @@ if (document.readyState === 'loading') {
                 timestamp: serie.currentTime
             });
 
-            participant.totalTime += lapTime;
-            participant.totalDistance += serie.distance;
+            participant.totalTime = (participant.totalTime || 0) + lapTime;
+            participant.totalDistance = (participant.totalDistance || 0) + serie.distance;
 
             if (!participant.bestLap || lapTime < participant.bestLap) {
                 participant.bestLap = lapTime;
@@ -16632,6 +16703,43 @@ if (document.readyState === 'loading') {
 
         showNotification(`${participant.name} a été relancé! 🔄`, 'info');
         updateParticipantRow(participant);
+    };
+
+    // Marquer un participant comme DNS (Did Not Start)
+    window.markAsDNS = function(bib) {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const participant = serie.participants.find(p => String(p.bib) === String(bib));
+        if (!participant) return;
+
+        participant.status = 'dns';
+        participant.totalTime = 0;
+        participant.laps = [];
+        participant.totalDistance = 0;
+
+        saveChronoToLocalStorage();
+        updateParticipantRow(participant);
+        showNotification(`${participant.name} marqué DNS (non partant)`, 'info');
+    };
+
+    // Annuler le DNS d'un participant
+    window.cancelDNS = function(bib) {
+        const serie = raceData.currentSerie;
+        if (!serie) return;
+
+        const participant = serie.participants.find(p => String(p.bib) === String(bib));
+        if (!participant) return;
+
+        // Remettre en statut 'ready' ou 'running' selon si la course est en cours
+        participant.status = serie.isRunning ? 'running' : 'ready';
+        if (serie.isRunning) {
+            participant.lastLapStartTime = serie.currentTime;
+        }
+
+        saveChronoToLocalStorage();
+        updateParticipantRow(participant);
+        showNotification(`${participant.name} remis en course`, 'success');
     };
 
     // Éditer le temps d'un participant
@@ -16870,13 +16978,15 @@ if (document.readyState === 'loading') {
         const statusColor = {
             ready: '#95a5a6',
             running: '#3498db',
-            finished: '#27ae60'
+            finished: '#27ae60',
+            dns: '#e74c3c'
         };
 
         const statusText = {
             ready: '⏸️ Prêt',
             running: '▶️ En course',
-            finished: '🏁 Terminé'
+            finished: '🏁 Terminé',
+            dns: '🚫 DNS'
         };
 
         // Reconstruire la ligne complète du participant
@@ -16888,40 +16998,41 @@ if (document.readyState === 'loading') {
                 <div style="font-weight: bold;">${participant.name}</div>
                 <div style="font-size: 12px; color: #7f8c8d;">${participant.category || 'Division ' + (participant.division || '-')}</div>
             </td>
+            <td style="padding: 12px;">
+                <div style="font-weight: bold; color: #16a085;">${participant.club || '-'}</div>
+            </td>
             <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
-                ${participant.laps.length}
+                ${(participant.laps || []).length}
             </td>
             <td style="padding: 12px; text-align: center; font-weight: bold;">
-                ${(participant.totalDistance / 1000).toFixed(2)} km
+                ${((participant.totalDistance || 0) / 1000).toFixed(2)} km
             </td>
             <td id="time-${participant.bib}" style="padding: 12px; text-align: center; font-family: monospace; font-weight: bold;">
-                ${formatTime(participant.totalTime)}
+                ${formatTime(participant.totalTime || participant.finishTime || 0)}
             </td>
             <td style="padding: 12px; text-align: center; font-family: monospace;">
-                ${participant.bestLap ? formatTime(participant.bestLap) : '-'}
+                ${participant.bestLap ? formatTime(participant.bestLap) : (participant.finishTime ? formatTime(participant.finishTime) : '-')}
             </td>
             <td style="padding: 12px; text-align: center;">
                 <span style="background: ${statusColor[participant.status]}; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">
                     ${statusText[participant.status]}
                 </span>
             </td>
-            <td style="padding: 12px; text-align: center;">
-                ${participant.status !== 'finished' ? `
-                    <button class="btn" onclick="recordLap('${participant.bib}')" style="background: #3498db; margin-right: 5px; padding: 8px 15px;">
-                        ⏱️ LAP
-                    </button>
-                    <button class="btn btn-success" onclick="finishParticipant('${participant.bib}')" style="padding: 8px 15px;">
-                        🏁 FINISH
-                    </button>
+            <td style="padding: 8px; text-align: center;">
+                ${participant.status === 'dns' ? `
+                    <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                        <button onclick="cancelDNS('${participant.bib}')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler DNS">↩️</button>
+                    </div>
+                ` : participant.status === 'finished' ? `
+                    <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                        <button onclick="editParticipantTime('${participant.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer le temps">✏️</button>
+                        <button onclick="restartParticipant('${participant.bib}')" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Relancer">🔄</button>
+                    </div>
                 ` : `
-                    <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
-                        <span style="color: #27ae60; font-weight: bold; padding: 8px; white-space: nowrap;">✅ Terminé</span>
-                        <button class="btn" onclick="editParticipantTime('${participant.bib}')" style="background: #f39c12; padding: 6px 12px; font-size: 13px;">
-                            ✏️ Éditer
-                        </button>
-                        <button class="btn" onclick="restartParticipant('${participant.bib}')" style="background: #e74c3c; color: white; padding: 6px 12px; font-size: 13px;">
-                            🔄 Relancer
-                        </button>
+                    <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                        <button onclick="recordLap('${participant.bib}')" style="background: #3498db; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
+                        <button onclick="finishParticipant('${participant.bib}')" style="background: #27ae60; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
+                        <button onclick="markAsDNS('${participant.bib}')" style="background: none; border: 1px solid #ccc; color: #999; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
                     </div>
                 `}
             </td>
@@ -16949,6 +17060,10 @@ if (document.readyState === 'loading') {
 
         // Trier les participants
         const ranked = [...serie.participants].sort((a, b) => {
+            // Les DNS à la fin
+            if (a.status === 'dns' && b.status !== 'dns') return 1;
+            if (b.status === 'dns' && a.status !== 'dns') return -1;
+
             // Les terminés d'abord
             if (a.status === 'finished' && b.status !== 'finished') return -1;
             if (b.status === 'finished' && a.status !== 'finished') return 1;
@@ -16994,12 +17109,13 @@ if (document.readyState === 'loading') {
                         <tbody>
                             ${ranked.map((p, index) => {
                                 const position = index + 1;
-                                const medal = position <= 3 ? medals[position - 1] : position;
-                                const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : '';
+                                const isDNS = p.status === 'dns';
+                                const medal = isDNS ? 'DNS' : (position <= 3 ? medals[position - 1] : position);
+                                const rowBg = isDNS ? 'background: #fdeaea; opacity: 0.7;' : (position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : '');
 
                                 return `
                                     <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
-                                        <td style="padding: 12px; text-align: center; font-size: 24px; font-weight: bold;">
+                                        <td style="padding: 12px; text-align: center; font-size: ${isDNS ? '14px' : '24px'}; font-weight: bold; color: ${isDNS ? '#e74c3c' : 'inherit'};">
                                             ${medal}
                                         </td>
                                         <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: #3498db;">
@@ -17027,6 +17143,8 @@ if (document.readyState === 'loading') {
                                         <td style="padding: 12px; text-align: center;">
                                             ${p.status === 'finished' ?
                                                 '<span style="color: #27ae60; font-weight: bold;">✅ Terminé</span>' :
+                                                p.status === 'dns' ?
+                                                '<span style="color: #e74c3c; font-weight: bold;">🚫 DNS</span>' :
                                                 '<span style="color: #e67e22; font-weight: bold;">⏳ En cours</span>'
                                             }
                                         </td>
@@ -19069,10 +19187,65 @@ if (document.readyState === 'loading') {
 
     // Exporter toute la compétition chrono en JSON
     window.exportChronoCompetition = function() {
+        // Afficher une modale pour choisir le nom du fichier
+        const defaultName = `competition-chrono-${new Date().toISOString().slice(0,10)}`;
+
+        const modal = document.createElement('div');
+        modal.id = 'exportChronoModal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+
+        modal.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%;">
+                <h3 style="margin: 0 0 15px 0; color: #16a085; font-size: 16px;">Exporter la compétition chrono</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555;">Nom du fichier :</label>
+                    <input type="text" id="exportChronoFileName" value="${defaultName}"
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
+                    <span style="font-size: 11px; color: #888;">.json</span>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="document.getElementById('exportChronoModal').remove()"
+                            style="padding: 8px 15px; border: 1px solid #ddd; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                        Annuler
+                    </button>
+                    <button onclick="confirmExportChronoCompetition()"
+                            style="padding: 8px 15px; border: none; background: #16a085; color: white; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                        Exporter
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Focus sur le champ de saisie et sélectionner le texte
+        const input = document.getElementById('exportChronoFileName');
+        input.focus();
+        input.select();
+
+        // Permettre l'export avec Entrée
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                confirmExportChronoCompetition();
+            }
+        });
+    };
+
+    window.confirmExportChronoCompetition = function() {
+        const input = document.getElementById('exportChronoFileName');
+        let fileName = input.value.trim();
+
+        if (!fileName) {
+            fileName = `competition-chrono-${new Date().toISOString().slice(0,10)}`;
+        }
+
+        // Retirer l'extension .json si l'utilisateur l'a ajoutée
+        fileName = fileName.replace(/\.json$/i, '');
+
         const exportData = {
             version: "1.0",
             exportDate: new Date().toISOString(),
-            competitionName: `Competition_Chrono_${new Date().toISOString().slice(0,10)}`,
+            competitionName: fileName,
             raceData: {
                 events: raceData.events,
                 participants: raceData.participants,
@@ -19093,9 +19266,12 @@ if (document.readyState === 'loading') {
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `competition-chrono-${new Date().toISOString().slice(0,10)}.json`;
+        link.download = `${fileName}.json`;
         link.click();
         URL.revokeObjectURL(url);
+
+        // Fermer la modale
+        document.getElementById('exportChronoModal').remove();
 
         showNotification('Compétition chrono exportée avec succès !', 'success');
     };
