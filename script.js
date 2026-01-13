@@ -17563,7 +17563,7 @@ if (document.readyState === 'loading') {
             );
             optionsHTML += createRankingOption(
                 '🏆 Classement Interclub',
-                'Classement des clubs par points (système équitable : chaque club ne marque qu\'une fois par série)',
+                'Classement des clubs par points (système équitable : chaque club ne marque qu\'une fois par épreuve)',
                 'interclub',
                 '#2ecc71',
                 `${analysis.clubs.length} club(s) en compétition`
@@ -17706,6 +17706,8 @@ if (document.readyState === 'loading') {
         // Convertir Sets en Arrays
         analysis.sports = Array.from(analysis.sports);
         analysis.categories = Array.from(analysis.categories);
+        analysis.nationalities = Array.from(analysis.nationalities);
+        analysis.clubs = Array.from(analysis.clubs);
 
         return analysis;
     }
@@ -18001,96 +18003,95 @@ if (document.readyState === 'loading') {
         displayRankingByCategories(clubsMap, '🏅 Classements par Club');
     }
 
-    // Classement interclub (système de points - chaque club ne marque qu'une fois par série)
     function generateInterclubRanking() {
         const clubStats = {};
+        const eventsList = [];
         const pointsScale = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
-        // Pour chaque série terminée
         raceData.events.forEach(event => {
-            event.series.forEach(serie => {
-                if (serie.status === 'completed') {
-                    // Trier les participants terminés de la série
-                    const rankedFinished = [...serie.participants]
-                        .filter(p => p.status === 'finished')
-                        .sort((a, b) => {
-                            if (serie.raceType === 'relay') {
-                                if (a.totalDistance !== b.totalDistance) {
-                                    return b.totalDistance - a.totalDistance;
-                                }
-                                return a.totalTime - b.totalTime;
-                            } else {
-                                if (a.totalDistance !== b.totalDistance) {
-                                    return b.totalDistance - a.totalDistance;
-                                }
-                                return (a.finishTime || a.totalTime) - (b.finishTime || b.totalTime);
-                            }
-                        });
+            const completedSeries = event.series.filter(s => s.status === 'completed');
+            if (completedSeries.length === 0) return;
 
-                    // Pour cette série, trouver le MEILLEUR représentant de chaque club
-                    const clubBestInSerie = {};
-                    rankedFinished.forEach((participant, index) => {
-                        const club = participant.club || 'Sans club';
+            eventsList.push(event.name);
 
-                        // Ne garder que le premier (meilleur) de chaque club dans cette série
-                        if (!clubBestInSerie[club]) {
-                            clubBestInSerie[club] = {
-                                position: index + 1,
-                                points: pointsScale[index] || 0,
-                                participant: participant,
-                                serieName: serie.name,
-                                eventName: event.name
-                            };
-                        }
-                    });
-
-                    // Attribuer les points au club
-                    Object.entries(clubBestInSerie).forEach(([club, data]) => {
-                        if (!clubStats[club]) {
-                            clubStats[club] = {
-                                clubName: club,
-                                totalPoints: 0,
-                                seriesScored: [],
-                                participants: new Set()
-                            };
-                        }
-
-                        clubStats[club].totalPoints += data.points;
-                        clubStats[club].seriesScored.push({
-                            eventName: event.name,
+            const eventParticipants = [];
+            completedSeries.forEach(serie => {
+                serie.participants.forEach(participant => {
+                    if (participant.status === 'finished') {
+                        eventParticipants.push({
+                            ...participant,
                             serieName: serie.name,
-                            participantName: data.participant.name,
-                            position: data.position,
-                            points: data.points
+                            raceType: serie.raceType
                         });
-                        clubStats[club].participants.add(data.participant.bib);
-                    });
+                    }
+                });
+            });
+
+            const rankedFinished = eventParticipants.sort((a, b) => {
+                if (a.raceType === 'relay') {
+                    if (a.totalDistance !== b.totalDistance) {
+                        return b.totalDistance - a.totalDistance;
+                    }
+                    return a.totalTime - b.totalTime;
+                } else {
+                    if (a.totalDistance !== b.totalDistance) {
+                        return b.totalDistance - a.totalDistance;
+                    }
+                    return (a.finishTime || a.totalTime) - (b.finishTime || b.totalTime);
                 }
+            });
+
+            const clubBestInEvent = {};
+            rankedFinished.forEach((participant, index) => {
+                const club = participant.club || 'Sans club';
+
+                if (!clubBestInEvent[club]) {
+                    clubBestInEvent[club] = {
+                        position: index + 1,
+                        points: pointsScale[index] || 0,
+                        participant: participant
+                    };
+                }
+            });
+
+            Object.entries(clubBestInEvent).forEach(([club, data]) => {
+                if (!clubStats[club]) {
+                    clubStats[club] = {
+                        clubName: club,
+                        totalPoints: 0,
+                        eventScores: {},
+                        participants: new Set()
+                    };
+                }
+
+                clubStats[club].totalPoints += data.points;
+                clubStats[club].eventScores[event.name] = {
+                    position: data.position,
+                    points: data.points,
+                    participantName: data.participant.name
+                };
+                clubStats[club].participants.add(data.participant.bib);
             });
         });
 
-        // Convertir en array et trier par points
         const rankedClubs = Object.values(clubStats).map(club => ({
             ...club,
             totalParticipants: club.participants.size,
-            participants: undefined // Retirer le Set pour l'affichage
+            participants: undefined
         })).sort((a, b) => {
-            // Trier par points totaux
             if (a.totalPoints !== b.totalPoints) {
                 return b.totalPoints - a.totalPoints;
             }
-            // En cas d'égalité, trier par nombre de séries gagnées
-            return b.seriesScored.length - a.seriesScored.length;
+            return b.totalParticipants - a.totalParticipants;
         });
 
-        // Afficher le classement interclub
         const rankingSection = document.getElementById('overallChronoRanking');
         const medals = ['🥇', '🥈', '🥉'];
 
         let html = `
             <div style="background: white; padding: 20px; border-radius: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <h3 style="margin: 0; color: #2c3e50;">🏆 Classement Interclub</h3>
+                    <h3 style="margin: 0; color: #2c3e50;">🏆 Classement Interclub par Épreuve</h3>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
                             ⬅️ Retour aux séries
@@ -18102,64 +18103,67 @@ if (document.readyState === 'loading') {
                 </div>
 
                 <p style="color: #7f8c8d; margin-bottom: 20px; text-align: center;">
-                    <strong>Système de points équitable :</strong> Chaque club ne marque qu'une seule fois par série (meilleur résultat du club)
+                    <strong>Système de points par épreuve :</strong> Meilleur résultat du club dans chaque épreuve (toutes séries confondues)
                     <br>
                     <span style="font-size: 13px;">Barème : 1er=25pts, 2e=18pts, 3e=15pts, 4e=12pts, 5e=10pts, 6e=8pts, 7e=6pts, 8e=4pts, 9e=2pts, 10e=1pt</span>
                 </p>
 
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white;">
-                            <th style="padding: 12px; text-align: center;">Position</th>
-                            <th style="padding: 12px; text-align: left;">Club</th>
-                            <th style="padding: 12px; text-align: center;">Points</th>
-                            <th style="padding: 12px; text-align: center;">Séries Comptées</th>
-                            <th style="padding: 12px; text-align: center;">Participants</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rankedClubs.map((club, index) => {
-                            const position = index + 1;
-                            const medal = position <= 3 ? medals[position - 1] : position;
-                            const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : (index % 2 === 0 ? 'background: #f8f9fa;' : '');
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: ${600 + (eventsList.length * 120)}px;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white;">
+                                <th style="padding: 12px; text-align: center; position: sticky; left: 0; background: linear-gradient(135deg, #2ecc71, #27ae60);">Pos.</th>
+                                <th style="padding: 12px; text-align: left; position: sticky; left: 60px; background: linear-gradient(135deg, #2ecc71, #27ae60);">Club</th>
+                                ${eventsList.map(eventName =>
+                                    `<th style="padding: 12px; text-align: center;">${eventName}</th>`
+                                ).join('')}
+                                <th style="padding: 12px; text-align: center; font-weight: bold; font-size: 16px;">TOTAL</th>
+                                <th style="padding: 12px; text-align: center;">Participants</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rankedClubs.map((club, index) => {
+                                const position = index + 1;
+                                const medal = position <= 3 ? medals[position - 1] : position;
+                                const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : (index % 2 === 0 ? 'background: #f8f9fa;' : '');
 
-                            return `
-                                <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
-                                    <td style="padding: 12px; text-align: center; font-size: 24px; font-weight: bold;">
-                                        ${medal}
-                                    </td>
-                                    <td style="padding: 12px;">
-                                        <div style="font-weight: bold; font-size: 18px; color: #2ecc71;">
-                                            🏅 ${club.clubName}
-                                        </div>
-                                    </td>
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 28px; color: #27ae60;">
-                                        ${club.totalPoints}
-                                    </td>
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; color: #9b59b6; font-size: 16px;">
-                                        ${club.seriesScored.length}
-                                    </td>
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; color: #3498db; font-size: 16px;">
-                                        ${club.totalParticipants}
-                                    </td>
-                                </tr>
-                                <tr style="${rowBg}">
-                                    <td colspan="5" style="padding: 0 12px 12px 60px;">
-                                        <div style="font-size: 13px; color: #7f8c8d;">
-                                            <strong>Détail des points :</strong><br>
-                                            ${club.seriesScored.map(score =>
-                                                `<span style="display: inline-block; margin-right: 15px; margin-top: 5px;">
-                                                    📍 ${score.eventName} - ${score.serieName}: <strong>${score.position}e</strong> (${score.participantName})
-                                                    <span style="color: #27ae60; font-weight: bold;">+${score.points} pts</span>
-                                                </span>`
-                                            ).join('')}
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
+                                return `
+                                    <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
+                                        <td style="padding: 12px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; left: 0; ${rowBg}">
+                                            ${medal}
+                                        </td>
+                                        <td style="padding: 12px; position: sticky; left: 60px; ${rowBg}">
+                                            <div style="font-weight: bold; font-size: 16px; color: #2ecc71;">
+                                                🏅 ${club.clubName}
+                                            </div>
+                                        </td>
+                                        ${eventsList.map(eventName => {
+                                            const score = club.eventScores[eventName];
+                                            if (score) {
+                                                const positionMedal = score.position <= 3 ? medals[score.position - 1] : score.position + 'e';
+                                                return `
+                                                    <td style="padding: 12px; text-align: center;">
+                                                        <div style="font-weight: bold; font-size: 18px; color: #27ae60;">${score.points}</div>
+                                                        <div style="font-size: 11px; color: #7f8c8d;">${positionMedal}</div>
+                                                        <div style="font-size: 10px; color: #95a5a6;">${score.participantName}</div>
+                                                    </td>
+                                                `;
+                                            } else {
+                                                return `<td style="padding: 12px; text-align: center; color: #bdc3c7;">-</td>`;
+                                            }
+                                        }).join('')}
+                                        <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 24px; color: #e74c3c;">
+                                            ${club.totalPoints}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center; font-weight: bold; color: #3498db;">
+                                            ${club.totalParticipants}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
 
