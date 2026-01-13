@@ -17967,6 +17967,7 @@ if (document.readyState === 'loading') {
                                     name: participant.name,
                                     bib: participant.bib,
                                     category: participant.category,
+                                    club: participant.club,
                                     totalDistance: participant.totalDistance,
                                     totalTime: participant.finishTime || participant.totalTime,
                                     totalLaps: participant.laps ? participant.laps.length : 0
@@ -19007,6 +19008,7 @@ if (document.readyState === 'loading') {
                                         <th style="padding: 8px; text-align: left;">Participant</th>
                                         <th style="padding: 8px; text-align: center;">Dossard</th>
                                         <th style="padding: 8px; text-align: center;">Catégorie</th>
+                                        <th style="padding: 8px; text-align: center;">Club</th>
                                         <th style="padding: 8px; text-align: center;">Distance</th>
                                         <th style="padding: 8px; text-align: center;">Temps</th>
                                     </tr>
@@ -19031,6 +19033,9 @@ if (document.readyState === 'loading') {
                                                 </td>
                                                 <td style="padding: 8px; text-align: center; color: #7f8c8d;">
                                                     ${participant.category || '-'}
+                                                </td>
+                                                <td style="padding: 8px; text-align: center; color: #7f8c8d;">
+                                                    ${participant.club || '-'}
                                                 </td>
                                                 <td style="padding: 8px; text-align: center; color: #27ae60; font-weight: bold;">
                                                     ${(participant.totalDistance / 1000).toFixed(2)} km
@@ -19116,6 +19121,7 @@ if (document.readyState === 'loading') {
                 { id: 'name', label: 'Nom du participant', checked: true },
                 { id: 'bib', label: 'Dossard', checked: true },
                 { id: 'category', label: 'Catégorie', checked: true },
+                { id: 'club', label: 'Club', checked: true },
                 { id: 'distance', label: 'Distance totale', checked: true },
                 { id: 'time', label: 'Temps total', checked: true }
             ];
@@ -19178,6 +19184,7 @@ if (document.readyState === 'loading') {
             name: true, // Toujours inclus
             bib: document.getElementById('pdfCol_bib')?.checked ?? true,
             category: document.getElementById('pdfCol_category')?.checked ?? true,
+            club: document.getElementById('pdfCol_club')?.checked ?? true,
             series: document.getElementById('pdfCol_series')?.checked ?? true,
             distance: document.getElementById('pdfCol_distance')?.checked ?? true,
             time: document.getElementById('pdfCol_time')?.checked ?? true,
@@ -19276,6 +19283,7 @@ if (document.readyState === 'loading') {
                             if (selectedColumns.name) row += `<td style="padding: 8px; font-weight: bold;">${p.name}</td>`;
                             if (selectedColumns.bib) row += `<td style="padding: 8px; text-align: center;">${p.bib}</td>`;
                             if (selectedColumns.category) row += `<td style="padding: 8px; text-align: center;">${p.category || '-'}</td>`;
+                            if (selectedColumns.club) row += `<td style="padding: 8px; text-align: center;">${p.club || '-'}</td>`;
                             if (selectedColumns.distance) row += `<td style="padding: 8px; text-align: center;">${(p.totalDistance / 1000).toFixed(2)} km</td>`;
                             if (selectedColumns.time) row += `<td style="padding: 8px; text-align: center; font-family: monospace; font-weight: bold;">${formatTime(p.totalTime)}</td>`;
 
@@ -19364,6 +19372,7 @@ if (document.readyState === 'loading') {
             if (selectedColumns.name) tableHeaders += `<th style="padding: 8px; text-align: left;">Participant</th>`;
             if (selectedColumns.bib) tableHeaders += `<th style="padding: 8px; text-align: center;">Dossard</th>`;
             if (selectedColumns.category) tableHeaders += `<th style="padding: 8px; text-align: center;">Catégorie</th>`;
+            if (selectedColumns.club) tableHeaders += `<th style="padding: 8px; text-align: center;">Club</th>`;
             if (selectedColumns.distance) tableHeaders += `<th style="padding: 8px; text-align: center;">Distance</th>`;
             if (selectedColumns.time) tableHeaders += `<th style="padding: 8px; text-align: center;">Temps</th>`;
         } else if (data.type === 'distance') {
