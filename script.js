@@ -17337,10 +17337,8 @@ if (document.readyState === 'loading') {
     function generateInterclubRanking(rankedParticipants, event) {
         const pointsScale = event.interclubPoints || [10, 8, 6, 5, 4, 3, 2, 1];
 
-        // Calculer les points par club
-        const clubPoints = {};
-        const clubDetails = {};
-
+        // Étape 1: Identifier le meilleur participant de chaque club
+        const clubBest = {};
         rankedParticipants.forEach((p, index) => {
             if (p.status !== 'finished') return;
 
@@ -17350,24 +17348,41 @@ if (document.readyState === 'loading') {
 
             if (!club || club.trim() === '') return;
 
-            const position = index + 1;
-            const points = position <= pointsScale.length ? pointsScale[position - 1] : 0;
-
-            if (!clubPoints[club]) {
-                clubPoints[club] = 0;
-                clubDetails[club] = [];
+            // Garder seulement le meilleur participant du club (premier rencontré car déjà trié)
+            if (!clubBest[club]) {
+                clubBest[club] = {
+                    participant: p,
+                    individualPosition: index + 1,
+                    time: p.finishTime || p.totalTime
+                };
             }
-
-            clubPoints[club] += points;
-            clubDetails[club].push({
-                name: p.name,
-                position: position,
-                points: points,
-                time: p.finishTime || p.totalTime
-            });
         });
 
-        // Trier les clubs par points décroissants
+        // Étape 2: Classer les clubs par le temps de leur meilleur participant
+        const rankedClubs = Object.entries(clubBest).sort(([clubA, dataA], [clubB, dataB]) => {
+            // Comparer les temps (plus rapide = meilleur)
+            return dataA.time - dataB.time;
+        });
+
+        // Étape 3: Attribuer les points selon le classement par club
+        const clubPoints = {};
+        const clubDetails = {};
+
+        rankedClubs.forEach(([club, data], clubIndex) => {
+            const clubPosition = clubIndex + 1;
+            const clubPointsValue = clubPosition <= pointsScale.length ? pointsScale[clubPosition - 1] : 0;
+
+            clubPoints[club] = clubPointsValue;
+            clubDetails[club] = [{
+                name: data.participant.name,
+                position: clubPosition,  // Position du club
+                individualPosition: data.individualPosition,  // Position individuelle
+                points: clubPointsValue,  // Points du club
+                time: data.time
+            }];
+        });
+
+        // Trier les clubs par points décroissants (déjà triés mais pour cohérence)
         const sortedClubs = Object.entries(clubPoints)
             .sort((a, b) => b[1] - a[1])
             .map(([club, points], index) => ({
@@ -17427,7 +17442,12 @@ if (document.readyState === 'loading') {
                                             ${c.athletes.length}
                                         </td>
                                         <td style="padding: 12px; font-size: 12px; color: #7f8c8d;">
-                                            ${c.athletes.map(a => `${a.name} (${a.position}e: ${a.points}pts)`).join(', ')}
+                                            ${c.athletes.map(a => {
+                                                const individualInfo = a.individualPosition && a.individualPosition !== a.position
+                                                    ? ` - ${a.individualPosition}e indiv.`
+                                                    : '';
+                                                return `${a.name} (${a.position}e club: ${a.points}pts${individualInfo})`;
+                                            }).join(', ')}
                                         </td>
                                     </tr>
                                 `;
@@ -18041,20 +18061,45 @@ if (document.readyState === 'loading') {
                 }
             });
 
+            // Étape 1: Identifier le meilleur participant de chaque club (avec position individuelle et temps)
             const clubBestInEvent = {};
             rankedFinished.forEach((participant, index) => {
                 const club = participant.club || 'Sans club';
 
                 if (!clubBestInEvent[club]) {
                     clubBestInEvent[club] = {
-                        position: index + 1,
-                        points: pointsScale[index] || 0,
-                        participant: participant
+                        individualPosition: index + 1,  // Position individuelle (pour affichage)
+                        participant: participant,
+                        time: participant.finishTime || participant.totalTime,
+                        distance: participant.totalDistance
                     };
                 }
             });
 
-            Object.entries(clubBestInEvent).forEach(([club, data]) => {
+            // Étape 2: Classer les clubs par leur meilleur temps (même logique que le classement individuel)
+            const rankedClubs = Object.entries(clubBestInEvent).sort(([clubA, dataA], [clubB, dataB]) => {
+                const a = dataA.participant;
+                const b = dataB.participant;
+
+                // Même logique de tri que pour rankedFinished
+                if (a.raceType === 'relay') {
+                    if (a.totalDistance !== b.totalDistance) {
+                        return b.totalDistance - a.totalDistance;
+                    }
+                    return a.totalTime - b.totalTime;
+                } else {
+                    if (a.totalDistance !== b.totalDistance) {
+                        return b.totalDistance - a.totalDistance;
+                    }
+                    return (a.finishTime || a.totalTime) - (b.finishTime || b.totalTime);
+                }
+            });
+
+            // Étape 3: Attribuer les points en fonction du classement PAR CLUB
+            rankedClubs.forEach(([club, data], clubIndex) => {
+                const clubPosition = clubIndex + 1;  // Position du club dans le classement interclub
+                const clubPoints = pointsScale[clubIndex] || 0;  // Points selon la position du club
+
                 if (!clubStats[club]) {
                     clubStats[club] = {
                         clubName: club,
@@ -18064,11 +18109,12 @@ if (document.readyState === 'loading') {
                     };
                 }
 
-                clubStats[club].totalPoints += data.points;
+                clubStats[club].totalPoints += clubPoints;
                 clubStats[club].eventScores[event.name] = {
-                    position: data.position,
-                    points: data.points,
-                    participantName: data.participant.name
+                    position: clubPosition,  // Position du club (4ème club)
+                    points: clubPoints,       // Points du club (12 pts pour 4ème)
+                    participantName: data.participant.name,
+                    individualPosition: data.individualPosition  // Position individuelle (15ème) pour info
                 };
                 clubStats[club].participants.add(data.participant.bib);
             });
@@ -18085,6 +18131,13 @@ if (document.readyState === 'loading') {
             return b.totalParticipants - a.totalParticipants;
         });
 
+        // Stocker les données pour l'export PDF
+        lastInterclubRankingData = {
+            eventsList: eventsList,
+            rankedClubs: rankedClubs,
+            pointsScale: pointsScale
+        };
+
         const rankingSection = document.getElementById('overallChronoRanking');
         const medals = ['🥇', '🥈', '🥉'];
 
@@ -18098,6 +18151,9 @@ if (document.readyState === 'loading') {
                         </button>
                         <button class="btn" onclick="showOverallChronoRanking()" style="background: #16a085;">
                             🔄 Changer de type
+                        </button>
+                        <button class="btn" onclick="exportInterclubToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                            🖨️ PDF
                         </button>
                     </div>
                 </div>
@@ -18141,11 +18197,15 @@ if (document.readyState === 'loading') {
                                             const score = club.eventScores[eventName];
                                             if (score) {
                                                 const positionMedal = score.position <= 3 ? medals[score.position - 1] : score.position + 'e';
+                                                // Afficher la position individuelle si différente de la position du club
+                                                const individualInfo = score.individualPosition && score.individualPosition !== score.position
+                                                    ? ` (${score.individualPosition}e indiv.)`
+                                                    : '';
                                                 return `
                                                     <td style="padding: 12px; text-align: center;">
                                                         <div style="font-weight: bold; font-size: 18px; color: #27ae60;">${score.points}</div>
-                                                        <div style="font-size: 11px; color: #7f8c8d;">${positionMedal}</div>
-                                                        <div style="font-size: 10px; color: #95a5a6;">${score.participantName}</div>
+                                                        <div style="font-size: 11px; color: #7f8c8d;">${positionMedal} club</div>
+                                                        <div style="font-size: 10px; color: #95a5a6;">${score.participantName}${individualInfo}</div>
                                                     </td>
                                                 `;
                                             } else {
@@ -18169,6 +18229,237 @@ if (document.readyState === 'loading') {
 
         rankingSection.innerHTML = html;
     }
+
+    // Exporter le classement interclub en PDF
+    window.exportInterclubToPDF = function() {
+        if (!lastInterclubRankingData || lastInterclubRankingData.rankedClubs.length === 0) {
+            showNotification('Aucun classement interclub disponible pour l\'export PDF', 'warning');
+            return;
+        }
+
+        const currentDate = new Date().toLocaleDateString('fr-FR', {
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+
+        const { eventsList, rankedClubs, pointsScale } = lastInterclubRankingData;
+        const medals = ['🥇', '🥈', '🥉'];
+
+        // Générer le tableau HTML pour le PDF
+        let tableRows = '';
+        rankedClubs.forEach((club, index) => {
+            const position = index + 1;
+            const medal = position <= 3 ? medals[position - 1] : position;
+            const rowBg = position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : (index % 2 === 0 ? 'background: #f8f9fa;' : '');
+
+            let row = `
+                <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
+                    <td style="padding: 12px; text-align: center; font-size: 20px; font-weight: bold;">
+                        ${medal}
+                    </td>
+                    <td style="padding: 12px; font-weight: bold; font-size: 16px; color: #2ecc71;">
+                        🏅 ${club.clubName}
+                    </td>
+                    ${eventsList.map(eventName => {
+                        const score = club.eventScores[eventName];
+                        if (score) {
+                            const positionMedal = score.position <= 3 ? medals[score.position - 1] : score.position + 'e';
+                            const individualInfo = score.individualPosition && score.individualPosition !== score.position
+                                ? ` (${score.individualPosition}e indiv.)`
+                                : '';
+                            return `
+                                <td style="padding: 12px; text-align: center;">
+                                    <div style="font-weight: bold; font-size: 18px; color: #27ae60;">${score.points}</div>
+                                    <div style="font-size: 11px; color: #7f8c8d;">${positionMedal} club</div>
+                                    <div style="font-size: 10px; color: #95a5a6;">${score.participantName}${individualInfo}</div>
+                                </td>
+                            `;
+                        } else {
+                            return `<td style="padding: 12px; text-align: center; color: #bdc3c7;">-</td>`;
+                        }
+                    }).join('')}
+                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 24px; color: #e74c3c;">
+                        ${club.totalPoints}
+                    </td>
+                    <td style="padding: 12px; text-align: center; font-weight: bold; color: #3498db;">
+                        ${club.totalParticipants}
+                    </td>
+                </tr>
+            `;
+            tableRows += row;
+        });
+
+        // Générer le HTML complet pour l'impression
+        const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Classement Interclub par Épreuve</title>
+                <style>
+                    @page {
+                        size: landscape;
+                        margin: 15mm;
+                    }
+
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                        background: white;
+                    }
+
+                    .header {
+                        text-align: center;
+                        margin-bottom: 20px;
+                        padding-bottom: 15px;
+                        border-bottom: 3px solid #2ecc71;
+                    }
+
+                    .header h1 {
+                        color: #2c3e50;
+                        margin: 0 0 10px 0;
+                        font-size: 28px;
+                    }
+
+                    .header p {
+                        color: #7f8c8d;
+                        margin: 5px 0;
+                        font-size: 13px;
+                    }
+
+                    .points-info {
+                        background: #e8f5e9;
+                        padding: 12px;
+                        border-radius: 8px;
+                        margin-bottom: 20px;
+                        text-align: center;
+                        font-size: 13px;
+                        color: #2c3e50;
+                    }
+
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    }
+
+                    thead tr {
+                        background: linear-gradient(135deg, #2ecc71, #27ae60);
+                        color: white;
+                    }
+
+                    th {
+                        padding: 12px;
+                        text-align: center;
+                        font-weight: bold;
+                        border-right: 1px solid rgba(255,255,255,0.2);
+                    }
+
+                    th:last-child {
+                        border-right: none;
+                    }
+
+                    td {
+                        border-right: 1px solid #ecf0f1;
+                    }
+
+                    td:last-child {
+                        border-right: none;
+                    }
+
+                    .footer {
+                        margin-top: 30px;
+                        padding-top: 15px;
+                        border-top: 2px solid #ecf0f1;
+                        text-align: center;
+                        color: #95a5a6;
+                        font-size: 11px;
+                    }
+
+                    @media print {
+                        body {
+                            padding: 10px;
+                        }
+
+                        .no-print {
+                            display: none;
+                        }
+
+                        table {
+                            page-break-inside: auto;
+                        }
+
+                        tr {
+                            page-break-inside: avoid;
+                            page-break-after: auto;
+                        }
+
+                        thead {
+                            display: table-header-group;
+                        }
+
+                        * {
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>🏆 Classement Interclub par Épreuve</h1>
+                    <p><strong>Système de points :</strong> Meilleur résultat du club dans chaque épreuve (toutes séries confondues)</p>
+                    <p>Généré le ${currentDate}</p>
+                </div>
+
+                <div class="points-info">
+                    <strong>Barème de points :</strong> ${pointsScale.map((p, i) => `${i + 1}${i === 0 ? 'er' : 'e'}=${p}pts`).join(', ')}
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Pos.</th>
+                            <th>Club</th>
+                            ${eventsList.map(eventName => `<th>${eventName}</th>`).join('')}
+                            <th>TOTAL</th>
+                            <th>Participants</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+
+                <div class="footer">
+                    <p>Gestionnaire de Championnats - Mode Chrono - Classement Interclub</p>
+                </div>
+
+                <button class="no-print" onclick="window.print()"
+                        style="position: fixed; top: 20px; right: 20px; padding: 12px 24px;
+                               background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;
+                               border: none; border-radius: 8px; cursor: pointer; font-size: 16px;
+                               box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: bold;">
+                    🖨️ Imprimer
+                </button>
+            </body>
+            </html>
+        `;
+
+        // Ouvrir dans une nouvelle fenêtre pour l'impression
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+        // Déclencher automatiquement l'aperçu d'impression après un court délai
+        setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
+        }, 500);
+
+        showNotification('Aperçu d\'impression du classement interclub ouvert', 'success');
+    };
 
     // Fonction générique pour générer un classement filtré
     function generateFilteredRanking(filterFunc, title, type) {
@@ -18476,6 +18767,13 @@ if (document.readyState === 'loading') {
         type: '',
         participants: [],
         categoriesMap: null
+    };
+
+    // Variable pour stocker les données du classement interclub
+    let lastInterclubRankingData = {
+        eventsList: [],
+        rankedClubs: [],
+        pointsScale: []
     };
 
     // Afficher les classements par catégorie
