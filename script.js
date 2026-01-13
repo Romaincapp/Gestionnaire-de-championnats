@@ -17494,7 +17494,21 @@ if (document.readyState === 'loading') {
             `${analysis.totalParticipants} participants • ${analysis.totalSeries} séries`
         );
 
-        // Option 2: Par Sport (si plusieurs sports)
+        // Option 2: Classements par Épreuve (toujours disponible)
+        const eventsWithCompletedSeries = raceData.events.filter(event =>
+            event.series && event.series.some(serie => serie.status === 'completed')
+        ).length;
+        if (eventsWithCompletedSeries > 0) {
+            optionsHTML += createRankingOption(
+                '🏆 Classements par Épreuve',
+                'Afficher les classements de chaque série par épreuve',
+                'by-event',
+                '#3498db',
+                `${eventsWithCompletedSeries} épreuve(s)`
+            );
+        }
+
+        // Option 3: Par Sport (si plusieurs sports)
         if (analysis.sports.length > 1) {
             const sportIcons = { running: '🏃', cycling: '🚴', swimming: '🏊', multisport: '🏅' };
             analysis.sports.forEach(sport => {
@@ -17508,7 +17522,7 @@ if (document.readyState === 'loading') {
             });
         }
 
-        // Option 3: Par Type (Individuel vs Relais)
+        // Option 4: Par Type (Individuel vs Relais)
         if (analysis.hasIndividual && analysis.hasRelay) {
             optionsHTML += createRankingOption(
                 '👤 Classement Individuel',
@@ -17526,7 +17540,7 @@ if (document.readyState === 'loading') {
             );
         }
 
-        // Option 4: Multi-épreuves (même participants dans plusieurs épreuves)
+        // Option 5: Multi-épreuves (même participants dans plusieurs épreuves)
         if (analysis.hasMultiEvents) {
             optionsHTML += createRankingOption(
                 '🎯 Classement Multi-Épreuves',
@@ -17537,7 +17551,7 @@ if (document.readyState === 'loading') {
             );
         }
 
-        // Option 5: Par Distance (si plusieurs épreuves avec même distance)
+        // Option 6: Par Distance (si plusieurs épreuves avec même distance)
         if (analysis.commonDistances.length > 0) {
             analysis.commonDistances.forEach(distance => {
                 optionsHTML += createRankingOption(
@@ -17550,7 +17564,7 @@ if (document.readyState === 'loading') {
             });
         }
 
-        // Option 6: Par Catégorie (si plusieurs catégories détectées)
+        // Option 7: Par Catégorie (si plusieurs catégories détectées)
         if (analysis.categories.length > 1) {
             optionsHTML += createRankingOption(
                 '📋 Classements par Catégorie',
@@ -17561,7 +17575,7 @@ if (document.readyState === 'loading') {
             );
         }
 
-        // Option 7: Par Nationalité (si plusieurs nationalités détectées)
+        // Option 8: Par Nationalité (si plusieurs nationalités détectées)
         if (analysis.nationalities.length > 1) {
             optionsHTML += createRankingOption(
                 '🌍 Classements par Nationalité',
@@ -17572,7 +17586,7 @@ if (document.readyState === 'loading') {
             );
         }
 
-        // Option 8: Par Club (si plusieurs clubs détectés)
+        // Option 9: Par Club (si plusieurs clubs détectés)
         if (analysis.clubs.length > 1) {
             optionsHTML += createRankingOption(
                 '🏅 Classements par Club',
@@ -17756,6 +17770,8 @@ if (document.readyState === 'loading') {
         // Générer le classement selon le type sélectionné
         if (type === 'global') {
             generateOverallChronoRanking();
+        } else if (type === 'by-event') {
+            generateRankingByEvent();
         } else if (type.startsWith('sport-')) {
             const sport = type.replace('sport-', '');
             generateRankingBySport(sport);
@@ -17913,6 +17929,61 @@ if (document.readyState === 'loading') {
         const ranked = allParticipants.sort((a, b) => a.time - b.time);
 
         displayRankingByTime(ranked, `📏 Classement ${targetDistance}m`, targetDistance);
+    }
+
+    // Classement par épreuve
+    function generateRankingByEvent() {
+        const eventsMap = {};
+
+        // Parcourir toutes les épreuves
+        raceData.events.forEach(event => {
+            // Filtrer les séries terminées de cette épreuve
+            const completedSeries = (event.series || []).filter(serie => serie.status === 'completed');
+
+            // Si l'épreuve a au moins une série terminée, l'ajouter
+            if (completedSeries.length > 0) {
+                eventsMap[event.id] = {
+                    eventName: event.name,
+                    eventId: event.id,
+                    sportType: event.sportType,
+                    distance: event.distance,
+                    series: []
+                };
+
+                // Ajouter toutes les séries de l'épreuve (terminées ou non)
+                event.series.forEach(serie => {
+                    const serieData = {
+                        serieName: serie.name,
+                        serieId: serie.id,
+                        status: serie.status,
+                        participants: []
+                    };
+
+                    // Pour les séries terminées, collecter les participants
+                    if (serie.status === 'completed') {
+                        serie.participants.forEach(participant => {
+                            if (participant.status === 'finished') {
+                                serieData.participants.push({
+                                    name: participant.name,
+                                    bib: participant.bib,
+                                    category: participant.category,
+                                    totalDistance: participant.totalDistance,
+                                    totalTime: participant.finishTime || participant.totalTime,
+                                    totalLaps: participant.laps ? participant.laps.length : 0
+                                });
+                            }
+                        });
+
+                        // Trier les participants par temps
+                        serieData.participants.sort((a, b) => a.totalTime - b.totalTime);
+                    }
+
+                    eventsMap[event.id].series.push(serieData);
+                });
+            }
+        });
+
+        displayRankingByEvents(eventsMap, '🏆 Classements par Épreuve');
     }
 
     // Classement par catégorie
@@ -18870,6 +18941,136 @@ if (document.readyState === 'loading') {
         rankingSection.innerHTML = html;
     }
 
+    // Afficher les classements par épreuve
+    function displayRankingByEvents(eventsMap, customTitle = '🏆 Classements par Épreuve') {
+        const rankingSection = document.getElementById('overallChronoRanking');
+        const eventIds = Object.keys(eventsMap);
+
+        // Stocker les données pour l'export PDF
+        lastChronoRankingData = {
+            title: customTitle,
+            type: 'event',
+            participants: [],
+            eventsMap: eventsMap
+        };
+
+        const sportIcons = { running: '🏃', cycling: '🚴', swimming: '🏊', multisport: '🏅' };
+
+        let html = `
+            <div style="background: white; padding: 20px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0; color: #2c3e50;">${customTitle}</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="hideChronoRanking()" style="background: #95a5a6;">
+                            ⬅️ Retour aux séries
+                        </button>
+                        <button class="btn" onclick="showOverallChronoRanking()" style="background: #16a085;">
+                            🔄 Changer de type
+                        </button>
+                        <button class="btn" onclick="exportChronoRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+                            📄 Export PDF
+                        </button>
+                    </div>
+                </div>
+        `;
+
+        // Parcourir chaque épreuve
+        eventIds.forEach(eventId => {
+            const eventData = eventsMap[eventId];
+            const sportIcon = sportIcons[eventData.sportType] || '🏃';
+            const distanceText = eventData.distance ? ` - ${eventData.distance}m` : '';
+
+            html += `
+                <div style="margin-bottom: 40px; border: 2px solid #3498db; border-radius: 10px; padding: 15px; background: linear-gradient(135deg, #f8f9fa, #ffffff);">
+                    <h4 style="color: white; background: linear-gradient(135deg, #3498db, #2980b9); padding: 12px 15px; border-radius: 8px; margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;">
+                        ${sportIcon} ${eventData.eventName}${distanceText}
+                        <span style="background: rgba(255,255,255,0.3); padding: 4px 10px; border-radius: 15px; font-size: 12px; margin-left: auto;">
+                            ${eventData.series.length} série(s)
+                        </span>
+                    </h4>
+            `;
+
+            // Parcourir chaque série de l'épreuve
+            eventData.series.forEach((serieData, serieIndex) => {
+                const medals = ['🥇', '🥈', '🥉'];
+
+                if (serieData.status === 'completed' && serieData.participants.length > 0) {
+                    html += `
+                        <div style="margin-bottom: 25px;">
+                            <h5 style="color: #2c3e50; background: #ecf0f1; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 14px;">
+                                ${serieData.serieName} (${serieData.participants.length} participant${serieData.participants.length > 1 ? 's' : ''})
+                            </h5>
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: #f8f9fa; border-bottom: 2px solid #ddd;">
+                                        <th style="padding: 8px; text-align: center;">Pos.</th>
+                                        <th style="padding: 8px; text-align: left;">Participant</th>
+                                        <th style="padding: 8px; text-align: center;">Dossard</th>
+                                        <th style="padding: 8px; text-align: center;">Catégorie</th>
+                                        <th style="padding: 8px; text-align: center;">Distance</th>
+                                        <th style="padding: 8px; text-align: center;">Temps</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${serieData.participants.map((participant, index) => {
+                                        const position = index + 1;
+                                        const medal = position <= 3 ? medals[position - 1] : position;
+
+                                        return `
+                                            <tr style="${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                                                <td style="padding: 8px; text-align: center; font-weight: bold; font-size: 16px;">
+                                                    ${medal}
+                                                </td>
+                                                <td style="padding: 8px; font-weight: bold; color: #2c3e50;">
+                                                    ${participant.name}
+                                                </td>
+                                                <td style="padding: 8px; text-align: center;">
+                                                    <span style="background: #3498db; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+                                                        ${participant.bib}
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 8px; text-align: center; color: #7f8c8d;">
+                                                    ${participant.category || '-'}
+                                                </td>
+                                                <td style="padding: 8px; text-align: center; color: #27ae60; font-weight: bold;">
+                                                    ${(participant.totalDistance / 1000).toFixed(2)} km
+                                                </td>
+                                                <td style="padding: 8px; text-align: center; font-family: monospace; font-weight: bold; color: #3498db;">
+                                                    ${formatTime(participant.totalTime)}
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                } else if (serieData.status !== 'completed') {
+                    html += `
+                        <div style="margin-bottom: 15px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                            <span style="color: #856404; font-size: 13px;">
+                                ⏳ ${serieData.serieName} - ${serieData.status === 'running' ? 'En cours' : 'Non démarrée'}
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="margin-bottom: 15px; padding: 10px; background: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                            <span style="color: #721c24; font-size: 13px;">
+                                ℹ️ ${serieData.serieName} - Aucun participant n'a terminé
+                            </span>
+                        </div>
+                    `;
+                }
+            });
+
+            html += `</div>`;
+        });
+
+        html += `</div>`;
+        rankingSection.innerHTML = html;
+    }
+
     // ========================================
     // EXPORT PDF DU CLASSEMENT CHRONO
     // ========================================
@@ -18906,6 +19107,15 @@ if (document.readyState === 'loading') {
                 { id: 'position', label: 'Position', checked: true },
                 { id: 'name', label: 'Nom du participant', checked: true },
                 { id: 'bib', label: 'Dossard', checked: true },
+                { id: 'distance', label: 'Distance totale', checked: true },
+                { id: 'time', label: 'Temps total', checked: true }
+            ];
+        } else if (data.type === 'event') {
+            columns = [
+                { id: 'position', label: 'Position', checked: true },
+                { id: 'name', label: 'Nom du participant', checked: true },
+                { id: 'bib', label: 'Dossard', checked: true },
+                { id: 'category', label: 'Catégorie', checked: true },
                 { id: 'distance', label: 'Distance totale', checked: true },
                 { id: 'time', label: 'Temps total', checked: true }
             ];
@@ -19025,6 +19235,81 @@ if (document.readyState === 'loading') {
                     tableRows += row;
                 });
             });
+        } else if (data.type === 'event' && data.eventsMap) {
+            // Classement par épreuve
+            const eventIds = Object.keys(data.eventsMap);
+            const sportIcons = { running: '🏃', cycling: '🚴', swimming: '🏊', multisport: '🏅' };
+
+            eventIds.forEach(eventId => {
+                const eventData = data.eventsMap[eventId];
+                const sportIcon = sportIcons[eventData.sportType] || '🏃';
+                const distanceText = eventData.distance ? ` - ${eventData.distance}m` : '';
+
+                // En-tête de l'épreuve
+                tableRows += `
+                    <tr style="background: linear-gradient(135deg, #3498db, #2980b9); color: white;">
+                        <td colspan="${visibleColumnsCount}" style="padding: 15px; font-weight: bold; font-size: 18px;">
+                            ${sportIcon} ${eventData.eventName}${distanceText}
+                        </td>
+                    </tr>
+                `;
+
+                // Parcourir chaque série
+                eventData.series.forEach(serieData => {
+                    if (serieData.status === 'completed' && serieData.participants.length > 0) {
+                        // Sous-en-tête de la série
+                        tableRows += `
+                            <tr style="background: #ecf0f1;">
+                                <td colspan="${visibleColumnsCount}" style="padding: 10px; font-weight: bold; font-size: 14px; color: #2c3e50;">
+                                    ${serieData.serieName} (${serieData.participants.length} participant${serieData.participants.length > 1 ? 's' : ''})
+                                </td>
+                            </tr>
+                        `;
+
+                        // Lignes des participants
+                        serieData.participants.forEach((p, idx) => {
+                            const pos = idx + 1;
+                            const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+                            let row = '<tr style="' + (idx % 2 === 0 ? 'background: #f8f9fa;' : '') + '">';
+
+                            if (selectedColumns.position) row += `<td style="padding: 8px; text-align: center; font-weight: bold; font-size: 16px;">${medal}</td>`;
+                            if (selectedColumns.name) row += `<td style="padding: 8px; font-weight: bold;">${p.name}</td>`;
+                            if (selectedColumns.bib) row += `<td style="padding: 8px; text-align: center;">${p.bib}</td>`;
+                            if (selectedColumns.category) row += `<td style="padding: 8px; text-align: center;">${p.category || '-'}</td>`;
+                            if (selectedColumns.distance) row += `<td style="padding: 8px; text-align: center;">${(p.totalDistance / 1000).toFixed(2)} km</td>`;
+                            if (selectedColumns.time) row += `<td style="padding: 8px; text-align: center; font-family: monospace; font-weight: bold;">${formatTime(p.totalTime)}</td>`;
+
+                            row += '</tr>';
+                            tableRows += row;
+                        });
+                    } else if (serieData.status !== 'completed') {
+                        // Série non terminée
+                        tableRows += `
+                            <tr style="background: #fff3cd;">
+                                <td colspan="${visibleColumnsCount}" style="padding: 8px; color: #856404; font-size: 12px;">
+                                    ⏳ ${serieData.serieName} - ${serieData.status === 'running' ? 'En cours' : 'Non démarrée'}
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        // Série terminée sans participants
+                        tableRows += `
+                            <tr style="background: #f8d7da;">
+                                <td colspan="${visibleColumnsCount}" style="padding: 8px; color: #721c24; font-size: 12px;">
+                                    ℹ️ ${serieData.serieName} - Aucun participant n'a terminé
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                // Ligne de séparation entre les épreuves
+                tableRows += `
+                    <tr>
+                        <td colspan="${visibleColumnsCount}" style="padding: 10px;"></td>
+                    </tr>
+                `;
+            });
         } else if (data.type === 'distance') {
             // Classement par temps (distance fixe)
             data.participants.forEach((p, idx) => {
@@ -19074,6 +19359,13 @@ if (document.readyState === 'loading') {
             if (selectedColumns.bib) tableHeaders += `<th style="padding: 12px; text-align: center;">Dossard</th>`;
             if (selectedColumns.distance) tableHeaders += `<th style="padding: 12px; text-align: center;">Distance</th>`;
             if (selectedColumns.time) tableHeaders += `<th style="padding: 12px; text-align: center;">Temps</th>`;
+        } else if (data.type === 'event') {
+            if (selectedColumns.position) tableHeaders += `<th style="padding: 8px; text-align: center;">Pos.</th>`;
+            if (selectedColumns.name) tableHeaders += `<th style="padding: 8px; text-align: left;">Participant</th>`;
+            if (selectedColumns.bib) tableHeaders += `<th style="padding: 8px; text-align: center;">Dossard</th>`;
+            if (selectedColumns.category) tableHeaders += `<th style="padding: 8px; text-align: center;">Catégorie</th>`;
+            if (selectedColumns.distance) tableHeaders += `<th style="padding: 8px; text-align: center;">Distance</th>`;
+            if (selectedColumns.time) tableHeaders += `<th style="padding: 8px; text-align: center;">Temps</th>`;
         } else if (data.type === 'distance') {
             if (selectedColumns.position) tableHeaders += `<th style="padding: 12px; text-align: center;">Pos.</th>`;
             if (selectedColumns.name) tableHeaders += `<th style="padding: 12px; text-align: left;">Participant</th>`;
