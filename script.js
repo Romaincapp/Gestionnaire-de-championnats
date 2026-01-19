@@ -12071,6 +12071,45 @@ function reorganizeMatchesByTour(matches) {
     return reorganized;
 }
 
+// Réorganiser les matchs pour pétanque : un match de chaque tour par page (4 matchs par page)
+function reorganizeMatchesForPetanque(matches) {
+    // Grouper les matchs par tour
+    const matchesByTour = {};
+
+    matches.forEach(match => {
+        const tour = match.tour || 0;
+        if (!matchesByTour[tour]) {
+            matchesByTour[tour] = [];
+        }
+        matchesByTour[tour].push(match);
+    });
+
+    // Obtenir les tours disponibles triés
+    const tours = Object.keys(matchesByTour).map(Number).sort((a, b) => a - b);
+
+    // Si pas de tours ou un seul tour, retourner les matchs tels quels groupés par 4
+    if (tours.length <= 1) {
+        return matches;
+    }
+
+    // Réorganiser : un match de chaque tour par page
+    // On veut : [Match1-Tour1, Match1-Tour2, Match1-Tour3, Match1-Tour4, Match2-Tour1, Match2-Tour2, ...]
+    const reorganized = [];
+    const maxLength = Math.max(...tours.map(t => matchesByTour[t].length));
+
+    // Pour chaque index de match (1er match, 2ème match, etc.)
+    for (let i = 0; i < maxLength; i++) {
+        // Ajouter le match numéro i de chaque tour
+        tours.forEach(tour => {
+            if (matchesByTour[tour][i]) {
+                reorganized.push(matchesByTour[tour][i]);
+            }
+        });
+    }
+
+    return reorganized;
+}
+
 // Remplacez seulement cette fonction dans votre code existant :
 
 // Générer le HTML complet pour l'impression - VERSION COMPACTE
@@ -12865,6 +12904,19 @@ function showPrintOptionsModal(dayNumber) {
             " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                 📄 Feuilles Boccia vierges (4 par page)
             </button>
+            <button id="print-option-petanque" style="
+                padding: 12px;
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                cursor: pointer;
+                text-align: left;
+                transition: transform 0.2s;
+            " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                🎯 Feuilles Pétanque (4 par page)
+            </button>
             <button id="print-option-recap" style="
                 padding: 12px;
                 background: linear-gradient(135deg, #f39c12, #e67e22);
@@ -12916,6 +12968,11 @@ function showPrintOptionsModal(dayNumber) {
     document.getElementById('print-option-boccia-blank').onclick = () => {
         document.body.removeChild(modal);
         printBlankBocciaSheets();
+    };
+
+    document.getElementById('print-option-petanque').onclick = () => {
+        document.body.removeChild(modal);
+        printPetanqueMatchSheets(dayNumber);
     };
 
     document.getElementById('print-option-recap').onclick = () => {
@@ -13328,6 +13385,328 @@ function generateBocciaMatchCard(match, dayNumber) {
                 <div class="result-row">
                     <div class="result-label">ARBITRE:</div>
                     <div class="result-line"></div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label">TERRAIN N°:</div>
+                    <div class="result-line" style="max-width: 15mm;"></div>
+                    <div class="result-label" style="margin-left: 3mm;">HEURE:</div>
+                    <div class="result-line" style="max-width: 15mm;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ===============================================
+// FEUILLES PÉTANQUE (4 PAR PAGE)
+// ===============================================
+
+function printPetanqueMatchSheets(dayNumber) {
+    if (!dayNumber) dayNumber = championship.currentDay;
+
+    const dayData = championship.days[dayNumber];
+    if (!dayData) {
+        alert('Aucune donnée trouvée pour cette journée !');
+        return;
+    }
+
+    // Demander le nombre de points pour la partie
+    const maxPoints = prompt('Jusqu\'à combien de points jouer ? (ex: 11, 13, 15)', '13');
+    if (!maxPoints || isNaN(parseInt(maxPoints)) || parseInt(maxPoints) < 1) {
+        return;
+    }
+
+    const pointsLimit = parseInt(maxPoints);
+
+    // Collecter tous les matchs division par division
+    let allMatches = [];
+    const numDivisions = getNumberOfDivisions();
+
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
+        allMatches.push(...divisionMatches);
+    }
+
+    if (allMatches.length === 0) {
+        alert('⚠️ Aucun match généré pour cette journée !');
+        return;
+    }
+
+    // Réorganiser les matchs : un match de chaque tour par page
+    const reorganizedMatches = reorganizeMatchesForPetanque(allMatches);
+
+    // Grouper les matchs par pages (4 matchs par page)
+    const matchPages = groupMatchesIntoPages(reorganizedMatches, 4);
+
+    // Générer le HTML d'impression Pétanque
+    const printHTML = generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit);
+
+    // Ouvrir dans une nouvelle fenêtre pour impression
+    openPrintWindow(printHTML, `Feuilles_Petanque_J${dayNumber}`);
+
+    showNotification(`🎯 ${allMatches.length} feuilles de match Pétanque générées (max ${pointsLimit} points) !`, 'success');
+}
+
+function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
+    const currentDate = new Date().toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Feuilles Pétanque - Journée ${dayNumber}</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 10mm;
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 8px;
+                    line-height: 1.1;
+                    color: #000;
+                    background: white;
+                }
+
+                .page {
+                    width: 210mm;
+                    height: 297mm;
+                    page-break-after: always;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    grid-template-rows: 1fr 1fr;
+                    gap: 5mm;
+                    padding: 5mm;
+                }
+
+                .page:last-child {
+                    page-break-after: avoid;
+                }
+
+                .match-card {
+                    border: 2px solid #000;
+                    padding: 3mm;
+                    background: white;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .match-header {
+                    text-align: center;
+                    border-bottom: 1.5px solid #000;
+                    padding-bottom: 2mm;
+                    margin-bottom: 2mm;
+                }
+
+                .match-title {
+                    font-size: 11px;
+                    font-weight: bold;
+                    margin-bottom: 1mm;
+                }
+
+                .match-info {
+                    font-size: 8px;
+                    color: #666;
+                }
+
+                .match-id {
+                    font-size: 9px;
+                    font-weight: bold;
+                    background: #e8f5e9;
+                    padding: 1mm;
+                    margin-top: 1mm;
+                    border: 1px solid #4caf50;
+                }
+
+                .players-section {
+                    margin-bottom: 2mm;
+                }
+
+                .player-row {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 1mm;
+                }
+
+                .player-label {
+                    font-weight: bold;
+                    font-size: 8px;
+                    width: 22mm;
+                }
+
+                .player-name-box {
+                    flex: 1;
+                    border: 1px solid #000;
+                    padding: 1.5mm;
+                    font-size: 10px;
+                    font-weight: bold;
+                    background: #f8f8f8;
+                }
+
+                .score-section {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .score-grid {
+                    display: grid;
+                    grid-template-columns: repeat(${Math.min(pointsLimit, 7)}, 1fr);
+                    gap: 1px;
+                    border: 1px solid #000;
+                    margin-bottom: 2mm;
+                }
+
+                .score-cell {
+                    aspect-ratio: 1;
+                    border: 1px solid #999;
+                    background: white;
+                    min-height: 6mm;
+                }
+
+                .grid-label {
+                    font-size: 7px;
+                    font-weight: bold;
+                    text-align: center;
+                    margin-bottom: 1mm;
+                }
+
+                .result-section {
+                    margin-top: auto;
+                    padding-top: 2mm;
+                    border-top: 1px dashed #999;
+                }
+
+                .result-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 1mm;
+                    align-items: center;
+                }
+
+                .result-label {
+                    font-size: 7px;
+                    font-weight: bold;
+                    margin-right: 2mm;
+                }
+
+                .result-line {
+                    flex: 1;
+                    border-bottom: 1px solid #000;
+                    min-height: 4mm;
+                }
+
+                @media print {
+                    body {
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
+                    }
+
+                    .page {
+                        page-break-inside: avoid;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+    `;
+
+    // Générer chaque page (4 matchs par page)
+    matchPages.forEach((pageMatches, pageIndex) => {
+        htmlContent += `<div class="page">`;
+
+        // Compléter avec des cartes vides si moins de 4 matchs
+        const matchesToDisplay = [...pageMatches];
+        while (matchesToDisplay.length < 4) {
+            matchesToDisplay.push(null);
+        }
+
+        matchesToDisplay.forEach((match, index) => {
+            if (match) {
+                htmlContent += generatePetanqueMatchCard(match, dayNumber, pointsLimit);
+            } else {
+                htmlContent += `<div class="match-card" style="border-style: dashed; opacity: 0.3;"></div>`;
+            }
+        });
+
+        htmlContent += `</div>`;
+    });
+
+    htmlContent += `
+        </body>
+        </html>
+    `;
+
+    return htmlContent;
+}
+
+function generatePetanqueMatchCard(match, dayNumber, pointsLimit) {
+    // Afficher le numéro de terrain si disponible
+    const terrainInfo = match.court ? ` • Terrain <strong>${match.court}</strong>` : '';
+
+    // Générer les cellules de score pour chaque joueur
+    const generateScoreRow = (label) => {
+        let cells = '';
+        for (let i = 0; i < pointsLimit; i++) {
+            cells += `<div class="score-cell"></div>`;
+        }
+        return cells;
+    };
+
+    return `
+        <div class="match-card">
+            <div class="match-header">
+                <div class="match-title">🎯 FEUILLE DE MATCH PÉTANQUE</div>
+                <div class="match-info">Journée ${dayNumber} • ${new Date().toLocaleDateString('fr-FR')}${terrainInfo}</div>
+                <div class="match-id">${match.matchId} • ${match.type}${match.tour ? ` Tour ${match.tour}` : ''}</div>
+            </div>
+
+            <div class="players-section">
+                <div class="player-row">
+                    <div class="player-label">ÉQUIPE 1:</div>
+                    <div class="player-name-box">${match.player1}</div>
+                </div>
+                <div class="player-row">
+                    <div class="player-label">ÉQUIPE 2:</div>
+                    <div class="player-name-box">${match.player2}</div>
+                </div>
+            </div>
+
+            <div class="score-section">
+                <div class="grid-label">${match.player1.substring(0, 20)} (max ${pointsLimit} pts)</div>
+                <div class="score-grid">
+                    ${generateScoreRow(match.player1)}
+                </div>
+
+                <div class="grid-label">${match.player2.substring(0, 20)} (max ${pointsLimit} pts)</div>
+                <div class="score-grid">
+                    ${generateScoreRow(match.player2)}
+                </div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-row">
+                    <div class="result-label">VAINQUEUR:</div>
+                    <div class="result-line"></div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label">SCORE FINAL:</div>
+                    <div class="result-line" style="max-width: 20mm;"></div>
+                    <div class="result-label" style="margin-left: 2mm;">à</div>
+                    <div class="result-line" style="max-width: 20mm;"></div>
                 </div>
                 <div class="result-row">
                     <div class="result-label">TERRAIN N°:</div>
@@ -17703,9 +18082,8 @@ if (document.readyState === 'loading') {
                             }
 
                             // Clubs
-                            if (participant.club) {
-                                analysis.clubs.add(participant.club);
-                            }
+                            const club = participant.club || 'Sans club';
+                            analysis.clubs.add(club);
 
                             // Multi-épreuves
                             const bib = participant.bib;
