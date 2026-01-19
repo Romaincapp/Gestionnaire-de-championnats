@@ -2124,7 +2124,7 @@ try {
                                 <div class="sets-container">
                                     <div class="set">
                                         <div class="set-scores" style="display: flex; gap: 8px; justify-content: center; align-items: center;">
-                                            <span style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${match.player1}</span>
+                                            <span style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: right;">${match.player1}</span>
                                             <input type="number" class="score-input"
                                                    placeholder="0" min="0"
                                                    value="${match.score1 || ''}"
@@ -2136,7 +2136,7 @@ try {
                                                    value="${match.score2 || ''}"
                                                    onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score2', this.value)"
                                                    onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
-                                            <span style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${match.player2}</span>
+                                            <span style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: left;">${match.player2}</span>
                                         </div>
                                         ${!match.completed && window.showForfaitButtons ? `
                                         <div style="display: flex; gap: 4px; justify-content: center; margin-top: 6px;">
@@ -8601,7 +8601,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                 gap: 8px;
             ">
                 <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${match.player1}')"
-                      style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: right; cursor: pointer; text-decoration: underline dotted; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                      style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: right; cursor: pointer; text-decoration: underline dotted;"
                       title="Cliquez pour voir les statistiques"
                       onmouseover="this.style.color='#3498db'"
                       onmouseout="this.style.color='#2c3e50'">${match.player1}</span>
@@ -8619,7 +8619,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                        onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
                        style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
                 <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${match.player2}')"
-                      style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: left; cursor: pointer; text-decoration: underline dotted; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                      style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: left; cursor: pointer; text-decoration: underline dotted;"
                       title="Cliquez pour voir les statistiques"
                       onmouseover="this.style.color='#3498db'"
                       onmouseout="this.style.color='#2c3e50'">${match.player2}</span>
