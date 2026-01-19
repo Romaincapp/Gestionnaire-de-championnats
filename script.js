@@ -13686,12 +13686,12 @@ function generatePetanqueMatchCard(match, dayNumber, pointsLimit) {
             </div>
 
             <div class="score-section">
-                <div class="grid-label">${match.player1.substring(0, 20)} (max ${pointsLimit} pts)</div>
+                <div class="grid-label">${match.player1} (max ${pointsLimit} pts)</div>
                 <div class="score-grid">
                     ${generateScoreRow(match.player1)}
                 </div>
 
-                <div class="grid-label">${match.player2.substring(0, 20)} (max ${pointsLimit} pts)</div>
+                <div class="grid-label">${match.player2} (max ${pointsLimit} pts)</div>
                 <div class="score-grid">
                     ${generateScoreRow(match.player2)}
                 </div>
