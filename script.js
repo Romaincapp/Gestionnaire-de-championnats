@@ -1338,7 +1338,7 @@ try {
 
             const matchesByTour = { 1: [], 2: [], 3: [], 4: [] };
             const usedMatches = new Set();
-            
+
             for (let tour = 1; tour <= 4; tour++) {
                 const playersInThisTour = new Set();
 
@@ -1393,7 +1393,75 @@ try {
                     }
                 }
             }
-            
+
+            // SECOND PASSAGE: Pour les joueurs qui n'ont pas atteint leur quota,
+            // on les fait jouer une 2ème fois dans un tour (contre un autre joueur en déficit)
+            // On répète jusqu'à ce qu'on ne puisse plus améliorer (pour gérer les déficits > 1)
+            let improved = true;
+            while (improved) {
+                improved = false;
+
+                // Recalculer les joueurs en déficit et les trier par déficit décroissant (le plus en déficit en premier)
+                const playersWithDeficit = divisionPlayers
+                    .filter(p => (playersMatchCount.get(p) || 0) < targetMatchesPerPlayer)
+                    .sort((a, b) => (playersMatchCount.get(a) || 0) - (playersMatchCount.get(b) || 0));
+
+                if (playersWithDeficit.length < 2) break;
+
+                // Essayer d'apparier le joueur avec le plus grand déficit en priorité
+                for (let i = 0; i < playersWithDeficit.length && !improved; i++) {
+                    const player1 = playersWithDeficit[i];
+                    const p1Count = playersMatchCount.get(player1) || 0;
+                    if (p1Count >= targetMatchesPerPlayer) continue;
+
+                    for (let j = i + 1; j < playersWithDeficit.length; j++) {
+                        const player2 = playersWithDeficit[j];
+                        const p2Count = playersMatchCount.get(player2) || 0;
+                        if (p2Count >= targetMatchesPerPlayer) continue;
+
+                        const key = [player1, player2].sort().join('|vs|');
+                        if (usedMatches.has(key)) continue;
+
+                        // Trouver le tour avec le moins de matchs pour équilibrer
+                        let bestTour = 1;
+                        let minMatches = matchesByTour[1].length;
+                        for (let t = 2; t <= 4; t++) {
+                            if (matchesByTour[t].length < minMatches) {
+                                minMatches = matchesByTour[t].length;
+                                bestTour = t;
+                            }
+                        }
+
+                        const timesPlayed = matchHistory.get(key) || 0;
+                        const matchData = {
+                            player1: player1,
+                            player2: player2,
+                            tour: bestTour,
+                            score1: '',
+                            score2: '',
+                            completed: false,
+                            winner: null,
+                            timesPlayedBefore: timesPlayed,
+                            isRematch: timesPlayed > 0
+                        };
+
+                        matchesByTour[bestTour].push(matchData);
+                        playersMatchCount.set(player1, p1Count + 1);
+                        playersMatchCount.set(player2, p2Count + 1);
+                        usedMatches.add(key);
+
+                        if (timesPlayed === 0) {
+                            reportDetails.totalNewMatches++;
+                        } else {
+                            reportDetails.totalRematches++;
+                        }
+
+                        improved = true;
+                        break; // Recommencer avec la liste triée à jour
+                    }
+                }
+            }
+
             for (let tour = 1; tour <= 4; tour++) {
                 dayData.matches[division].push(...matchesByTour[tour]);
             }
@@ -6878,6 +6946,15 @@ function addPoolToggleToInterface(dayNumber) {
                     " id="direct-final-btn-${dayNumber}">
                         ⚡ Élimination Directe
                     </button>
+
+                    <button class="btn" onclick="generateSeasonFinalPhase(${dayNumber})" style="
+                        background: linear-gradient(135deg, #f39c12, #e67e22);
+                        color: white;
+                        padding: 8px 15px;
+                        font-size: 12px;
+                    " id="season-final-btn-${dayNumber}">
+                        🏆 Finale Saison
+                    </button>
                 </div>
             </div>
 
@@ -9888,6 +9965,183 @@ function generateDirectFinalPhase(dayNumber) {
     }, 100);
 }
 window.generateDirectFinalPhase = generateDirectFinalPhase;
+
+// ======================================
+// FINALE DE SAISON (basée sur classement général)
+// ======================================
+
+/**
+ * Génère une phase finale basée sur les X meilleurs du classement général de la saison
+ */
+function generateSeasonFinalPhase(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData) {
+        alert('Journée non trouvée !');
+        return;
+    }
+
+    // Vérifier qu'il y a au moins une journée précédente avec des matchs
+    const previousDays = Object.keys(championship.days)
+        .map(d => parseInt(d))
+        .filter(d => d < dayNumber);
+
+    if (previousDays.length === 0) {
+        alert('⚠️ Aucune journée précédente !\n\nLa finale de saison nécessite au moins une journée avec des matchs terminés.');
+        return;
+    }
+
+    // Récupérer le classement général
+    const generalRanking = calculateGeneralRanking();
+    if (!generalRanking.hasData) {
+        alert('⚠️ Aucun classement général disponible !\n\nTerminez au moins un match dans une journée précédente.');
+        return;
+    }
+
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+
+    // Compter les joueurs par division pour proposer des options pertinentes
+    let divisionInfo = [];
+    for (let division = 1; division <= numDivisions; division++) {
+        const players = generalRanking.divisions[division] || [];
+        if (players.length > 0) {
+            divisionInfo.push(`Division ${division}: ${players.length} joueurs`);
+        }
+    }
+
+    if (divisionInfo.length === 0) {
+        alert('⚠️ Aucun joueur dans le classement général !');
+        return;
+    }
+
+    // Demander le nombre de qualifiés par division
+    const promptMsg = `🏆 FINALE DE SAISON\n\nClassement général actuel :\n${divisionInfo.join('\n')}\n\nCombien de joueurs qualifier par division ?\n(Sera arrondi à la puissance de 2 : 4, 8, 16, 32...)\n\nEntrez un nombre :`;
+
+    const input = prompt(promptMsg, '8');
+    if (input === null) return;
+
+    let numQualified = parseInt(input);
+    if (isNaN(numQualified) || numQualified < 2) {
+        alert('⚠️ Veuillez entrer un nombre valide (minimum 2)');
+        return;
+    }
+
+    // Arrondir à la puissance de 2 inférieure ou égale
+    let targetSize = 2;
+    while (targetSize * 2 <= numQualified) {
+        targetSize *= 2;
+    }
+    numQualified = targetSize;
+
+    // Confirmation
+    const confirmMsg = `🏆 FINALE DE SAISON - Journée ${dayNumber}\n\n` +
+        `Les ${numQualified} meilleurs de chaque division (selon le classement général) seront qualifiés.\n\n` +
+        `Une phase éliminatoire sera générée avec seeding basé sur le classement.\n\n` +
+        `Continuer ?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    // Initialiser la structure pools si nécessaire
+    if (!dayData.pools) {
+        dayData.pools = {
+            enabled: true,
+            config: { mode: 'season-final' },
+            divisions: {}
+        };
+    } else {
+        dayData.pools.enabled = true;
+        dayData.pools.config = dayData.pools.config || {};
+        dayData.pools.config.mode = 'season-final';
+    }
+
+    // Initialiser les divisions
+    for (let div = 1; div <= numDivisions; div++) {
+        if (!dayData.pools.divisions[div]) {
+            dayData.pools.divisions[div] = {
+                pools: [],
+                matches: []
+            };
+        }
+    }
+
+    // Initialiser la phase finale manuelle
+    initializeManualFinalPhase(dayNumber);
+
+    let totalQualified = 0;
+    let qualificationSummary = [];
+
+    // Pour chaque division, qualifier les X meilleurs du classement général
+    for (let division = 1; division <= numDivisions; division++) {
+        const rankedPlayers = generalRanking.divisions[division] || [];
+
+        if (rankedPlayers.length < 2) continue;
+
+        // Prendre les X meilleurs (ou tous si moins de X joueurs)
+        const topPlayers = rankedPlayers.slice(0, Math.min(numQualified, rankedPlayers.length));
+
+        if (topPlayers.length < 2) continue;
+
+        // Créer la liste des qualifiés avec leur seed basé sur le classement
+        const qualified = topPlayers.map((player, index) => ({
+            name: player.name,
+            seed: index + 1,
+            qualificationMethod: `#${index + 1} Classement Général`,
+            isSeasonFinal: true,
+            // Garder les stats pour référence
+            totalPoints: player.totalPoints,
+            totalWins: player.totalWins,
+            goalAverage: player.goalAveragePoints,
+            avgWinRate: player.avgWinRate
+        }));
+
+        // Ajuster à une puissance de 2 si nécessaire
+        const adjustedQualified = adjustToPowerOfTwo(qualified);
+
+        dayData.pools.manualFinalPhase.divisions[division].qualified = adjustedQualified;
+        totalQualified += qualified.length; // Compter seulement les vrais joueurs, pas les BYEs
+
+        // Déterminer et générer le premier tour
+        const firstRoundName = determineFirstRound(adjustedQualified.length);
+        if (firstRoundName && adjustedQualified.length >= 4) {
+            generateFirstRoundDirect(dayNumber, division, adjustedQualified, firstRoundName);
+        }
+
+        qualificationSummary.push(`Division ${division}: ${qualified.length} qualifiés (top ${qualified.length} du classement)`);
+    }
+
+    dayData.pools.manualFinalPhase.enabled = true;
+
+    // Mettre à jour l'affichage
+    updateManualFinalPhaseDisplay(dayNumber);
+    saveToLocalStorage();
+
+    // Désactiver les boutons
+    const seasonBtn = document.getElementById(`season-final-btn-${dayNumber}`);
+    if (seasonBtn) {
+        seasonBtn.disabled = true;
+        seasonBtn.style.opacity = '0.5';
+    }
+    const directBtn = document.getElementById(`direct-final-btn-${dayNumber}`);
+    if (directBtn) {
+        directBtn.disabled = true;
+        directBtn.style.opacity = '0.5';
+    }
+
+    const summary = `🏆 FINALE DE SAISON CRÉÉE !\n\n` +
+        `${totalQualified} joueur(s) qualifié(s) au total.\n\n` +
+        `${qualificationSummary.join('\n')}\n\n` +
+        `Les matchs ont été générés avec seeding basé sur le classement général !`;
+
+    alert(summary);
+
+    // Scroll vers la phase finale
+    setTimeout(() => {
+        const firstFinalPhase = document.querySelector('.manual-final-phase-container');
+        if (firstFinalPhase) {
+            firstFinalPhase.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 100);
+}
+window.generateSeasonFinalPhase = generateSeasonFinalPhase;
 
 /**
  * Ajuste le nombre de joueurs à la puissance de 2 supérieure en ajoutant des BYEs
