@@ -6,18 +6,18 @@ body   * {
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
+            line-height: 1.5;
             color: #333;
             background: linear-gradient(135deg, #0a64da 0%, #2020c7 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             overflow: hidden;
         }
@@ -38,7 +38,7 @@ body   * {
         .tabs-container {
             background: #f8f9fa;
             border-bottom: 2px solid #ecf0f1;
-            padding: 0 30px;
+            padding: 0 15px;
             overflow-x: auto;
         }
         
@@ -124,7 +124,7 @@ body   * {
         }
         
         .content {
-            padding: 30px;
+            padding: 15px;
         }
         
         .tab-content {
@@ -142,10 +142,10 @@ body   * {
         }
         
         .section {
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             background: #f8f9fa;
             border-radius: 12px;
-            padding: 25px;
+            padding: 15px;
             border-left: 5px solid #3498db;
         }
         
@@ -439,10 +439,10 @@ body   * {
         }
         
         .tour-section {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             background: #f8f9fa;
             border-radius: 10px;
-            padding: 20px;
+            padding: 10px 6px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
         
@@ -450,8 +450,8 @@ body   * {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding: 15px;
+            margin-bottom: 10px;
+            padding: 10px 12px;
             background: linear-gradient(135deg, #34495e, #2c3e50);
             color: white;
             border-radius: 8px;
@@ -465,15 +465,15 @@ body   * {
         }
         
         .tour-title {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
         }
         
         .tour-progress {
-            font-size: 14px;
+            font-size: 13px;
             background: rgba(255,255,255,0.2);
-            padding: 5px 12px;
-            border-radius: 15px;
+            padding: 4px 8px;
+            border-radius: 12px;
         }
         
         .tour-matches {
@@ -494,7 +494,7 @@ body   * {
             background: transparent;
             border: none;
             border-radius: 0;
-            padding: 8px 0;
+            padding: 6px 2px;
             margin-bottom: 0;
             border-bottom: 1px solid rgba(0,0,0,0.08);
             transition: all 0.2s ease;
@@ -517,20 +517,31 @@ body   * {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            margin-left: -2px;
+            margin-right: -2px;
         }
 
         .player-names {
             font-weight: 600;
             color: #2c3e50;
             font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            min-width: 0;
+            margin-right: 3px;
+            letter-spacing: -0.2px;
         }
         
         .match-status {
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 12px;
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 10px;
             font-weight: bold;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         
         .status-pending {
@@ -544,10 +555,10 @@ body   * {
         }
         
         .sets-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 4px;
+            display: block;
+            width: 100%;
+            margin-top: 3px;
+            padding: 0;
         }
 
         .set {
@@ -556,10 +567,13 @@ body   * {
             border-radius: 0;
             padding: 4px 0;
             text-align: center;
+            width: 100%;
         }
 
         .match {
             text-align: center;
+            padding-left: 4px;
+            padding-right: 4px;
         }
         
         .set-disabled {
@@ -574,22 +588,64 @@ body   * {
             font-weight: bold;
         }
         
-        .set-scores {
-            display: flex;
-            justify-content: center;
+        .set-scores,
+        .pool-match .score-container,
+        .manual-match .score-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            width: 100%;
+        }
+        
+        .set-scores .score-center,
+        .pool-match .score-center,
+        .manual-match .score-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .set-scores > span,
+        .player-name-left,
+        .player-name-right,
+        .pool-match .player-name-left,
+        .pool-match .player-name-right,
+        .manual-match .player-name-left,
+        .manual-match .player-name-right {
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 13px !important;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .player-name-left,
+        .pool-match .player-name-left,
+        .manual-match .player-name-left {
+            text-align: right;
+            padding-right: 4px;
+        }
+        
+        .player-name-right,
+        .pool-match .player-name-right,
+        .manual-match .player-name-right {
+            text-align: left;
+            padding-left: 4px;
         }
         
         .score-input {
-            width: 45px;
-            height: 35px;
+            width: 40px;
+            height: 32px;
             text-align: center;
-            padding: 6px;
+            padding: 4px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             border: 2px solid #ddd;
-            border-radius: 6px;
+            border-radius: 5px;
             transition: all 0.3s ease;
             background: white;
         }
@@ -623,7 +679,8 @@ body   * {
         .score-separator {
             font-weight: bold;
             color: #7f8c8d;
-            font-size: 18px;
+            font-size: 14px;
+            margin: 0 2px;
         }
         
         .match-result {
@@ -668,8 +725,8 @@ body   * {
 
         .match.collapsed .match-header::after {
             content: "▼";
-            margin-left: 10px;
-            font-size: 12px;
+            margin-left: 6px;
+            font-size: 11px;
             color: #7f8c8d;
             transition: transform 0.3s ease;
         }
@@ -687,14 +744,15 @@ body   * {
             font-size: 12px;
             font-weight: bold;
             color: #27ae60;
-            margin-left: 10px;
+            margin-left: 4px;
+            margin-right: 4px;
         }
 
         /* Pool match and manual match collapsed states */
         .pool-match.collapsed,
         .manual-match.collapsed {
-            padding: 6px 10px;
-            margin-bottom: 4px;
+            padding: 5px 4px;
+            margin-bottom: 3px;
             cursor: pointer;
         }
 
@@ -706,6 +764,8 @@ body   * {
         .pool-match.collapsed .player-names,
         .manual-match.collapsed .match-title {
             font-size: 13px;
+            margin-right: 3px;
+            letter-spacing: -0.2px;
         }
 
         .pool-match.collapsed .score-container,
@@ -721,8 +781,8 @@ body   * {
         .pool-match.collapsed .match-header::after,
         .manual-match.collapsed .match-header::after {
             content: "▼";
-            margin-left: 10px;
-            font-size: 12px;
+            margin-left: 6px;
+            font-size: 11px;
             color: #7f8c8d;
             transition: transform 0.3s ease;
         }
@@ -1279,3 +1339,218 @@ body   * {
         h2:hover .collapse-icon {
             color: #2980b9;
         }
+
+
+/* ============================================
+   STYLES MULTISPORT - Championship + Chrono
+   ============================================ */
+
+/* Onglet Multisport */
+.tab.multisport-ranking {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: 600;
+}
+
+.tab.multisport-ranking.active {
+    background: linear-gradient(135deg, #764ba2, #667eea);
+    transform: scale(1.02);
+}
+
+.tab.multisport-ranking:hover {
+    background: linear-gradient(135deg, #5a67d8, #6b46c1);
+}
+
+/* Sélecteur de type de journée */
+.day-type-selector {
+    transition: all 0.3s ease;
+}
+
+.day-type-selector:hover {
+    border-color: #adb5bd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Badge de type de journée */
+.day-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.day-type-badge.championship {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+}
+
+.day-type-badge.chrono {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white;
+}
+
+/* Classement Multisport */
+.multisport-ranking-section {
+    background: white;
+    border-radius: 10px;
+}
+
+.multisport-info {
+    position: relative;
+    overflow: hidden;
+}
+
+.multisport-info::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Table du classement multisport */
+.multisport-ranking table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.multisport-ranking th {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 15px 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.multisport-ranking td {
+    padding: 15px 10px;
+    text-align: center;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.multisport-ranking tr:hover {
+    background: #f8f9fa;
+}
+
+.multisport-ranking .rank-1 {
+    background: linear-gradient(135deg, #ffd700, #ffed4a) !important;
+}
+
+.multisport-ranking .rank-2 {
+    background: linear-gradient(135deg, #c0c0c0, #e8e8e8) !important;
+}
+
+.multisport-ranking .rank-3 {
+    background: linear-gradient(135deg, #cd7f32, #daa520) !important;
+    color: white;
+}
+
+/* Interface Chrono par journée */
+.chrono-day-interface {
+    animation: fadeIn 0.3s ease;
+}
+
+.chrono-event-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chrono-event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.chrono-serie-card {
+    transition: all 0.2s ease;
+}
+
+.chrono-serie-card:hover {
+    background: #e9ecef;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive pour multisport */
+@media (max-width: 768px) {
+    .day-type-selector > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .day-type-selector span:last-child {
+        margin-left: 0 !important;
+        margin-top: 10px;
+    }
+    
+    .multisport-ranking th,
+    .multisport-ranking td {
+        padding: 10px 5px;
+        font-size: 12px;
+    }
+    
+    .multisport-info p {
+        font-size: 12px !important;
+    }
+}
+
+/* Print styles pour multisport */
+@media print {
+    .day-type-selector,
+    .tab.multisport-ranking {
+        display: none !important;
+    }
+    
+    .multisport-ranking {
+        box-shadow: none;
+    }
+}
+
+
+/* Animation pulse pour l'onglet multisport */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Simplification du sélecteur de type de journée */
+.day-type-selector {
+    transition: all 0.3s ease;
+}
+
+.day-type-selector:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
+
+.day-type-selector select {
+    transition: all 0.2s ease;
+}
+
+.day-type-selector select:hover {
+    background: white !important;
+}
+
+/* Mode compact pour le sélecteur */
+.day-type-selector.compact {
+    display: inline-flex;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.day-type-selector.compact select {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 100px;
+}

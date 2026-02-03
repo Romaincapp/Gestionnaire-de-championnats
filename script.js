@@ -545,6 +545,19 @@ try {
             }
         });
 
+        // Initialiser le sélecteur de clubs
+        const clubSelect = document.getElementById('addPlayerClub');
+        if (clubSelect && typeof clubsModule !== 'undefined' && clubsModule.generateClubOptions) {
+            clubSelect.innerHTML = clubsModule.generateClubOptions();
+        }
+        
+        // Cacher le champ de club personnalisé
+        const clubCustom = document.getElementById('addPlayerClubCustom');
+        if (clubCustom) {
+            clubCustom.style.display = 'none';
+            clubCustom.value = '';
+        }
+
         modal.style.display = 'block';
         document.getElementById('addPlayerName').focus();
     }
@@ -562,6 +575,23 @@ try {
         const name = formatProperName(document.getElementById('addPlayerName').value);
         const division = parseInt(document.getElementById('addPlayerDivision').value);
         const dayNumber = addPlayerModalDayNumber;
+        
+        // Récupérer le club
+        let club = '';
+        const clubSelect = document.getElementById('addPlayerClub');
+        const clubCustom = document.getElementById('addPlayerClubCustom');
+        
+        if (clubSelect) {
+            if (clubSelect.value === '__custom__' && clubCustom && clubCustom.value.trim()) {
+                club = clubCustom.value.trim();
+                // Ajouter le nouveau club à la liste
+                if (typeof clubsModule !== 'undefined' && clubsModule.addClub) {
+                    clubsModule.addClub(club);
+                }
+            } else if (clubSelect.value && clubSelect.value !== '__custom__') {
+                club = clubSelect.value;
+            }
+        }
 
         if (!name || name === '') {
             showNotification('Veuillez entrer un nom de joueur', 'warning');
@@ -579,14 +609,28 @@ try {
             championship.days[dayNumber] = { players, matches };
         }
 
-        if (championship.days[dayNumber].players[division].includes(name)) {
+        // Vérifier si le joueur existe déjà (en utilisant la fonction du module clubs si disponible)
+        let playerExists = false;
+        if (typeof clubsModule !== 'undefined' && clubsModule.playerExists) {
+            playerExists = clubsModule.playerExists(dayNumber, division, name);
+        } else {
+            playerExists = championship.days[dayNumber].players[division].some(p => {
+                const pName = typeof p === 'object' ? p.name : p;
+                return pName.toLowerCase() === name.toLowerCase();
+            });
+        }
+        
+        if (playerExists) {
             showNotification(`${name} est déjà inscrit en D${division}`, 'warning');
             return;
         }
 
-        championship.days[dayNumber].players[division].push(name);
+        // Créer l'objet joueur avec club
+        const playerObj = { name, club };
+        championship.days[dayNumber].players[division].push(playerObj);
+        
         saveToLocalStorage();
-        showNotification(`${name} ajouté à D${division}`, 'success');
+        showNotification(`${name}${club ? ' (' + club + ')' : ''} ajouté à D${division}`, 'success');
         updatePlayersDisplay(dayNumber);
 
         document.getElementById('addPlayerName').value = '';
@@ -603,6 +647,33 @@ try {
 
         document.getElementById('bulkModal').dataset.dayNumber = addPlayerModalDayNumber;
         document.getElementById('bulkModal').dataset.division = division;
+        
+        // Initialiser le sélecteur de clubs
+        const clubSelect = document.getElementById('bulkClubSelect');
+        if (clubSelect && typeof clubsModule !== 'undefined' && clubsModule.generateClubOptions) {
+            clubSelect.innerHTML = '<option value="">-- Aucun --</option>' + 
+                clubsModule.generateClubOptions().replace('<option value="">-- Sélectionner un club --</option>', '');
+        }
+        
+        // Cacher le champ personnalisé
+        const clubCustom = document.getElementById('bulkClubCustom');
+        if (clubCustom) {
+            clubCustom.style.display = 'none';
+            clubCustom.value = '';
+        }
+        
+        // Configurer le changement de sélection
+        if (clubSelect) {
+            clubSelect.onchange = function() {
+                if (this.value === '__custom__' && clubCustom) {
+                    clubCustom.style.display = 'block';
+                    clubCustom.focus();
+                } else if (clubCustom) {
+                    clubCustom.style.display = 'none';
+                    clubCustom.value = '';
+                }
+            };
+        }
     }
     window.showBulkFromModal = showBulkFromModal;
 
@@ -621,20 +692,72 @@ try {
 
         document.getElementById('bulkModal').dataset.dayNumber = targetDay;
         document.getElementById('bulkModal').dataset.division = division;
+        
+        // Initialiser le sélecteur de clubs
+        const clubSelect = document.getElementById('bulkClubSelect');
+        if (clubSelect && typeof clubsModule !== 'undefined' && clubsModule.generateClubOptions) {
+            clubSelect.innerHTML = '<option value="">-- Aucun --</option>' + 
+                clubsModule.generateClubOptions().replace('<option value="">-- Sélectionner un club --</option>', '');
+        }
+        
+        // Cacher le champ personnalisé
+        const clubCustom = document.getElementById('bulkClubCustom');
+        if (clubCustom) {
+            clubCustom.style.display = 'none';
+            clubCustom.value = '';
+        }
+        
+        // Configurer le changement de sélection
+        if (clubSelect) {
+            clubSelect.onchange = function() {
+                if (this.value === '__custom__' && clubCustom) {
+                    clubCustom.style.display = 'block';
+                    clubCustom.focus();
+                } else if (clubCustom) {
+                    clubCustom.style.display = 'none';
+                    clubCustom.value = '';
+                }
+            };
+        }
     }
     window.showBulkInput = showBulkInput;
 
     function closeBulkModal() {
         document.getElementById('bulkModal').style.display = 'none';
         document.getElementById('bulkText').value = '';
+        
+        // Réinitialiser le sélecteur de clubs
+        const clubSelect = document.getElementById('bulkClubSelect');
+        const clubCustom = document.getElementById('bulkClubCustom');
+        if (clubSelect) clubSelect.value = '';
+        if (clubCustom) {
+            clubCustom.style.display = 'none';
+            clubCustom.value = '';
+        }
     }
     window.closeBulkModal = closeBulkModal;
 
     function addBulkPlayers() {
         const text = document.getElementById('bulkText').value.trim();
         const modal = document.getElementById('bulkModal');
-        const dayNumber = parseInt(modal.dataset.dayNumber) || parseInt(document.getElementById('bulkTargetDay').value);
-        const division = parseInt(modal.dataset.division) || parseInt(document.getElementById('bulkDivision').value);
+        const dayNumber = parseInt(modal.dataset.dayNumber) || parseInt(document.getElementById('bulkTargetDay')?.value || 1);
+        const division = parseInt(modal.dataset.division) || parseInt(document.getElementById('bulkDivision')?.value || 1);
+        
+        // Récupérer le club sélectionné
+        let club = '';
+        const clubSelect = document.getElementById('bulkClubSelect');
+        const clubCustom = document.getElementById('bulkClubCustom');
+        
+        if (clubSelect) {
+            if (clubSelect.value === '__custom__' && clubCustom && clubCustom.value.trim()) {
+                club = clubCustom.value.trim();
+                if (typeof clubsModule !== 'undefined' && clubsModule.addClub) {
+                    clubsModule.addClub(club);
+                }
+            } else if (clubSelect.value && clubSelect.value !== '__custom__') {
+                club = clubSelect.value;
+            }
+        }
         
         if (!text) {
             alert('Veuillez entrer au moins un nom de joueur');
@@ -663,8 +786,16 @@ try {
         }
         
         names.forEach(name => {
-            if (!championship.days[dayNumber].players[division].includes(name)) {
-                championship.days[dayNumber].players[division].push(name);
+            // Vérifier si le joueur existe déjà (en comparant les noms)
+            const exists = championship.days[dayNumber].players[division].some(p => {
+                const pName = typeof p === 'object' ? p.name : p;
+                return pName.toLowerCase() === name.toLowerCase();
+            });
+            
+            if (!exists) {
+                // Créer l'objet joueur avec club
+                const playerObj = club ? { name, club } : { name, club: '' };
+                championship.days[dayNumber].players[division].push(playerObj);
                 added++;
             } else {
                 duplicates.push(name);
@@ -675,7 +806,7 @@ try {
         updateDaySelectors();
         saveToLocalStorage();
         
-        let message = `✅ ${added} joueurs ajoutés à la Division ${division} - Journée ${dayNumber} !`;
+        let message = `✅ ${added} joueurs${club ? ' (' + club + ')' : ''} ajoutés à la Division ${division} - Journée ${dayNumber} !`;
         if (duplicates.length > 0) {
             message += `\n\n⚠️ Joueurs déjà présents (ignorés): ${duplicates.join(', ')}`;
         }
@@ -739,15 +870,28 @@ try {
                 container.innerHTML = '<div class="empty-state">Aucun joueur</div>';
             } else {
                 container.innerHTML = players.map(player => {
+                    // Extraire le nom et le club
+                    let playerName, playerClub;
+                    if (typeof player === 'object' && player !== null) {
+                        playerName = player.name || '';
+                        playerClub = player.club || '';
+                    } else {
+                        playerName = String(player);
+                        playerClub = '';
+                    }
+                    
                     // Utiliser JSON.stringify pour échapper correctement tous les caractères spéciaux
-                    const escapedPlayer = JSON.stringify(player).slice(1, -1);
+                    const escapedPlayer = JSON.stringify(playerName).slice(1, -1);
 
                     // Vérifier si le joueur a un match BYE
-                    const hasBye = playerHasByeMatch(dayNumber, division, player);
+                    const hasBye = playerHasByeMatch(dayNumber, division, playerName);
                     const byeClass = hasBye ? ' player-has-bye' : '';
+                    
+                    // Afficher le club s'il existe
+                    const clubBadge = playerClub ? `<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 6px;">${playerClub}</span>` : '';
 
                     return `<div class="player-tag${byeClass}" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayer}')">
-                        ${player}
+                        ${playerName}${clubBadge}
                         <div class="player-actions">
                             <button class="edit-player" onclick="event.stopPropagation(); editPlayer(${dayNumber}, ${division}, '${escapedPlayer}')" title="Modifier">✏️</button>
                             <button class="remove-player" onclick="event.stopPropagation(); removePlayer(${dayNumber}, ${division}, '${escapedPlayer}')" title="Supprimer">×</button>
@@ -763,12 +907,26 @@ try {
     window.updatePlayersDisplay = updatePlayersDisplay;
 
     function removePlayer(dayNumber, division, playerName) {
+        // Trouver le joueur pour obtenir son nom d'affichage
+        let displayName = playerName;
+        const players = championship.days[dayNumber].players[division];
+        const playerObj = players.find(p => {
+            const pName = typeof p === 'object' ? p.name : p;
+            return pName.toLowerCase() === playerName.toLowerCase();
+        });
+        if (playerObj && typeof playerObj === 'object' && playerObj.club) {
+            displayName = `${playerObj.name} (${playerObj.club})`;
+        }
+        
         // Demander confirmation avant suppression
-        if (!confirm(`Êtes-vous sûr de vouloir supprimer ${playerName} ?`)) {
+        if (!confirm(`Êtes-vous sûr de vouloir supprimer ${displayName} ?`)) {
             return; // Annuler la suppression
         }
 
-        championship.days[dayNumber].players[division] = championship.days[dayNumber].players[division].filter(p => p !== playerName);
+        championship.days[dayNumber].players[division] = players.filter(p => {
+            const pName = typeof p === 'object' ? p.name : p;
+            return pName.toLowerCase() !== playerName.toLowerCase();
+        });
         championship.days[dayNumber].matches[division] = championship.days[dayNumber].matches[division].filter(match =>
             match.player1 !== playerName && match.player2 !== playerName
         );
@@ -776,100 +934,184 @@ try {
         updateMatchesDisplay(dayNumber);
         updateStats(dayNumber);
         saveToLocalStorage();
-        showNotification(`${playerName} supprimé`, 'warning');
+        showNotification(`${displayName} supprimé`, 'warning');
     }
     window.removePlayer = removePlayer;
 
     function editPlayer(dayNumber, division, oldPlayerName) {
-        const newName = prompt(`Modifier le nom du joueur:\n\nNom actuel: ${oldPlayerName}`, oldPlayerName);
-
-        if (!newName || newName.trim() === '') {
-            return; // Annulé
-        }
-
-        const trimmedNewName = formatProperName(newName);
-
-        // Si le nom n'a pas changé (comparaison insensible à la casse)
-        if (trimmedNewName.toLowerCase() === oldPlayerName.toLowerCase()) {
-            return;
-        }
-
-        // Vérifier si le nouveau nom existe déjà dans la division
-        if (championship.days[dayNumber].players[division].includes(trimmedNewName)) {
-            showNotification(`Le nom "${trimmedNewName}" existe déjà dans D${division} - J${dayNumber}`, 'warning');
-            return;
-        }
-
-        // Remplacer le nom dans le tableau des joueurs
-        const playerIndex = championship.days[dayNumber].players[division].indexOf(oldPlayerName);
-        if (playerIndex !== -1) {
-            championship.days[dayNumber].players[division][playerIndex] = trimmedNewName;
-        }
-
-        // Mettre à jour le nom dans tous les matchs classiques
-        championship.days[dayNumber].matches[division].forEach(match => {
-            if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
-            if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
-            if (match.winner === oldPlayerName) match.winner = trimmedNewName;
+        // Trouver le joueur dans la liste
+        const players = championship.days[dayNumber].players[division];
+        const playerIndex = players.findIndex(p => {
+            const pName = typeof p === 'object' ? p.name : p;
+            return pName.toLowerCase() === oldPlayerName.toLowerCase();
         });
-
-        // Mettre à jour dans les matchs de poules si activé
-        if (championship.days[dayNumber].pools?.enabled && championship.days[dayNumber].pools.divisions[division]) {
-            const poolMatches = championship.days[dayNumber].pools.divisions[division].matches || [];
-            poolMatches.forEach(match => {
-                if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
-                if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
-                if (match.winner === oldPlayerName) match.winner = trimmedNewName;
-            });
-
-            // Mettre à jour dans les pools
-            const pools = championship.days[dayNumber].pools.divisions[division].pools || [];
-            pools.forEach(pool => {
-                const idx = pool.indexOf(oldPlayerName);
-                if (idx !== -1) pool[idx] = trimmedNewName;
-            });
-
-            // Mettre à jour dans la phase finale (ancien système)
-            const finalPhase = championship.days[dayNumber].pools.divisions[division].finalPhase || [];
-            finalPhase.forEach(match => {
-                if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
-                if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
-                if (match.winner === oldPlayerName) match.winner = trimmedNewName;
-            });
-
-            // Mettre à jour dans la phase finale MANUELLE (nouveau système)
-            const manualFinalPhase = championship.days[dayNumber].pools?.manualFinalPhase?.divisions?.[division];
-            if (manualFinalPhase) {
-                // Mettre à jour dans les qualifiés
-                if (manualFinalPhase.qualified) {
-                    manualFinalPhase.qualified.forEach(player => {
-                        if (player.name === oldPlayerName) player.name = trimmedNewName;
-                    });
+        
+        if (playerIndex === -1) return;
+        
+        const currentPlayer = players[playerIndex];
+        const currentName = typeof currentPlayer === 'object' ? currentPlayer.name : currentPlayer;
+        const currentClub = typeof currentPlayer === 'object' ? (currentPlayer.club || '') : '';
+        
+        // Utiliser un modal personnalisé au lieu de prompt pour permettre l'édition du club
+        showEditPlayerModal(dayNumber, division, playerIndex, currentName, currentClub);
+    }
+    
+    function showEditPlayerModal(dayNumber, division, playerIndex, currentName, currentClub) {
+        // Supprimer le modal existant s'il y en a un
+        const existingModal = document.getElementById('editPlayerModal');
+        if (existingModal) existingModal.remove();
+        
+        var modal = document.createElement('div');
+        modal.id = 'editPlayerModal';
+        modal.innerHTML = 
+            '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
+            'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
+            'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeEditPlayerModal()">' +
+            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">' +
+            '<h3>✏️ Modifier le joueur</h3>' +
+            '<div style="margin: 15px 0;">' +
+            '<label>Nom :</label>' +
+            '<input type="text" id="editPlayerNameInput" value="' + currentName + '" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ddd;">' +
+            '</div>' +
+            '<div style="margin: 15px 0;">' +
+            '<label>Club :</label>' +
+            '<select id="editPlayerClubSelect" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ddd;">' +
+            generateClubOptionsForEdit(currentClub) +
+            '</select>' +
+            '<input type="text" id="editPlayerClubCustom" value="" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ddd; display: none;" placeholder="Nouveau club...">' +
+            '</div>' +
+            '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
+            '<button onclick="closeEditPlayerModal()" class="btn btn-secondary">Annuler</button>' +
+            '<button onclick="saveEditedPlayer(' + dayNumber + ', ' + division + ', ' + playerIndex + ', \'' + currentName.replace(/'/g, "\\'") + '\')" class="btn btn-primary">Sauvegarder</button>' +
+            '</div></div></div>';
+        
+        document.body.appendChild(modal);
+        
+        // Configurer le changement de sélection de club
+        var clubSelect = document.getElementById('editPlayerClubSelect');
+        var clubCustom = document.getElementById('editPlayerClubCustom');
+        if (clubSelect && clubCustom) {
+            clubSelect.onchange = function() {
+                if (this.value === '__custom__') {
+                    clubCustom.style.display = 'block';
+                    clubCustom.focus();
+                } else {
+                    clubCustom.style.display = 'none';
+                    clubCustom.value = '';
                 }
-                // Mettre à jour dans tous les tours
-                if (manualFinalPhase.rounds) {
-                    Object.values(manualFinalPhase.rounds).forEach(round => {
-                        if (round.matches) {
-                            round.matches.forEach(match => {
-                                if (match.player1 === oldPlayerName) match.player1 = trimmedNewName;
-                                if (match.player2 === oldPlayerName) match.player2 = trimmedNewName;
-                                if (match.winner === oldPlayerName) match.winner = trimmedNewName;
-                            });
-                        }
-                    });
+            };
+        }
+    }
+    
+    function generateClubOptionsForEdit(selectedClub) {
+        var clubs = (typeof clubsModule !== 'undefined' && clubsModule.getClubsList) ? 
+            clubsModule.getClubsList() : ['Club A', 'Club B', 'Club C'];
+        var html = '<option value="">-- Aucun club --</option>';
+        clubs.forEach(function(club) {
+            var selected = club === selectedClub ? ' selected' : '';
+            html += '<option value="' + club.replace(/"/g, '&quot;') + '"' + selected + '>' + club + '</option>';
+        });
+        html += '<option value="__custom__">+ Ajouter un nouveau club...</option>';
+        return html;
+    }
+    
+    function closeEditPlayerModal() {
+        var modal = document.getElementById('editPlayerModal');
+        if (modal) modal.remove();
+    }
+    
+    function saveEditedPlayer(dayNumber, division, playerIndex, oldPlayerName) {
+        var nameInput = document.getElementById('editPlayerNameInput');
+        var clubSelect = document.getElementById('editPlayerClubSelect');
+        var clubCustom = document.getElementById('editPlayerClubCustom');
+        
+        if (!nameInput) return;
+        
+        var newName = formatProperName(nameInput.value);
+        if (!newName) {
+            showNotification('Veuillez entrer un nom', 'warning');
+            return;
+        }
+        
+        // Récupérer le club
+        var newClub = '';
+        if (clubSelect) {
+            if (clubSelect.value === '__custom__' && clubCustom && clubCustom.value.trim()) {
+                newClub = clubCustom.value.trim();
+                if (typeof clubsModule !== 'undefined' && clubsModule.addClub) {
+                    clubsModule.addClub(newClub);
                 }
+            } else if (clubSelect.value && clubSelect.value !== '__custom__') {
+                newClub = clubSelect.value;
             }
         }
-
-        // Rafraîchir l'affichage
+        
+        // Vérifier si le nom a changé et s'il existe déjà
+        if (newName.toLowerCase() !== oldPlayerName.toLowerCase()) {
+            var exists = championship.days[dayNumber].players[division].some((p, idx) => {
+                if (idx === playerIndex) return false;
+                var pName = typeof p === 'object' ? p.name : p;
+                return pName.toLowerCase() === newName.toLowerCase();
+            });
+            
+            if (exists) {
+                showNotification('Ce nom existe déjà dans la division', 'warning');
+                return;
+            }
+        }
+        
+        // Mettre à jour le joueur
+        championship.days[dayNumber].players[division][playerIndex] = {
+            name: newName,
+            club: newClub
+        };
+        
+        // Mettre à jour les matchs si le nom a changé
+        if (newName !== oldPlayerName) {
+            championship.days[dayNumber].matches[division].forEach(match => {
+                if (match.player1 === oldPlayerName) match.player1 = newName;
+                if (match.player2 === oldPlayerName) match.player2 = newName;
+                if (match.winner === oldPlayerName) match.winner = newName;
+            });
+            
+            // Mettre à jour dans les poules si activé
+            if (championship.days[dayNumber].pools?.enabled && championship.days[dayNumber].pools.divisions[division]) {
+                const poolMatches = championship.days[dayNumber].pools.divisions[division].matches || [];
+                poolMatches.forEach(match => {
+                    if (match.player1 === oldPlayerName) match.player1 = newName;
+                    if (match.player2 === oldPlayerName) match.player2 = newName;
+                    if (match.winner === oldPlayerName) match.winner = newName;
+                });
+                
+                const pools = championship.days[dayNumber].pools.divisions[division].pools || [];
+                pools.forEach(pool => {
+                    const idx = pool.indexOf(oldPlayerName);
+                    if (idx !== -1) pool[idx] = newName;
+                });
+                
+                const finalPhase = championship.days[dayNumber].pools.divisions[division].finalPhase || [];
+                finalPhase.forEach(match => {
+                    if (match.player1 === oldPlayerName) match.player1 = newName;
+                    if (match.player2 === oldPlayerName) match.player2 = newName;
+                    if (match.winner === oldPlayerName) match.winner = newName;
+                });
+            }
+        }
+        
+        closeEditPlayerModal();
+        saveToLocalStorage();
         updatePlayersDisplay(dayNumber);
         updateMatchesDisplay(dayNumber);
-        updateStats(dayNumber);
-        saveToLocalStorage();
-
-        showNotification(`"${oldPlayerName}" renommé en "${trimmedNewName}"`, 'success');
+        
+        var msg = newClub ? 
+            `"${newName}" (${newClub}) mis à jour` : 
+            `"${newName}" mis à jour`;
+        showNotification(msg, 'success');
     }
     window.editPlayer = editPlayer;
+    window.showEditPlayerModal = showEditPlayerModal;
+    window.closeEditPlayerModal = closeEditPlayerModal;
+    window.saveEditedPlayer = saveEditedPlayer;
 
     // GESTION DES ONGLETS ET JOURNÉES
     function addNewDay() {
@@ -887,7 +1129,16 @@ try {
 
         championship.days[newDayNumber] = {
             players: players,
-            matches: matches
+            matches: matches,
+            dayType: 'championship', // Par défaut: mode championship
+            chronoData: {
+                events: [],
+                series: [],
+                participants: [],
+                nextEventId: 1,
+                nextSerieId: 1,
+                nextParticipantId: 1
+            }
         };
 
         // Initialiser le système de poules pour cette nouvelle journée
@@ -907,6 +1158,11 @@ try {
         updateDaySelectors();
         updateTabsDisplay();
         switchTab(newDayNumber);
+        
+        // Mettre à jour la visibilité de l'onglet multisport (peut-être qu'on passe en mode mixte)
+        if (typeof updateMultisportTabVisibility === 'function') {
+            updateMultisportTabVisibility();
+        }
 
         // Restaurer l'état collapsed si présent
         setTimeout(() => {
@@ -994,7 +1250,25 @@ try {
     }
 
     function generateDayContentHTML(dayNumber) {
+        // Déterminer le type de journée (sera mis à jour après chargement)
+        const dayType = championship.days[dayNumber]?.dayType || 'championship';
+        const isChrono = dayType === 'chrono';
+        
         return `
+            <!-- Sélecteur de type de journée (compact et intelligent) -->
+            <div class="day-type-selector" id="day-type-selector-${dayNumber}" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 8px 12px; background: ${isChrono ? 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)' : 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)'}; border-radius: 8px; color: white;">
+                <span style="font-size: 13px; font-weight: 500;">${isChrono ? '⏱️' : '🎾'} Mode:</span>
+                <select id="day-type-select-${dayNumber}" onchange="handleDayTypeChange(${dayNumber}, this.value)" style="padding: 6px 10px; border-radius: 6px; border: none; font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.95); color: #333; min-width: 140px;">
+                    <option value="championship" ${!isChrono ? 'selected' : ''}>🏆 Matchs</option>
+                    <option value="chrono" ${isChrono ? 'selected' : ''}>⏱️ Courses</option>
+                </select>
+                <span id="day-type-label-${dayNumber}" style="font-size: 11px; opacity: 0.9; margin-left: auto;">
+                    ${isChrono ? 'Chronométrage' : 'Championnat'}
+                </span>
+            </div>
+            
+            <!-- SECTION CHAMPIONSHIP (affichée si type = championship) -->
+            <div id="championship-section-${dayNumber}" style="display: ${isChrono ? 'none' : 'block'};">
             <div class="section">
                 <h2 style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="toggleDayHub(${dayNumber})">
                     <span id="day-hub-icon-${dayNumber}" class="collapse-icon" style="font-size: 14px; transition: transform 0.3s ease; display: inline-block;">▼</span>
@@ -1069,6 +1343,17 @@ try {
                 <h3>📊 Statistiques Journée ${dayNumber}</h3>
                 <div class="stats-grid" id="statsContent-${dayNumber}"></div>
             </div>
+            </div><!-- Fin championship-section -->
+            
+            <!-- SECTION CHRONO (affichée si type = chrono) -->
+            <div id="chrono-section-${dayNumber}" style="display: ${isChrono ? 'block' : 'none'};">
+                <div class="section" style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);">
+                    <h2 style="color: white;">⏱️ Gestion des Courses - Journée ${dayNumber}</h2>
+                    <div id="chrono-content-${dayNumber}" style="background: white; padding: 20px; border-radius: 10px; margin-top: 15px;">
+                        ${isChrono && typeof renderChronoInterfaceForDay === 'function' ? renderChronoInterfaceForDay(dayNumber) : '<p style="text-align: center; color: #7f8c8d;">Chargement de l\'interface chrono...</p>'}
+                    </div>
+                </div>
+            </div>
         `;
     }
 
@@ -1130,9 +1415,109 @@ try {
             targetContent.style.display = 'block'; // Force l'affichage
         }
     }
+    
+    // Fonction pour changer le type de journée sans recharger la page
+    // Initialiser le sélecteur de type pour la J1 (HTML statique)
+    function initializeDayTypeSelectorForDay1() {
+        const dayNumber = 1;
+        if (!championship.days[dayNumber]) return;
+        
+        const dayType = championship.days[dayNumber].dayType || 'championship';
+        const isChrono = dayType === 'chrono';
+        
+        // Mettre à jour le sélecteur
+        const selector = document.getElementById(`day-type-selector-${dayNumber}`);
+        const select = document.getElementById(`day-type-select-${dayNumber}`);
+        const label = document.getElementById(`day-type-label-${dayNumber}`);
+        
+        if (selector) {
+            if (isChrono) {
+                selector.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
+            } else {
+                selector.style.background = 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
+            }
+        }
+        
+        if (select) {
+            select.value = dayType;
+        }
+        
+        if (label) {
+            label.textContent = isChrono ? 'Chronométrage' : 'Championnat';
+        }
+        
+        // Afficher/masquer les sections
+        const chronoSection = document.getElementById(`chrono-section-${dayNumber}`);
+        const championshipSection = document.getElementById(`championship-section-${dayNumber}`);
+        
+        if (chronoSection) {
+            chronoSection.style.display = isChrono ? 'block' : 'none';
+        }
+        if (championshipSection) {
+            championshipSection.style.display = isChrono ? 'none' : 'block';
+        }
+        
+        // Rafraîchir l'affichage chrono si nécessaire
+        if (isChrono && typeof refreshChronoDisplay === 'function') {
+            refreshChronoDisplay(dayNumber);
+        }
+    }
+    window.initializeDayTypeSelectorForDay1 = initializeDayTypeSelectorForDay1;
+
+    function handleDayTypeChange(dayNumber, type) {
+        // Sauvegarder le nouveau type
+        if (!championship.days[dayNumber]) return;
+        
+        championship.days[dayNumber].dayType = type;
+        saveToLocalStorage();
+        
+        // Mettre à jour l'interface visuelle du sélecteur
+        const selector = document.getElementById(`day-type-selector-${dayNumber}`);
+        const label = document.getElementById(`day-type-label-${dayNumber}`);
+        
+        if (selector) {
+            if (type === 'chrono') {
+                selector.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
+                if (label) label.textContent = 'Chronométrage';
+            } else {
+                selector.style.background = 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
+                if (label) label.textContent = 'Championnat';
+            }
+        }
+        
+        // Afficher/masquer les sections appropriées
+        const chronoSection = document.getElementById(`chrono-section-${dayNumber}`);
+        const championshipSection = document.getElementById(`championship-section-${dayNumber}`);
+        
+        if (chronoSection) {
+            chronoSection.style.display = type === 'chrono' ? 'block' : 'none';
+        }
+        if (championshipSection) {
+            championshipSection.style.display = type === 'championship' ? 'block' : 'none';
+        }
+        
+        // Rafraîchir l'affichage chrono si on passe en mode chrono
+        if (type === 'chrono' && typeof refreshChronoDisplay === 'function') {
+            refreshChronoDisplay(dayNumber);
+        }
+        
+        // Mettre à jour la visibilité de l'onglet multisport
+        if (typeof updateMultisportTabVisibility === 'function') {
+            updateMultisportTabVisibility();
+        }
+        
+        showNotification(`Mode ${type === 'chrono' ? 'Courses' : 'Matchs'} activé`, 'success');
+    }
+    window.handleDayTypeChange = handleDayTypeChange;
     window.switchTab = switchTab;
 
     function switchToGeneralRanking() {
+        // Si on est en mode multisport (mix de types), rediriger vers le classement multisport
+        if (typeof isMultisportMode === 'function' && isMultisportMode()) {
+            switchToMultisportRanking();
+            return;
+        }
+        
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
             // Force le masquage de tous les contenus sauf general-ranking
@@ -1157,6 +1542,121 @@ try {
         updateGeneralRanking();
     }
     window.switchToGeneralRanking = switchToGeneralRanking;
+
+    // ============================================
+    // FONCTIONS MULTISPORT
+    // ============================================
+
+    function switchToMultisportRanking() {
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+            content.style.display = 'none';
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+
+        const multisportTab = document.querySelector('[data-tab="multisport"]');
+        const multisportContent = document.getElementById('multisport-ranking');
+
+        if (multisportTab) multisportTab.classList.add('active');
+        if (multisportContent) {
+            multisportContent.classList.add('active');
+            multisportContent.style.display = 'block';
+        }
+
+        updateMultisportRanking();
+    }
+    window.switchToMultisportRanking = switchToMultisportRanking;
+
+    function updateMultisportRanking() {
+        const container = document.getElementById('multisportRankingContent');
+        if (!container) return;
+        
+        if (typeof renderMultisportRanking === 'function') {
+            container.innerHTML = renderMultisportRanking();
+        } else {
+            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Module multisport non chargé</p>';
+        }
+    }
+    window.updateMultisportRanking = updateMultisportRanking;
+
+    function toggleMultisportHub() {
+        const hub = document.getElementById('multisport-hub-content');
+        const icon = document.getElementById('multisport-hub-icon');
+        if (hub) {
+            if (hub.style.display === 'none') {
+                hub.style.display = 'block';
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            } else {
+                hub.style.display = 'none';
+                if (icon) icon.style.transform = 'rotate(-90deg)';
+            }
+        }
+    }
+    window.toggleMultisportHub = toggleMultisportHub;
+
+    function openMultisportRankingInNewWindow() {
+        const ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
+        const sorted = Object.values(ranking).sort((a, b) => b.totalPoints - a.totalPoints);
+        
+        let html = `<!DOCTYPE html>
+        <html><head><meta charset="UTF-8"><title>Classement Multisport</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+            .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+            h1 { text-align: center; color: #667eea; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; }
+            td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; }
+            tr:nth-child(1) { background: linear-gradient(135deg, #ffd700, #ffed4a); }
+            tr:nth-child(2) { background: linear-gradient(135deg, #c0c0c0, #e0e0e0); }
+            tr:nth-child(3) { background: linear-gradient(135deg, #cd7f32, #daa520); color: white; }
+            .total { font-size: 1.3em; font-weight: bold; color: #27ae60; }
+            .club-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 11px; padding: 3px 10px; border-radius: 12px; }
+        </style></head><body>
+        <div class="container">
+        <h1>🏅 Classement Multisport</h1>
+        <table>
+        <thead><tr><th>#</th><th>Joueur</th><th>Club</th><th>🎾 Championship</th><th>⏱️ Chrono</th><th>Total</th></tr></thead>
+        <tbody>`;
+        
+        sorted.forEach((stat, index) => {
+            const clubBadge = stat.club ? `<span class="club-badge">${stat.club}</span>` : '-';
+            html += `<tr>
+                <td>${index + 1}</td>
+                <td><strong>${stat.player}</strong></td>
+                <td>${clubBadge}</td>
+                <td>${stat.championshipPoints} pts<br><small>${stat.championshipWins}V/${stat.championshipMatches}J</small></td>
+                <td>${stat.chronoPoints} pts<br><small>${stat.chronoSeries} séries</small></td>
+                <td class="total">${stat.totalPoints}</td>
+            </tr>`;
+        });
+        
+        html += `</tbody></table></div></body></html>`;
+        
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
+    }
+    window.openMultisportRankingInNewWindow = openMultisportRankingInNewWindow;
+
+    function exportMultisportRanking() {
+        const ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
+        const dataStr = JSON.stringify(ranking, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'classement-multisport-' + new Date().toISOString().split('T')[0] + '.json';
+        a.click();
+        
+        URL.revokeObjectURL(url);
+        showNotification('Classement exporté !', 'success');
+    }
+    window.exportMultisportRanking = exportMultisportRanking;
 
     function updateTabsDisplay() {
         const tabsContainer = document.getElementById('tabs');
@@ -1206,6 +1706,16 @@ try {
             updatePlayersDisplay(dayNum);
             updateMatchesDisplay(dayNum);
             updateStats(dayNum);
+            
+            // Initialiser l'interface chrono si nécessaire
+            if (typeof updateDayTypeUI === 'function') {
+                updateDayTypeUI(dayNum);
+            }
+            // Rafraîchir l'affichage chrono pour les journées en mode chrono
+            const dayData = championship.days[dayNum];
+            if (dayData && dayData.dayType === 'chrono' && typeof refreshChronoDisplay === 'function') {
+                refreshChronoDisplay(dayNum);
+            }
             //nouveau pour les pools
             initializePoolsForDay(dayNum);
         });
@@ -1870,8 +2380,8 @@ try {
                                 player2: 'BYE',
                                 tour: tourIndex + 1,
                                 court: court,
-                                score1: '',
-                                score2: '',
+                                score1: 5,
+                                score2: 0,
                                 completed: true,
                                 winner: player,
                                 isBye: true
@@ -2158,8 +2668,8 @@ try {
                         if (courtMatches.length === 0) continue;
 
                         html += `
-                            <div style="margin-bottom: 15px; padding: 10px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; border-left: 4px solid #3498db;">
-                                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 10px; font-size: 16px;">
+                            <div style="margin-bottom: 12px; padding: 8px 2px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; border-left: 4px solid #3498db;">
+                                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 6px; font-size: 15px;">
                                     🎾 Terrain ${court}
                                 </div>
                         `;
@@ -2191,20 +2701,22 @@ try {
                                 </div>` : ''}
                                 <div class="sets-container">
                                     <div class="set">
-                                        <div class="set-scores" style="display: flex; gap: 8px; justify-content: center; align-items: center;">
-                                            <span style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: right;">${match.player1}</span>
-                                            <input type="number" class="score-input"
-                                                   placeholder="0" min="0"
-                                                   value="${match.score1 || ''}"
-                                                   onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score1', this.value)"
-                                                   onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
-                                            <span class="score-separator">-</span>
-                                            <input type="number" class="score-input"
-                                                   placeholder="0" min="0"
-                                                   value="${match.score2 || ''}"
-                                                   onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score2', this.value)"
-                                                   onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
-                                            <span style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: left;">${match.player2}</span>
+                                        <div class="set-scores">
+                                            <span class="player-name-left">${match.player1}</span>
+                                            <div class="score-center">
+                                                <input type="number" class="score-input"
+                                                       placeholder="0" min="0"
+                                                       value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
+                                                       onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score1', this.value)"
+                                                       onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
+                                                <span class="score-separator">-</span>
+                                                <input type="number" class="score-input"
+                                                       placeholder="0" min="0"
+                                                       value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
+                                                       onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score2', this.value)"
+                                                       onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
+                                            </div>
+                                            <span class="player-name-right">${match.player2}</span>
                                         </div>
                                         ${!match.completed && window.showForfaitButtons ? `
                                         <div style="display: flex; gap: 4px; justify-content: center; margin-top: 6px;">
@@ -2814,12 +3326,12 @@ try {
         match.completed = true;
 
         if (forfaitPlayer === 'player1') {
-            match.score1 = '0';
-            match.score2 = '3';
+            match.score1 = 0;
+            match.score2 = 5;
             match.winner = match.player2;
         } else {
-            match.score1 = '3';
-            match.score2 = '0';
+            match.score1 = 5;
+            match.score2 = 0;
             match.winner = match.player1;
         }
 
@@ -5160,6 +5672,9 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             updateDaySelectors();
             initializeAllDaysContent();
             switchTab(championship.currentDay);
+            
+            // Initialiser le sélecteur de type pour J1
+            initializeDayTypeSelectorForDay1();
 
             // Rafraîchir l'affichage des phases finales pour toutes les journées
             Object.keys(championship.days).forEach(dayNumber => {
@@ -6242,7 +6757,7 @@ function showByeManagementModal(dayNumber) {
                     border-left: 4px solid #27ae60;
                 ">
                     <strong>💡 Explication :</strong><br>
-                    Un match BYE donne automatiquement 3 points (victoire) + 2 sets gagnés au joueur.<br>
+                    Un match BYE donne automatiquement 5 points (victoire) + forfait au joueur.<br>
                     Cela compense l'absence de 4ème adversaire avec un nombre impair de joueurs.<br>
                     <strong style="color: #f39c12;">🎯 Les lignes oranges</strong> indiquent les joueurs ayant déjà au moins un match BYE.
                 </div>
@@ -6706,6 +7221,24 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
     window.initializeDivisionSelects = initializeDivisionSelects;
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser le module multisport
+        if (typeof initMultisport === 'function') {
+            initMultisport();
+        }
+        
+        // Migrer les données joueurs vers le format avec club si nécessaire
+        if (typeof clubsModule !== 'undefined' && clubsModule.migratePlayerData) {
+            clubsModule.migratePlayerData();
+        }
+        
+        // Mettre à jour la visibilité de l'onglet multisport
+        if (typeof updateMultisportTabVisibility === 'function') {
+            updateMultisportTabVisibility();
+        }
+        
+        // Initialiser le sélecteur de type pour la J1 (HTML statique)
+        initializeDayTypeSelectorForDay1();
+        
         // Charger les données sauvegardées
         if (loadFromLocalStorage()) {
             initializeDivisionSelects();
@@ -6714,11 +7247,15 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
             initializeAllDaysContent();
             restoreCollapseState();
             switchTab(championship.currentDay);
+            
+            // Initialiser le sélecteur de type pour J1 après chargement
+            initializeDayTypeSelectorForDay1();
         } else {
             initializeDivisionSelects();
             initializeDivisionsDisplay(1);
             updatePlayersDisplay(1);
             initializePoolsForDay(1);
+            initializeDayTypeSelectorForDay1();
             restoreCollapseState();
         }
 
@@ -8117,8 +8654,8 @@ function generateRoundRobinMatches(pool, poolIndex, division, dayNumber, startMa
                         poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                         division: division,
                         dayNumber: dayNumber,
-                        score1: '0',
-                        score2: '0',
+                        score1: 5,
+                        score2: 0,
                         completed: true,
                         winner: player1,
                         isPoolMatch: true,
@@ -8134,8 +8671,8 @@ function generateRoundRobinMatches(pool, poolIndex, division, dayNumber, startMa
                         poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                         division: division,
                         dayNumber: dayNumber,
-                        score1: '0',
-                        score2: '0',
+                        score1: 0,
+                        score2: 5,
                         completed: true,
                         winner: player2,
                         isPoolMatch: true,
@@ -8672,31 +9209,29 @@ function generatePoolMatchHTML(match, dayNumber) {
                 ">${statusText}</div>
             </div>` : ''}
             
-            <div class="score-container" style="
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            ">
-                <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${match.player1}')"
-                      style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: right; cursor: pointer; text-decoration: underline dotted;"
+            <div class="score-container">
+                <span class="player-name-left" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${match.player1}')"
+                      style="cursor: pointer; text-decoration: underline dotted;"
                       title="Cliquez pour voir les statistiques"
                       onmouseover="this.style.color='#3498db'"
                       onmouseout="this.style.color='#2c3e50'">${match.player1}</span>
-                <input type="number"
-                       value="${match.score1 || ''}"
-                       placeholder="0"
-                       onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score1', this.value)"
-                       onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
-                       style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
-                <span style="font-weight: bold; color: #7f8c8d; font-size: 18px;">-</span>
-                <input type="number"
-                       value="${match.score2 || ''}"
-                       placeholder="0"
-                       onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value)"
-                       onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
-                       style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
-                <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${match.player2}')"
-                      style="font-size: 11px; color: #2c3e50; font-weight: 600; flex: 1; text-align: left; cursor: pointer; text-decoration: underline dotted;"
+                <div class="score-center">
+                    <input type="number"
+                           value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
+                           placeholder="0"
+                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score1', this.value)"
+                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
+                           style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
+                    <span style="font-weight: bold; color: #7f8c8d; font-size: 14px;">-</span>
+                    <input type="number"
+                           value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
+                           placeholder="0"
+                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value)"
+                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
+                           style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
+                </div>
+                <span class="player-name-right" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${match.player2}')"
+                      style="cursor: pointer; text-decoration: underline dotted;"
                       title="Cliquez pour voir les statistiques"
                       onmouseover="this.style.color='#3498db'"
                       onmouseout="this.style.color='#2c3e50'">${match.player2}</span>
@@ -10788,31 +11323,29 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                 </div>
             ` : `
                 <div class="score-container" style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    gap: 8px;
                     margin-bottom: 12px;
                     padding: 12px;
                     background: #f8f9fa;
                     border: 1px solid #dee2e6;
                     border-radius: 6px;
                 ">
-                    <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player1}</span>
-                    <input type="number"
-                           value="${match.score1 || ''}"
-                           placeholder="0"
-                           onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
-                           onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                           style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
-                    <span style="color: #6c757d; font-weight: bold; font-size: 18px;">-</span>
-                    <input type="number"
-                           value="${match.score2 || ''}"
-                           placeholder="0"
-                           onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
-                           onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                           style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
-                    <span style="font-size: 11px; color: #2c3e50; font-weight: 600;">${match.player2}</span>
+                    <span class="player-name-left">${match.player1}</span>
+                    <div class="score-center">
+                        <input type="number"
+                               value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
+                               placeholder="0"
+                               onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
+                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
+                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
+                        <span style="color: #6c757d; font-weight: bold; font-size: 14px;">-</span>
+                        <input type="number"
+                               value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
+                               placeholder="0"
+                               onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
+                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
+                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
+                    </div>
+                    <span class="player-name-right">${match.player2}</span>
                 </div>
 
                 ${!isCompleted && window.showForfaitButtons ? `
@@ -11976,22 +12509,16 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                 </div>
             ` : `
                 <div class="score-container" style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    gap: 15px;
                     margin-bottom: 15px;
                     padding: 15px;
                     background: #f8f9fa;
                     border: 1px solid #dee2e6;
                     border-radius: 8px;
                 ">
-                    <div style="text-align: center;">
-                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px; font-weight: bold;">
-                            ${match.player1}
-                        </div>
+                    <span class="player-name-left">${match.player1}</span>
+                    <div class="score-center">
                         <input type="number"
-                               value="${match.score1 || ''}"
+                               value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
                                placeholder="0"
                                min="0"
                                max="30"
@@ -12008,14 +12535,9 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                                    background: white;
                                    padding: 8px 4px;
                                ">
-                    </div>
-                    <span style="color: #495057; font-weight: bold; font-size: 20px;">-</span>
-                    <div style="text-align: center;">
-                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px; font-weight: bold;">
-                            ${match.player2}
-                        </div>
+                        <span style="color: #495057; font-weight: bold; font-size: 16px;">-</span>
                         <input type="number"
-                               value="${match.score2 || ''}"
+                               value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
                                placeholder="0"
                                min="0"
                                max="30"
@@ -12033,6 +12555,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                                    padding: 8px 4px;
                                ">
                     </div>
+                    <span class="player-name-right">${match.player2}</span>
                 </div>
                 
                 <div class="match-result" style="

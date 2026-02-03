@@ -22,8 +22,11 @@
                     Journée 1
                 </button>
                  <button class="add-day-btn" onclick="addNewDay()" title="Ajouter une journée">+</button>
-                <button class="tab general-ranking" onclick="switchToGeneralRanking()" data-tab="general">
-                    🏆 Classement Général
+                <button class="tab general-ranking" onclick="switchToGeneralRanking()" data-tab="general" id="generalRankingTab">
+                    🏆 Classement
+                </button>
+                <button class="tab multisport-ranking" onclick="switchToMultisportRanking()" data-tab="multisport" id="multisportTab" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: none;">
+                    🏅 Multisport
                 </button>
             </div>
         </div>
@@ -55,10 +58,6 @@
                             <option value="8">8</option>
                             <option value="10">10</option>
                         </select>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="chronoModeCheckbox" onchange="toggleChronoMode()" style="width: 18px; height: 18px; cursor: pointer;">
-                        <label for="chronoModeCheckbox" style="font-weight: bold; cursor: pointer; font-size: 14px;">⏱️ Mode Chrono</label>
                     </div>
                     <button id="applyConfigBtn" class="btn" onclick="applyConfiguration()" style="background: white; color: #16a085; font-weight: bold; padding: 6px 15px; font-size: 13px;">
                         ✅ Appliquer
@@ -125,6 +124,17 @@
 
             <!-- CONTENU JOURNÉE -->
             <div class="tab-content day-content active" id="day-1">
+                <!-- Sélecteur de type de journée pour J1 (sera initialisé par JS) -->
+                <div class="day-type-selector" id="day-type-selector-1" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 8px 12px; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border-radius: 8px; color: white;">
+                    <span style="font-size: 13px; font-weight: 500;">🎾 Mode:</span>
+                    <select id="day-type-select-1" onchange="handleDayTypeChange(1, this.value)" style="padding: 6px 10px; border-radius: 6px; border: none; font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.95); color: #333; min-width: 140px;">
+                        <option value="championship" selected>🏆 Matchs</option>
+                        <option value="chrono">⏱️ Courses</option>
+                    </select>
+                    <span id="day-type-label-1" style="font-size: 11px; opacity: 0.9; margin-left: auto;">Championnat</span>
+                </div>
+                
+                <div id="championship-section-1" style="display: block;">
                 <div class="section">
                     <h2 style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="toggleDayHub(1)">
                         <span id="day-hub-icon-1" class="collapse-icon" style="font-size: 14px; transition: transform 0.3s ease; display: inline-block;">▼</span>
@@ -208,6 +218,17 @@
                     <h3>📊 Statistiques Journée 1</h3>
                     <div class="stats-grid" id="statsContent-1"></div>
                 </div>
+                </div><!-- Fin championship-section-1 -->
+                
+                <!-- SECTION CHRONO pour J1 -->
+                <div id="chrono-section-1" style="display: none;">
+                    <div class="section" style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);">
+                        <h2 style="color: white;">⏱️ Gestion des Courses - Journée 1</h2>
+                        <div id="chrono-content-1" style="background: white; padding: 20px; border-radius: 10px; margin-top: 15px;">
+                            <p style="text-align: center; color: #7f8c8d;">Chargement de l'interface chrono...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- CLASSEMENT GÉNÉRAL -->
@@ -249,6 +270,43 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- CLASSEMENT MULTISPORT -->
+            <div class="tab-content multisport-content" id="multisport-ranking" style="display: none;">
+                <div class="section multisport-ranking-section">
+                    <h2 style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="toggleMultisportHub()">
+                        <span id="multisport-hub-icon" class="collapse-icon" style="font-size: 14px; transition: transform 0.3s ease; display: inline-block;">▼</span>
+                        <span>🏅 Classement Multisport (Championship + Chrono)</span>
+                    </h2>
+                    
+                    <div id="multisport-hub-content">
+                        <div class="multisport-info" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                            <p style="margin: 0; font-size: 14px;">
+                                🎯 Ce classement combine les points des journées <strong>Championship</strong> (matchs) et <strong>Chrono</strong> (courses).
+                                <br>🎾 Championship: 3 pts par victoire | ⏱️ Chrono: 20 pts pour le 1er, 17 pour le 2ème, etc.
+                            </p>
+                        </div>
+                        
+                        <div class="control-buttons" style="margin-bottom: 30px; flex-wrap: wrap; gap: 8px;">
+                            <button class="btn btn-warning" onclick="updateMultisportRanking()" style="padding: 8px 12px; font-size: 13px;">
+                                🔄 Mettre à jour
+                            </button>
+                            <button class="btn" onclick="openMultisportRankingInNewWindow()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; padding: 8px 12px; font-size: 13px;">
+                                📺 Afficher
+                            </button>
+                            <button class="btn btn-success" onclick="exportMultisportRanking()" style="padding: 8px 12px; font-size: 13px;">
+                                📊 Exporter JSON
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="multisportRankingContent">
+                        <div class="empty-state">
+                            Activez le mode Multisport sur au moins une journée et saisissez des résultats pour voir le classement
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -282,11 +340,15 @@
             <!-- Ajout individuel -->
             <div style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px;">
                 <div style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500;">Ajout individuel</div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="text" id="addPlayerName" placeholder="Nom du joueur" style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" onkeypress="if(event.key==='Enter')addPlayerFromModal()">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="addPlayerName" placeholder="Nom du joueur" style="flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" onkeypress="if(event.key==='Enter')addPlayerFromModal()">
+                    <select id="addPlayerClub" onchange="handleClubSelectChange(this, 'addPlayerClubCustom')" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; min-width: 150px;">
+                        <option value="">-- Club --</option>
+                    </select>
                     <select id="addPlayerDivision" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;"></select>
                     <button onclick="addPlayerFromModal()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px;">Ajouter</button>
                 </div>
+                <input type="text" id="addPlayerClubCustom" placeholder="Nouveau club..." style="display: none; width: 100%; margin-top: 8px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
             </div>
 
             <!-- Import en masse -->
@@ -308,7 +370,8 @@
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                <button onclick="showClubManagementModal()" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🏢 Gérer les clubs</button>
                 <button onclick="closeAddPlayerModal()" style="padding: 8px 16px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">Fermer</button>
             </div>
         </div>
@@ -320,6 +383,13 @@
             <p style="margin-bottom: 12px; color: #7f8c8d; font-size: 14px;">
                 Collez la liste des noms (un par ligne) pour la <strong id="selectedDivision">Division 1</strong> :
             </p>
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 12px; color: #64748b; margin-right: 8px;">Club (optionnel) :</label>
+                <select id="bulkClubSelect" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; min-width: 150px;">
+                    <option value="">-- Aucun --</option>
+                </select>
+                <input type="text" id="bulkClubCustom" style="display: none; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 5px; width: 100%;" placeholder="Nouveau club...">
+            </div>
             <textarea id="bulkText" placeholder="Joueur 1&#10;Joueur 2&#10;Joueur 3&#10;..."
                       style="width: 100%; flex: 1; min-height: 250px; max-height: 400px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical; font-size: 14px;"></textarea>
             <div class="modal-buttons" style="position: sticky; bottom: 0; background: white; padding: 15px 0 0 0; margin-top: 15px; border-top: 2px solid #ddd;">
@@ -973,6 +1043,38 @@
         </div>
     </div>
 
+        <!-- ============================================ -->
+        <!-- MODULES REFACTORISES - Architecture modulaire -->
+        <!-- ============================================ -->
+        
+        <!-- 1. Modules de base -->
+        <script src="src/config.iife.js"></script>
+        <script src="src/utils.iife.js"></script>
+        <script src="src/notifications.iife.js"></script>
+        <script src="src/state.iife.js"></script>
+        
+        <!-- 2. Module Multisport -->
+        <script src="src/multisport.iife.js"></script>
+        
+        <!-- 3. Module Clubs -->
+        <script src="src/clubs.iife.js"></script>
+        
+        <!-- 4. Module Joueurs -->
+        <script src="src/players.iife.js"></script>
+        
+        <!-- 4. Modules des 3 modes UI -->
+        <script src="src/ui.iife.js"></script>           <!-- UI Generale -->
+        <script src="src/matches.iife.js"></script>      <!-- Mode Championship -->
+        <script src="src/pools.iife.js"></script>        <!-- Mode POOL -->
+        <script src="src/chrono.iife.js"></script>       <!-- Mode CHRONO -->
+        
+        <!-- 5. Modules fonctionnels -->
+        <script src="src/ranking.iife.js"></script>      <!-- Classements -->
+        <script src="src/export.iife.js"></script>       <!-- Export/Print -->
+        
+        <!-- ============================================ -->
+        <!-- FICHIER LEGACY (fonctions restantes a migrer) -->
+        <!-- ============================================ -->
         <script src="script.js"></script>
 
     </body>
