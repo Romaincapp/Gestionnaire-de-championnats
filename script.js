@@ -821,11 +821,14 @@ try {
         const dayData = championship.days[dayNumber];
         if (!dayData) return false;
 
+        // Helper pour vérifier si un joueur est un BYE (nom exact 'BYE' ou commence par 'BYE')
+        const isByePlayer = (name) => name === 'BYE' || (typeof name === 'string' && name.startsWith('BYE'));
+
         // Vérifier dans les matchs classiques
         const regularMatches = dayData.matches[division] || [];
         const hasByeInRegular = regularMatches.some(match =>
-            (match.player1 === playerName && match.player2 === 'BYE') ||
-            (match.player2 === playerName && match.player1 === 'BYE')
+            (match.player1 === playerName && isByePlayer(match.player2)) ||
+            (match.player2 === playerName && isByePlayer(match.player1))
         );
 
         if (hasByeInRegular) return true;
@@ -834,8 +837,8 @@ try {
         if (dayData.pools?.enabled && dayData.pools.divisions[division]) {
             const poolMatches = dayData.pools.divisions[division].matches || [];
             const hasByeInPools = poolMatches.some(match =>
-                (match.player1 === playerName && match.player2 === 'BYE') ||
-                (match.player2 === playerName && match.player1 === 'BYE')
+                (match.player1 === playerName && isByePlayer(match.player2)) ||
+                (match.player2 === playerName && isByePlayer(match.player1))
             );
 
             if (hasByeInPools) return true;
@@ -845,8 +848,8 @@ try {
         if (dayData.pools?.divisions[division]?.finalPhase) {
             const finalMatches = dayData.pools.divisions[division].finalPhase || [];
             const hasByeInFinal = finalMatches.some(match =>
-                (match.player1 === playerName && match.player2 === 'BYE') ||
-                (match.player2 === playerName && match.player1 === 'BYE')
+                (match.player1 === playerName && isByePlayer(match.player2)) ||
+                (match.player2 === playerName && isByePlayer(match.player1))
             );
 
             if (hasByeInFinal) return true;
