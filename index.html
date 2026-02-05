@@ -148,6 +148,9 @@
                         <button onclick="showAddPlayerModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
                             ➕ Joueurs
                         </button>
+                        <button onclick="showImportPlayersModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            📥 Importer
+                        </button>
                         <!-- Actions matchs -->
                         <button onclick="showMatchGenerationModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             🎯 Matchs
@@ -325,6 +328,14 @@
             <p style="margin: 15px 0; color: #7f8c8d; font-size: 14px;">
                 ⚠️ L'import remplacera complètement le championnat actuel
             </p>
+            <div style="margin: 20px 0; padding: 15px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;">
+                <p style="margin: 0 0 10px 0; font-size: 13px; color: #0369a1;">
+                    📁 <strong>Import multi-journées :</strong> Sélectionnez plusieurs fichiers JSON (un par journée)
+                </p>
+                <button onclick="showMultiDayImportModal(); closeImportModal();" class="btn" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; width: 100%;">
+                    📂 Importer plusieurs journées
+                </button>
+            </div>
             <div class="modal-buttons">
                 <button class="btn btn-danger" onclick="closeImportModal()">Annuler</button>
                 <button class="btn btn-success" onclick="processImport()">Importer</button>
