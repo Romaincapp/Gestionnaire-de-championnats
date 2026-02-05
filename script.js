@@ -29,6 +29,14 @@ try {
     }
     window.formatProperName = formatProperName;
 
+    // Fonction pour échapper les caractères spéciaux dans les attributs onclick
+    // Nécessaire pour les noms avec apostrophes (ex: "pt'oursons")
+    function escapeForOnclick(str) {
+        if (!str) return '';
+        return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+    window.escapeForOnclick = escapeForOnclick;
+
     // Fonction pour vérifier si un match aller-retour existe déjà dans une liste de matchs
     // Retourne true si player1 vs player2 OU player2 vs player1 existe déjà
     function hasReverseMatchInDay(matches, player1, player2) {
@@ -892,8 +900,8 @@ try {
                         playerClub = '';
                     }
                     
-                    // Utiliser JSON.stringify pour échapper correctement tous les caractères spéciaux
-                    const escapedPlayer = JSON.stringify(playerName).slice(1, -1);
+                    // Échapper les caractères spéciaux pour les attributs onclick
+                    const escapedPlayer = escapeForOnclick(playerName);
 
                     // Vérifier si le joueur a un match BYE
                     const hasBye = playerHasByeMatch(dayNumber, division, playerName);
@@ -4479,7 +4487,7 @@ playerStats.forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
     const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
                       player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
-    const escapedPlayerName = JSON.stringify(player.name).slice(1, -1);
+    const escapedPlayerName = escapeForOnclick(player.name);
 
     // Style de la colonne Étape selon le résultat
     let stageStyle = '';
@@ -4613,7 +4621,7 @@ generalRanking.divisions[division].forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
     const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
                       player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
-    const escapedPlayerName = JSON.stringify(player.name).slice(1, -1);
+    const escapedPlayerName = escapeForOnclick(player.name);
 
     // Style de la colonne Étape selon le résultat
     let stageStyle = '';
@@ -5848,13 +5856,17 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     window.closeImportModal = closeImportModal;
 
     function handleChampionshipImport(event) {
+        console.log('handleChampionshipImport appelé', event);
         const file = event.target.files[0];
+        console.log('Fichier sélectionné:', file);
         if (!file) return;
-        
+
         const reader = new FileReader();
         reader.onload = function(e) {
+            console.log('Fichier lu avec succès');
             try {
                 const data = JSON.parse(e.target.result);
+                console.log('JSON parsé:', data);
                 
                 if (data.championship) {
                     importedChampionshipData = data;
@@ -7431,7 +7443,7 @@ function showByeManagementModal(dayNumber) {
         `;
         
         playersNeedingBye.forEach((player, index) => {
-            const escapedPlayerName = JSON.stringify(player.name).slice(1, -1);
+            const escapedPlayerName = escapeForOnclick(player.name);
             // Style conditionnel : fond orange si le joueur a déjà un BYE
             const rowStyle = player.hasBye
                 ? 'background: linear-gradient(135deg, #f39c12, #e67e22); color: white;'
@@ -9812,7 +9824,7 @@ function updatePoolsDisplay(dayNumber) {
                         border-radius: 8px;
                     ">
                         ${pool.map(player =>
-                            `<span class="pool-player-tag" onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${player}')" style="
+                            `<span class="pool-player-tag" onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${escapeForOnclick(player)}')" style="
                                 background: linear-gradient(135deg, #27ae60, #2ecc71);
                                 color: white;
                                 padding: 8px 15px;
@@ -9884,7 +9896,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                     margin-bottom: 10px;
                 ">
                     <div class="player-names" style="font-weight: 600; color: #856404;">
-                        🎯 <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${realPlayer}')"
+                        🎯 <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(realPlayer)}')"
                                 style="cursor: pointer; text-decoration: underline dotted;"
                                 title="Cliquez pour voir les statistiques"
                                 onmouseover="this.style.color='#3498db'"
@@ -9901,7 +9913,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                 </div>
 
                 <div style="text-align: center; padding: 10px; background: rgba(255, 193, 7, 0.1); border-radius: 6px;">
-                    <strong style="color: #856404;">✅ <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${realPlayer}')"
+                    <strong style="color: #856404;">✅ <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(realPlayer)}')"
                                                             style="cursor: pointer; text-decoration: underline dotted;"
                                                             title="Cliquez pour voir les statistiques"
                                                             onmouseover="this.style.color='#3498db'"
@@ -9962,7 +9974,7 @@ function generatePoolMatchHTML(match, dayNumber) {
             </div>` : ''}
             
             <div class="score-container">
-                <span class="player-name-left" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${match.player1}')"
+                <span class="player-name-left" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player1)}')"
                       style="cursor: pointer; text-decoration: underline dotted;"
                       title="Cliquez pour voir les statistiques"
                       onmouseover="this.style.color='#3498db'"
@@ -9982,7 +9994,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                            onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
                            style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
                 </div>
-                <span class="player-name-right" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${match.player2}')"
+                <span class="player-name-right" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player2)}')"
                       style="cursor: pointer; text-decoration: underline dotted;"
                       title="Cliquez pour voir les statistiques"
                       onmouseover="this.style.color='#3498db'"
@@ -10675,7 +10687,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                                     ${index + 1} ${emoji}
                                 </td>
                                 <td style="padding: 8px; font-weight: 600; color: ${textColor};">
-                                    <span ${dayNumber && division ? `onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${player.name}')"` : ''}
+                                    <span ${dayNumber && division ? `onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${escapeForOnclick(player.name)}')"` : ''}
                                           style="cursor: ${dayNumber && division ? 'pointer' : 'default'}; ${dayNumber && division ? 'text-decoration: underline dotted;' : ''}"
                                           ${dayNumber && division ? `title="Cliquez pour voir les statistiques"` : ''}
                                           ${dayNumber && division ? `onmouseover="this.style.color='#3498db'"` : ''}
