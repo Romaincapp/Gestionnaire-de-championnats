@@ -18,6 +18,14 @@ try {
     // Fonction pour formater un nom en "Nom Propre" (première lettre majuscule, reste minuscule)
     function formatProperName(name) {
         if (!name) return '';
+        // Si c'est un objet joueur {name, club}, formater le nom dans l'objet et retourner l'objet
+        if (typeof name === 'object' && name !== null) {
+            if (name.name && typeof name.name === 'string') {
+                name.name = formatProperName(name.name);
+            }
+            return name;
+        }
+        if (typeof name !== 'string') return '';
         return name.trim()
             .toLowerCase()
             .split(/(\s+|-)/) // Sépare par espaces ou tirets, en gardant les séparateurs
