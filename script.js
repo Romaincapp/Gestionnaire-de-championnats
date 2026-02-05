@@ -7367,11 +7367,30 @@ function showByeManagementModal(dayNumber) {
                 // Normaliser le nom du joueur (peut être un objet {name, club} ou une chaîne)
                 const playerName = getPlayerName(player);
 
-                const playerMatches = dayData.matches[division].filter(m =>
+                // Collecter TOUS les matchs du joueur (réguliers + poules + phase finale)
+                let allMatches = [];
+
+                // Matchs réguliers
+                const regularMatches = (dayData.matches[division] || []).filter(m =>
                     m.player1 === playerName || m.player2 === playerName
                 );
+                allMatches.push(...regularMatches);
 
-                const matchCount = playerMatches.length;
+                // Matchs de poules
+                if (dayData.pools?.enabled && dayData.pools.divisions?.[division]) {
+                    const poolMatches = (dayData.pools.divisions[division].matches || []).filter(m =>
+                        m.player1 === playerName || m.player2 === playerName
+                    );
+                    allMatches.push(...poolMatches);
+
+                    // Matchs de phase finale
+                    const finalMatches = (dayData.pools.divisions[division].finalPhase || []).filter(m =>
+                        m.player1 === playerName || m.player2 === playerName
+                    );
+                    allMatches.push(...finalMatches);
+                }
+
+                const matchCount = allMatches.length;
 
                 if (matchCount < 4) {
                     playersNeedingBye.push({
@@ -7522,11 +7541,30 @@ function showByeManagementModal(dayNumber) {
                 // Normaliser le nom du joueur (peut être un objet {name, club} ou une chaîne)
                 const playerName = getPlayerName(player);
 
-                const playerMatches = dayData.matches[division].filter(m =>
+                // Collecter TOUS les matchs du joueur (réguliers + poules + phase finale)
+                let allMatches = [];
+
+                // Matchs réguliers
+                const regularMatches = (dayData.matches[division] || []).filter(m =>
                     m.player1 === playerName || m.player2 === playerName
                 );
+                allMatches.push(...regularMatches);
 
-                const matchCount = playerMatches.length;
+                // Matchs de poules
+                if (dayData.pools?.enabled && dayData.pools.divisions?.[division]) {
+                    const poolMatches = (dayData.pools.divisions[division].matches || []).filter(m =>
+                        m.player1 === playerName || m.player2 === playerName
+                    );
+                    allMatches.push(...poolMatches);
+
+                    // Matchs de phase finale
+                    const finalMatches = (dayData.pools.divisions[division].finalPhase || []).filter(m =>
+                        m.player1 === playerName || m.player2 === playerName
+                    );
+                    allMatches.push(...finalMatches);
+                }
+
+                const matchCount = allMatches.length;
                 const missingMatches = 4 - matchCount;
 
                 for (let i = 0; i < missingMatches; i++) {
