@@ -1,0 +1,194 @@
+{
+  "version": "1.0",
+  "exportDate": "2026-01-13T00:00:00.000Z",
+  "competitionName": "Competition Course 2024",
+  "raceData": {
+    "events": [
+      {
+        "id": 1,
+        "name": "Course 400m",
+        "sportType": "running",
+        "distance": "400m",
+        "series": [
+          {
+            "id": 1,
+            "name": "Série 400m",
+            "eventId": 1,
+            "sportType": "running",
+            "distance": "400m",
+            "raceType": "individual",
+            "status": "completed",
+            "participants": [
+              {"bib": "10", "name": "Vervekken Jérôme", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 70920, "totalTime": 70920, "laps": [], "totalDistance": 400},
+              {"bib": "32", "name": "Guerera Alessio", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 82710, "totalTime": 82710, "laps": [], "totalDistance": 400},
+              {"bib": "6", "name": "Ferreira Da Costa Joao", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 94190, "totalTime": 94190, "laps": [], "totalDistance": 400},
+              {"bib": "36", "name": "Montemitro Sebastien", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 94200, "totalTime": 94200, "laps": [], "totalDistance": 400},
+              {"bib": "4", "name": "Chauveau Florian", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 96270, "totalTime": 96270, "laps": [], "totalDistance": 400},
+              {"bib": "30", "name": "Laurent Loïc", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 97300, "totalTime": 97300, "laps": [], "totalDistance": 400},
+              {"bib": "5", "name": "Seeuws Lionel", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 98630, "totalTime": 98630, "laps": [], "totalDistance": 400},
+              {"bib": "7", "name": "Lecomte Valentin", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 100550, "totalTime": 100550, "laps": [], "totalDistance": 400},
+              {"bib": "17", "name": "Canivet Frédéric", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 100910, "totalTime": 100910, "laps": [], "totalDistance": 400},
+              {"bib": "18", "name": "Michel Coralie", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 107300, "totalTime": 107300, "laps": [], "totalDistance": 400},
+              {"bib": "21", "name": "Leroy Christophe", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 107460, "totalTime": 107460, "laps": [], "totalDistance": 400},
+              {"bib": "35", "name": "Bordenga Vincent", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 107920, "totalTime": 107920, "laps": [], "totalDistance": 400},
+              {"bib": "14", "name": "Henry Marc", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 109420, "totalTime": 109420, "laps": [], "totalDistance": 400},
+              {"bib": "22", "name": "Normand Jean-François", "category": "Boulaie", "club": "Boulaie", "status": "finished", "finishTime": 114920, "totalTime": 114920, "laps": [], "totalDistance": 400},
+              {"bib": "43", "name": "Hottois Jason", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane", "status": "finished", "finishTime": 121240, "totalTime": 121240, "laps": [], "totalDistance": 400},
+              {"bib": "9", "name": "Luyindula Lucie", "category": "GAI SÉJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 121760, "totalTime": 121760, "laps": [], "totalDistance": 400},
+              {"bib": "54", "name": "Cialec Terre", "category": "TRUCKET", "club": "Trucket", "status": "finished", "finishTime": 123720, "totalTime": 123720, "laps": [], "totalDistance": 400},
+              {"bib": "8", "name": "Deleu Kevin", "category": "GAI SÉJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 124760, "totalTime": 124760, "laps": [], "totalDistance": 400},
+              {"bib": "13", "name": "Robin Christophe", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 132350, "totalTime": 132350, "laps": [], "totalDistance": 400},
+              {"bib": "42", "name": "Truant François", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane", "status": "finished", "finishTime": 134050, "totalTime": 134050, "laps": [], "totalDistance": 400},
+              {"bib": "23", "name": "Brousmische Sylvain", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 142530, "totalTime": 142530, "laps": [], "totalDistance": 400},
+              {"bib": "24", "name": "Thiry Katalyne", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 143550, "totalTime": 143550, "laps": [], "totalDistance": 400},
+              {"bib": "31", "name": "Sroka Guillaume", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 149290, "totalTime": 149290, "laps": [], "totalDistance": 400},
+              {"bib": "33", "name": "Damien Helene", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 154680, "totalTime": 154680, "laps": [], "totalDistance": 400},
+              {"bib": "53", "name": "Libert Eléna", "category": "TRUCKET", "club": "Trucket", "status": "finished", "finishTime": 155740, "totalTime": 155740, "laps": [], "totalDistance": 400},
+              {"bib": "15", "name": "Crapez Lydie", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 155780, "totalTime": 155780, "laps": [], "totalDistance": 400},
+              {"bib": "34", "name": "Collet Aurore", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 218710, "totalTime": 218710, "laps": [], "totalDistance": 400}
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Course 800m",
+        "sportType": "running",
+        "distance": "800m",
+        "series": [
+          {
+            "id": 2,
+            "name": "Série 800m",
+            "eventId": 2,
+            "sportType": "running",
+            "distance": "800m",
+            "raceType": "individual",
+            "status": "completed",
+            "participants": [
+              {"bib": "10", "name": "Vervekken Jérôme", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 186450, "totalTime": 186450, "laps": [], "totalDistance": 800},
+              {"bib": "20", "name": "Delorge Sebastien", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 210050, "totalTime": 210050, "laps": [], "totalDistance": 800},
+              {"bib": "50", "name": "Detaille Franck", "category": "TRUCKET", "club": "Trucket", "status": "finished", "finishTime": 213450, "totalTime": 213450, "laps": [], "totalDistance": 800},
+              {"bib": "55", "name": "Akin Erkan", "category": "TRUCKET", "club": "Trucket", "status": "finished", "finishTime": 216780, "totalTime": 216780, "laps": [], "totalDistance": 800},
+              {"bib": "36", "name": "Montemitro Sebastien", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 220770, "totalTime": 220770, "laps": [], "totalDistance": 800},
+              {"bib": "6", "name": "Ferreira Da Costa Joao", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 225260, "totalTime": 225260, "laps": [], "totalDistance": 800},
+              {"bib": "21", "name": "Leroy Christophe", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 229630, "totalTime": 229630, "laps": [], "totalDistance": 800},
+              {"bib": "14", "name": "Henry Marc", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 245260, "totalTime": 245260, "laps": [], "totalDistance": 800},
+              {"bib": "4", "name": "Chauveau Florian", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 248650, "totalTime": 248650, "laps": [], "totalDistance": 800},
+              {"bib": "44", "name": "Dardenne Alan", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane", "status": "finished", "finishTime": 259510, "totalTime": 259510, "laps": [], "totalDistance": 800},
+              {"bib": "30", "name": "Laurent Loïc", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 261160, "totalTime": 261160, "laps": [], "totalDistance": 800},
+              {"bib": "18", "name": "Michel Coralie", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 263170, "totalTime": 263170, "laps": [], "totalDistance": 800},
+              {"bib": "8", "name": "Deleu Kevin", "category": "GAI SÉJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 271140, "totalTime": 271140, "laps": [], "totalDistance": 800},
+              {"bib": "22", "name": "Normand Jean-François", "category": "Boulaie", "club": "Boulaie", "status": "finished", "finishTime": 284950, "totalTime": 284950, "laps": [], "totalDistance": 800},
+              {"bib": "41", "name": "Paquay Patrice", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane", "status": "finished", "finishTime": 301410, "totalTime": 301410, "laps": [], "totalDistance": 800},
+              {"bib": "52", "name": "Lorfevre Jean-Pol", "category": "TRUCKET", "club": "Trucket", "status": "finished", "finishTime": 301960, "totalTime": 301960, "laps": [], "totalDistance": 800},
+              {"bib": "42", "name": "Truant François", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane", "status": "finished", "finishTime": 332420, "totalTime": 332420, "laps": [], "totalDistance": 800},
+              {"bib": "23", "name": "Brousmische Sylvain", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 341460, "totalTime": 341460, "laps": [], "totalDistance": 800},
+              {"bib": "24", "name": "Thiry Katalyne", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 368050, "totalTime": 368050, "laps": [], "totalDistance": 800},
+              {"bib": "15", "name": "Crapez Lydie", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 386100, "totalTime": 386100, "laps": [], "totalDistance": 800}
+            ]
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Course 1200m",
+        "sportType": "running",
+        "distance": "1200m",
+        "series": [
+          {
+            "id": 3,
+            "name": "Série 1200m",
+            "eventId": 3,
+            "sportType": "running",
+            "distance": "1200m",
+            "raceType": "individual",
+            "status": "completed",
+            "participants": [
+              {"bib": "11", "name": "Vervekken Jonathan", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 369550, "totalTime": 369550, "laps": [], "totalDistance": 1200},
+              {"bib": "5", "name": "Seeuws Lionel", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 407080, "totalTime": 407080, "laps": [], "totalDistance": 1200},
+              {"bib": "32", "name": "Guerera Alessio", "category": "JALON", "club": "Jalon", "status": "finished", "finishTime": 418410, "totalTime": 418410, "laps": [], "totalDistance": 1200},
+              {"bib": "20", "name": "Delorge Sebastien", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 440740, "totalTime": 440740, "laps": [], "totalDistance": 1200},
+              {"bib": "2", "name": "Ripert David", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 457000, "totalTime": 457000, "laps": [], "totalDistance": 1200},
+              {"bib": "17", "name": "Canivet Frédéric", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 459220, "totalTime": 459220, "laps": [], "totalDistance": 1200},
+              {"bib": "45", "name": "Kévin", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane", "status": "finished", "finishTime": 702790, "totalTime": 702790, "laps": [], "totalDistance": 1200}
+            ]
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Course 2400m",
+        "sportType": "running",
+        "distance": "2400m",
+        "series": [
+          {
+            "id": 4,
+            "name": "Série 2400m",
+            "eventId": 4,
+            "sportType": "running",
+            "distance": "2400m",
+            "raceType": "individual",
+            "status": "completed",
+            "participants": [
+              {"bib": "11", "name": "Vervekken Jonathan", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 797470, "totalTime": 797470, "laps": [], "totalDistance": 2400},
+              {"bib": "40", "name": "Hardelay Jonathan", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane", "status": "finished", "finishTime": 878550, "totalTime": 878550, "laps": [], "totalDistance": 2400},
+              {"bib": "50", "name": "Detaille Franck", "category": "TRUCKET", "club": "Trucket", "status": "finished", "finishTime": 878880, "totalTime": 878880, "laps": [], "totalDistance": 2400},
+              {"bib": "3", "name": "Lemaire Louis", "category": "GAI SEJOUR", "club": "Gai Séjour", "status": "finished", "finishTime": 898250, "totalTime": 898250, "laps": [], "totalDistance": 2400},
+              {"bib": "41", "name": "Paquay Patrice", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane", "status": "finished", "finishTime": 1159030, "totalTime": 1159030, "laps": [], "totalDistance": 2400},
+              {"bib": "13", "name": "Robin Christophe", "category": "BOULAIE", "club": "Boulaie", "status": "finished", "finishTime": 1269920, "totalTime": 1269920, "laps": [], "totalDistance": 2400}
+            ]
+          }
+        ]
+      }
+    ],
+    "participants": [
+      {"id": 1, "name": "Ripert David", "bib": "2", "category": "GAI SEJOUR", "club": "Gai Séjour"},
+      {"id": 2, "name": "Lemaire Louis", "bib": "3", "category": "GAI SEJOUR", "club": "Gai Séjour"},
+      {"id": 3, "name": "Chauveau Florian", "bib": "4", "category": "GAI SEJOUR", "club": "Gai Séjour"},
+      {"id": 4, "name": "Seeuws Lionel", "bib": "5", "category": "GAI SEJOUR", "club": "Gai Séjour"},
+      {"id": 5, "name": "Ferreira Da Costa Joao", "bib": "6", "category": "GAI SEJOUR", "club": "Gai Séjour"},
+      {"id": 6, "name": "Lecomte Valentin", "bib": "7", "category": "GAI SEJOUR", "club": "Gai Séjour"},
+      {"id": 7, "name": "Deleu Kevin", "bib": "8", "category": "GAI SÉJOUR", "club": "Gai Séjour"},
+      {"id": 8, "name": "Luyindula Lucie", "bib": "9", "category": "GAI SÉJOUR", "club": "Gai Séjour"},
+      {"id": 9, "name": "Vervekken Jérôme", "bib": "10", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 10, "name": "Vervekken Jonathan", "bib": "11", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 11, "name": "Robin Christophe", "bib": "13", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 12, "name": "Henry Marc", "bib": "14", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 13, "name": "Crapez Lydie", "bib": "15", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 14, "name": "Canivet Frédéric", "bib": "17", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 15, "name": "Michel Coralie", "bib": "18", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 16, "name": "Delorge Sebastien", "bib": "20", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 17, "name": "Leroy Christophe", "bib": "21", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 18, "name": "Normand Jean-François", "bib": "22", "category": "Boulaie", "club": "Boulaie"},
+      {"id": 19, "name": "Brousmische Sylvain", "bib": "23", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 20, "name": "Thiry Katalyne", "bib": "24", "category": "BOULAIE", "club": "Boulaie"},
+      {"id": 21, "name": "Laurent Loïc", "bib": "30", "category": "JALON", "club": "Jalon"},
+      {"id": 22, "name": "Sroka Guillaume", "bib": "31", "category": "JALON", "club": "Jalon"},
+      {"id": 23, "name": "Guerera Alessio", "bib": "32", "category": "JALON", "club": "Jalon"},
+      {"id": 24, "name": "Damien Helene", "bib": "33", "category": "JALON", "club": "Jalon"},
+      {"id": 25, "name": "Collet Aurore", "bib": "34", "category": "JALON", "club": "Jalon"},
+      {"id": 26, "name": "Bordenga Vincent", "bib": "35", "category": "JALON", "club": "Jalon"},
+      {"id": 27, "name": "Montemitro Sebastien", "bib": "36", "category": "JALON", "club": "Jalon"},
+      {"id": 28, "name": "Hardelay Jonathan", "bib": "40", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane"},
+      {"id": 29, "name": "Paquay Patrice", "bib": "41", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane"},
+      {"id": 30, "name": "Truant François", "bib": "42", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane"},
+      {"id": 31, "name": "Hottois Jason", "bib": "43", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane"},
+      {"id": 32, "name": "Dardenne Alan", "bib": "44", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane"},
+      {"id": 33, "name": "Kévin", "bib": "45", "category": "LA CARPE MOSANE", "club": "La Carpe Mosane"},
+      {"id": 34, "name": "Detaille Franck", "bib": "50", "category": "TRUCKET", "club": "Trucket"},
+      {"id": 35, "name": "Lorfevre Jean-Pol", "bib": "52", "category": "TRUCKET", "club": "Trucket"},
+      {"id": 36, "name": "Libert Eléna", "bib": "53", "category": "TRUCKET", "club": "Trucket"},
+      {"id": 37, "name": "Cialec Terre", "bib": "54", "category": "TRUCKET", "club": "Trucket"},
+      {"id": 38, "name": "Akin Erkan", "bib": "55", "category": "TRUCKET", "club": "Trucket"}
+    ],
+    "nextEventId": 5,
+    "nextSerieId": 5,
+    "nextParticipantId": 39
+  },
+  "stats": {
+    "totalEvents": 4,
+    "totalParticipants": 38,
+    "totalSeries": 4,
+    "completedSeries": 4
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "exportDate": "2025-10-16T14:05:03.636Z",
+  "competitionName": "Competition_Chrono_2025-10-16",
+  "raceData": {
+    "events": [
+      {
+        "id": 2,
+        "name": "Natation",
+        "sportType": "swimming",
+        "distance": 100,
+        "raceType": "individual",
+        "relayDuration": null,
+        "series": []
+      },
+      {
+        "id": 3,
+        "name": "Vélo",
+        "sportType": "cycling",
+        "distance": 5000,
+        "raceType": "individual",
+        "relayDuration": null,
+        "series": []
+      },
+      {
+        "id": 4,
+        "name": "Course à pied",
+        "sportType": "running",
+        "distance": 1000,
+        "raceType": "individual",
+        "relayDuration": null,
+        "series": []
+      }
+    ],
+    "participants": [],
+    "nextEventId": 5,
+    "nextSerieId": 1,
+    "nextParticipantId": 1
+  },
+  "stats": {
+    "totalEvents": 3,
+    "totalParticipants": 0,
+    "totalSeries": 0,
+    "completedSeries": 0
+  }
+}
