@@ -7361,22 +7361,25 @@ function showByeManagementModal(dayNumber) {
         let playersNeedingBye = [];
 
         for (let division = 1; division <= numDivisions; division++) {
-            const players = dayData.players[division];
+            const players = dayData.players[division] || [];
 
             players.forEach(player => {
+                // Normaliser le nom du joueur (peut être un objet {name, club} ou une chaîne)
+                const playerName = getPlayerName(player);
+
                 const playerMatches = dayData.matches[division].filter(m =>
-                    m.player1 === player || m.player2 === player
+                    m.player1 === playerName || m.player2 === playerName
                 );
 
                 const matchCount = playerMatches.length;
 
                 if (matchCount < 4) {
                     playersNeedingBye.push({
-                        name: player,
+                        name: playerName,
                         division: division,
                         currentMatches: matchCount,
                         missingMatches: 4 - matchCount,
-                        hasBye: playerHasByeMatch(dayNumber, division, player)
+                        hasBye: playerHasByeMatch(dayNumber, division, playerName)
                     });
                 }
             });
@@ -7513,23 +7516,26 @@ function showByeManagementModal(dayNumber) {
         let addedCount = 0;
 
         for (let division = 1; division <= numDivisions; division++) {
-            const players = dayData.players[division];
-            
+            const players = dayData.players[division] || [];
+
             players.forEach(player => {
-                const playerMatches = dayData.matches[division].filter(m => 
-                    m.player1 === player || m.player2 === player
+                // Normaliser le nom du joueur (peut être un objet {name, club} ou une chaîne)
+                const playerName = getPlayerName(player);
+
+                const playerMatches = dayData.matches[division].filter(m =>
+                    m.player1 === playerName || m.player2 === playerName
                 );
-                
+
                 const matchCount = playerMatches.length;
                 const missingMatches = 4 - matchCount;
-                
+
                 for (let i = 0; i < missingMatches; i++) {
-                    addByeMatchForPlayer(dayNumber, division, player);
+                    addByeMatchForPlayer(dayNumber, division, playerName);
                     addedCount++;
                 }
             });
         }
-        
+
         showNotification(`${addedCount} matchs BYE ajoutés automatiquement !`, 'success');
     }
     window.addByeToAll = addByeToAll;
