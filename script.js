@@ -39,6 +39,15 @@ try {
     }
     window.hasReverseMatchInDay = hasReverseMatchInDay;
 
+    // Fonction utilitaire pour extraire le nom d'un joueur (chaîne ou objet {name, club})
+    function getPlayerName(player) {
+        if (typeof player === 'object' && player !== null) {
+            return player.name || '';
+        }
+        return player || '';
+    }
+    window.getPlayerName = getPlayerName;
+
     // STRUCTURE DE DONNÉES CHAMPIONNAT
     let championship = {
         currentDay: 1,
@@ -1118,7 +1127,12 @@ try {
 
     // GESTION DES ONGLETS ET JOURNÉES
     function addNewDay() {
+        // Sauvegarder avant toute modification (sécurité)
+        saveToLocalStorage();
+        
         const existingDays = Object.keys(championship.days).map(Number);
+        console.log('Journées existantes:', existingDays);
+        
         const newDayNumber = Math.max(...existingDays) + 1;
         const numDivisions = championship.config.numDivisions || 3;
 
@@ -1171,6 +1185,13 @@ try {
         setTimeout(() => {
             restoreCollapseState();
         }, 100);
+
+        // Mettre à jour les boutons de copie rapide pour toutes les journées
+        setTimeout(() => {
+            Object.keys(championship.days).forEach(dayNum => {
+                generateQuickCopyButtons(parseInt(dayNum));
+            });
+        }, 50);
 
         saveToLocalStorage();
 
@@ -1227,6 +1248,10 @@ try {
     }
 
     function createDayContent(dayNumber) {
+        // Récupérer le type de journée depuis les données
+        const dayData = championship.days[dayNumber];
+        const dayType = dayData?.dayType || 'championship';
+        
         // Vérifier si le contenu de la journée existe déjà
         const existingDayContent = document.getElementById(`day-${dayNumber}`);
         if (existingDayContent) {
@@ -1237,6 +1262,37 @@ try {
             tempDiv.innerHTML = generateDayContentHTML(dayNumber);
             existingDayContent.innerHTML = tempDiv.innerHTML;
             initializeDivisionsDisplay(dayNumber);
+            setTimeout(() => generateQuickCopyButtons(dayNumber), 0);
+            
+            // S'assurer que le sélecteur a la bonne valeur et mettre à jour l'affichage
+            setTimeout(() => {
+                const selector = document.getElementById(`day-type-select-${dayNumber}`);
+                if (selector) {
+                    selector.value = dayType;
+                }
+                
+                // Afficher la bonne section (championship ou chrono)
+                const chronoSection = document.getElementById(`chrono-section-${dayNumber}`);
+                const championshipSection = document.getElementById(`championship-section-${dayNumber}`);
+                
+                if (chronoSection && championshipSection) {
+                    if (dayType === 'chrono') {
+                        chronoSection.style.display = 'block';
+                        championshipSection.style.display = 'none';
+                    } else {
+                        chronoSection.style.display = 'none';
+                        championshipSection.style.display = 'block';
+                    }
+                }
+                
+                // Rafraîchir l'affichage chrono si nécessaire
+                if (dayType === 'chrono' && typeof refreshChronoDisplay === 'function') {
+                    const chronoContent = document.getElementById(`chrono-content-${dayNumber}`);
+                    if (chronoContent) {
+                        chronoContent.innerHTML = renderChronoInterfaceForDay(dayNumber);
+                    }
+                }
+            }, 50);
             return;
         }
 
@@ -1250,6 +1306,7 @@ try {
 
         content.insertBefore(dayContent, generalRanking);
         initializeDivisionsDisplay(dayNumber);
+        setTimeout(() => generateQuickCopyButtons(dayNumber), 0);
     }
 
     function generateDayContentHTML(dayNumber) {
@@ -1285,9 +1342,11 @@ try {
                     <button onclick="showAddPlayerModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
                         ➕ Joueurs
                     </button>
-                    <button onclick="copyPlayersFromPreviousDay(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                        👥 Copier J${dayNumber-1}
+                    <button onclick="showImportPlayersModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        📥 Importer joueurs
                     </button>
+                    <!-- Boutons copie rapide -->
+                    <span id="quick-copy-buttons-${dayNumber}" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>
                     <!-- Actions matchs -->
                     <button onclick="showMatchGenerationModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🎯 Matchs
@@ -1470,6 +1529,23 @@ try {
     function handleDayTypeChange(dayNumber, type) {
         // Sauvegarder le nouveau type
         if (!championship.days[dayNumber]) return;
+        
+        // S'assurer que la structure de données existe
+        if (!championship.days[dayNumber].dayType) {
+            championship.days[dayNumber].dayType = 'championship';
+        }
+        
+        // Initialiser les données chrono si elles n'existent pas
+        if (!championship.days[dayNumber].chronoData) {
+            championship.days[dayNumber].chronoData = {
+                events: [],
+                series: [],
+                participants: [],
+                nextEventId: 1,
+                nextSerieId: 1,
+                nextParticipantId: 1
+            };
+        }
         
         championship.days[dayNumber].dayType = type;
         saveToLocalStorage();
@@ -1701,24 +1777,44 @@ try {
     function initializeAllDaysContent() {
         Object.keys(championship.days).forEach(dayNumber => {
             const dayNum = Number(dayNumber);
-            if (dayNum > 1) {
-                // Forcer la recréation/mise à jour du contenu pour toutes les journées supplémentaires
-                createDayContent(dayNum);
-            }
+            // Recréer/mettre à jour le contenu pour TOUTES les journées (y compris J1)
+            // Cela garantit que le bon type d'interface est affiché
+            createDayContent(dayNum);
             initializeDivisionsDisplay(dayNum);
             updatePlayersDisplay(dayNum);
             updateMatchesDisplay(dayNum);
             updateStats(dayNum);
             
-            // Initialiser l'interface chrono si nécessaire
-            if (typeof updateDayTypeUI === 'function') {
-                updateDayTypeUI(dayNum);
-            }
-            // Rafraîchir l'affichage chrono pour les journées en mode chrono
+            // Afficher la bonne section selon le type de journée
             const dayData = championship.days[dayNum];
-            if (dayData && dayData.dayType === 'chrono' && typeof refreshChronoDisplay === 'function') {
-                refreshChronoDisplay(dayNum);
+            if (dayData) {
+                const dayType = dayData.dayType || 'championship';
+                const chronoSection = document.getElementById(`chrono-section-${dayNum}`);
+                const championshipSection = document.getElementById(`championship-section-${dayNum}`);
+                const selector = document.getElementById(`day-type-select-${dayNum}`);
+                
+                if (selector) {
+                    selector.value = dayType;
+                }
+                
+                if (chronoSection && championshipSection) {
+                    chronoSection.style.display = dayType === 'chrono' ? 'block' : 'none';
+                    championshipSection.style.display = dayType === 'championship' ? 'block' : 'none';
+                }
+                
+                // Rafraîchir l'affichage chrono si nécessaire (délai pour s'assurer que le DOM est prêt)
+                if (dayType === 'chrono' && typeof renderChronoInterfaceForDay === 'function') {
+                    setTimeout(() => {
+                        const chronoContent = document.getElementById(`chrono-content-${dayNum}`);
+                        if (chronoContent) {
+                            chronoContent.innerHTML = renderChronoInterfaceForDay(dayNum);
+                        }
+                    }, 200);
+                }
             }
+            
+            // Générer les boutons de copie rapide
+            setTimeout(() => generateQuickCopyButtons(dayNum), 100);
             //nouveau pour les pools
             initializePoolsForDay(dayNum);
         });
@@ -1780,7 +1876,8 @@ try {
         };
 
         for (let division = 1; division <= numDivisions; division++) {
-            const divisionPlayers = [...(dayData.players[division] || [])];
+            // Normaliser les joueurs : extraire le nom si c'est un objet {name, club}
+            const divisionPlayers = (dayData.players[division] || []).map(p => getPlayerName(p));
 
             if (divisionPlayers.length < 2) {
                 if (divisionPlayers.length === 1) {
@@ -1850,13 +1947,17 @@ try {
             divisionPlayers.forEach(p => playersMatchCount.set(p, 0));
 
             const matchesByTour = { 1: [], 2: [], 3: [], 4: [] };
-            const usedMatches = new Set();
+            // Utiliser un Map<key, count> au lieu d'un Set pour permettre les matchs aller-retour
+            const usedMatchesCount = new Map();
+            // Avec 4 joueurs et 4+ matchs demandés, on peut jouer 2 fois contre le même adversaire
+            const maxUsesPerPair = allowReverseMatches ? 2 : 1;
 
             for (let tour = 1; tour <= 4; tour++) {
                 const playersInThisTour = new Set();
 
                 for (const matchPair of possibleMatches) {
-                    if (usedMatches.has(matchPair.key)) continue;
+                    const currentUses = usedMatchesCount.get(matchPair.key) || 0;
+                    if (currentUses >= maxUsesPerPair) continue;
 
                     if (!playersInThisTour.has(matchPair.player1) &&
                         !playersInThisTour.has(matchPair.player2)) {
@@ -1890,7 +1991,7 @@ try {
                                 playersInThisTour.add(matchPair.player2);
                                 playersMatchCount.set(matchPair.player1, p1Count + 1);
                                 playersMatchCount.set(matchPair.player2, p2Count + 1);
-                                usedMatches.add(matchPair.key);
+                                usedMatchesCount.set(matchPair.key, currentUses + 1);
 
                                 if (matchPair.timesPlayed === 0) {
                                     reportDetails.totalNewMatches++;
@@ -1933,7 +2034,8 @@ try {
                         if (p2Count >= targetMatchesPerPlayer) continue;
 
                         const key = [player1, player2].sort().join('|vs|');
-                        if (usedMatches.has(key)) continue;
+                        const currentKeyUses = usedMatchesCount.get(key) || 0;
+                        if (currentKeyUses >= maxUsesPerPair) continue;
 
                         // Trouver le tour avec le moins de matchs pour équilibrer
                         let bestTour = 1;
@@ -1955,13 +2057,13 @@ try {
                             completed: false,
                             winner: null,
                             timesPlayedBefore: timesPlayed,
-                            isRematch: timesPlayed > 0
+                            isRematch: currentKeyUses > 0 || timesPlayed > 0
                         };
 
                         matchesByTour[bestTour].push(matchData);
                         playersMatchCount.set(player1, p1Count + 1);
                         playersMatchCount.set(player2, p2Count + 1);
-                        usedMatches.add(key);
+                        usedMatchesCount.set(key, currentKeyUses + 1);
 
                         if (timesPlayed === 0) {
                             reportDetails.totalNewMatches++;
@@ -2038,7 +2140,8 @@ try {
         };
 
         for (let division = 1; division <= numDivisions; division++) {
-            const divisionPlayers = [...(dayData.players[division] || [])];
+            // Normaliser les joueurs : extraire le nom si c'est un objet {name, club}
+            const divisionPlayers = (dayData.players[division] || []).map(p => getPlayerName(p));
             const numPlayers = divisionPlayers.length;
 
             if (numPlayers < 4) {
@@ -2254,7 +2357,8 @@ try {
         };
 
         for (let division = 1; division <= numDivisions; division++) {
-            const divisionPlayers = [...(dayData.players[division] || [])];
+            // Normaliser les joueurs : extraire le nom si c'est un objet {name, club}
+            const divisionPlayers = (dayData.players[division] || []).map(p => getPlayerName(p));
             const numPlayers = divisionPlayers.length;
 
             if (numPlayers < 4) {
@@ -2472,7 +2576,8 @@ try {
         };
 
         for (let division = 1; division <= numDivisions; division++) {
-            const divisionPlayers = [...(dayData.players[division] || [])];
+            // Normaliser les joueurs : extraire le nom si c'est un objet {name, club}
+            const divisionPlayers = (dayData.players[division] || []).map(p => getPlayerName(p));
 
             if (divisionPlayers.length < 2) {
                 continue;
@@ -3468,44 +3573,327 @@ try {
     }
 
     function copyPlayersFromPreviousDay(dayNumber) {
-        const previousDay = dayNumber - 1;
-
-        if (!championship.days[previousDay]) {
-            alert(`Aucune journée ${previousDay} trouvée`);
-            return;
-        }
-
-        const numDivisions = championship.config?.numberOfDivisions || 3;
-        const prevPlayers = championship.days[previousDay].players;
-        let totalPlayers = 0;
-        let divisionDetails = '';
-
-        for (let division = 1; division <= numDivisions; division++) {
-            const divPlayerCount = prevPlayers[division]?.length || 0;
-            totalPlayers += divPlayerCount;
-            divisionDetails += `Division ${division}: ${divPlayerCount} joueurs\n`;
-        }
-
-        if (totalPlayers === 0) {
-            alert(`Aucun joueur à copier depuis la Journée ${previousDay}`);
-            return;
-        }
-
-        const confirmMsg = `Copier les joueurs de la Journée ${previousDay} vers la Journée ${dayNumber} ?\n\n` +
-                          divisionDetails + `\nTotal: ${totalPlayers} joueurs`;
-
-        if (confirm(confirmMsg)) {
-            for (let division = 1; division <= numDivisions; division++) {
-                championship.days[dayNumber].players[division] = [...(prevPlayers[division] || [])];
+        // Rediriger vers le nouveau modal d'import qui gère tous les modes
+        if (typeof showImportPlayersModal === 'function') {
+            showImportPlayersModal(dayNumber);
+        } else {
+            // Fallback sur l'ancienne méthode si le module n'est pas chargé
+            const previousDay = dayNumber - 1;
+            if (!championship.days[previousDay]) {
+                alert(`Aucune journée ${previousDay} trouvée`);
+                return;
             }
-
-            updatePlayersDisplay(dayNumber);
-            saveToLocalStorage();
-
-            showNotification(`${totalPlayers} joueurs copiés de J${previousDay} vers J${dayNumber}`, 'success');
+            showNotification('Module d\'import non chargé', 'error');
         }
     }
     window.copyPlayersFromPreviousDay = copyPlayersFromPreviousDay;
+
+    /**
+     * Démarre une course pour une série d'une journée spécifique (Mode Chrono par jour)
+     * Adapte les données du format jour vers le format global de l'ancien système
+     */
+    function startChronoRaceForDay(dayNumber, serieId) {
+        const dayData = championship.days[dayNumber];
+        if (!dayData || !dayData.chronoData) {
+            showNotification('Données chrono introuvables pour cette journée', 'error');
+            return;
+        }
+        
+        const chronoData = dayData.chronoData;
+        const serie = chronoData.series.find(s => s.id === serieId);
+        if (!serie) {
+            showNotification('Série introuvable', 'error');
+            return;
+        }
+        
+        if (!serie.participants || serie.participants.length === 0) {
+            showNotification('Ajoutez des participants avant de démarrer', 'warning');
+            return;
+        }
+        
+        // Préparer la structure pour l'ancien système
+        // Créer un événement temporaire si nécessaire
+        let event = raceData.events.find(e => e.id === serie.eventId);
+        if (!event && serie.eventId) {
+            // Chercher dans les événements du jour
+            const dayEvent = chronoData.events.find(e => e.id === serie.eventId);
+            if (dayEvent) {
+                event = {
+                    id: dayEvent.id,
+                    name: dayEvent.name,
+                    date: dayEvent.date,
+                    sportType: serie.sportType || 'running',
+                    raceType: serie.raceType || 'individual',
+                    distance: serie.distance || 1000,
+                    relayDuration: serie.relayDuration || 60,
+                    interclubPoints: serie.interclubPoints || [10,8,6,5,4,3,2,1],
+                    series: []
+                };
+                raceData.events.push(event);
+            }
+        }
+        
+        // Si pas d'événement, créer un événement virtuel pour cette série
+        if (!event) {
+            event = {
+                id: raceData.nextEventId++,
+                name: 'Jour ' + dayNumber + ' - ' + serie.name,
+                date: new Date().toISOString().split('T')[0],
+                sportType: serie.sportType || 'running',
+                raceType: serie.raceType || 'individual',
+                distance: serie.distance || 1000,
+                relayDuration: serie.relayDuration || 60,
+                interclubPoints: serie.interclubPoints || [10,8,6,5,4,3,2,1],
+                series: []
+            };
+            raceData.events.push(event);
+            serie.eventId = event.id;
+        }
+        
+        // Vérifier si la série existe déjà dans raceData
+        let raceSerie = raceData.series.find(s => s.id === serieId && s.eventId === event.id);
+        if (!raceSerie) {
+            // Créer la série dans le format de l'ancien système
+            raceSerie = {
+                id: serieId,
+                name: serie.name,
+                eventId: event.id,
+                participants: serie.participants.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    bib: p.bib,
+                    club: p.club || '',
+                    category: p.category || '',
+                    division: p.division,
+                    laneNumber: p.laneNumber,
+                    status: p.status || 'ready',
+                    totalTime: p.totalTime || 0,
+                    finishTime: p.finishTime || null,
+                    laps: p.laps || [],
+                    totalDistance: p.totalDistance || 0,
+                    bestLap: p.bestLap || null,
+                    lastLapStartTime: p.lastLapStartTime || 0
+                })),
+                isRunning: serie.isRunning || false,
+                startTime: serie.startTime || null,
+                currentTime: serie.currentTime || 0,
+                status: serie.status || 'ready',
+                laneMode: serie.laneMode || false
+            };
+            raceData.series.push(raceSerie);
+            event.series.push(raceSerie);
+        }
+        
+        // Stocker la référence au jour et série pour la sauvegarde ultérieure
+        raceData.currentDayNumber = dayNumber;
+        raceData.currentSerieId = serieId;
+        
+        // Mettre la série comme courante
+        raceData.currentSerie = raceSerie;
+        
+        // Sauvegarder les données de course
+        saveChronoToLocalStorage();
+        
+        // Basculer vers la section chrono globale
+        const chronoModeSection = document.getElementById('chronoModeSection');
+        // Cacher tous les onglets de journée
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.style.display = 'none';
+        });
+        
+        // Afficher la section chrono
+        if (chronoModeSection) {
+            chronoModeSection.style.display = 'block';
+        }
+        
+        // Mettre à jour l'onglet actif dans la navigation
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Charger l'affichage des événements puis afficher l'interface de course
+        if (typeof displayEventsList === 'function') {
+            displayEventsList();
+        }
+        
+        // Afficher l'interface de course
+        setTimeout(() => {
+            displayRaceInterface(raceSerie);
+        }, 100);
+        
+        showNotification('Course démarrée pour ' + serie.name + ' (Jour ' + dayNumber + ')', 'success');
+    }
+    window.startChronoRaceForDay = startChronoRaceForDay;
+
+    /**
+     * Sauvegarde les résultats de la course vers le stockage par jour
+     * Appelée automatiquement quand on termine une course
+     */
+    function saveRaceResultsToDay() {
+        if (!raceData.currentSerie || !raceData.currentDayNumber) return;
+        
+        const dayNumber = raceData.currentDayNumber;
+        const serieId = raceData.currentSerieId;
+        const dayData = championship.days[dayNumber];
+        
+        if (!dayData || !dayData.chronoData) return;
+        
+        const serie = dayData.chronoData.series.find(s => s.id === serieId);
+        if (!serie) return;
+        
+        const raceSerie = raceData.currentSerie;
+        
+        // Copier les données modifiées vers le stockage par jour
+        serie.isRunning = raceSerie.isRunning;
+        serie.startTime = raceSerie.startTime;
+        serie.currentTime = raceSerie.currentTime;
+        serie.status = raceSerie.status;
+        serie.endTime = raceSerie.endTime;
+        
+        // Copier les participants avec leurs résultats
+        serie.participants = raceSerie.participants.map(p => ({
+            id: p.id,
+            name: p.name,
+            bib: p.bib,
+            club: p.club || '',
+            category: p.category || '',
+            division: p.division,
+            laneNumber: p.laneNumber,
+            status: p.status,
+            totalTime: p.totalTime,
+            finishTime: p.finishTime,
+            laps: p.laps || [],
+            totalDistance: p.totalDistance,
+            bestLap: p.bestLap,
+            lastLapStartTime: p.lastLapStartTime
+        }));
+        
+        // Sauvegarder dans championship
+        saveToLocalStorage();
+        
+        // Nettoyer les références temporaires
+        delete raceData.currentDayNumber;
+        delete raceData.currentSerieId;
+    }
+    window.saveRaceResultsToDay = saveRaceResultsToDay;
+
+    /**
+     * Génère les boutons de copie rapide "Copier J1", "Copier J2" etc.
+     * pour une journée donnée
+     */
+    function generateQuickCopyButtons(dayNumber) {
+        const container = document.getElementById(`quick-copy-buttons-${dayNumber}`);
+        if (!container) return;
+        
+        // Vider le conteneur
+        container.innerHTML = '';
+        
+        // Générer un bouton pour chaque journée précédente
+        const allDays = Object.keys(championship.days).map(Number).sort((a, b) => a - b);
+        const previousDays = allDays.filter(d => d < dayNumber);
+        
+        if (previousDays.length === 0) return;
+        
+        // Ajouter un séparateur visuel si nécessaire
+        if (previousDays.length > 0) {
+            const sep = document.createElement('span');
+            sep.style.color = '#cbd5e1';
+            sep.textContent = '|';
+            container.appendChild(sep);
+        }
+        
+        previousDays.forEach(prevDay => {
+            const btn = document.createElement('button');
+            btn.onclick = function() { quickCopyFromDay(dayNumber, prevDay); };
+            btn.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 11px; background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; border-radius: 6px; cursor: pointer; font-weight: 500;';
+            btn.title = `Copier tous les joueurs de la Journée ${prevDay}`;
+            btn.innerHTML = `📋 J${prevDay}`;
+            container.appendChild(btn);
+        });
+    }
+    window.generateQuickCopyButtons = generateQuickCopyButtons;
+
+    /**
+     * Copie rapide des joueurs d'une journée à une autre
+     */
+    function quickCopyFromDay(targetDayNumber, sourceDayNumber) {
+        const sourceDay = championship.days[sourceDayNumber];
+        const targetDay = championship.days[targetDayNumber];
+        
+        if (!sourceDay || !targetDay) {
+            showNotification('Journée source ou cible introuvable', 'error');
+            return;
+        }
+        
+        // Compter les joueurs à copier
+        let playersToCopy = 0;
+        const numDivisions = championship.config?.numberOfDivisions || 3;
+        for (let div = 1; div <= numDivisions; div++) {
+            playersToCopy += (sourceDay.players[div] || []).length;
+        }
+        
+        if (playersToCopy === 0) {
+            showNotification(`La Journée ${sourceDayNumber} n'a pas de joueurs`, 'warning');
+            return;
+        }
+        
+        // Confirmer si joueurs existent déjà
+        let existingCount = 0;
+        for (let div = 1; div <= numDivisions; div++) {
+            existingCount += (targetDay.players[div] || []).length;
+        }
+        
+        let confirmMsg = `Copier ${playersToCopy} joueur(s) de J${sourceDayNumber} vers J${targetDayNumber} ?`;
+        if (existingCount > 0) {
+            confirmMsg += `\n\n⚠️ Attention : La Journée ${targetDayNumber} a déjà ${existingCount} joueur(s).\nLes doublons seront ignorés.`;
+        }
+        
+        if (!confirm(confirmMsg)) return;
+        
+        // Effectuer la copie
+        let copied = 0;
+        let skipped = 0;
+        
+        for (let div = 1; div <= numDivisions; div++) {
+            const sourcePlayers = sourceDay.players[div] || [];
+            const targetPlayers = targetDay.players[div] || [];
+            
+            sourcePlayers.forEach(player => {
+                const playerName = typeof player === 'object' ? player.name : player;
+                const playerClub = typeof player === 'object' ? (player.club || '') : '';
+                
+                // Vérifier si déjà présent
+                const exists = targetPlayers.some(p => {
+                    const pName = typeof p === 'object' ? p.name : p;
+                    return pName.toLowerCase() === playerName.toLowerCase();
+                });
+                
+                if (!exists) {
+                    targetPlayers.push({
+                        name: playerName,
+                        club: playerClub
+                    });
+                    copied++;
+                } else {
+                    skipped++;
+                }
+            });
+            
+            targetDay.players[div] = targetPlayers;
+        }
+        
+        saveToLocalStorage();
+        
+        // Rafraîchir l'affichage
+        if (typeof updatePlayersDisplay === 'function') {
+            updatePlayersDisplay(targetDayNumber);
+        }
+        
+        let msg = `${copied} joueur(s) copié(s) de J${sourceDayNumber}`;
+        if (skipped > 0) msg += ` (${skipped} doublon(s) ignoré(s))`;
+        showNotification(msg, 'success');
+    }
+    window.quickCopyFromDay = quickCopyFromDay;
 
     function clearDayData(dayNumber) {
         const dayData = championship.days[dayNumber];
@@ -5711,6 +6099,311 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
     }
     window.processImport = processImport;
 
+    /**
+     * Cherche des joueurs/participants dans n'importe quelle structure de données
+     */
+    function findPlayersInData(data, depth = 0) {
+        if (depth > 5) return []; // Limite de récursion
+        
+        const players = [];
+        
+        if (Array.isArray(data)) {
+            // C'est un tableau, chercher des objets avec 'name' ou 'nom'
+            for (const item of data) {
+                if (typeof item === 'string' && item.length > 0 && item.length < 100) {
+                    players.push({ name: item });
+                } else if (item && typeof item === 'object') {
+                    if (item.name || item.nom) {
+                        players.push({
+                            name: item.name || item.nom,
+                            club: item.club || ''
+                        });
+                    } else {
+                        // Récursion
+                        const nested = findPlayersInData(item, depth + 1);
+                        players.push(...nested);
+                    }
+                }
+            }
+        } else if (data && typeof data === 'object') {
+            // C'est un objet, parcourir ses propriétés
+            for (const key of Object.keys(data)) {
+                const value = data[key];
+                if (key === 'name' || key === 'nom') {
+                    if (typeof value === 'string' && value.length > 0) {
+                        players.push({ name: value });
+                    }
+                } else if (Array.isArray(value) && value.length > 0) {
+                    const nested = findPlayersInData(value, depth + 1);
+                    players.push(...nested);
+                }
+            }
+        }
+        
+        return players;
+    }
+
+    /**
+     * Importe plusieurs fichiers JSON (un par journée)
+     * Chaque fichier devient une journée séparée (J1, J2, J3...)
+     */
+    function importMultipleDayFiles(event) {
+        const files = Array.from(event.target.files);
+        if (!files || files.length === 0) return;
+        
+        // Trier les fichiers par nom pour un ordre cohérent
+        files.sort((a, b) => a.name.localeCompare(b.name));
+        
+        let processedCount = 0;
+        let importedDays = [];
+        let errors = [];
+        
+        // Vider le championnat actuel pour repartir à zéro
+        if (!confirm(`Vous allez importer ${files.length} fichier(s) comme journées séparées.\n\nCela créera J1, J2, J3... à partir de chaque fichier.\n\nLe championnat actuel sera remplacé. Continuer ?`)) {
+            event.target.value = '';
+            return;
+        }
+        
+        // Réinitialiser le championnat (en gardant la même référence pour les autres modules)
+        championship.currentDay = 1;
+        championship.config = { ...config };
+        championship.days = {};
+        
+        const numDivisions = config.numberOfDivisions || 3;
+        
+        // Traiter chaque fichier
+        const processFile = (file, dayIndex) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        const dayNumber = dayIndex + 1;
+                        
+                        // Extraire les données de la journée avec détection automatique du format
+                        let dayData = null;
+                        let detectedType = 'unknown';
+                        
+                        // Détection format 1: Export complet championnat (avec chronoData ou days)
+                        if (data.championship && data.championship.days) {
+                            const days = Object.values(data.championship.days);
+                            if (days.length > 0) {
+                                dayData = JSON.parse(JSON.stringify(days[0]));
+                                detectedType = dayData.dayType || 'championship';
+                            }
+                        }
+                        // Détection format 2: Days direct (sans wrapper championship)
+                        else if (data.days && Object.keys(data.days).length > 0) {
+                            const days = Object.values(data.days);
+                            dayData = JSON.parse(JSON.stringify(days[0]));
+                            detectedType = dayData.dayType || 'championship';
+                        }
+                        // Détection format 3: Ancien format championship (players + matches direct)
+                        else if (data.players && data.matches) {
+                            dayData = {
+                                players: data.players,
+                                matches: data.matches,
+                                dayType: 'championship'
+                            };
+                            detectedType = 'championship';
+                        }
+                        // Détection format 4: Chrono direct (events/series au niveau root)
+                        // OU export depuis l'ancien système chrono global (raceData)
+                        else if (data.events || data.series || data.raceData || data.participants || (data.championship && data.championship.raceData)) {
+                            // Si c'est un export de l'ancien système chrono global
+                            const raceData = data.raceData || (data.championship && data.championship.raceData) || data;
+                            
+                            dayData = {
+                                dayType: 'chrono',
+                                chronoData: {
+                                    events: raceData.events || data.events || [],
+                                    series: raceData.series || data.series || [],
+                                    participants: raceData.participants || data.participants || [],
+                                    nextEventId: raceData.nextEventId || data.nextEventId || 1,
+                                    nextSerieId: raceData.nextSerieId || data.nextSerieId || 1,
+                                    nextParticipantId: raceData.nextParticipantId || data.nextParticipantId || 1
+                                },
+                                players: {},
+                                matches: {}
+                            };
+                            detectedType = 'chrono';
+                            console.log(`Jour ${dayNumber}: Format chrono détecté (events: ${dayData.chronoData.events.length}, series: ${dayData.chronoData.series.length})`);
+                        }
+                        // Détection format 5: Chrono avec chronoData imbriqué
+                        else if (data.chronoData || data.dayType === 'chrono') {
+                            dayData = {
+                                dayType: 'chrono',
+                                chronoData: data.chronoData || {
+                                    events: [],
+                                    series: [],
+                                    participants: [],
+                                    nextEventId: 1,
+                                    nextSerieId: 1,
+                                    nextParticipantId: 1
+                                },
+                                players: {},
+                                matches: {}
+                            };
+                            detectedType = 'chrono';
+                        }
+                        
+                        if (!dayData) {
+                            // Dernier essai: chercher n'importe quelle structure avec des données
+                            if (Object.keys(data).length > 0) {
+                                // Essayer de trouver des joueurs/participants n'importe où
+                                const foundPlayers = findPlayersInData(data);
+                                if (foundPlayers.length > 0) {
+                                    dayData = {
+                                        dayType: 'championship',
+                                        players: { 1: foundPlayers },
+                                        matches: { 1: [] }
+                                    };
+                                    detectedType = 'championship (auto-detect)';
+                                }
+                            }
+                        }
+                        
+                        if (!dayData) {
+                            errors.push(`${file.name}: Format non reconnu (types trouvés: ${Object.keys(data).join(', ')})`);
+                            resolve();
+                            return;
+                        }
+                        
+                        // S'assurer que les structures existent et sont complètes
+                        if (!dayData.players) dayData.players = {};
+                        if (!dayData.matches) dayData.matches = {};
+                        if (!dayData.dayType) dayData.dayType = 'championship';
+                        
+                        // Pour le mode chrono, s'assurer que chronoData existe
+                        if (dayData.dayType === 'chrono' && !dayData.chronoData) {
+                            dayData.chronoData = {
+                                events: [],
+                                series: [],
+                                participants: [],
+                                nextEventId: 1,
+                                nextSerieId: 1,
+                                nextParticipantId: 1
+                            };
+                        }
+                        
+                        // Initialiser TOUTES les divisions (même si players/matches existe mais est vide)
+                        for (let div = 1; div <= numDivisions; div++) {
+                            if (!dayData.players[div] || !Array.isArray(dayData.players[div])) {
+                                dayData.players[div] = [];
+                            }
+                            if (!dayData.matches[div] || !Array.isArray(dayData.matches[div])) {
+                                dayData.matches[div] = [];
+                            }
+                        }
+                        
+                        console.log(`Jour ${dayNumber} importé: type=${dayData.dayType}, chronoData=`, dayData.chronoData);
+                        
+                        // Ajouter au championnat
+                        championship.days[dayNumber] = dayData;
+                        const typeLabel = detectedType === 'chrono' ? '⏱️' : '🏆';
+                        importedDays.push(`J${dayNumber} ${typeLabel} (${file.name})`);
+                        processedCount++;
+                        
+                    } catch (error) {
+                        errors.push(`${file.name}: ${error.message}`);
+                    }
+                    resolve();
+                };
+                reader.readAsText(file);
+            });
+        };
+        
+        // Traiter tous les fichiers en séquence
+        Promise.all(files.map((file, index) => processFile(file, index)))
+            .then(() => {
+                if (processedCount > 0) {
+                    // Mettre à jour l'interface
+                    updateTabsDisplay();
+                    updateDaySelectors();
+                    initializeAllDaysContent();
+                    
+                    // IMPORTANT : Mettre à jour le type d'UI pour chaque journée importée
+                    Object.keys(championship.days).forEach(dayNum => {
+                        const dayData = championship.days[dayNum];
+                        if (dayData && typeof updateDayTypeUI === 'function') {
+                            updateDayTypeUI(parseInt(dayNum));
+                        }
+                    });
+                    
+                    switchTab(1);
+                    
+                    // Initialiser le sélecteur de type pour J1
+                    initializeDayTypeSelectorForDay1();
+                    
+                    saveToLocalStorage();
+                    
+                    let msg = `${processedCount} journée(s) importée(s) :\n${importedDays.join('\n')}`;
+                    if (errors.length > 0) {
+                        msg += `\n\nErreurs (${errors.length}):\n${errors.join('\n')}`;
+                    }
+                    alert(msg);
+                    showNotification(`${processedCount} journée(s) importée(s) avec succès !`, 'success');
+                } else {
+                    alert('Aucun fichier n\'a pu être importé.\n\nErreurs:\n' + errors.join('\n'));
+                }
+                
+                // Vider l'input
+                event.target.value = '';
+            });
+    }
+    window.importMultipleDayFiles = importMultipleDayFiles;
+
+    /**
+     * Affiche la modal d'import multi-fichiers
+     */
+    function showMultiDayImportModal() {
+        // Créer la modal si elle n'existe pas
+        let modal = document.getElementById('multiDayImportModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'multiDayImportModal';
+            modal.innerHTML = `
+                <div id="multiDayImportModalContent" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                    background: rgba(0,0,0,0.5); display: flex; justify-content: center; 
+                    align-items: center; z-index: 10000;" onclick="if(event.target===this)closeMultiDayImportModal()">
+                    <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+                        <h3>📥 Importer plusieurs journées</h3>
+                        <p style="color: #7f8c8d; font-size: 13px; margin: 10px 0;">
+                            Sélectionnez plusieurs fichiers JSON (un par journée).<br>
+                            Chaque fichier deviendra une journée (J1, J2, J3...).
+                        </p>
+                        <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                            <input type="file" id="multiDayImportInput" accept=".json" multiple 
+                                onchange="importMultipleDayFiles(event)"
+                                style="display: none;">
+                            <button onclick="document.getElementById('multiDayImportInput').click()" 
+                                style="padding: 12px 24px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                                📁 Sélectionner les fichiers JSON
+                            </button>
+                            <p style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                                Astuce : nommez vos fichiers dans l'ordre<br>
+                                (01-jour1.json, 02-jour2.json, 03-jour3.json...)
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="closeMultiDayImportModal()" class="btn btn-secondary">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        modal.style.display = 'block';
+    }
+    window.showMultiDayImportModal = showMultiDayImportModal;
+
+    function closeMultiDayImportModal() {
+        const modal = document.getElementById('multiDayImportModal');
+        if (modal) modal.style.display = 'none';
+    }
+    window.closeMultiDayImportModal = closeMultiDayImportModal;
+
     function clearAllData() {
         const stats = calculateChampionshipStats();
 
@@ -7224,26 +7917,25 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
     window.initializeDivisionSelects = initializeDivisionSelects;
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialiser le module multisport
-        if (typeof initMultisport === 'function') {
-            initMultisport();
-        }
-        
-        // Migrer les données joueurs vers le format avec club si nécessaire
-        if (typeof clubsModule !== 'undefined' && clubsModule.migratePlayerData) {
-            clubsModule.migratePlayerData();
-        }
-        
-        // Mettre à jour la visibilité de l'onglet multisport
-        if (typeof updateMultisportTabVisibility === 'function') {
-            updateMultisportTabVisibility();
-        }
-        
-        // Initialiser le sélecteur de type pour la J1 (HTML statique)
-        initializeDayTypeSelectorForDay1();
-        
-        // Charger les données sauvegardées
+        // Charger les données sauvegardées d'abord
         if (loadFromLocalStorage()) {
+            // Puis migrer les données multisport (après chargement pour ne pas être écrasé)
+            if (typeof initMultisport === 'function') {
+                initMultisport();
+            }
+            
+            // Migrer les données joueurs vers le format avec club si nécessaire
+            if (typeof clubsModule !== 'undefined' && clubsModule.migratePlayerData) {
+                clubsModule.migratePlayerData();
+            }
+            
+            // Mettre à jour la visibilité de l'onglet multisport
+            if (typeof updateMultisportTabVisibility === 'function') {
+                updateMultisportTabVisibility();
+            }
+            
+            // Initialiser le sélecteur de type pour la J1 (HTML statique)
+            initializeDayTypeSelectorForDay1();
             initializeDivisionSelects();
             updateTabsDisplay();
             updateDaySelectors();
@@ -7251,16 +7943,26 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
             restoreCollapseState();
             switchTab(championship.currentDay);
             
-            // Initialiser le sélecteur de type pour J1 après chargement
-            initializeDayTypeSelectorForDay1();
+            // Générer les boutons de copie rapide pour toutes les journées
+            setTimeout(() => {
+                Object.keys(championship.days).forEach(dayNum => {
+                    generateQuickCopyButtons(parseInt(dayNum));
+                });
+            }, 100);
         } else {
+            // Pas de données sauvegardées - initialiser la structure par défaut
+            if (typeof initMultisport === 'function') {
+                initMultisport();
+            }
             initializeDivisionSelects();
             initializeDivisionsDisplay(1);
             updatePlayersDisplay(1);
             initializePoolsForDay(1);
-            initializeDayTypeSelectorForDay1();
             restoreCollapseState();
         }
+        
+        // Initialiser le sélecteur de type pour J1 (toujours faire cela)
+        initializeDayTypeSelectorForDay1();
 
         setupEventListeners();
 
@@ -8423,7 +9125,8 @@ function generatePools(dayNumber) {
     dayData.pools.config.matchesPerPlayer = matchesPerPlayer; // Sauvegarde globale
 
     for (let division = 1; division <= numDivisions; division++) {
-        const players = [...dayData.players[division]];
+        // Normaliser les joueurs : extraire le nom si c'est un objet {name, club}
+        const players = (dayData.players[division] || []).map(p => getPlayerName(p));
         if (players.length < 4) {
             if (players.length > 0) {
                 alert(`Division ${division}: Il faut au moins 4 joueurs pour créer des poules (${players.length} actuellement)`);
@@ -17402,15 +18105,36 @@ if (document.readyState === 'loading') {
     // Retour à la liste des épreuves
     window.backToSeriesList = function() {
         const raceInterface = document.getElementById('raceInterface');
-        const eventsList = document.getElementById('eventsList').parentElement;
+        const eventsList = document.getElementById('eventsList');
+        
+        const dayNumber = raceData.currentDayNumber;
 
-        raceInterface.style.display = 'none';
-        eventsList.style.display = 'block';
+        // Sauvegarder les résultats vers le stockage par jour avant de quitter
+        if (typeof saveRaceResultsToDay === 'function' && dayNumber) {
+            saveRaceResultsToDay();
+        }
+
+        if (raceInterface) raceInterface.style.display = 'none';
+        if (eventsList) eventsList.style.display = 'block';
 
         // Retirer l'écouteur clavier du mode couloirs
         removeLaneModeKeyListener();
 
-        displayEventsList();
+        if (typeof displayEventsList === 'function') {
+            displayEventsList();
+        }
+        
+        // Retourner à l'onglet de la journée si on venait d'une journée
+        if (dayNumber && typeof switchTab === 'function') {
+            // Cacher la section chrono globale
+            const chronoModeSection = document.getElementById('chronoModeSection');
+            if (chronoModeSection) {
+                chronoModeSection.style.display = 'none';
+            }
+            
+            // Afficher le bon onglet de jour
+            switchTab(dayNumber);
+        }
     };
 
     // ============================================
@@ -17567,9 +18291,17 @@ if (document.readyState === 'loading') {
 
         raceData.currentSerie.status = 'completed';
         raceData.currentSerie.isRunning = false;
+        raceData.currentSerie.endTime = new Date().toISOString();
+
+        // Sauvegarder les résultats vers le stockage par jour (si course lancée depuis un jour)
+        if (typeof saveRaceResultsToDay === 'function') {
+            saveRaceResultsToDay();
+        }
 
         saveChronoToLocalStorage();
         showNotification('Série terminée!', 'success');
+        
+        // Retourner à la liste des séries (qui gèrera le retour à la journée si nécessaire)
         backToSeriesList();
     };
 
