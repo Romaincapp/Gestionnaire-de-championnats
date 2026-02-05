@@ -4712,8 +4712,9 @@ generalRanking.divisions[division].forEach((player, index) => {
                 const dayNum = parseInt(dayNumber);
                 const dayData = championship.days[dayNum];
 
-                dayData.players[division]
-                    .filter(playerName => playerName.toUpperCase() !== 'BYE')
+                (dayData.players[division] || [])
+                    .map(p => getPlayerName(p))
+                    .filter(playerName => playerName && playerName.toUpperCase() !== 'BYE')
                     .forEach(playerName => {
                         if (!playerFirstAppearance[playerName] || dayNum < playerFirstAppearance[playerName]) {
                             playerFirstAppearance[playerName] = dayNum;
@@ -4729,8 +4730,9 @@ generalRanking.divisions[division].forEach((player, index) => {
                 const dayNum = parseInt(dayNumber);
                 const dayData = championship.days[dayNum];
 
-                dayData.players[division]
-                    .filter(playerName => playerName.toUpperCase() !== 'BYE')
+                (dayData.players[division] || [])
+                    .map(p => getPlayerName(p))
+                    .filter(playerName => playerName && playerName.toUpperCase() !== 'BYE')
                     .forEach(playerName => {
                    if (!playersData[playerName]) {
     playersData[playerName] = {
