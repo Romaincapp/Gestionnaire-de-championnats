@@ -4333,9 +4333,14 @@ try {
     function showRankingsForDay(dayNumber, type) {
         const rankingsSection = document.getElementById(`rankings-${dayNumber}`);
         if (!rankingsSection) return;
-        
-        document.querySelectorAll(`#rankings-${dayNumber} .toggle-btn`).forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
+
+        document.querySelectorAll(`#rankings-${dayNumber} .toggle-btn`).forEach(btn => {
+            btn.classList.remove('active');
+            if ((type === 'points' && btn.textContent.includes('Points')) ||
+                (type === 'winrate' && btn.textContent.includes('Victoires'))) {
+                btn.classList.add('active');
+            }
+        });
         updateRankingsForDay(dayNumber, type);
     }
     window.showRankingsForDay = showRankingsForDay;
@@ -4402,7 +4407,7 @@ try {
         const isPoolMode = dayData.pools?.enabled;
 
         for (let division = 1; division <= numDivisions; division++) {
-            if (dayData.players[division].length === 0) continue;
+            if (!dayData.players[division] || dayData.players[division].length === 0) continue;
 
            const playerStats = dayData.players[division]
     .filter(player => player.toUpperCase() !== 'BYE')
@@ -15788,8 +15793,8 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
 
                 body {
                     font-family: Arial, sans-serif;
-                    font-size: 10px;
-                    line-height: 1.3;
+                    font-size: 14px;
+                    line-height: 1.4;
                     color: #000;
                     background: white;
                 }
@@ -15813,14 +15818,14 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
                 }
 
                 .page-title {
-                    font-size: 20px;
+                    font-size: 22px;
                     font-weight: bold;
                     color: #2c3e50;
                     margin-bottom: 3px;
                 }
 
                 .page-subtitle {
-                    font-size: 12px;
+                    font-size: 14px;
                     color: #666;
                 }
 
@@ -15829,7 +15834,7 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
                     color: white;
                     padding: 8px;
                     margin-bottom: 10px;
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: bold;
                     text-align: center;
                     border-radius: 3px;
@@ -15844,16 +15849,16 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
                 .matches-table th {
                     background: #34495e;
                     color: white;
-                    padding: 6px 4px;
+                    padding: 8px 6px;
                     text-align: left;
-                    font-size: 11px;
+                    font-size: 14px;
                     font-weight: bold;
                 }
 
                 .matches-table td {
-                    padding: 8px 4px;
+                    padding: 10px 6px;
                     border-bottom: 1px solid #ddd;
-                    font-size: 10px;
+                    font-size: 14px;
                 }
 
                 .matches-table tr:hover {
@@ -15867,7 +15872,7 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
                 .match-id {
                     font-weight: bold;
                     color: #2c3e50;
-                    font-size: 9px;
+                    font-size: 12px;
                 }
 
                 .player-name {
@@ -15875,7 +15880,7 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
                 }
 
                 .score-cell {
-                    width: 40px;
+                    width: 45px;
                     text-align: center;
                     border: 1px solid #ccc;
                     background: #f9f9f9;
@@ -16001,8 +16006,8 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
 
                 body {
                     font-family: Arial, sans-serif;
-                    font-size: 10px;
-                    line-height: 1.3;
+                    font-size: 14px;
+                    line-height: 1.4;
                     color: #000;
                     background: white;
                 }
@@ -16026,14 +16031,14 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
                 }
 
                 .page-title {
-                    font-size: 20px;
+                    font-size: 22px;
                     font-weight: bold;
                     color: #2c3e50;
                     margin-bottom: 3px;
                 }
 
                 .page-subtitle {
-                    font-size: 12px;
+                    font-size: 14px;
                     color: #666;
                 }
 
@@ -16042,7 +16047,7 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
                     color: white;
                     padding: 8px;
                     margin-bottom: 10px;
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: bold;
                     text-align: center;
                     border-radius: 3px;
@@ -16057,16 +16062,16 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
                 .matches-table th {
                     background: #34495e;
                     color: white;
-                    padding: 6px 4px;
+                    padding: 8px 6px;
                     text-align: left;
-                    font-size: 11px;
+                    font-size: 14px;
                     font-weight: bold;
                 }
 
                 .matches-table td {
-                    padding: 8px 4px;
+                    padding: 10px 6px;
                     border-bottom: 1px solid #ddd;
-                    font-size: 10px;
+                    font-size: 14px;
                 }
 
                 .matches-table tr:hover {
@@ -16080,7 +16085,7 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
                 .match-id {
                     font-weight: bold;
                     color: #2c3e50;
-                    font-size: 9px;
+                    font-size: 12px;
                 }
 
                 .player-name {
@@ -16088,7 +16093,7 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
                 }
 
                 .score-cell {
-                    width: 40px;
+                    width: 45px;
                     text-align: center;
                     border: 1px solid #ccc;
                     background: #f9f9f9;
@@ -16244,8 +16249,8 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
 
                 body {
                     font-family: Arial, sans-serif;
-                    font-size: 10px;
-                    line-height: 1.3;
+                    font-size: 14px;
+                    line-height: 1.4;
                     color: #000;
                     background: white;
                 }
@@ -16269,14 +16274,14 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
                 }
 
                 .page-title {
-                    font-size: 20px;
+                    font-size: 22px;
                     font-weight: bold;
                     color: #2c3e50;
                     margin-bottom: 3px;
                 }
 
                 .page-subtitle {
-                    font-size: 12px;
+                    font-size: 14px;
                     color: #666;
                 }
 
@@ -16285,7 +16290,7 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
                     color: white;
                     padding: 8px;
                     margin-bottom: 10px;
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: bold;
                     text-align: center;
                     border-radius: 3px;
@@ -16300,16 +16305,16 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
                 .matches-table th {
                     background: #34495e;
                     color: white;
-                    padding: 6px 4px;
+                    padding: 8px 6px;
                     text-align: left;
-                    font-size: 11px;
+                    font-size: 14px;
                     font-weight: bold;
                 }
 
                 .matches-table td {
-                    padding: 8px 4px;
+                    padding: 10px 6px;
                     border-bottom: 1px solid #ddd;
-                    font-size: 10px;
+                    font-size: 14px;
                 }
 
                 .matches-table tr:hover {
@@ -16323,7 +16328,7 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
                 .match-id {
                     font-weight: bold;
                     color: #2c3e50;
-                    font-size: 9px;
+                    font-size: 12px;
                 }
 
                 .player-name {
@@ -16331,7 +16336,7 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
                 }
 
                 .score-cell {
-                    width: 40px;
+                    width: 45px;
                     text-align: center;
                     border: 1px solid #ccc;
                     background: #f9f9f9;
