@@ -91,7 +91,9 @@ try {
     window.getPlayerName = getPlayerName;
 
     // STRUCTURE DE DONNÉES CHAMPIONNAT
-    let championship = {
+    // Utiliser window.championship s'il existe déjà (créé par state.iife.js)
+    // pour que les modules IIFE qui l'ont capturé voient les mêmes données
+    let championship = window.championship || {
         currentDay: 1,
         config: { ...config }, // Sauvegarder la config dans le championnat
         days: {
@@ -102,7 +104,8 @@ try {
         }
     };
 
-    window.championship = championship; // Rendre accessible globalement
+    // Synchroniser avec la référence globale
+    window.championship = championship;
 
     let importedChampionshipData = null;
 
@@ -190,6 +193,8 @@ try {
     // SAUVEGARDE LOCAL STORAGE
     function saveToLocalStorage() {
         try {
+            // S'assurer que la variable locale pointe vers window.championship
+            championship = window.championship;
             localStorage.setItem('tennisTableChampionship', JSON.stringify(championship));
         } catch (error) {
             console.warn("Erreur sauvegarde:", error);
@@ -210,7 +215,13 @@ try {
         try {
             const saved = localStorage.getItem('tennisTableChampionship');
             if (saved) {
-                championship = JSON.parse(saved);
+                const loaded = JSON.parse(saved);
+                // Copier les données dans window.championship pour préserver les références
+                // utilisées par les modules IIFE
+                Object.keys(window.championship).forEach(key => delete window.championship[key]);
+                Object.assign(window.championship, loaded);
+                // Synchroniser la variable locale
+                championship = window.championship;
                 // Charger la config sauvegardée ou utiliser les valeurs par défaut
                 if (championship.config) {
                     config.numberOfDivisions = championship.config.numberOfDivisions || 3;
@@ -6490,7 +6501,7 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
 
             if (doubleConfirm) {
                 // Réinitialiser les données en mémoire du championnat
-                championship = {
+                const resetData = {
                     currentDay: 1,
                     config: { ...config },
                     days: {
@@ -6500,6 +6511,10 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                         }
                     }
                 };
+                // Vider et réassigner window.championship pour préserver les références
+                Object.keys(window.championship).forEach(key => delete window.championship[key]);
+                Object.assign(window.championship, resetData);
+                championship = window.championship;
 
                 // Réinitialiser les données en mémoire du mode chrono
                 if (typeof raceData !== 'undefined') {
