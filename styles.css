@@ -438,6 +438,22 @@ body   * {
             margin-top: 20px;
         }
         
+        .court-container {
+            margin-bottom: 12px;
+            padding: 8px 2px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .court-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            font-size: 15px;
+            padding: 0 8px;
+        }
+        
         .tour-section {
             margin-bottom: 20px;
             background: #f8f9fa;
@@ -700,6 +716,16 @@ body   * {
         .result-completed {
             background: #a8e6cf;
             color: #00b894;
+        }
+        
+        .result-forfait {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .result-draw {
+            background: #e3f2fd;
+            color: #1565c0;
         }
 
         /* Match collapsed state - ultra compact */
@@ -1553,4 +1579,460 @@ body   * {
     padding: 4px 8px;
     font-size: 12px;
     min-width: 100px;
+}
+
+/* ============================================
+   DARK MODE TOGGLE SWITCH
+   ============================================ */
+
+.dark-mode-toggle {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    height: 28px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.dark-mode-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.dark-mode-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.3);
+    border-radius: 28px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+}
+
+.dark-mode-slider::before {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    z-index: 1;
+}
+
+.dark-mode-toggle input:checked + .dark-mode-slider {
+    background: rgba(0,0,0,0.4);
+}
+
+.dark-mode-toggle input:checked + .dark-mode-slider::before {
+    transform: translateX(28px);
+}
+
+.dark-mode-icon {
+    font-size: 14px;
+    line-height: 1;
+    z-index: 0;
+}
+
+/* ============================================
+   DARK MODE STYLES
+   ============================================ */
+
+body.dark-mode {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #e0e0e0;
+}
+
+body.dark-mode .container {
+    background: #1e1e2e;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .header {
+    background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
+}
+
+/* Tabs */
+body.dark-mode .tabs-container {
+    background: #252538;
+    border-bottom-color: #333;
+}
+
+body.dark-mode .tab {
+    background: #2a2a3d;
+    color: #999;
+}
+
+body.dark-mode .tab.active {
+    background: #1e1e2e;
+    color: #e0e0e0;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .tab:hover:not(.active) {
+    background: #333350;
+    color: #ccc;
+}
+
+/* Content */
+body.dark-mode .content {
+    background: #1e1e2e;
+}
+
+body.dark-mode .section {
+    background: #252538;
+    border-left-color: #3498db;
+}
+
+body.dark-mode .section h2 {
+    color: #e0e0e0;
+}
+
+/* Inputs */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background: #2a2a3d;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+body.dark-mode .score-input {
+    background: #2a2a3d;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+body.dark-mode .score-input:focus {
+    background: #333350;
+}
+
+/* Divisions */
+body.dark-mode .division {
+    background: #252538;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .players-list {
+    background: #2a2a3d;
+}
+
+/* Matches */
+body.dark-mode .tour-section {
+    background: #252538;
+}
+
+body.dark-mode .court-container {
+    background: linear-gradient(135deg, #2a2a3d, #1e1e2f);
+    border-left-color: #3498db;
+}
+
+body.dark-mode .court-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .match {
+    border-bottom-color: rgba(255,255,255,0.08);
+}
+
+body.dark-mode .match.completed {
+    background: rgba(39, 174, 96, 0.15);
+}
+
+body.dark-mode .match:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+body.dark-mode .player-names {
+    color: #e0e0e0;
+}
+
+body.dark-mode .set-scores > span,
+body.dark-mode .player-name-left,
+body.dark-mode .player-name-right,
+body.dark-mode .pool-match .player-name-left,
+body.dark-mode .pool-match .player-name-right,
+body.dark-mode .manual-match .player-name-left,
+body.dark-mode .manual-match .player-name-right,
+body.dark-mode .court-container .set-scores > span,
+body.dark-mode .court-container .player-name-left,
+body.dark-mode .court-container .player-name-right {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .score-separator {
+    color: #999;
+}
+
+body.dark-mode .set-label {
+    color: #a0a0b0;
+}
+
+body.dark-mode .status-pending {
+    background: #b8860b;
+    color: #fff8dc;
+}
+
+body.dark-mode .status-completed {
+    background: #2d6a4f;
+    color: #a8e6cf;
+}
+
+body.dark-mode .match-result {
+    color: #e0e0e0;
+}
+
+body.dark-mode .result-pending {
+    background: #b8860b;
+    color: #fff8dc;
+}
+
+body.dark-mode .result-completed {
+    background: #2d6a4f;
+    color: #a8e6cf;
+}
+
+body.dark-mode .result-forfait {
+    background: #8b6914;
+    color: #ffeaa7;
+}
+
+body.dark-mode .result-draw {
+    background: #1a5276;
+    color: #aed6f1;
+}
+
+/* Rankings */
+body.dark-mode .rankings-section {
+    background: #252538;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .rankings-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .ranking-table th {
+    background: #2a2a3d;
+    color: #e0e0e0;
+}
+
+body.dark-mode .ranking-table td {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .ranking-table tr:hover {
+    background: #2a2a3d;
+}
+
+/* General ranking */
+body.dark-mode .general-ranking-section {
+    background: linear-gradient(135deg, #3d3520, #2e2815);
+    border-color: #f39c12;
+}
+
+body.dark-mode .general-stat-card {
+    background: #252538;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+
+/* Import section */
+body.dark-mode .import-section {
+    background: #252538;
+    border-color: #3498db;
+}
+
+body.dark-mode .import-box {
+    background: #2a2a3d;
+}
+
+body.dark-mode .import-box h4 {
+    color: #e0e0e0;
+}
+
+/* Guide box */
+body.dark-mode .guide-box {
+    background: linear-gradient(135deg, #1a3328, #1a2e25);
+    border-left-color: #27ae60;
+}
+
+body.dark-mode .guide-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .guide-item {
+    color: #ccc;
+}
+
+/* Control buttons */
+body.dark-mode .control-buttons {
+    background: #252538;
+    border-color: #333;
+}
+
+/* Modals */
+body.dark-mode .modal-content,
+body.dark-mode .player-modal-content {
+    background: #1e1e2e;
+    color: #e0e0e0;
+}
+
+body.dark-mode .modal h3 {
+    color: #e0e0e0;
+}
+
+body.dark-mode .player-modal-header {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .player-name-title {
+    color: #e0e0e0;
+}
+
+/* Overview cards */
+body.dark-mode .overview-card {
+    background: #252538;
+}
+
+/* History matches */
+body.dark-mode .history-match {
+    background: #252538;
+    border-color: #333;
+}
+
+body.dark-mode .history-match.win {
+    background: #1a3328;
+    border-left-color: #27ae60;
+}
+
+body.dark-mode .history-match.loss {
+    background: #3d2020;
+    border-left-color: #e74c3c;
+}
+
+body.dark-mode .history-opponent {
+    color: #e0e0e0;
+}
+
+/* Stats */
+body.dark-mode .stats {
+    background: #0f0f1a;
+}
+
+/* Empty state */
+body.dark-mode .empty-state {
+    color: #666;
+}
+
+/* Toggle buttons */
+body.dark-mode .toggle-btn {
+    background: #252538;
+    color: #3498db;
+    border-color: #3498db;
+}
+
+body.dark-mode .toggle-btn.active {
+    background: #3498db;
+    color: white;
+}
+
+/* Multisport */
+body.dark-mode .multisport-ranking-section {
+    background: #252538;
+}
+
+body.dark-mode .multisport-ranking td {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .multisport-ranking tr:hover {
+    background: #2a2a3d;
+}
+
+/* Chrono mode */
+body.dark-mode #chronoModeSection {
+    color: #e0e0e0;
+}
+
+body.dark-mode .chrono-event-card {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .chrono-serie-card:hover {
+    background: #333350;
+}
+
+/* Tables generiques */
+body.dark-mode table th {
+    background: #2a2a3d;
+    color: #e0e0e0;
+}
+
+body.dark-mode table td {
+    color: #e0e0e0;
+    border-bottom-color: #333;
+}
+
+body.dark-mode table tr:hover {
+    background: #2a2a3d;
+}
+
+/* Scrollbar dark mode */
+body.dark-mode ::-webkit-scrollbar {
+    width: 8px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+    background: #1e1e2e;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Set disabled dark mode */
+body.dark-mode .set-disabled {
+    background: #1a1a2e;
+}
+
+body.dark-mode .set-disabled .score-input {
+    background: #1a1a2e;
+    color: #555;
+    border-color: #333;
+}
+
+/* Players list header */
+body.dark-mode .players-list-header:hover {
+    background: linear-gradient(135deg, #333350, #2a2a3d) !important;
+}
+
+/* Day type selector */
+body.dark-mode .day-type-selector {
+    background: #252538;
+}
+
+/* Notification override for readability */
+body.dark-mode .notification {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }

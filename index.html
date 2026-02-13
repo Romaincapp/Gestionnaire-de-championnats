@@ -11,7 +11,16 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏆 Gestionnaire de Championnats</h1>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <h1 style="margin: 0;">🏆 Gestionnaire de Championnats</h1>
+                <label class="dark-mode-toggle" title="Mode sombre / clair">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="dark-mode-slider">
+                        <span class="dark-mode-icon">☀️</span>
+                        <span class="dark-mode-icon">🌙</span>
+                    </span>
+                </label>
+            </div>
             <p>Planté !!! avec ❤️ par Romain testé avec style par Rachel</p>
         </div>
 

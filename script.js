@@ -6,6 +6,32 @@ try {
     };
     window.config = config;
 
+    // DARK MODE
+    function toggleDarkMode() {
+        var isDark = document.getElementById('darkModeToggle').checked;
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+        try {
+            localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+        } catch(e) {}
+    }
+    window.toggleDarkMode = toggleDarkMode;
+
+    // Charger la préférence dark mode au démarrage
+    (function loadDarkMode() {
+        try {
+            var saved = localStorage.getItem('darkMode');
+            if (saved === 'true') {
+                document.body.classList.add('dark-mode');
+                var toggle = document.getElementById('darkModeToggle');
+                if (toggle) toggle.checked = true;
+            }
+        } catch(e) {}
+    })();
+
     // Fonction pour initialiser les divisions dynamiquement
     function initializeDivisions(numberOfDivisions) {
         const divisions = {};
@@ -2792,8 +2818,8 @@ try {
                         if (courtMatches.length === 0) continue;
 
                         html += `
-                            <div style="margin-bottom: 12px; padding: 8px 2px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; border-left: 4px solid #3498db;">
-                                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 6px; font-size: 15px;">
+                            <div class="court-container">
+                                <div class="court-title">
                                     🎾 Terrain ${court}
                                 </div>
                         `;
@@ -2861,13 +2887,13 @@ try {
                         if (match.completed && match.winner) {
                             const forfaitText = match.forfaitBy ? ' (forfait)' : '';
                             html += `
-                                <div class="match-result result-completed" ${match.forfaitBy ? 'style="background: #fff3cd; color: #856404;"' : ''}>
+                                <div class="match-result result-completed ${match.forfaitBy ? 'result-forfait' : ''}">
                                     ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${forfaitText} (${score1}-${score2})
                                 </div>
                             `;
                         } else if (match.completed && match.winner === null) {
                             html += `
-                                <div class="match-result result-completed" style="background: #e3f2fd; color: #1565c0;">
+                                <div class="match-result result-completed result-draw">
                                     🤝 Match nul (${score1}-${score2})
                                 </div>
                             `;
@@ -4410,7 +4436,8 @@ try {
             if (!dayData.players[division] || dayData.players[division].length === 0) continue;
 
            const playerStats = dayData.players[division]
-    .filter(player => player.toUpperCase() !== 'BYE')
+    .map(p => getPlayerName(p))
+    .filter(player => player && player.toUpperCase() !== 'BYE')
     .map(player => {
     const stats = calculatePlayerStats(dayNumber, division, player);
     // Récupérer l'étape finale du joueur pour cette journée
@@ -4692,10 +4719,10 @@ generalRanking.divisions[division].forEach((player, index) => {
         let totalMatches = 0;
         let completedMatches = 0;
         let totalDays = Object.keys(championship.days).length;
-        
+
         Object.values(championship.days).forEach(day => {
             Object.values(day.players).forEach(divPlayers => {
-                divPlayers.forEach(player => totalPlayers.add(player));
+                divPlayers.forEach(player => totalPlayers.add(getPlayerName(player)));
             });
             Object.values(day.matches).forEach(divMatches => {
                 totalMatches += divMatches.length;
@@ -5817,7 +5844,7 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
 
         Object.values(championship.days).forEach(day => {
             Object.values(day.players).forEach(divPlayers => {
-                divPlayers.forEach(player => totalPlayers.add(player));
+                divPlayers.forEach(player => totalPlayers.add(getPlayerName(player)));
             });
 
             // Compter les matchs réguliers
@@ -5931,7 +5958,7 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
         
         Object.values(championshipData.days).forEach(day => {
             Object.values(day.players).forEach(divPlayers => {
-                divPlayers.forEach(player => totalPlayers.add(player));
+                divPlayers.forEach(player => totalPlayers.add(getPlayerName(player)));
             });
             Object.values(day.matches).forEach(divMatches => {
                 totalMatches += divMatches.length;
@@ -6955,8 +6982,9 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
         const poolName = String.fromCharCode(65 + poolIndex); // A, B, C...
         const rankings = [];
 
-        poolPlayers.forEach(player => {
-            if (player.toUpperCase() === 'BYE') return;
+        poolPlayers.forEach(rawPlayer => {
+            const player = getPlayerName(rawPlayer);
+            if (!player || player.toUpperCase() === 'BYE') return;
 
             // Calculer les stats de ce joueur dans cette poule uniquement
             const playerPoolMatches = poolMatches.filter(m =>
@@ -11168,7 +11196,7 @@ function generateDirectFinalPhase(dayNumber) {
     // Vérifier qu'il y a des joueurs dans au moins une division
     for (let division = 1; division <= numDivisions; division++) {
         const players = dayData.players[division] || [];
-        const validPlayers = players.filter(p => p && p.toUpperCase() !== 'BYE');
+        const validPlayers = players.map(p => getPlayerName(p)).filter(p => p && p.toUpperCase() !== 'BYE');
         totalPlayers += validPlayers.length;
     }
 
@@ -11213,7 +11241,7 @@ function generateDirectFinalPhase(dayNumber) {
     // Pour chaque division, qualifier tous les joueurs directement
     for (let division = 1; division <= numDivisions; division++) {
         const players = dayData.players[division] || [];
-        const validPlayers = players.filter(p => p && p.toUpperCase() !== 'BYE');
+        const validPlayers = players.map(p => getPlayerName(p)).filter(p => p && p.toUpperCase() !== 'BYE');
 
         if (validPlayers.length < 2) continue;
 
@@ -12888,7 +12916,7 @@ function getPlayerFinalStageForDay(playerName, dayNumber, division) {
     }
 
     // Vérifier si le joueur est dans cette division
-    const players = dayData.players[division] || [];
+    const players = (dayData.players[division] || []).map(p => getPlayerName(p));
     if (!players.includes(playerName)) {
         return null;
     }
