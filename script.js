@@ -1503,14 +1503,11 @@ try {
     function switchTab(dayNumber) {
         championship.currentDay = dayNumber;
 
-        // Retirer la classe active de tous les contenus de journées
+        // Masquer TOUS les contenus de journées (réinitialiser class ET style inline)
         const allTabContents = document.querySelectorAll('.tab-content');
         allTabContents.forEach(content => {
             content.classList.remove('active');
-            // Force le masquage pour être sûr (y compris general-ranking)
-            if (content.id !== `day-${dayNumber}`) {
-                content.style.display = 'none';
-            }
+            content.style.display = 'none';
         });
 
         // Retirer la classe active de tous les onglets
@@ -1525,7 +1522,7 @@ try {
         if (targetTab) targetTab.classList.add('active');
         if (targetContent) {
             targetContent.classList.add('active');
-            targetContent.style.display = 'block'; // Force l'affichage
+            targetContent.style.display = 'block';
         }
     }
     
@@ -6130,8 +6127,10 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
             updateTabsDisplay();
             updateDaySelectors();
             initializeAllDaysContent();
-            switchTab(championship.currentDay);
-            
+
+            // Toujours afficher J1 après import (peu importe le currentDay de l'export)
+            switchTab(1);
+
             // Initialiser le sélecteur de type pour J1
             initializeDayTypeSelectorForDay1();
 
@@ -6160,6 +6159,9 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
 
             closeImportModal();
             showNotification('Championnat importé avec succès !', 'success');
+
+            // Forcer l'affichage de J1 après toutes les opérations
+            switchTab(1);
 
         } catch (error) {
             alert('Erreur lors de l\'import : ' + error.message);
@@ -6399,22 +6401,29 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
                     });
                     
                     switchTab(1);
-                    
+
                     // Initialiser le sélecteur de type pour J1
                     initializeDayTypeSelectorForDay1();
-                    
+
                     saveToLocalStorage();
-                    
+
+                    // Fermer la modale d'import multi-journées
+                    closeMultiDayImportModal();
+
                     let msg = `${processedCount} journée(s) importée(s) :\n${importedDays.join('\n')}`;
                     if (errors.length > 0) {
                         msg += `\n\nErreurs (${errors.length}):\n${errors.join('\n')}`;
                     }
                     alert(msg);
                     showNotification(`${processedCount} journée(s) importée(s) avec succès !`, 'success');
+
+                    // Forcer l'affichage de J1 après fermeture de l'alert
+                    // (au cas où des opérations DOM asynchrones auraient modifié l'état)
+                    switchTab(1);
                 } else {
                     alert('Aucun fichier n\'a pu être importé.\n\nErreurs:\n' + errors.join('\n'));
                 }
-                
+
                 // Vider l'input
                 event.target.value = '';
             });
