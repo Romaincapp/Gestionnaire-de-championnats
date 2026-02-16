@@ -193,8 +193,6 @@ try {
     // SAUVEGARDE LOCAL STORAGE
     function saveToLocalStorage() {
         try {
-            // S'assurer que la variable locale pointe vers window.championship
-            championship = window.championship;
             localStorage.setItem('tennisTableChampionship', JSON.stringify(championship));
         } catch (error) {
             console.warn("Erreur sauvegarde:", error);
@@ -5990,7 +5988,12 @@ window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
         }
 
         try {
-            championship = importedChampionshipData.championship;
+            // IMPORTANT: Ne pas remplacer la référence, mais copier les propriétés
+            // dans l'objet existant pour que window.championship et tous les modules IIFE
+            // voient les nouvelles données
+            var importedData = importedChampionshipData.championship;
+            Object.keys(championship).forEach(function(key) { delete championship[key]; });
+            Object.assign(championship, importedData);
 
             if (!championship.days) {
                 championship.days = {};
