@@ -12,37 +12,29 @@
     // GESTION DES ONGLETS ET JOURNÉES
     // ============================================
 
+    // switchTab est défini dans script.js avec gestion complète des styles inline
+    // Ne PAS redéfinir ici pour éviter les conflits
     function switchTab(dayNumber) {
+        // Déléguer à la version de script.js si disponible
+        if (global.switchTab && global.switchTab !== switchTab) {
+            return global.switchTab(dayNumber);
+        }
+        // Fallback minimal si script.js n'est pas encore chargé
         championship.currentDay = dayNumber;
-        
-        // Mettre à jour les onglets visuels
         document.querySelectorAll('.tab').forEach(function(tab) {
             tab.classList.remove('active');
             if (parseInt(tab.dataset.day) === dayNumber) {
                 tab.classList.add('active');
             }
         });
-        
-        // Masquer tous les contenus
         document.querySelectorAll('.tab-content').forEach(function(content) {
             content.classList.remove('active');
+            content.style.display = 'none';
         });
-        
-        // Afficher le contenu de la journée
         var dayContent = document.getElementById('day-' + dayNumber);
         if (dayContent) {
             dayContent.classList.add('active');
-        }
-        
-        // Mettre à jour les affichages
-        if (typeof updatePlayersDisplay === 'function') updatePlayersDisplay(dayNumber);
-        if (typeof updateMatchesDisplay === 'function') updateMatchesDisplay(dayNumber);
-        if (typeof updatePlayerCount === 'function') updatePlayerCount(dayNumber);
-        if (typeof updateRankings === 'function') updateRankings();
-        
-        // Mettre à jour le classement général si on est sur cet onglet
-        if (typeof updateGeneralRanking === 'function') {
-            updateGeneralRanking();
+            dayContent.style.display = 'block';
         }
     }
 
@@ -201,68 +193,86 @@
     }
 
     function processImport() {
+        // Déléguer à la version de script.js si disponible (import par fichier)
+        if (global.processImport && global.processImport !== processImport) {
+            return global.processImport();
+        }
+
+        // Fallback: import par textarea (si script.js pas encore chargé)
         var textarea = document.getElementById('importData');
         if (!textarea) return;
-        
+
         try {
             var data = JSON.parse(textarea.value);
-            
+
             if (!data.days || !data.config) {
                 throw new Error('Format de données invalide');
             }
-            
+
             // Confirmer si des données existent
             if (Object.keys(championship.days).length > 0) {
                 if (!confirm('Des données existent déjà. Voulez-vous les remplacer ?')) {
                     return;
                 }
             }
-            
-            // Charger les données
-            championship.days = data.days;
-            championship.config = data.config;
-            championship.currentDay = 1;
-            
+
+            // IMPORTANT: Modifier l'objet EN PLACE pour préserver les références
+            Object.keys(championship).forEach(function(key) { delete championship[key]; });
+            Object.assign(championship, {
+                days: data.days,
+                config: data.config,
+                currentDay: 1
+            });
+
             // Mettre à jour la config globale
             global.config = { ...data.config };
-            
+
             saveToLocalStorage();
-            
+
             showNotification('Données importées avec succès !', 'success');
-            
+
             // Recharger la page pour appliquer les changements
             setTimeout(function() {
                 location.reload();
             }, 1000);
-            
+
         } catch (error) {
             showNotification('Erreur lors de l\'import : ' + error.message, 'error');
         }
     }
 
     function clearAllData() {
+        // Déléguer à la version de script.js si disponible
+        if (global.clearAllData && global.clearAllData !== clearAllData) {
+            return global.clearAllData();
+        }
+
         if (!confirm('⚠️ ATTENTION ⚠️\n\nCela va supprimer TOUTES les données du championnat.\n\nCette action est irréversible.\n\nÊtes-vous sûr ?')) {
             return;
         }
-        
+
         if (!confirm('Dernière confirmation :\n\nVoulez-vous vraiment tout supprimer ?')) {
             return;
         }
-        
-        // Réinitialiser
-        championship.days = {
-            1: {
-                players: global.initializeDivisions(global.config.numberOfDivisions),
-                matches: global.initializeDivisions(global.config.numberOfDivisions)
+
+        // IMPORTANT: Modifier l'objet EN PLACE pour préserver les références
+        Object.keys(championship).forEach(function(key) { delete championship[key]; });
+        Object.assign(championship, {
+            currentDay: 1,
+            config: { ...global.DEFAULT_CONFIG },
+            days: {
+                1: {
+                    players: global.initializeDivisions(global.config.numberOfDivisions),
+                    matches: global.initializeDivisions(global.config.numberOfDivisions)
+                }
             }
-        };
-        championship.currentDay = 1;
-        
+        });
+
         // Supprimer du localStorage
         localStorage.removeItem('tennisTableChampionship');
-        
+
         showNotification('Toutes les données ont été supprimées', 'info');
-        
+
         // Recharger la page
         setTimeout(function() {
             location.reload();

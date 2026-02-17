@@ -28,7 +28,8 @@
 
     function saveToLocalStorage() {
         try {
-            localStorage.setItem('tennisTableChampionship', JSON.stringify(championship));
+            // Toujours utiliser global.championship pour être sûr d'avoir la bonne référence
+            localStorage.setItem('tennisTableChampionship', JSON.stringify(global.championship));
         } catch (error) {
             console.warn("Erreur sauvegarde:", error);
         }
@@ -39,11 +40,16 @@
             var saved = localStorage.getItem('tennisTableChampionship');
             if (saved) {
                 var loaded = JSON.parse(saved);
-                championship = { 
-                    ...championship, 
-                    ...loaded,
-                    config: { ...DEFAULT_CONFIG, ...loaded.config }
-                };
+                // IMPORTANT: Modifier l'objet EN PLACE pour préserver les références
+                // Ne JAMAIS faire championship = {...} qui casse les références des autres modules
+                Object.keys(championship).forEach(function(key) { delete championship[key]; });
+                Object.assign(championship, loaded);
+                // S'assurer que la config a les valeurs par défaut
+                if (!championship.config) {
+                    championship.config = { ...DEFAULT_CONFIG };
+                } else {
+                    championship.config = { ...DEFAULT_CONFIG, ...championship.config };
+                }
                 return true;
             }
         } catch (error) {
@@ -54,12 +60,12 @@
 
     function toggleForfaitButtons() {
         showForfaitButtons = !showForfaitButtons;
-        
+
         document.querySelectorAll('[id^="forfait-toggle-btn-"]').forEach(function(btn) {
             btn.style.background = showForfaitButtons ? '#e74c3c' : '#95a5a6';
             btn.innerHTML = showForfaitButtons ? '⚠️ Actions ON' : '⚠️ Actions OFF';
         });
-        
+
         return showForfaitButtons;
     }
 
