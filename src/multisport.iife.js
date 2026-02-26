@@ -2286,6 +2286,7 @@
     global.isMultisportMode = isMultisportMode;
     global.updateMultisportTabVisibility = updateMultisportTabVisibility;
     global.initMultisportTab = initMultisportTab;
+    global.updateDayTypeUI = updateDayTypeUI;
     global.getChronoDataForDay = getChronoDataForDay;
     global.addChronoEvent = addChronoEvent;
     global.addChronoSerie = addChronoSerie;

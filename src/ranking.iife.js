@@ -10,6 +10,8 @@
     var getNumberOfDivisions = function() { return typeof global.getNumberOfDivisions === 'function' ? global.getNumberOfDivisions() : 3; };
     var getPlayerName = function(p) { return typeof global.getPlayerName === 'function' ? global.getPlayerName(p) : (p || ''); };
     var escapeForOnclick = function(s) { return typeof global.escapeForOnclick === 'function' ? global.escapeForOnclick(s) : s; };
+    var getPlayerFinalStageForDay = function(playerName, dayNumber, division) { return typeof global.getPlayerFinalStageForDay === 'function' ? global.getPlayerFinalStageForDay(playerName, dayNumber, division) : null; };
+    var getBestPlayerStage = function(playerName, division) { return typeof global.getBestPlayerStage === 'function' ? global.getBestPlayerStage(playerName, division) : null; };
 
     // STATISTIQUES ET CLASSEMENTS
     function calculatePlayerStats(dayNumber, division, playerName) {
@@ -250,6 +252,7 @@
         updateRankingsForDay(targetDay);
     }
     window.updateRankings = updateRankings;
+    window.updateStats = updateStats;
 
     function updateStats(dayNumber) {
         const dayData = championship.days[dayNumber];
@@ -1726,6 +1729,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
 }
 
 // Assigner la fonction à l'objet window pour qu'elle soit accessible globalement
+window.exportGeneralRanking = exportGeneralRanking;
 window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
 
 

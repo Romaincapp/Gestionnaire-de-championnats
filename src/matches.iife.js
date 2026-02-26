@@ -1649,6 +1649,8 @@
         showNotification(`Forfait déclaré pour ${forfaitPlayer === 'player1' ? match.player1 : match.player2}`, 'warning');
     }
     window.declareForfait = declareForfait;
+    window.updateMatchesDisplay = updateMatchesDisplay;
+    window.checkMatchCompletion = checkMatchCompletion;
 
 
 })(window);

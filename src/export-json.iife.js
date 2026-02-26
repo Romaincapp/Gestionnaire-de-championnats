@@ -147,7 +147,8 @@
             modal.style.display = 'none';
             const fileInput = document.getElementById('importFileInput');
             if (fileInput) fileInput.value = '';
-            importedChampionshipData = null;
+            // Ne pas réinitialiser importedChampionshipData ici pour permettre à l'utilisateur de cliquer sur "Importer" plus tard
+            // global.importedChampionshipData = null;
         }
     }
     window.closeImportModal = closeImportModal;
@@ -166,9 +167,9 @@
                 console.log('JSON parsé:', data);
                 
                 if (data.championship) {
-                    importedChampionshipData = data;
+                    global.importedChampionshipData = data;
                 } else if (data.players && data.matches) {
-                    importedChampionshipData = {
+                    global.importedChampionshipData = {
                         version: "2.0",
                         exportDate: data.timestamp || new Date().toISOString(),
                         championship: {
@@ -185,21 +186,21 @@
                     throw new Error('Format de fichier non reconnu');
                 }
                 
-                const importDate = new Date(importedChampionshipData.exportDate).toLocaleString('fr-FR');
-                const stats = importedChampionshipData.stats || calculateStatsFromData(importedChampionshipData.championship);
+                const importDate = new Date(global.importedChampionshipData.exportDate).toLocaleString('fr-FR');
+                const stats = global.importedChampionshipData.stats || calculateStatsFromData(global.importedChampionshipData.championship);
                 
                 const confirmMsg = `Confirmer l'import du championnat ?\n\n` +
                                  `📅 Exporté le : ${importDate}\n` +
-                                 `🏆 Journées : ${stats.totalDays || Object.keys(importedChampionshipData.championship.days).length}\n` +
+                                 `🏆 Journées : ${stats.totalDays || Object.keys(global.importedChampionshipData.championship.days).length}\n` +
                                  `👥 Joueurs : ${stats.totalPlayers || 'Non calculé'}\n` +
                                  `🎯 Matchs : ${stats.totalMatches || 'Non calculé'}\n\n` +
                                  `⚠️ Cette action remplacera complètement le championnat actuel`;
                 
                 if (confirm(confirmMsg)) {
                     processImport();
-                } else {
-                    closeImportModal();
                 }
+                // Ne pas fermer la modale si l'utilisateur clique sur Annuler, 
+                // pour lui permetre de recliquer sur "Importer"
                 
             } catch (error) {
                 alert('Erreur lors de la lecture du fichier :\n' + error.message + '\n\nVérifiez que le fichier est un export valide.');
@@ -208,6 +209,7 @@
         
         reader.readAsText(file);
     }
+    window.handleChampionshipImport = handleChampionshipImport;
 
     function calculateStatsFromData(championshipData) {
         let totalPlayers = new Set();
@@ -230,7 +232,7 @@
     }
 
     function processImport() {
-        if (!importedChampionshipData) {
+        if (!global.importedChampionshipData) {
             alert('Aucun fichier sélectionné');
             return;
         }
@@ -239,7 +241,7 @@
             // IMPORTANT: Ne pas remplacer la référence, mais copier les propriétés
             // dans l'objet existant pour que window.championship et tous les modules IIFE
             // voient les nouvelles données
-            var importedData = importedChampionshipData.championship;
+            var importedData = global.importedChampionshipData.championship;
             Object.keys(championship).forEach(function(key) { delete championship[key]; });
             Object.assign(championship, importedData);
 
@@ -407,6 +409,9 @@
             });
 
             saveToLocalStorage();
+
+            // Réinitialiser les données importées après un import réussi
+            global.importedChampionshipData = null;
 
             closeImportModal();
             showNotification('Championnat importé avec succès !', 'success');

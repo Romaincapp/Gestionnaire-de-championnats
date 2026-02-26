@@ -13,6 +13,7 @@
     var getPlayerName = function(p) { return typeof global.getPlayerName === 'function' ? global.getPlayerName(p) : (p || ''); };
     var escapeForOnclick = function(s) { return typeof global.escapeForOnclick === 'function' ? global.escapeForOnclick(s) : s; };
     var initializeDivisions = function(n) { return typeof global.initializeDivisions === 'function' ? global.initializeDivisions(n) : {}; };
+    var initializePoolSystem = function(dayNumber) { return typeof global.initializePoolSystem === 'function' ? global.initializePoolSystem(dayNumber) : null; };
 
     // GESTION DES ONGLETS ET JOURNÉES
     function addNewDay() {
@@ -1249,5 +1250,9 @@
         playerCountElement.textContent = `(${playersCount} joueur${playersCount !== 1 ? 's' : ''})`;
     }
     window.updatePlayerCount = updatePlayerCount;
+    window.updateTabsDisplay = updateTabsDisplay;
+    window.initializeAllDaysContent = initializeAllDaysContent;
+    window.initializeDivisionsDisplay = initializeDivisionsDisplay;
+    window.updateDaySelectors = updateDaySelectors;
 
 })(window);

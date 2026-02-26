@@ -2871,10 +2871,13 @@ window.displayManualFinalPhaseFromData = displayManualFinalPhaseFromData;
 
 // Export des fonctions principales
 window.initializePoolsForDay = initializePoolsForDay;
+window.updatePoolsDisplay = updatePoolsDisplay;
 window.togglePoolMode = togglePoolMode;
 window.generatePools = generatePools;
 window.updatePoolMatchScore = updatePoolMatchScore;
 window.handlePoolMatchEnter = handlePoolMatchEnter;
+window.updateManualFinalPhaseDisplay = updateManualFinalPhaseDisplay;
+window.restoreCollapseState = restoreCollapseState;
 window.generateFinalPhase = function(dayNumber) {
     // Appeler la vraie fonction de génération des phases finales manuelles
     generateManualFinalPhase(dayNumber);
@@ -5311,6 +5314,13 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
 
 // Remplacer la fonction existante
 window.generateManualMatchHTML = generateManualMatchHTMLImproved;
+
+// Exposer les fonctions d'étape finale pour le classement
+global.getPlayerFinalStageForDay = getPlayerFinalStageForDay;
+global.getBestPlayerStage = getBestPlayerStage;
+
+// Exposer la fonction d'initialisation des poules
+global.initializePoolSystem = initializePoolSystem;
 
 // Appliquer les styles au chargement
 addScoreInputStyles();

@@ -1330,8 +1330,8 @@ function exportGeneralRankingToHTML() {
     showNotification('Classement général exporté en HTML !', 'success');
 }
 
-window.exportGeneralRanking = exportGeneralRanking;
-window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
+// Les fonctions exportGeneralRanking et exportGeneralRankingToPDF sont définies dans ranking.iife.js
+// On expose seulement exportGeneralRankingToHTML qui est défini dans ce fichier
 window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
     // INITIALISATION AU CHARGEMENT
     // Afficher l'attribution des terrains par division
