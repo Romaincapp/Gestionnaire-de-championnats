@@ -1,0 +1,892 @@
+{
+  "version": "2.0",
+  "exportDate": "2026-02-16T15:04:42.061Z",
+  "championshipName": "Pétanque G1 J2",
+  "championship": {
+    "currentDay": 2,
+    "config": {
+      "numberOfDivisions": 1,
+      "numberOfCourts": 1,
+      "numDivisions": 1,
+      "numCourts": 1
+    },
+    "days": {
+      "1": {
+        "players": {
+          "1": [],
+          "2": []
+        },
+        "matches": {
+          "1": [],
+          "2": []
+        },
+        "dayType": "championship",
+        "chronoData": {
+          "events": [],
+          "series": [],
+          "participants": [],
+          "nextEventId": 1,
+          "nextSerieId": 1,
+          "nextParticipantId": 1
+        },
+        "pools": {
+          "enabled": false,
+          "divisions": {
+            "1": {
+              "pools": [],
+              "matches": []
+            },
+            "2": {
+              "pools": [],
+              "matches": []
+            },
+            "3": {
+              "pools": [],
+              "matches": []
+            }
+          }
+        }
+      },
+      "2": {
+        "players": {
+          "1": [
+            {
+              "name": "Zouaves 1",
+              "club": ""
+            },
+            {
+              "name": "Zouaves 2",
+              "club": ""
+            },
+            {
+              "name": "Houblonneux 1",
+              "club": ""
+            },
+            {
+              "name": "Houblonneux 2",
+              "club": ""
+            },
+            {
+              "name": "Heureux Abri 1",
+              "club": ""
+            },
+            {
+              "name": "Heureux Abri 2",
+              "club": ""
+            },
+            {
+              "name": "Heureux Abri 3",
+              "club": ""
+            },
+            {
+              "name": "Heureux Abri 4",
+              "club": ""
+            },
+            {
+              "name": "Heuroublou",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour 1",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour 2",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour 3",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour 4",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour 5",
+              "club": ""
+            },
+            {
+              "name": "Panda 1",
+              "club": ""
+            },
+            {
+              "name": "Panda 2",
+              "club": ""
+            },
+            {
+              "name": "Panda 3",
+              "club": ""
+            },
+            {
+              "name": "Panda 4",
+              "club": ""
+            },
+            {
+              "name": "Panda 5",
+              "club": ""
+            },
+            {
+              "name": "Panda Olivier 1",
+              "club": ""
+            },
+            {
+              "name": "Panda Olivier 2",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie 1",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie 2",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie 3",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie 4",
+              "club": ""
+            },
+            {
+              "name": "Azuree Bleu 1",
+              "club": ""
+            },
+            {
+              "name": "Azuree Bleu 2",
+              "club": ""
+            }
+          ],
+          "2": [],
+          "3": []
+        },
+        "matches": {
+          "1": [
+            {
+              "player1": "Heureux Abri 1",
+              "player2": "Panda 1",
+              "tour": 1,
+              "score1": "11",
+              "score2": "5",
+              "completed": true,
+              "winner": "Heureux Abri 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda 5",
+              "player2": "Marthe Et Marie 2",
+              "tour": 1,
+              "score1": "11",
+              "score2": "6",
+              "completed": true,
+              "winner": "Panda 5",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Houblonneux 2",
+              "player2": "Heuroublou",
+              "tour": 1,
+              "score1": "11",
+              "score2": "2",
+              "completed": true,
+              "winner": "Houblonneux 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Zouaves 2",
+              "player2": "Houblonneux 1",
+              "tour": 1,
+              "score1": "11",
+              "score2": "0",
+              "completed": true,
+              "winner": "Zouaves 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 3",
+              "player2": "Gai Séjour 4",
+              "tour": 1,
+              "score1": "0",
+              "score2": "12",
+              "completed": true,
+              "winner": "Gai Séjour 4",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda 4",
+              "player2": "Panda Olivier 1",
+              "tour": 1,
+              "score1": "12",
+              "score2": "10",
+              "completed": true,
+              "winner": "Panda 4",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 2",
+              "player2": "Gai Séjour 2",
+              "tour": 1,
+              "score1": "11",
+              "score2": "10",
+              "completed": true,
+              "winner": "Heureux Abri 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 4",
+              "player2": "Marthe Et Marie 3",
+              "tour": 1,
+              "score1": "8",
+              "score2": "11",
+              "completed": true,
+              "winner": "Marthe Et Marie 3",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Zouaves 1",
+              "player2": "Marthe Et Marie 4",
+              "tour": 1,
+              "score1": "11",
+              "score2": "5",
+              "completed": true,
+              "winner": "Zouaves 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 3",
+              "player2": "Marthe Et Marie 1",
+              "tour": 1,
+              "score1": "5",
+              "score2": "11",
+              "completed": true,
+              "winner": "Marthe Et Marie 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda 2",
+              "player2": "Panda 3",
+              "tour": 1,
+              "score1": "11",
+              "score2": "0",
+              "completed": true,
+              "winner": "Panda 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 5",
+              "player2": "Azuree Bleu 2",
+              "tour": 1,
+              "score1": "11",
+              "score2": "5",
+              "completed": true,
+              "winner": "Gai Séjour 5",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 1",
+              "player2": "Azuree Bleu 1",
+              "tour": 1,
+              "score1": "11",
+              "score2": "2",
+              "completed": true,
+              "winner": "Gai Séjour 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Zouaves 1",
+              "player2": "Gai Séjour 1",
+              "tour": 1,
+              "score1": "6",
+              "score2": "11",
+              "completed": true,
+              "winner": "Gai Séjour 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Houblonneux 1",
+              "player2": "Panda Olivier 2",
+              "tour": 2,
+              "score1": "11",
+              "score2": "6",
+              "completed": true,
+              "winner": "Houblonneux 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda 1",
+              "player2": "Marthe Et Marie 4",
+              "tour": 2,
+              "score1": "11",
+              "score2": "10",
+              "completed": true,
+              "winner": "Panda 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Zouaves 1",
+              "player2": "Houblonneux 2",
+              "tour": 2,
+              "score1": "10",
+              "score2": "11",
+              "completed": true,
+              "winner": "Houblonneux 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 4",
+              "player2": "Panda Olivier 1",
+              "tour": 2,
+              "score1": "7",
+              "score2": "11",
+              "completed": true,
+              "winner": "Panda Olivier 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heuroublou",
+              "player2": "Azuree Bleu 2",
+              "tour": 2,
+              "score1": "11",
+              "score2": "9",
+              "completed": true,
+              "winner": "Heuroublou",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Zouaves 2",
+              "player2": "Panda 2",
+              "tour": 2,
+              "score1": "9",
+              "score2": "11",
+              "completed": true,
+              "winner": "Panda 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 2",
+              "player2": "Panda 3",
+              "tour": 2,
+              "score1": "12",
+              "score2": "7",
+              "completed": true,
+              "winner": "Gai Séjour 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda 5",
+              "player2": "Azuree Bleu 1",
+              "tour": 2,
+              "score1": "9",
+              "score2": "11",
+              "completed": true,
+              "winner": "Azuree Bleu 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Marthe Et Marie 2",
+              "player2": "Marthe Et Marie 3",
+              "tour": 2,
+              "score1": "5",
+              "score2": "11",
+              "completed": true,
+              "winner": "Marthe Et Marie 3",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 2",
+              "player2": "Gai Séjour 3",
+              "tour": 2,
+              "score1": "11",
+              "score2": "5",
+              "completed": true,
+              "winner": "Heureux Abri 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 3",
+              "player2": "Gai Séjour 5",
+              "tour": 2,
+              "score1": "11",
+              "score2": "1",
+              "completed": true,
+              "winner": "Heureux Abri 3",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda 4",
+              "player2": "Marthe Et Marie 1",
+              "tour": 2,
+              "score1": "4",
+              "score2": "11",
+              "completed": true,
+              "winner": "Marthe Et Marie 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 1",
+              "player2": "Gai Séjour 4",
+              "tour": 2,
+              "score1": "11",
+              "score2": "2",
+              "completed": true,
+              "winner": "Heureux Abri 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Houblonneux 2",
+              "player2": "Gai Séjour 5",
+              "tour": 3,
+              "score1": "11",
+              "score2": "3",
+              "completed": true,
+              "winner": "Houblonneux 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 4",
+              "player2": "Panda 4",
+              "tour": 3,
+              "score1": "11",
+              "score2": "7",
+              "completed": true,
+              "winner": "Heureux Abri 4",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda 1",
+              "player2": "Azuree Bleu 1",
+              "tour": 3,
+              "score1": "7",
+              "score2": "13",
+              "completed": true,
+              "winner": "Azuree Bleu 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Zouaves 2",
+              "player2": "Panda Olivier 1",
+              "tour": 3,
+              "score1": "11",
+              "score2": "2",
+              "completed": true,
+              "winner": "Zouaves 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 2",
+              "player2": "Panda 2",
+              "tour": 3,
+              "score1": "3",
+              "score2": "11",
+              "completed": true,
+              "winner": "Panda 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Marthe Et Marie 2",
+              "player2": "Azuree Bleu 2",
+              "tour": 3,
+              "score1": "12",
+              "score2": "10",
+              "completed": true,
+              "winner": "Marthe Et Marie 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda Olivier 2",
+              "player2": "Marthe Et Marie 1",
+              "tour": 3,
+              "score1": "3",
+              "score2": "11",
+              "completed": true,
+              "winner": "Marthe Et Marie 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 1",
+              "player2": "Heuroublou",
+              "tour": 3,
+              "score1": "11",
+              "score2": "0",
+              "completed": true,
+              "winner": "Heureux Abri 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Houblonneux 1",
+              "player2": "Panda 5",
+              "tour": 3,
+              "score1": "5",
+              "score2": "11",
+              "completed": true,
+              "winner": "Panda 5",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Zouaves 1",
+              "player2": "Panda 3",
+              "tour": 3,
+              "score1": "9",
+              "score2": "11",
+              "completed": true,
+              "winner": "Panda 3",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 3",
+              "player2": "Gai Séjour 3",
+              "tour": 3,
+              "score1": "2",
+              "score2": "11",
+              "completed": true,
+              "winner": "Gai Séjour 3",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 2",
+              "player2": "Gai Séjour 1",
+              "tour": 3,
+              "score1": "3",
+              "score2": "11",
+              "completed": true,
+              "winner": "Gai Séjour 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Marthe Et Marie 3",
+              "player2": "Marthe Et Marie 4",
+              "tour": 3,
+              "score1": "5",
+              "score2": "12",
+              "completed": true,
+              "winner": "Marthe Et Marie 4",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 4",
+              "player2": "Marthe Et Marie 4",
+              "tour": 4,
+              "score1": "1",
+              "score2": "11",
+              "completed": true,
+              "winner": "Marthe Et Marie 4",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Houblonneux 1",
+              "player2": "Houblonneux 2",
+              "tour": 4,
+              "score1": "3",
+              "score2": "11",
+              "completed": true,
+              "winner": "Houblonneux 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 5",
+              "player2": "Panda Olivier 1",
+              "tour": 4,
+              "score1": "11",
+              "score2": "5",
+              "completed": true,
+              "winner": "Gai Séjour 5",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Panda 1",
+              "player2": "Panda 4",
+              "tour": 4,
+              "score1": "11",
+              "score2": "8",
+              "completed": true,
+              "winner": "Panda 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Zouaves 2",
+              "player2": "Gai Séjour 1",
+              "tour": 4,
+              "score1": "11",
+              "score2": "0",
+              "completed": true,
+              "winner": "Zouaves 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 3",
+              "player2": "Panda 3",
+              "tour": 4,
+              "score1": "5",
+              "score2": "11",
+              "completed": true,
+              "winner": "Panda 3",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 4",
+              "player2": "Panda Olivier 2",
+              "tour": 4,
+              "score1": "11",
+              "score2": "3",
+              "completed": true,
+              "winner": "Gai Séjour 4",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Marthe Et Marie 3",
+              "player2": "Azuree Bleu 2",
+              "tour": 4,
+              "score1": "13",
+              "score2": "9",
+              "completed": true,
+              "winner": "Marthe Et Marie 3",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heuroublou",
+              "player2": "Marthe Et Marie 2",
+              "tour": 4,
+              "score1": "11",
+              "score2": "6",
+              "completed": true,
+              "winner": "Heuroublou",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 2",
+              "player2": "Azuree Bleu 1",
+              "tour": 4,
+              "score1": "10",
+              "score2": "11",
+              "completed": true,
+              "winner": "Azuree Bleu 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 3",
+              "player2": "Panda 2",
+              "tour": 4,
+              "score1": "6",
+              "score2": "11",
+              "completed": true,
+              "winner": "Panda 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Heureux Abri 1",
+              "player2": "Marthe Et Marie 1",
+              "tour": 4,
+              "score1": "11",
+              "score2": "6",
+              "completed": true,
+              "winner": "Heureux Abri 1",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 2",
+              "player2": "Panda 5",
+              "tour": 4,
+              "score1": "11",
+              "score2": "8",
+              "completed": true,
+              "winner": "Gai Séjour 2",
+              "timesPlayedBefore": 0,
+              "isRematch": false,
+              "court": 1
+            },
+            {
+              "player1": "Gai Séjour 4",
+              "player2": "Bye",
+              "tour": 4,
+              "score1": 5,
+              "score2": 0,
+              "completed": true,
+              "winner": "Gai Séjour 4",
+              "isBye": true,
+              "court": 1
+            },
+            {
+              "player1": "Panda Olivier 2",
+              "player2": "Bye",
+              "tour": 4,
+              "score1": 5,
+              "score2": 0,
+              "completed": true,
+              "winner": "Panda Olivier 2",
+              "isBye": true,
+              "court": 1
+            }
+          ],
+          "2": [],
+          "3": []
+        },
+        "dayType": "championship",
+        "chronoData": {
+          "events": [],
+          "series": [],
+          "participants": [],
+          "nextEventId": 1,
+          "nextSerieId": 1,
+          "nextParticipantId": 1
+        },
+        "pools": {
+          "enabled": false,
+          "divisions": {
+            "1": {
+              "pools": [],
+              "matches": []
+            },
+            "2": {
+              "pools": [],
+              "matches": []
+            },
+            "3": {
+              "pools": [],
+              "matches": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "stats": {
+    "totalPlayers": 27,
+    "totalMatches": 55,
+    "totalDays": 2,
+    "uniquePlayersList": [
+      "Zouaves 1",
+      "Zouaves 2",
+      "Houblonneux 1",
+      "Houblonneux 2",
+      "Heureux Abri 1",
+      "Heureux Abri 2",
+      "Heureux Abri 3",
+      "Heureux Abri 4",
+      "Heuroublou",
+      "Gai Séjour 1",
+      "Gai Séjour 2",
+      "Gai Séjour 3",
+      "Gai Séjour 4",
+      "Gai Séjour 5",
+      "Panda 1",
+      "Panda 2",
+      "Panda 3",
+      "Panda 4",
+      "Panda 5",
+      "Panda Olivier 1",
+      "Panda Olivier 2",
+      "Marthe Et Marie 1",
+      "Marthe Et Marie 2",
+      "Marthe Et Marie 3",
+      "Marthe Et Marie 4",
+      "Azuree Bleu 1",
+      "Azuree Bleu 2"
+    ]
+  }
+}
