@@ -14,7 +14,7 @@
     // État global
     var championship = {
         currentDay: 1,
-        config: { ...DEFAULT_CONFIG },
+        config: { numberOfDivisions: DEFAULT_CONFIG.numberOfDivisions, numberOfCourts: DEFAULT_CONFIG.numberOfCourts },
         days: {
             1: {
                 players: initializeDivisions(DEFAULT_CONFIG.numberOfDivisions),
@@ -46,9 +46,15 @@
                 Object.assign(championship, loaded);
                 // S'assurer que la config a les valeurs par défaut
                 if (!championship.config) {
-                    championship.config = { ...DEFAULT_CONFIG };
+                    championship.config = { numberOfDivisions: DEFAULT_CONFIG.numberOfDivisions, numberOfCourts: DEFAULT_CONFIG.numberOfCourts };
                 } else {
-                    championship.config = { ...DEFAULT_CONFIG, ...championship.config };
+                    championship.config.numberOfDivisions = championship.config.numberOfDivisions || DEFAULT_CONFIG.numberOfDivisions;
+                    championship.config.numberOfCourts = championship.config.numberOfCourts || DEFAULT_CONFIG.numberOfCourts;
+                }
+                // Synchroniser le config global
+                if (global.config) {
+                    global.config.numberOfDivisions = championship.config.numberOfDivisions;
+                    global.config.numberOfCourts = championship.config.numberOfCourts;
                 }
                 return true;
             }
@@ -60,13 +66,30 @@
 
     function toggleForfaitButtons() {
         showForfaitButtons = !showForfaitButtons;
+        global.showForfaitButtons = showForfaitButtons;
 
+        // Mettre à jour tous les boutons toggle (pour toutes les journées)
         document.querySelectorAll('[id^="forfait-toggle-btn-"]').forEach(function(btn) {
             btn.style.background = showForfaitButtons ? '#e74c3c' : '#95a5a6';
             btn.innerHTML = showForfaitButtons ? '⚠️ Actions ON' : '⚠️ Actions OFF';
         });
 
-        return showForfaitButtons;
+        // Rafraîchir l'affichage des matchs
+        var currentDay = championship.currentDay;
+        if (typeof global.updateMatchesDisplay === 'function') global.updateMatchesDisplay(currentDay);
+        if (championship.days[currentDay] && championship.days[currentDay].pools && championship.days[currentDay].pools.enabled) {
+            if (typeof global.updatePoolsDisplay === 'function') global.updatePoolsDisplay(currentDay);
+        }
+        if (championship.days[currentDay] && championship.days[currentDay].pools && championship.days[currentDay].pools.manualFinalPhase) {
+            if (typeof global.updateManualFinalPhaseDisplay === 'function') global.updateManualFinalPhaseDisplay(currentDay);
+        }
+
+        if (typeof global.showNotification === 'function') {
+            global.showNotification(
+                showForfaitButtons ? 'Actions dangereuses activées (forfaits + suppressions)' : 'Actions dangereuses masquées',
+                showForfaitButtons ? 'warning' : 'info'
+            );
+        }
     }
 
     // Exposer sur window

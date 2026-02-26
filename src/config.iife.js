@@ -4,86 +4,95 @@
 (function(global) {
     'use strict';
 
-    const DEFAULT_CONFIG = {
+    var DEFAULT_CONFIG = {
         numberOfDivisions: 3,
         numberOfCourts: 4
     };
 
-    let config = { ...DEFAULT_CONFIG };
+    var config = { numberOfDivisions: DEFAULT_CONFIG.numberOfDivisions, numberOfCourts: DEFAULT_CONFIG.numberOfCourts };
 
     function initializeDivisions(numberOfDivisions) {
-        const divisions = {};
-        for (let i = 1; i <= numberOfDivisions; i++) {
+        var divisions = {};
+        for (var i = 1; i <= numberOfDivisions; i++) {
             divisions[i] = [];
         }
         return divisions;
     }
 
     function updateDivisionConfig() {
-        const select = document.getElementById('divisionConfig');
+        var select = document.getElementById('divisionConfig');
         if (select) {
             config.numberOfDivisions = parseInt(select.value);
         }
+        if (typeof global.updateCourtAssignmentInfo === 'function') global.updateCourtAssignmentInfo();
     }
 
     function updateCourtConfig() {
-        const select = document.getElementById('courtConfig');
+        var select = document.getElementById('courtConfig');
         if (select) {
             config.numberOfCourts = parseInt(select.value);
         }
+        if (typeof global.updateCourtAssignmentInfo === 'function') global.updateCourtAssignmentInfo();
     }
 
     function getNumberOfDivisions() {
-        return config.numberOfDivisions;
+        var championship = global.championship;
+        return (championship && championship.config && championship.config.numberOfDivisions) || config.numberOfDivisions || 3;
     }
 
     function getNumberOfCourts() {
-        return config.numberOfCourts;
+        var championship = global.championship;
+        return (championship && championship.config && championship.config.numberOfCourts) || config.numberOfCourts || 4;
     }
 
     function getCourtsForDivision(division) {
-        const numCourts = config.numberOfCourts;
-        const numDivisions = config.numberOfDivisions;
-        const courtsPerDivision = Math.ceil(numCourts / numDivisions);
-        const firstCourt = (division - 1) * courtsPerDivision + 1;
-        const lastCourt = Math.min(division * courtsPerDivision, numCourts);
-        return { first: firstCourt, last: lastCourt, count: lastCourt - firstCourt + 1 };
+        var numCourts = getNumberOfCourts();
+        var numDivisions = getNumberOfDivisions();
+        var courtsPerDivision = Math.ceil(numCourts / numDivisions);
+        var firstCourt = (division - 1) * courtsPerDivision + 1;
+        var lastCourt = Math.min(division * courtsPerDivision, numCourts);
+        return {
+            first: firstCourt,
+            last: lastCourt,
+            count: lastCourt - firstCourt + 1
+        };
     }
 
     function applyConfiguration() {
-        const newDivisions = parseInt(document.getElementById('divisionConfig').value);
-        const newCourts = parseInt(document.getElementById('courtConfig').value);
-        
-        if (!confirm(`⚙️ Appliquer la nouvelle configuration ?\n\n` +
-            `📊 Divisions: ${newDivisions}\n` +
-            `🎾 Terrains: ${newCourts}\n\n` +
-            `⚠️ Attention: Cela peut affecter l'affichage des joueurs et matchs existants.`)) {
+        var newDivisions = config.numberOfDivisions;
+        var newCourts = config.numberOfCourts;
+
+        if (!confirm('⚙️ Appliquer la nouvelle configuration ?\n\n' +
+            '📊 Divisions: ' + newDivisions + '\n' +
+            '🎾 Terrains: ' + newCourts + '\n\n' +
+            '⚠️ Attention: Cela peut affecter l\'affichage des joueurs et matchs existants.')) {
             return;
         }
-        
-        config.numberOfDivisions = newDivisions;
-        config.numberOfCourts = newCourts;
-        
-        if (global.championship && global.championship.days) {
-            Object.keys(global.championship.days).forEach(dayKey => {
-                const day = global.championship.days[dayKey];
-                for (let i = 1; i <= newDivisions; i++) {
-                    if (!day.players[i]) day.players[i] = [];
-                    if (!day.matches[i]) day.matches[i] = [];
-                }
-                Object.keys(day.players).forEach(div => {
-                    if (parseInt(div) > newDivisions) {
-                        delete day.players[div];
-                        delete day.matches[div];
+
+        var championship = global.championship;
+        if (championship && championship.days) {
+            // Mettre à jour toutes les journées existantes
+            Object.keys(championship.days).forEach(function(dayKey) {
+                var day = championship.days[dayKey];
+                for (var i = 1; i <= newDivisions; i++) {
+                    if (!day.players[i]) {
+                        day.players[i] = [];
+                        day.matches[i] = [];
                     }
-                });
+                }
             });
-            global.championship.config = { ...config };
+
+            // Sauvegarder la config dans le championnat
+            championship.config = {
+                numberOfDivisions: newDivisions,
+                numberOfCourts: newCourts
+            };
         }
-        
-        if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
-        if (typeof showNotification === 'function') showNotification('Configuration appliquée avec succès !', 'success');
-        if (typeof updateMatchesDisplay === 'function') updateMatchesDisplay(global.championship?.currentDay || 1);
+
+        if (typeof global.saveToLocalStorage === 'function') global.saveToLocalStorage();
+
+        // Recharger l'interface
+        location.reload();
     }
 
     // Exposer sur window

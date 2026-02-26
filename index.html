@@ -1068,33 +1068,35 @@
         <!-- ============================================ -->
         
         <!-- 1. Modules de base -->
+        <!-- 1. Fondation (aucune dépendance) -->
         <script src="src/config.iife.js"></script>
         <script src="src/utils.iife.js"></script>
         <script src="src/notifications.iife.js"></script>
+
+        <!-- 2. État global (dépend de la fondation) -->
         <script src="src/state.iife.js"></script>
-        
-        <!-- 2. Module Multisport -->
-        <script src="src/multisport.iife.js"></script>
-        
-        <!-- 3. Module Clubs -->
         <script src="src/clubs.iife.js"></script>
-        
-        <!-- 4. Module Joueurs -->
+
+        <!-- 3. Modules fonctionnels (dépendent de l'état) -->
+        <script src="src/multisport.iife.js"></script>
         <script src="src/players.iife.js"></script>
-        
-        <!-- 4. Modules des 3 modes UI -->
-        <script src="src/ui.iife.js"></script>           <!-- UI Generale -->
-        <script src="src/matches.iife.js"></script>      <!-- Mode Championship -->
-        <script src="src/pools.iife.js"></script>        <!-- Mode POOL -->
-        <script src="src/chrono.iife.js"></script>       <!-- Mode CHRONO -->
-        
-        <!-- 5. Modules fonctionnels -->
-        <script src="src/ranking.iife.js"></script>      <!-- Classements -->
-        <script src="src/export.iife.js"></script>       <!-- Export/Print -->
-        
-        <!-- ============================================ -->
-        <!-- FICHIER LEGACY (fonctions restantes a migrer) -->
-        <!-- ============================================ -->
+        <script src="src/ui.iife.js"></script>
+        <script src="src/matches.iife.js"></script>
+        <script src="src/pools.iife.js"></script>
+        <script src="src/ranking.iife.js"></script>
+
+        <!-- 4. Export -->
+        <script src="src/export.iife.js"></script>
+        <script src="src/export-json.iife.js"></script>
+        <script src="src/export-print.iife.js"></script>
+
+        <!-- 5. Chrono (indépendant du championship) -->
+        <script src="src/chrono.iife.js"></script>
+
+        <!-- 6. Initialisation (dépend de tout) -->
+        <script src="src/init.iife.js"></script>
+
+        <!-- 7. Bootstrap (dark mode uniquement) -->
         <script src="script.js"></script>
 
     </body>

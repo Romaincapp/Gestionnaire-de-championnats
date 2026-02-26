@@ -4,15 +4,13 @@
 (function(global) {
     'use strict';
 
-    function showNotification(message, type) {
-        type = type || 'info';
-        
+    function showNotification(message, type = 'info') {
         if (typeof document === 'undefined') {
             return;
         }
 
         const notification = document.createElement('div');
-        notification.className = 'notification ' + type;
+        notification.className = `notification ${type}`;
         notification.textContent = message;
 
         // Style de base
@@ -46,10 +44,10 @@
 
         document.body.appendChild(notification);
 
-        setTimeout(function() {
+        setTimeout(() => {
             notification.style.opacity = '0';
             notification.style.transform = 'translateY(-20px)';
-            setTimeout(function() {
+            setTimeout(() => {
                 if (notification.parentNode) {
                     notification.remove();
                 }

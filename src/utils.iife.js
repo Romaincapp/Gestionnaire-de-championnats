@@ -6,6 +6,14 @@
 
     function formatProperName(name) {
         if (!name) return '';
+        // Si c'est un objet joueur {name, club}, formater le nom dans l'objet et retourner l'objet
+        if (typeof name === 'object' && name !== null) {
+            if (name.name && typeof name.name === 'string') {
+                name.name = formatProperName(name.name);
+            }
+            return name;
+        }
+        if (typeof name !== 'string') return '';
         return name.trim()
             .toLowerCase()
             .split(/(\s+|-)/)
@@ -16,12 +24,24 @@
             .join('');
     }
 
+    function escapeForOnclick(str) {
+        if (!str) return '';
+        return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
     function hasReverseMatchInDay(matches, player1, player2) {
         if (!matches || !Array.isArray(matches)) return false;
         return matches.some(match => {
             return (match.player1 === player1 && match.player2 === player2) ||
                    (match.player1 === player2 && match.player2 === player1);
         });
+    }
+
+    function getPlayerName(player) {
+        if (typeof player === 'object' && player !== null) {
+            return player.name || '';
+        }
+        return player || '';
     }
 
     function generateId() {
@@ -58,7 +78,9 @@
 
     // Exposer sur window
     global.formatProperName = formatProperName;
+    global.escapeForOnclick = escapeForOnclick;
     global.hasReverseMatchInDay = hasReverseMatchInDay;
+    global.getPlayerName = getPlayerName;
     global.generateId = generateId;
     global.formatTime = formatTime;
     global.calculateWinRate = calculateWinRate;
