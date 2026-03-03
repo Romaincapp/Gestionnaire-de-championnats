@@ -884,7 +884,12 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             const dayNum = parseInt(dayNumber);
             const dayData = championship.days[dayNum];
 
-            if (dayData.players[division].includes(playerName)) {
+            // Vérifier si le joueur existe (en gérant le format objet {name, club})
+            const playerExists = dayData.players[division].some(p => {
+                const pName = typeof p === 'object' ? p.name : p;
+                return pName === playerName;
+            });
+            if (playerExists) {
                 if (firstAppearance === null || dayNum < firstAppearance) {
                     firstAppearance = dayNum;
                 }
@@ -895,6 +900,12 @@ if (dayStats && dayStats.matchesPlayed > 0) {
         });
 
         const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
+
+        // Si le joueur n'a été trouvé dans aucune journée, afficher un message d'erreur
+        if (firstAppearance === null || lastAppearance === null) {
+            alert('Joueur non trouvé dans le championnat');
+            return;
+        }
 
         // Ajouter des journées forfait pour les journées manquées AVANT la première apparition
         allDays.forEach(dayNum => {
@@ -920,12 +931,19 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             const dayNum = parseInt(dayNumber);
             const dayData = championship.days[dayNum];
 
-            if (dayData.players[division].includes(playerName)) {
+            // Vérifier si le joueur existe (en gérant le format objet {name, club})
+            const playerExists = dayData.players[division].some(p => {
+                const pName = typeof p === 'object' ? p.name : p;
+                return pName === playerName;
+            });
+            if (playerExists) {
                 const dayStats = calculatePlayerStats(dayNum, division, playerName);
-                if (dayStats && dayStats.matchesPlayed > 0) {
+                // Inclure même si aucun match terminé, pour voir les matchs à venir
+                if (dayStats && (dayStats.matchesPlayed > 0 || dayStats.matches.length > 0)) {
                     playerHistory.push({
                         day: dayNum,
                         ...dayStats,
+                        totalMatchesScheduled: dayStats.matches.length,
                         isForfeit: false
                     });
                 }
@@ -1030,43 +1048,250 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             `;
         }
         
-        let historyHtml = '<h4 style="color: #2c3e50; margin-bottom: 15px;">📈 Performance par journée</h4>';
-        playerHistory.forEach(dayStats => {
+        // Générer un ID unique pour ce modal
+        const modalId = 'general-player-details-' + Date.now();
+        
+        let historyHtml = `
+            <h4 style="color: #2c3e50; margin-bottom: 15px;">📈 Performance par journée</h4>
+            <style>
+                .day-summary { 
+                    background: #f8f9fa; 
+                    border-radius: 8px; 
+                    margin-bottom: 8px; 
+                    overflow: hidden;
+                    border: 1px solid #e9ecef;
+                }
+                .day-header { 
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center; 
+                    padding: 10px 12px; 
+                    cursor: pointer;
+                    transition: background 0.2s;
+                }
+                .day-header:hover { background: #e9ecef; }
+                .day-header-left { display: flex; align-items: center; gap: 10px; }
+                .day-toggle { 
+                    width: 20px; 
+                    height: 20px; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    font-size: 12px;
+                    color: #6c757d;
+                    transition: transform 0.2s;
+                }
+                .day-title { font-weight: 600; color: #2c3e50; font-size: 14px; }
+                .day-stats { font-size: 12px; color: #6c757d; }
+                .day-points { 
+                    font-weight: bold; 
+                    font-size: 14px; 
+                    padding: 4px 10px; 
+                    border-radius: 12px;
+                }
+                .day-points.win { background: #d4edda; color: #155724; }
+                .day-points.loss { background: #f8d7da; color: #721c24; }
+                .day-points.neutral { background: #e2e3e5; color: #383d41; }
+                .day-matches { 
+                    display: block; 
+                    padding: 0 12px 12px 42px; 
+                    border-top: 1px solid #e9ecef;
+                }
+                .day-matches.collapsed { display: none; }
+                .match-detail {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px 10px;
+                    margin: 4px 0;
+                    background: white;
+                    border-radius: 6px;
+                    font-size: 13px;
+                }
+                .match-detail.win { border-left: 3px solid #28a745; }
+                .match-detail.loss { border-left: 3px solid #dc3545; }
+                .match-detail.draw { border-left: 3px solid #6c757d; }
+                .match-detail.forfait { border-left: 3px solid #ffc107; }
+                .match-detail.pending { border-left: 3px solid #6c757d; opacity: 0.8; }
+                .match-opponent { flex: 1; color: #495057; }
+                .match-opponent strong { color: #2c3e50; }
+                .match-score {
+                    font-weight: bold;
+                    font-size: 14px;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    background: #f8f9fa;
+                }
+                .match-result-icon { 
+                    width: 24px; 
+                    text-align: center; 
+                    font-size: 14px;
+                    margin-right: 6px;
+                }
+                .forfait-badge {
+                    font-size: 10px;
+                    padding: 2px 6px;
+                    border-radius: 10px;
+                    background: #fff3cd;
+                    color: #856404;
+                    margin-left: 6px;
+                }
+            </style>
+        `;
+        
+        playerHistory.forEach((dayStats, index) => {
+            const dayId = `${modalId}-day-${dayStats.day}`;
+            
             if (dayStats.isForfeit) {
-                // Affichage spécial pour les journées forfaitées
                 historyHtml += `
-                    <div class="history-match" style="background: #fee; border-left: 4px solid #e74c3c; opacity: 0.7;">
-                        <div>
-                            <div class="history-opponent">Journée ${dayStats.day} ⚠️ FORFAIT</div>
-                            <div style="font-size: 12px; color: #c0392b;">
-                                Équipe absente - 4 forfaits automatiques (-20 buts)
+                    <div class="day-summary">
+                        <div class="day-header" style="background: #fee; opacity: 0.8;">
+                            <div class="day-header-left">
+                                <span style="color: #e74c3c;">⚠️</span>
+                                <span class="day-title">Journée ${dayStats.day}</span>
+                                <span class="forfait-badge">FORFAIT</span>
                             </div>
-                        </div>
-                        <div class="history-score">
-                            <div style="font-weight: bold; color: #e74c3c;">${dayStats.totalPoints} pts</div>
-                            <div style="font-size: 12px;">0V/0D/4F</div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="day-stats">4 forfaits • -20 buts</span>
+                                <span class="day-points loss">0 pts</span>
+                            </div>
                         </div>
                     </div>
                 `;
             } else {
-                const performanceClass = dayStats.winRate >= 60 ? 'win' : dayStats.winRate >= 40 ? '' : 'loss';
-
+                const pointsClass = dayStats.totalPoints >= 8 ? 'win' : dayStats.totalPoints >= 4 ? 'neutral' : 'loss';
+                const toggleId = `toggle-${dayId}`;
+                const matchesId = `matches-${dayId}`;
+                
+                // Récupérer les matchs détaillés pour cette journée
+                const dayData = championship.days[dayStats.day];
+                let dayMatches = [];
+                
+                // Matchs classiques
+                if (dayData.matches && dayData.matches[division]) {
+                    dayMatches = dayData.matches[division].filter(m => 
+                        m.player1 === playerName || m.player2 === playerName
+                    );
+                }
+                
+                // Matchs de poules
+                if (dayData.pools?.enabled && dayData.pools.divisions?.[division]) {
+                    const poolMatches = dayData.pools.divisions[division].matches || [];
+                    const playerPoolMatches = poolMatches.filter(m => 
+                        m.player1 === playerName || m.player2 === playerName
+                    );
+                    dayMatches = [...dayMatches, ...playerPoolMatches];
+                }
+                
+                // Matchs de phase finale
+                if (dayData.pools?.divisions?.[division]?.finalPhase) {
+                    const finalMatches = dayData.pools.divisions[division].finalPhase || [];
+                    const playerFinalMatches = finalMatches.filter(m => 
+                        m.player1 === playerName || m.player2 === playerName
+                    );
+                    dayMatches = [...dayMatches, ...playerFinalMatches];
+                }
+                
+                // Matchs de phase finale manuelle
+                if (dayData.pools?.manualFinalPhase?.divisions?.[division]) {
+                    const manualFinalPhase = dayData.pools.manualFinalPhase.divisions[division];
+                    if (manualFinalPhase.rounds) {
+                        Object.values(manualFinalPhase.rounds).forEach(round => {
+                            if (round.matches) {
+                                const playerRoundMatches = round.matches.filter(m => 
+                                    m.player1 === playerName || m.player2 === playerName
+                                );
+                                dayMatches = [...dayMatches, ...playerRoundMatches];
+                            }
+                        });
+                    }
+                }
+                
+                // Générer le HTML des matchs
+                let matchesHtml = '';
+                if (dayMatches.length > 0) {
+                    // Trier les matchs : en cours d'abord, puis terminés
+                    const sortedMatches = dayMatches.sort((a, b) => {
+                        if (!a.completed && b.completed) return -1;
+                        if (a.completed && !b.completed) return 1;
+                        return 0;
+                    });
+                    
+                    matchesHtml = sortedMatches.map(match => {
+                        const isPlayer1 = match.player1 === playerName;
+                        const opponent = isPlayer1 ? match.player2 : match.player1;
+                        const playerScore = isPlayer1 ? match.score1 : match.score2;
+                        const opponentScore = isPlayer1 ? match.score2 : match.score1;
+                        const hasScore = playerScore !== '' && playerScore !== null && playerScore !== undefined;
+                        
+                        let resultClass = '';
+                        let resultIcon = '';
+                        let scoreDisplay = '';
+                        let statusBadge = '';
+                        
+                        if (!match.completed) {
+                            // Match non terminé - vérifier s'il y a des scores partiels
+                            if (hasScore || (opponentScore !== '' && opponentScore !== null && opponentScore !== undefined)) {
+                                resultClass = 'pending';
+                                resultIcon = '⏳';
+                                scoreDisplay = `${playerScore || '-'}-${opponentScore || '-'}`;
+                                statusBadge = '<span style="font-size: 10px; color: #f39c12; margin-left: 6px;">en cours</span>';
+                            } else {
+                                resultClass = 'pending';
+                                resultIcon = '📅';
+                                scoreDisplay = 'À jouer';
+                            }
+                        } else if (match.forfaitBy) {
+                            const playerForfait = match.forfaitBy === (isPlayer1 ? 'player1' : 'player2');
+                            resultClass = 'forfait';
+                            resultIcon = playerForfait ? '⚠️' : '🏆';
+                            scoreDisplay = playerForfait ? 'Forfait' : `Victoire (forfait)`;
+                        } else if (match.winner === null) {
+                            resultClass = 'draw';
+                            resultIcon = '🤝';
+                            scoreDisplay = `${playerScore}-${opponentScore}`;
+                        } else if (match.winner === playerName) {
+                            resultClass = 'win';
+                            resultIcon = '🏆';
+                            scoreDisplay = `${playerScore}-${opponentScore}`;
+                        } else {
+                            resultClass = 'loss';
+                            resultIcon = '❌';
+                            scoreDisplay = `${playerScore}-${opponentScore}`;
+                        }
+                        
+                        return `
+                            <div class="match-detail ${resultClass}">
+                                <span class="match-result-icon">${resultIcon}</span>
+                                <span class="match-opponent">vs <strong>${opponent}</strong>${statusBadge}</span>
+                                <span class="match-score">${scoreDisplay}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
                 historyHtml += `
-                    <div class="history-match ${performanceClass}">
-                        <div>
-                            <div class="history-opponent">Journée ${dayStats.day}</div>
-                            <div style="font-size: 12px; color: #7f8c8d;">
-                                ${dayStats.wins}V/${dayStats.draws || 0}N/${dayStats.losses}D/${dayStats.forfeits || 0}F - ${dayStats.matchesPlayed} matchs
+                    <div class="day-summary">
+                        <div class="day-header" onclick="toggleDayMatches('${toggleId}', '${matchesId}')">
+                            <div class="day-header-left">
+                                <span class="day-toggle" id="${toggleId}">▼</span>
+                                <span class="day-title">Journée ${dayStats.day}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                ${dayStats.totalMatchesScheduled > dayStats.matchesPlayed ? `<span style="font-size: 11px; padding: 2px 8px; background: #fff3cd; color: #856404; border-radius: 10px;">⏳ ${dayStats.totalMatchesScheduled - dayStats.matchesPlayed} restant${dayStats.totalMatchesScheduled - dayStats.matchesPlayed > 1 ? 's' : ''}</span>` : ''}
+                                <span class="day-stats">${dayStats.wins}V/${dayStats.draws || 0}N/${dayStats.losses}D/${dayStats.forfeits || 0}F${dayStats.totalMatchesScheduled > dayStats.matchesPlayed ? ` • ${dayStats.matchesPlayed}/${dayStats.totalMatchesScheduled}` : ` • ${dayStats.matchesPlayed}`}</span>
+                                <span class="day-points ${pointsClass}">${dayStats.totalPoints} pts</span>
                             </div>
                         </div>
-                        <div class="history-score">
-                            <div style="font-weight: bold;">${dayStats.totalPoints} pts</div>
-                            <div style="font-size: 12px;">${dayStats.winRate}% vict.</div>
+                        <div class="day-matches" id="${matchesId}">
+                            ${matchesHtml || '<div style="padding: 10px; color: #6c757d; font-size: 12px;">Aucun match trouvé</div>'}
                         </div>
                     </div>
                 `;
             }
         });
+        
+        // La fonction toggleDayMatches est définie globalement plus bas
         
         const playerMatches = document.getElementById('playerMatches');
         if (playerMatches) {
@@ -1079,6 +1304,17 @@ if (dayStats && dayStats.matchesPlayed > 0) {
         }
     }
     window.showGeneralPlayerDetails = showGeneralPlayerDetails;
+
+    // Fonction pour toggle l'affichage des matchs d'une journée dans le modal général
+    function toggleDayMatches(toggleId, matchesId) {
+        const toggle = document.getElementById(toggleId);
+        const matches = document.getElementById(matchesId);
+        if (toggle && matches) {
+            matches.classList.toggle('collapsed');
+            toggle.textContent = matches.classList.contains('collapsed') ? '▶' : '▼';
+        }
+    }
+    window.toggleDayMatches = toggleDayMatches;
 
     function exportGeneralRanking() {
         const generalRanking = calculateGeneralRanking();

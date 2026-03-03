@@ -5322,6 +5322,46 @@ global.getBestPlayerStage = getBestPlayerStage;
 // Exposer la fonction d'initialisation des poules
 global.initializePoolSystem = initializePoolSystem;
 
+// Exposer les fonctions de toggle des hubs
+global.toggleDayHub = toggleDayHub;
+global.toggleGeneralHub = toggleGeneralHub;
+global.togglePoolSection = togglePoolSection;
+global.togglePoolMode = togglePoolMode;
+global.togglePoolConfigMode = togglePoolConfigMode;
+global.saveCollapseState = saveCollapseState;
+global.restoreCollapseState = restoreCollapseState;
+
+// Exposer les fonctions de configuration des poules
+global.updateSimpleConfigInfo = updateSimpleConfigInfo;
+global.updateAdvancedConfigInfo = updateAdvancedConfigInfo;
+global.selectPreFillMode = selectPreFillMode;
+global.applyPreFillStrategy = applyPreFillStrategy;
+global.backToModeSelection = backToModeSelection;
+global.closePoolPreFillStrategyModal = closePoolPreFillStrategyModal;
+global.preFillFromGeneralRanking = preFillFromGeneralRanking;
+
+// Exposer les fonctions de génération des poules et phases finales
+global.generatePools = generatePools;
+global.generateFinalPhase = generateFinalPhase;
+global.generateDirectFinalPhase = generateDirectFinalPhase;
+global.generateSeasonFinalPhase = generateSeasonFinalPhase;
+global.updatePoolsDisplay = updatePoolsDisplay;
+global.updatePoolMatchScore = updatePoolMatchScore;
+global.handlePoolMatchEnter = handlePoolMatchEnter;
+
+// Exposer les fonctions de phase finale manuelle
+global.initializePoolsForDay = initializePoolsForDay;
+global.initializeManualFinalPhase = initializeManualFinalPhase;
+global.updateManualFinalPhaseDisplay = updateManualFinalPhaseDisplay;
+global.updateManualMatchScore = updateManualMatchScore;
+global.handleManualMatchEnter = handleManualMatchEnter;
+global.generateManualFinalPhase = generateManualFinalPhase;
+global.generateNextManualRound = generateNextManualRound;
+global.resetManualFinalPhase = resetManualFinalPhase;
+global.exportManualFinalResults = exportManualFinalResults;
+global.showPlayerPoolSummary = showPlayerPoolSummary;
+global.closePlayerPoolSummary = closePlayerPoolSummary;
+
 // Appliquer les styles au chargement
 addScoreInputStyles();
 
