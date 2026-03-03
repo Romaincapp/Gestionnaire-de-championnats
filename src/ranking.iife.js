@@ -591,6 +591,9 @@ playerStats.forEach((player, index) => {
         
         const generalRanking = calculateGeneralRanking();
         
+        // Stocker le classement pour réutilisation par le PDF (évite de recalculer)
+        window.lastCalculatedGeneralRanking = generalRanking;
+        
         const generalRankingContent = document.getElementById('generalRankingContent');
         if (!generalRankingContent) return;
         
@@ -1350,12 +1353,13 @@ if (dayStats && dayStats.matchesPlayed > 0) {
       
     
    function exportGeneralRankingToPDF() {
-    const generalRanking = calculateGeneralRanking();
+    // Utiliser le classement déjà calculé si disponible (pour préserver l'ordre exact)
+    const generalRanking = window.lastCalculatedGeneralRanking || calculateGeneralRanking();
 
     const generalStats = calculateGeneralStats();
 
-    if (!generalRanking.hasData) {
-        alert('Aucun classement général disponible pour l\'export PDF');
+    if (!generalRanking || !generalRanking.hasData) {
+        alert('Aucun classement général disponible pour l\'export PDF. Veuillez d\'abord mettre à jour le classement.');
         return;
     }
 
@@ -1372,6 +1376,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Classement Général - Championnat Sportif</title>
+            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
             <style>
                 * {
                     margin: 0;
@@ -1380,30 +1385,31 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 }
                 
                 body {
-                    font-family: 'Arial', 'Helvetica', sans-serif;
-                    font-size: 12px;
+                    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+                    font-size: 11px;
                     line-height: 1.5;
-                    color: #2c3e50;
-                    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-                    padding: 25px;
+                    color: #2d3748;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    padding: 30px;
+                    min-height: 100vh;
                 }
                 
                 .container {
                     background: white;
-                    border-radius: 15px;
-                    padding: 20px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-                    max-width: 1000px;
+                    border-radius: 20px;
+                    padding: 30px;
+                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+                    max-width: 1100px;
                     margin: 0 auto;
                 }
                 
                 .header {
                     text-align: center;
-                    margin-bottom: 15px;
-                    padding: 20px;
-                    background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+                    margin-bottom: 25px;
+                    padding: 35px 25px;
+                    background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
                     color: white;
-                    border-radius: 12px;
+                    border-radius: 16px;
                     position: relative;
                     overflow: hidden;
                 }
@@ -1411,454 +1417,417 @@ if (dayStats && dayStats.matchesPlayed > 0) {
                 .header::before {
                     content: '';
                     position: absolute;
-                    top: -50%;
-                    right: -50%;
-                    width: 200%;
-                    height: 200%;
-                    background: repeating-linear-gradient(
-                        45deg,
-                        transparent,
-                        transparent 10px,
-                        rgba(255,255,255,0.05) 10px,
-                        rgba(255,255,255,0.05) 20px
-                    );
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+                    opacity: 0.5;
                 }
                 
                 .header h1 {
-                    font-size: 28px;
-                    margin-bottom: 12px;
-                    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                    font-size: 32px;
+                    font-weight: 700;
+                    margin-bottom: 10px;
+                    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
                     position: relative;
                     z-index: 1;
+                    letter-spacing: 1px;
+                }
+                
+                .header .trophy-icon {
+                    font-size: 48px;
+                    margin-bottom: 10px;
+                    display: block;
+                    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
                 }
                 
                 .header .date {
                     font-size: 14px;
+                    font-weight: 300;
                     opacity: 0.9;
                     position: relative;
                     z-index: 1;
                 }
                 
                 .stats-section {
-                    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-                    padding: 20px;
-                    margin-bottom: 15px;
-                    border-radius: 12px;
-                    border: 2px solid #f39c12;
+                    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+                    padding: 25px;
+                    margin-bottom: 25px;
+                    border-radius: 16px;
+                    border: 2px solid #fc8181;
                     position: relative;
                 }
                 
                 .stats-title {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #e67e22;
-                    margin-bottom: 12px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #c53030;
+                    margin-bottom: 18px;
                     text-align: center;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
                 }
                 
                 .stats-grid {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
-                    gap: 12px;
+                    gap: 15px;
                 }
                 
                 .stat-item {
                     text-align: center;
-                    padding: 12px;
-                    background: rgba(255,255,255,0.9);
-                    border-radius: 10px;
-                    border: 2px solid #f39c12;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                    transition: transform 0.3s ease;
+                    padding: 18px 12px;
+                    background: white;
+                    border-radius: 12px;
+                    border: 2px solid #feb2b2;
+                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
                 }
                 
                 .stat-item:hover {
-                    transform: translateY(-2px);
+                    transform: translateY(-3px);
+                    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+                }
+                
+                .stat-icon {
+                    font-size: 24px;
+                    margin-bottom: 8px;
+                    display: block;
                 }
                 
                 .stat-number {
-                    font-size: 24px;
-                    font-weight: bold;
-                    color: #d35400;
+                    font-size: 28px;
+                    font-weight: 700;
+                    color: #c53030;
                     display: block;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+                    line-height: 1;
                 }
                 
                 .stat-label {
-                    font-size: 11px;
-                    color: #16a085;
-                    margin-top: 8px;
-                    font-weight: 600;
+                    font-size: 10px;
+                    color: #4a5568;
+                    margin-top: 6px;
+                    font-weight: 500;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
                 }
                 
                 .division {
-                    margin-bottom: 20px;
+                    margin-bottom: 25px;
                     page-break-inside: avoid;
                     background: white;
-                    border-radius: 12px;
+                    border-radius: 16px;
                     overflow: hidden;
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+                    border: 1px solid #e2e8f0;
                 }
                 
                 .division-title {
-                    font-size: 18px;
-                    font-weight: bold;
+                    font-size: 16px;
+                    font-weight: 600;
                     color: white;
                     margin-bottom: 0;
-                    padding: 12px;
+                    padding: 14px 20px;
                     text-align: center;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-                    letter-spacing: 1px;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
                 }
                 
-                .division-1 .division-title {
-                    background: linear-gradient(135deg, #e74c3c, #c0392b);
-                }
-                
-                .division-2 .division-title {
-                    background: linear-gradient(135deg, #f39c12, #e67e22);
-                }
-                
-                .division-3 .division-title {
-                    background: linear-gradient(135deg, #27ae60, #229954);
-                }
-
-                .division-4 .division-title {
-                    background: linear-gradient(135deg, #3498db, #2980b9);
-                }
-
-                .division-5 .division-title {
-                    background: linear-gradient(135deg, #9b59b6, #8e44ad);
-                }
-
-                .division-6 .division-title {
-                    background: linear-gradient(135deg, #16a085, #138d75);
-                }
+                .division-1 .division-title { background: linear-gradient(90deg, #e53e3e 0%, #c53030 100%); }
+                .division-2 .division-title { background: linear-gradient(90deg, #dd6b20 0%, #c05621 100%); }
+                .division-3 .division-title { background: linear-gradient(90deg, #38a169 0%, #276749 100%); }
+                .division-4 .division-title { background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%); }
+                .division-5 .division-title { background: linear-gradient(90deg, #805ad5 0%, #553c9a 100%); }
+                .division-6 .division-title { background: linear-gradient(90deg, #319795 0%, #285e61 100%); }
 
                 .ranking-table {
                     width: 100%;
-                    border-collapse: collapse;
+                    border-collapse: separate;
+                    border-spacing: 0;
                     margin-bottom: 0;
-                    font-size: 12px;
+                    font-size: 11px;
                 }
                 
                 .ranking-table th {
-                    background: linear-gradient(135deg, #34495e, #2c3e50);
+                    background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
                     color: white;
-                    padding: 10px 8px;
+                    padding: 12px 8px;
                     text-align: center;
-                    font-weight: bold;
-                    font-size: 11px;
-                    border: 1px solid #2c3e50;
+                    font-weight: 600;
+                    font-size: 10px;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                    border-bottom: 2px solid #4a5568;
                 }
                 
+                .ranking-table th:first-child { border-radius: 0 0 0 0; }
+                .ranking-table th:last-child { border-radius: 0 0 0 0; }
+                
                 .ranking-table td {
-                    padding: 8px 8px;
-                    border: 1px solid #ecf0f1;
-                    font-size: 12px;
+                    padding: 10px 6px;
+                    border-bottom: 1px solid #e2e8f0;
+                    font-size: 11px;
                     text-align: center;
+                }
+                
+                .ranking-table tr:last-child td {
+                    border-bottom: none;
                 }
                 
                 .ranking-table tr:nth-child(even) {
-                    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                    background: #f7fafc;
                 }
                 
                 .ranking-table tr:hover {
-                    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
-                    transform: scale(1.01);
-                    transition: all 0.2s ease;
+                    background: #edf2f7;
                 }
                 
                 .rank-position {
-                    font-weight: bold;
-                    width: 60px;
+                    font-weight: 700;
+                    width: 50px;
                     font-size: 14px;
                 }
                 
+                .rank-medal {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    font-size: 14px;
+                    font-weight: 700;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }
+                
                 .rank-gold {
-                    background: linear-gradient(135deg, #ffd700, #ffed4e) !important;
-                    color: #b8860b !important;
-                    font-weight: bold;
-                    box-shadow: inset 0 2px 4px rgba(184, 134, 11, 0.3);
+                    background: linear-gradient(135deg, #ffd700 0%, #ffec8b 50%, #ffd700 100%) !important;
+                    color: #744210 !important;
+                    border: 2px solid #d69e2e;
                 }
                 
                 .rank-silver {
-                    background: linear-gradient(135deg, #c0c0c0, #a8a8a8) !important;
-                    color: #666 !important;
-                    font-weight: bold;
-                    box-shadow: inset 0 2px 4px rgba(102, 102, 102, 0.3);
+                    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 50%, #e2e8f0 100%) !important;
+                    color: #4a5568 !important;
+                    border: 2px solid #a0aec0;
                 }
                 
                 .rank-bronze {
-                    background: linear-gradient(135deg, #cd7f32, #b8722c) !important;
-                    color: #8b4513 !important;
-                    font-weight: bold;
-                    box-shadow: inset 0 2px 4px rgba(139, 69, 19, 0.3);
+                    background: linear-gradient(135deg, #ed8936 0%, #c05621 50%, #ed8936 100%) !important;
+                    color: white !important;
+                    border: 2px solid #9c4221;
                 }
                 
                 .player-name {
                     font-weight: 600;
-                    color: #2c3e50;
+                    color: #2d3748;
                     text-align: left;
                     padding-left: 15px;
-                    font-size: 13px;
+                    font-size: 12px;
                 }
                 
                 .points-total {
-                    font-weight: bold;
-                    color: #e74c3c;
+                    font-weight: 700;
+                    color: #c53030;
                     font-size: 14px;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
                 }
                 
+                .win-rate {
+                    color: #38a169;
+                    font-weight: 500;
+                }
+                
+                .diff-positive { color: #38a169; font-weight: 600; }
+                .diff-negative { color: #e53e3e; font-weight: 600; }
+                .diff-zero { color: #718096; }
+                
                 .footer {
-                    margin-top: 20px;
-                    padding: 15px;
-                    background: linear-gradient(135deg, #34495e, #2c3e50);
+                    margin-top: 30px;
+                    padding: 25px;
+                    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
                     color: white;
                     text-align: center;
-                    border-radius: 12px;
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    border-radius: 16px;
+                    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
                 }
                 
                 .footer p {
-                    margin-bottom: 5px;
+                    margin-bottom: 6px;
                     font-size: 11px;
+                    opacity: 0.9;
                 }
 
-                .footer p:last-child {
-                    margin-bottom: 0;
-                }
+                .footer p:last-child { margin-bottom: 0; }
 
                 .footer p:first-child {
-                    font-weight: bold;
-                    font-size: 13px;
-                    color: #3498db;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                    font-weight: 600;
+                    font-size: 14px;
+                    color: #63b3ed;
+                    margin-bottom: 10px;
                 }
                 
                 .export-info {
                     position: fixed;
                     top: 20px;
                     right: 20px;
-                    background: linear-gradient(135deg, #3498db, #2980b9);
+                    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
                     color: white;
                     padding: 20px;
-                    border-radius: 12px;
-                    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+                    border-radius: 16px;
+                    box-shadow: 0 10px 25px -5px rgba(66, 153, 225, 0.4);
                     z-index: 1000;
-                    max-width: 320px;
-                    border: 2px solid rgba(255,255,255,0.2);
+                    max-width: 280px;
+                    border: 1px solid rgba(255,255,255,0.2);
                 }
                 
                 .export-info h3 {
-                    margin-bottom: 15px;
-                    font-size: 16px;
+                    margin-bottom: 12px;
+                    font-size: 15px;
                     text-align: center;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                    font-weight: 600;
                 }
                 
                 .export-info p {
-                    font-size: 13px;
-                    line-height: 1.4;
-                    margin-bottom: 10px;
+                    font-size: 12px;
+                    line-height: 1.5;
+                    margin-bottom: 8px;
                 }
                 
                 .export-info .shortcut {
-                    background: rgba(255,255,255,0.25);
-                    padding: 4px 8px;
-                    border-radius: 5px;
-                    font-weight: bold;
+                    background: rgba(255,255,255,0.2);
+                    padding: 3px 8px;
+                    border-radius: 6px;
+                    font-weight: 600;
                     border: 1px solid rgba(255,255,255,0.3);
                 }
                 
                 @media print {
-                    .export-info {
-                        display: none !important;
-                    }
+                    .export-info { display: none !important; }
                     
                     body {
                         background: white !important;
-                        padding: 15px;
-                        font-size: 11px;
+                        padding: 0;
+                        font-size: 10px;
                     }
                     
                     .container {
                         box-shadow: none !important;
-                        border-radius: 0 !important;
-                        padding: 0 !important;
-                        background: white !important;
+                        border-radius: 0;
+                        padding: 15px;
+                        max-width: 100%;
                     }
                     
                     .header {
-                        background: #2c3e50 !important;
-                        color: white !important;
+                        background: #1a365d !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                        border-radius: 0 !important;
-                        margin-bottom: 10px;
-                        padding: 12px !important;
+                        border-radius: 12px;
+                        margin-bottom: 20px;
+                        padding: 25px !important;
                     }
                     
-                    .header::before {
-                        display: none !important;
-                    }
+                    .header h1 { font-size: 24px; }
+                    .header .trophy-icon { font-size: 36px; }
                     
                     .stats-section {
-                        background: #f8f9fa !important;
-                        border: 2px solid #dee2e6 !important;
+                        background: #fff5f5 !important;
+                        border: 2px solid #fc8181 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                        border-radius: 0 !important;
-                        margin-bottom: 10px;
-                        padding: 12px !important;
+                        border-radius: 12px;
+                        margin-bottom: 20px;
                     }
                     
                     .stat-item {
                         background: white !important;
-                        border: 1px solid #dee2e6 !important;
+                        border: 1px solid #feb2b2 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
                     
                     .division {
                         page-break-inside: avoid;
-                        margin-bottom: 12px;
-                        box-shadow: none !important;
-                        border: 1px solid #dee2e6 !important;
-                        border-radius: 0 !important;
+                        margin-bottom: 20px;
+                        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+                        border-radius: 12px;
                     }
                     
                     .division-title {
-                        background: #f8f9fa !important;
-                        color: #2c3e50 !important;
-                        border: 2px solid #dee2e6 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                        padding: 10px !important;
-                        page-break-after: avoid !important;
+                        border-radius: 12px 12px 0 0;
                     }
                     
-                    .division-1 .division-title {
-                        background: #f8d7da !important;
-                        color: #721c24 !important;
-                        border-color: #e74c3c !important;
-                    }
-                    
-                    .division-2 .division-title {
-                        background: #fff3cd !important;
-                        color: #856404 !important;
-                        border-color: #f39c12 !important;
-                    }
-                    
-                    .division-3 .division-title {
-                        background: #d1ecf1 !important;
-                        color: #155724 !important;
-                        border-color: #27ae60 !important;
-                    }
-
-                    .division-4 .division-title {
-                        background: #d6eaf8 !important;
-                        color: #1b4f72 !important;
-                        border-color: #3498db !important;
-                    }
-
-                    .division-5 .division-title {
-                        background: #e8daef !important;
-                        color: #4a235a !important;
-                        border-color: #9b59b6 !important;
-                    }
-
-                    .division-6 .division-title {
-                        background: #d0ece7 !important;
-                        color: #0e6655 !important;
-                        border-color: #16a085 !important;
-                    }
-
-                    .ranking-table {
-                        page-break-inside: avoid;
-                        font-size: 10px;
-                    }
-                    
-                    .ranking-table th {
-                        background: #2c3e50 !important;
-                        color: white !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
+                    .ranking-table { font-size: 9px; }
+                    .ranking-table th { font-size: 8px; padding: 8px 4px; }
+                    .ranking-table td { padding: 6px 4px; }
                     
                     .rank-gold, .rank-silver, .rank-bronze {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
                     
-                    .header h1 {
-                        font-size: 22px;
+                    .stats-grid {
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 10px;
                     }
                     
-                    .stats-grid {
-                        grid-template-columns: repeat(2, 1fr);
-                        gap: 8px;
-                    }
-
-                    .stats-title {
-                        margin-bottom: 8px !important;
-                    }
+                    .stat-number { font-size: 22px; }
                     
                     .footer {
-                        background: #34495e !important;
-                        color: white !important;
+                        background: #2d3748 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                        border-radius: 0 !important;
-                        margin-top: 15px;
-                        padding: 15px !important;
+                        border-radius: 12px;
                     }
                 }
                 
                 @page {
-                    margin: 1cm;
-                    size: A4 portrait;
+                    margin: 1.5cm;
+                    size: A4 landscape;
                 }
             </style>
         </head>
         <body>
             <div class="export-info">
                 <h3>📄 Export PDF</h3>
-                <p>Pour sauvegarder en PDF :</p>
-                <p>• <span class="shortcut">Ctrl+P</span> (ou Cmd+P sur Mac)</p>
-                <p>• Choisir "Enregistrer au format PDF"</p>
-                <p>• Cliquer sur "Enregistrer"</p>
+                <p>💡 <strong>Conseil :</strong> Utilisez <span class="shortcut">Ctrl+P</span></p>
+                <p>puis "Enregistrer au format PDF"</p>
             </div>
             
             <div class="container">
                 <div class="header">
-                    <h1>🏆 CLASSEMENT GÉNÉRAL DU CHAMPIONNAT</h1>
+                    <span class="trophy-icon">🏆</span>
+                    <h1>CLASSEMENT GÉNÉRAL DU CHAMPIONNAT</h1>
                     <div class="date">Généré le ${currentDate}</div>
                 </div>
                 
                 <div class="stats-section">
-                    <div class="stats-title">📊 STATISTIQUES DU CHAMPIONNAT</div>
+                    <div class="stats-title">
+                        <span>📊</span>
+                        <span>STATISTIQUES DU CHAMPIONNAT</span>
+                    </div>
                     <div class="stats-grid">
                         <div class="stat-item">
+                            <span class="stat-icon">📅</span>
                             <span class="stat-number">${generalStats.totalDays}</span>
                             <div class="stat-label">Journées disputées</div>
                         </div>
                         <div class="stat-item">
+                            <span class="stat-icon">👥</span>
                             <span class="stat-number">${generalStats.totalPlayers}</span>
                             <div class="stat-label">Joueurs uniques</div>
                         </div>
                         <div class="stat-item">
+                            <span class="stat-icon">🎯</span>
                             <span class="stat-number">${generalStats.totalMatches}</span>
                             <div class="stat-label">Matchs programmés</div>
                         </div>
                         <div class="stat-item">
+                            <span class="stat-icon">✅</span>
                             <span class="stat-number">${generalStats.completedMatches}</span>
                             <div class="stat-label">Matchs terminés</div>
                         </div>
@@ -1896,20 +1865,34 @@ if (dayStats && dayStats.matchesPlayed > 0) {
 
         generalRanking.divisions[division].forEach((player, index) => {
             let rankClass = '';
-            if (index === 0) rankClass = 'rank-gold';
-            else if (index === 1) rankClass = 'rank-silver';
-            else if (index === 2) rankClass = 'rank-bronze';
+            let rankDisplay = '';
+            if (index === 0) {
+                rankClass = 'rank-gold';
+                rankDisplay = '<span class="rank-medal rank-gold">🥇</span>';
+            } else if (index === 1) {
+                rankClass = 'rank-silver';
+                rankDisplay = '<span class="rank-medal rank-silver">🥈</span>';
+            } else if (index === 2) {
+                rankClass = 'rank-bronze';
+                rankDisplay = '<span class="rank-medal rank-bronze">🥉</span>';
+            } else {
+                rankDisplay = `<span style="font-weight: 600; color: #4a5568;">${index + 1}</span>`;
+            }
+
+            const diffClass = player.goalAveragePoints > 0 ? 'diff-positive' : 
+                             player.goalAveragePoints < 0 ? 'diff-negative' : 'diff-zero';
+            const diffSign = player.goalAveragePoints > 0 ? '+' : '';
 
             htmlContent += `
                 <tr>
-                    <td class="rank-position ${rankClass}">${index + 1}</td>
+                    <td class="rank-position">${rankDisplay}</td>
                     <td class="player-name">${player.name}</td>
                     <td class="points-total">${player.totalPoints}</td>
-                    <td style="text-align: center;">${player.daysPlayed}</td>
-                    <td style="text-align: center;">${player.totalWins}/${player.totalDraws || 0}/${player.totalLosses}/${player.totalForfaits}</td>
-                    <td style="text-align: center;">${player.avgWinRate}%</td>
-                    <td style="text-align: center;">${player.totalPointsWon}/${player.totalPointsLost}</td>
-                    <td style="text-align: center;">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
+                    <td>${player.daysPlayed}</td>
+                    <td><span style="color: #38a169; font-weight: 500;">${player.totalWins}</span>/<span style="color: #d69e2e;">${player.totalDraws || 0}</span>/<span style="color: #e53e3e;">${player.totalLosses}</span>/<span style="color: #718096;">${player.totalForfaits}</span></td>
+                    <td class="win-rate">${player.avgWinRate}%</td>
+                    <td><span style="color: #38a169;">${player.totalPointsWon}</span> <span style="color: #a0aec0;">/</span> <span style="color: #e53e3e;">${player.totalPointsLost}</span></td>
+                    <td class="${diffClass}">${diffSign}${player.goalAveragePoints}</td>
                 </tr>
             `;
         });
@@ -1924,9 +1907,9 @@ if (dayStats && dayStats.matchesPlayed > 0) {
     // Ajouter le pied de page
     htmlContent += `
             <div class="footer">
-                <p>Championnat Sportif - Gestion Esenca Sport</p>
-                <p>Système de points: Victoire = 3pts, Défaite = 1pt</p>
-                <p>Document généré automatiquement le ${currentDate}</p>
+                <p>🏓 Championnat Sportif - Gestion Esenca Sport</p>
+                <p>Système de points : Victoire = 3 pts | Match nul = 2 pts | Défaite = 1 pt | Forfait = 0 pt</p>
+                <p>Document généré automatiquement le ${currentDate} • Classement officiel</p>
             </div>
         </div>
     </body>
