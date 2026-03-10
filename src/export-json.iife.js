@@ -10,6 +10,7 @@
     var getNumberOfDivisions = function() { return typeof global.getNumberOfDivisions === 'function' ? global.getNumberOfDivisions() : 3; };
     var getPlayerName = function(p) { return typeof global.getPlayerName === 'function' ? global.getPlayerName(p) : (p || ''); };
     var initializeDivisions = function(n) { return typeof global.initializeDivisions === 'function' ? global.initializeDivisions(n) : {}; };
+    var formatProperName = function(name) { return typeof global.formatProperName === 'function' ? global.formatProperName(name) : (name || ''); };
 
     // EXPORT / IMPORT
     function exportChampionship() {
@@ -186,21 +187,8 @@
                     throw new Error('Format de fichier non reconnu');
                 }
                 
-                const importDate = new Date(global.importedChampionshipData.exportDate).toLocaleString('fr-FR');
-                const stats = global.importedChampionshipData.stats || calculateStatsFromData(global.importedChampionshipData.championship);
-                
-                const confirmMsg = `Confirmer l'import du championnat ?\n\n` +
-                                 `📅 Exporté le : ${importDate}\n` +
-                                 `🏆 Journées : ${stats.totalDays || Object.keys(global.importedChampionshipData.championship.days).length}\n` +
-                                 `👥 Joueurs : ${stats.totalPlayers || 'Non calculé'}\n` +
-                                 `🎯 Matchs : ${stats.totalMatches || 'Non calculé'}\n\n` +
-                                 `⚠️ Cette action remplacera complètement le championnat actuel`;
-                
-                if (confirm(confirmMsg)) {
-                    processImport();
-                }
-                // Ne pas fermer la modale si l'utilisateur clique sur Annuler, 
-                // pour lui permetre de recliquer sur "Importer"
+                // Étape 1 : Analyser et proposer la configuration
+                showImportConfigModal();
                 
             } catch (error) {
                 alert('Erreur lors de la lecture du fichier :\n' + error.message + '\n\nVérifiez que le fichier est un export valide.');
@@ -209,7 +197,249 @@
         
         reader.readAsText(file);
     }
+
+    /**
+     * Analyse le JSON importé pour détecter le nombre de divisions et terrains nécessaires
+     */
+    function analyzeImportConfig() {
+        const data = global.importedChampionshipData;
+        if (!data || !data.championship) return null;
+
+        const champ = data.championship;
+        
+        // Détecter le nombre de divisions
+        let maxDivision = 0;
+        let maxCourt = 0;
+        
+        // Vérifier dans la config
+        if (champ.config) {
+            maxDivision = Math.max(maxDivision, 
+                champ.config.numberOfDivisions || 
+                champ.config.numDivisions || 0
+            );
+            maxCourt = Math.max(maxCourt,
+                champ.config.numberOfCourts ||
+                champ.config.numCourts || 0
+            );
+        }
+        
+        // Vérifier dans les données des journées
+        if (champ.days) {
+            Object.values(champ.days).forEach(day => {
+                if (day.players) {
+                    const divisions = Object.keys(day.players).map(Number).filter(n => !isNaN(n));
+                    maxDivision = Math.max(maxDivision, ...divisions);
+                }
+                if (day.matches) {
+                    const divisions = Object.keys(day.matches).map(Number).filter(n => !isNaN(n));
+                    maxDivision = Math.max(maxDivision, ...divisions);
+                }
+                // Vérifier aussi les poules
+                if (day.pools && day.pools.divisions) {
+                    const divisions = Object.keys(day.pools.divisions).map(Number).filter(n => !isNaN(n));
+                    maxDivision = Math.max(maxDivision, ...divisions);
+                }
+            });
+        }
+        
+        // Détecter le nombre de terrains depuis les matchs si pas trouvé dans config
+        if (maxCourt === 0 && champ.days) {
+            Object.values(champ.days).forEach(day => {
+                if (day.matches) {
+                    Object.values(day.matches).forEach(divMatches => {
+                        divMatches.forEach(match => {
+                            if (match.court) {
+                                maxCourt = Math.max(maxCourt, match.court);
+                            }
+                        });
+                    });
+                }
+            });
+        }
+        
+        // Valeurs par défaut si non détectées
+        if (maxDivision === 0) maxDivision = 3;
+        if (maxCourt === 0) maxCourt = 4;
+        
+        return {
+            divisions: maxDivision,
+            courts: maxCourt
+        };
+    }
+
+    /**
+     * Affiche une modale pour configurer divisions et terrains avant l'import
+     */
+    function showImportConfigModal() {
+        const config = analyzeImportConfig();
+        const importDate = new Date(global.importedChampionshipData.exportDate).toLocaleString('fr-FR');
+        const stats = global.importedChampionshipData.stats || calculateStatsFromData(global.importedChampionshipData.championship);
+        
+        // Créer la modale
+        let modal = document.getElementById('importConfigModal');
+        if (modal) modal.remove();
+        
+        modal = document.createElement('div');
+        modal.id = 'importConfigModal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10001;';
+        
+        modal.innerHTML = `
+            <div style="background: white; padding: 25px; border-radius: 10px; max-width: 450px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <h3 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 18px;">📥 Configuration de l'import</h3>
+                
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #555;">
+                    <div style="margin-bottom: 5px;"><strong>📅 Exporté le :</strong> ${importDate}</div>
+                    <div style="margin-bottom: 5px;"><strong>🏆 Journées :</strong> ${stats.totalDays || Object.keys(global.importedChampionshipData.championship.days).length}</div>
+                    <div style="margin-bottom: 5px;"><strong>👥 Joueurs :</strong> ${stats.totalPlayers || 'Non calculé'}</div>
+                    <div><strong>🎯 Matchs :</strong> ${stats.totalMatches || 'Non calculé'}</div>
+                </div>
+                
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                    Configurez le nombre de divisions et de terrains avant d'importer :
+                </p>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 13px; font-weight: 600; color: #333;">⚙️ Divisions</label>
+                        <select id="importConfigDivisions" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; cursor: pointer;">
+                            <option value="1" ${config.divisions === 1 ? 'selected' : ''}>1</option>
+                            <option value="2" ${config.divisions === 2 ? 'selected' : ''}>2</option>
+                            <option value="3" ${config.divisions === 3 ? 'selected' : ''}>3</option>
+                            <option value="4" ${config.divisions === 4 ? 'selected' : ''}>4</option>
+                            <option value="5" ${config.divisions === 5 ? 'selected' : ''}>5</option>
+                            <option value="6" ${config.divisions === 6 ? 'selected' : ''}>6</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 13px; font-weight: 600; color: #333;">🎾 Terrains</label>
+                        <select id="importConfigCourts" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; cursor: pointer;">
+                            <option value="1" ${config.courts === 1 ? 'selected' : ''}>1</option>
+                            <option value="2" ${config.courts === 2 ? 'selected' : ''}>2</option>
+                            <option value="3" ${config.courts === 3 ? 'selected' : ''}>3</option>
+                            <option value="4" ${config.courts === 4 ? 'selected' : ''}>4</option>
+                            <option value="5" ${config.courts === 5 ? 'selected' : ''}>5</option>
+                            <option value="6" ${config.courts === 6 ? 'selected' : ''}>6</option>
+                            <option value="8" ${config.courts === 8 ? 'selected' : ''}>8</option>
+                            <option value="10" ${config.courts === 10 ? 'selected' : ''}>10</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px; color: #856404;">
+                    💡 <strong>Conseil :</strong> Ces valeurs ont été détectées automatiquement depuis le fichier. Modifiez-les si nécessaire.
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="closeImportConfigModal()" style="padding: 10px 20px; border: 1px solid #ddd; background: #f5f5f5; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                        Annuler
+                    </button>
+                    <button onclick="applyImportConfig()" style="padding: 10px 20px; border: none; background: #27ae60; color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        ✅ Importer
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    window.showImportConfigModal = showImportConfigModal;
+
+    function closeImportConfigModal() {
+        const modal = document.getElementById('importConfigModal');
+        if (modal) {
+            modal.remove();
+        }
+        // Réinitialiser les données importées
+        global.importedChampionshipData = null;
+    }
+    window.closeImportConfigModal = closeImportConfigModal;
+
+    function applyImportConfig() {
+        const divisionsSelect = document.getElementById('importConfigDivisions');
+        const courtsSelect = document.getElementById('importConfigCourts');
+        
+        if (!divisionsSelect || !courtsSelect) return;
+        
+        const numDivisions = parseInt(divisionsSelect.value);
+        const numCourts = parseInt(courtsSelect.value);
+        
+        // Mettre à jour la configuration dans les données importées
+        if (!global.importedChampionshipData.championship.config) {
+            global.importedChampionshipData.championship.config = {};
+        }
+        global.importedChampionshipData.championship.config.numberOfDivisions = numDivisions;
+        global.importedChampionshipData.championship.config.numDivisions = numDivisions;
+        global.importedChampionshipData.championship.config.numberOfCourts = numCourts;
+        global.importedChampionshipData.championship.config.numCourts = numCourts;
+        
+        // Mettre à jour les sélecteurs HTML pour correspondre
+        const divisionConfig = document.getElementById('divisionConfig');
+        const courtConfig = document.getElementById('courtConfig');
+        
+        if (divisionConfig) divisionConfig.value = numDivisions;
+        if (courtConfig) courtConfig.value = numCourts;
+        
+        // Fermer la modale de configuration
+        const modal = document.getElementById('importConfigModal');
+        if (modal) modal.remove();
+        
+        // Lancer l'import
+        processImport();
+    }
+    window.applyImportConfig = applyImportConfig;
     window.handleChampionshipImport = handleChampionshipImport;
+
+    /**
+     * Applique la configuration des divisions et terrains après l'import
+     * Version sans rechargement de page pour l'import
+     */
+    function applyImportConfiguration() {
+        const newDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
+        const newCourts = championship.config?.numberOfCourts || championship.config?.numCourts || 4;
+        
+        // Mettre à jour la configuration globale
+        if (typeof global.config !== 'undefined') {
+            global.config.numberOfDivisions = newDivisions;
+            global.config.numberOfCourts = newCourts;
+        }
+        
+        // S'assurer que toutes les journées ont les bonnes structures
+        if (championship && championship.days) {
+            Object.keys(championship.days).forEach(function(dayKey) {
+                const day = championship.days[dayKey];
+                
+                // Initialiser les structures si manquantes
+                if (!day.players) day.players = {};
+                if (!day.matches) day.matches = {};
+                
+                // Créer toutes les divisions nécessaires
+                for (let i = 1; i <= newDivisions; i++) {
+                    if (!day.players[i]) {
+                        day.players[i] = [];
+                    }
+                    if (!day.matches[i]) {
+                        day.matches[i] = [];
+                    }
+                }
+                
+                // Supprimer les divisions excédentaires (au-delà de newDivisions)
+                Object.keys(day.players).forEach(function(divKey) {
+                    const divNum = parseInt(divKey);
+                    if (divNum > newDivisions) {
+                        delete day.players[divKey];
+                        delete day.matches[divKey];
+                    }
+                });
+            });
+        }
+        
+        // Mettre à jour l'affichage de l'attribution des terrains si la fonction existe
+        if (typeof global.updateCourtAssignmentInfo === 'function') {
+            global.updateCourtAssignmentInfo();
+        }
+        
+        console.log(`Configuration appliquée: ${newDivisions} divisions, ${newCourts} terrains`);
+    }
 
     function calculateStatsFromData(championshipData) {
         let totalPlayers = new Set();
@@ -262,15 +492,22 @@
                     championship.config.numCourts = championship.config.numberOfCourts;
                 }
 
+                // Mettre à jour les sélecteurs HTML avec les bons IDs (divisionConfig et courtConfig)
                 if (championship.config.numDivisions || championship.config.numberOfDivisions) {
-                    const numDivSelect = document.getElementById('numDivisions');
                     const value = championship.config.numDivisions || championship.config.numberOfDivisions;
-                    if (numDivSelect) numDivSelect.value = value;
+                    const divisionConfig = document.getElementById('divisionConfig');
+                    if (divisionConfig) divisionConfig.value = value;
                 }
                 if (championship.config.numCourts || championship.config.numberOfCourts) {
-                    const numCourtsSelect = document.getElementById('numCourts');
                     const value = championship.config.numCourts || championship.config.numberOfCourts;
-                    if (numCourtsSelect) numCourtsSelect.value = value;
+                    const courtConfig = document.getElementById('courtConfig');
+                    if (courtConfig) courtConfig.value = value;
+                }
+                
+                // Mettre à jour aussi la configuration globale
+                if (typeof global.config !== 'undefined') {
+                    global.config.numberOfDivisions = championship.config.numberOfDivisions || championship.config.numDivisions || 3;
+                    global.config.numberOfCourts = championship.config.numberOfCourts || championship.config.numCourts || 4;
                 }
             }
 
@@ -377,6 +614,9 @@
                 }
             });
 
+            // Appliquer la configuration des divisions sans recharger la page
+            applyImportConfiguration();
+            
             updateTabsDisplay();
             updateDaySelectors();
             initializeAllDaysContent();

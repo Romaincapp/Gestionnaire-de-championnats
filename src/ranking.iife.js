@@ -19,7 +19,7 @@
         if (!dayData) return null;
 
         // Collecter les matchs classiques
-        let playerMatches = dayData.matches[division].filter(match =>
+        let playerMatches = (dayData.matches[division] || []).filter(match =>
             match.player1 === playerName || match.player2 === playerName
         );
 
@@ -67,7 +67,7 @@
 
         playerMatches.forEach(match => {
             // Appeler checkMatchCompletion seulement pour les matchs classiques (pas pour les matchs de poules)
-            const matchIndex = dayData.matches[division].indexOf(match);
+            const matchIndex = (dayData.matches[division] || []).indexOf(match);
             if (matchIndex !== -1) {
                 // C'est un match classique
                 checkMatchCompletion(dayNumber, division, matchIndex);
@@ -264,10 +264,10 @@
         let completedMatches = 0;
 
         for (let division = 1; division <= numDivisions; division++) {
-            totalPlayers += dayData.players[division].length;
-            totalMatches += dayData.matches[division].length;
+            totalPlayers += (dayData.players[division] || []).length;
+            totalMatches += (dayData.matches[division] || []).length;
             
-            dayData.matches[division].forEach((match, index) => {
+            (dayData.matches[division] || []).forEach((match, index) => {
                 checkMatchCompletion(dayNumber, division, index);
                 if (match.completed) completedMatches++;
             });
@@ -288,7 +288,7 @@
                 let tourCompleted = 0;
 
                 for (let division = 1; division <= numDivisions; division++) {
-                    const tourMatches = dayData.matches[division].filter(m => m.tour === tour);
+                    const tourMatches = (dayData.matches[division] || []).filter(m => m.tour === tour);
                     tourTotal += tourMatches.length;
                     tourCompleted += tourMatches.filter(m => m.completed).length;
                 }
@@ -762,52 +762,55 @@ generalRanking.divisions[division].forEach((player, index) => {
                     .map(p => getPlayerName(p))
                     .filter(playerName => playerName && playerName.toUpperCase() !== 'BYE')
                     .forEach(playerName => {
-                   if (!playersData[playerName]) {
-    playersData[playerName] = {
-        name: playerName,
-        daysPlayed: 0,
-        totalPoints: 0,
-        totalWins: 0,
-        totalDraws: 0,
-        totalLosses: 0,
-        totalForfaits: 0,
-        totalPointsWon: 0,
-        totalPointsLost: 0,
-        totalMatchesPlayed: 0,
-        winRates: [],
-        firstDay: playerFirstAppearance[playerName]
-    };
+                        if (!playersData[playerName]) {
+                            playersData[playerName] = {
+                                name: playerName,
+                                daysPlayed: 0,
+                                totalPoints: 0,
+                                totalWins: 0,
+                                totalDraws: 0,
+                                totalLosses: 0,
+                                totalForfaits: 0,
+                                totalPointsWon: 0,
+                                totalPointsLost: 0,
+                                totalMatchesPlayed: 0,
+                                winRates: [],
+                                firstDay: playerFirstAppearance[playerName]
+                            };
 
-    // Ajouter des forfaits pour les journées manquées AVANT la première apparition
-    const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
-    const missedDays = allDays.filter(d => d < playerFirstAppearance[playerName]);
+                            // Ajouter des forfaits pour les journées manquées AVANT la première apparition
+                            const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
+                            const missedDays = allDays.filter(d => d < playerFirstAppearance[playerName]);
 
-    missedDays.forEach(() => {
-        // 4 forfaits par journée manquée = 0 points, -20 goal average (5 buts encaissés par match)
-        playersData[playerName].totalForfaits += 4;
-        playersData[playerName].totalPoints += 0; // 4 forfaits × 0 point
-        playersData[playerName].totalPointsLost += 20; // 4 forfaits × 5 buts encaissés
-        playersData[playerName].totalMatchesPlayed += 4;
-        playersData[playerName].winRates.push(0); // 0% de victoire pour une journée forfait
-    });
-}
+                            missedDays.forEach(() => {
+                                // 4 forfaits par journée manquée = 0 points, -20 goal average (5 buts encaissés par match)
+                                playersData[playerName].totalForfaits += 4;
+                                playersData[playerName].totalPoints += 0; // 4 forfaits × 0 point
+                                playersData[playerName].totalPointsLost += 20; // 4 forfaits × 5 buts encaissés
+                                playersData[playerName].totalMatchesPlayed += 4;
+                                playersData[playerName].winRates.push(0); // 0% de victoire pour une journée forfait
+                            });
+                        }
 
-const dayStats = calculatePlayerStats(dayNum, division, playerName);
-if (dayStats && dayStats.matchesPlayed > 0) {
-    playersData[playerName].daysPlayed++;
-    playersData[playerName].totalPoints += dayStats.totalPoints;
-    playersData[playerName].totalWins += dayStats.wins;
-    playersData[playerName].totalDraws += dayStats.draws || 0;
-    playersData[playerName].totalLosses += dayStats.losses;
-    playersData[playerName].totalForfaits += dayStats.forfeits || 0;  // Forfaits par match
-    playersData[playerName].totalPointsWon += dayStats.pointsWon;
-    playersData[playerName].totalPointsLost += dayStats.pointsLost;
-    playersData[playerName].totalMatchesPlayed += dayStats.matchesPlayed;
-    playersData[playerName].winRates.push(dayStats.winRate);
+                        const dayStats = calculatePlayerStats(dayNum, division, playerName);
+                        // Traiter les stats même si matchesPlayed === 0 mais qu'il y a des matchs programmés
+                        // (ex: joueur absent, matchs non joués/forfaits)
+                        // OU si le joueur a des forfaits déclarés dans les matchs
+                        if (dayStats && (dayStats.matchesPlayed > 0 || dayStats.matches.length > 0 || dayStats.forfeits > 0)) {
+                            playersData[playerName].daysPlayed++;
+                            playersData[playerName].totalPoints += dayStats.totalPoints;
+                            playersData[playerName].totalWins += dayStats.wins;
+                            playersData[playerName].totalDraws += dayStats.draws || 0;
+                            playersData[playerName].totalLosses += dayStats.losses;
+                            playersData[playerName].totalForfaits += dayStats.forfeits || 0;  // Forfaits par match
+                            playersData[playerName].totalPointsWon += dayStats.pointsWon;
+                            playersData[playerName].totalPointsLost += dayStats.pointsLost;
+                            playersData[playerName].totalMatchesPlayed += dayStats.matchesPlayed;
+                            playersData[playerName].winRates.push(dayStats.winRate);
 
-    generalRanking.hasData = true;
-}
-                });
+                            generalRanking.hasData = true;
+                        }
+                    });
             });
 
             // Étape 3: Ajouter les forfaits pour les journées manquées APRÈS la dernière apparition
@@ -828,7 +831,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
            const isPoolMode = Object.values(championship.days).some(day => day.pools?.enabled);
 
            const playersArray = Object.values(playersData)
-    .filter(player => player.daysPlayed > 0)
+    .filter(player => player.daysPlayed > 0 || player.totalForfaits > 0)
     .map(player => {
         // Calculer la meilleure étape finale du joueur sur toutes les journées
         const bestStage = getBestPlayerStage(player.name, division);
@@ -888,7 +891,7 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             const dayData = championship.days[dayNum];
 
             // Vérifier si le joueur existe (en gérant le format objet {name, club})
-            const playerExists = dayData.players[division].some(p => {
+            const playerExists = (dayData.players[division] || []).some(p => {
                 const pName = typeof p === 'object' ? p.name : p;
                 return pName === playerName;
             });
@@ -935,14 +938,15 @@ if (dayStats && dayStats.matchesPlayed > 0) {
             const dayData = championship.days[dayNum];
 
             // Vérifier si le joueur existe (en gérant le format objet {name, club})
-            const playerExists = dayData.players[division].some(p => {
+            const playerExists = (dayData.players[division] || []).some(p => {
                 const pName = typeof p === 'object' ? p.name : p;
                 return pName === playerName;
             });
             if (playerExists) {
                 const dayStats = calculatePlayerStats(dayNum, division, playerName);
                 // Inclure même si aucun match terminé, pour voir les matchs à venir
-                if (dayStats && (dayStats.matchesPlayed > 0 || dayStats.matches.length > 0)) {
+                // OU si le joueur a des forfaits (pour afficher les journées avec forfait)
+                if (dayStats && (dayStats.matchesPlayed > 0 || dayStats.matches.length > 0 || dayStats.forfeits > 0)) {
                     playerHistory.push({
                         day: dayNum,
                         ...dayStats,
