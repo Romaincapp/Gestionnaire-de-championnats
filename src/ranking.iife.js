@@ -813,8 +813,34 @@ generalRanking.divisions[division].forEach((player, index) => {
                     });
             });
 
-            // Étape 3: Ajouter les forfaits pour les journées manquées APRÈS la dernière apparition
+            // Étape 3: Ajouter les forfaits pour les journées manquées ENTRE la première et dernière apparition
             const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
+            Object.keys(playersData).forEach(playerName => {
+                // Journées où le joueur est présent
+                const playerDays = allDays.filter(dayNum => {
+                    const dayData = championship.days[dayNum];
+                    return (dayData.players[division] || []).some(p => {
+                        const pName = typeof p === 'object' ? p.name : p;
+                        return pName === playerName;
+                    });
+                });
+                
+                // Journées manquées entre la première et dernière apparition
+                const firstDay = playerFirstAppearance[playerName];
+                const lastDay = playerLastAppearance[playerName];
+                const missedDaysBetween = allDays.filter(d => d > firstDay && d < lastDay && !playerDays.includes(d));
+                
+                missedDaysBetween.forEach(() => {
+                    // 4 forfaits par journée manquée = 0 points, -20 goal average
+                    playersData[playerName].totalForfaits += 4;
+                    playersData[playerName].totalPoints += 0;
+                    playersData[playerName].totalPointsLost += 20;
+                    playersData[playerName].totalMatchesPlayed += 4;
+                    playersData[playerName].winRates.push(0);
+                });
+            });
+
+            // Étape 4: Ajouter les forfaits pour les journées manquées APRÈS la dernière apparition
             Object.keys(playersData).forEach(playerName => {
                 const missedDaysAfter = allDays.filter(d => d > playerLastAppearance[playerName]);
                 missedDaysAfter.forEach(() => {
@@ -827,7 +853,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                 });
             });
 
-           // Étape 4: Déterminer si on est en mode pool et récupérer les étapes finales
+           // Étape 5: Déterminer si on est en mode pool et récupérer les étapes finales
            const isPoolMode = Object.values(championship.days).some(day => day.pools?.enabled);
 
            const playersArray = Object.values(playersData)
@@ -932,7 +958,7 @@ generalRanking.divisions[division].forEach((player, index) => {
             }
         });
 
-        // Ajouter les journées réellement jouées
+        // Ajouter les journées réellement jouées (ou forfait si absent entre first et last)
         Object.keys(championship.days).sort((a, b) => Number(a) - Number(b)).forEach(dayNumber => {
             const dayNum = parseInt(dayNumber);
             const dayData = championship.days[dayNum];
@@ -942,6 +968,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                 const pName = typeof p === 'object' ? p.name : p;
                 return pName === playerName;
             });
+            
             if (playerExists) {
                 const dayStats = calculatePlayerStats(dayNum, division, playerName);
                 // Inclure même si aucun match terminé, pour voir les matchs à venir
@@ -954,6 +981,21 @@ generalRanking.divisions[division].forEach((player, index) => {
                         isForfeit: false
                     });
                 }
+            } else if (dayNum > firstAppearance && dayNum < lastAppearance) {
+                // Journée manquée entre la première et dernière apparition = FORFAIT
+                playerHistory.push({
+                    day: dayNum,
+                    totalPoints: 0,
+                    wins: 0,
+                    draws: 0,
+                    losses: 0,
+                    forfaits: 4,
+                    pointsWon: 0,
+                    pointsLost: 20,
+                    matchesPlayed: 4,
+                    winRate: 0,
+                    isForfeit: true
+                });
             }
         });
 
