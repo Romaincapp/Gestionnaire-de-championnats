@@ -1002,7 +1002,11 @@
                                 <div class="sets-container">
                                     <div class="set">
                                         <div class="set-scores">
-                                            <span class="player-name-left">${match.player1}</span>
+                                            ${window.showForfaitButtons ? 
+                                                `<input type="text" class="player-name-input" value="${match.player1}" 
+                                                        onchange="editMatchPlayerName(${dayNumber}, ${division}, ${globalIndex}, 'player1', this.value)"
+                                                        style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">` 
+                                                : `<span class="player-name-left">${match.player1}</span>`}
                                             <div class="score-center">
                                                 <input type="number" class="score-input"
                                                        placeholder="0" min="0"
@@ -1016,7 +1020,11 @@
                                                        onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score2', this.value)"
                                                        onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
                                             </div>
-                                            <span class="player-name-right">${match.player2}</span>
+                                            ${window.showForfaitButtons ? 
+                                                `<input type="text" class="player-name-input" value="${match.player2}" 
+                                                        onchange="editMatchPlayerName(${dayNumber}, ${division}, ${globalIndex}, 'player2', this.value)"
+                                                        style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">` 
+                                                : `<span class="player-name-right">${match.player2}</span>`}
                                         </div>
                                         ${!match.completed && window.showForfaitButtons ? `
                                         <div style="display: flex; gap: 4px; justify-content: center; margin-top: 6px;">
@@ -1649,6 +1657,125 @@
         showNotification(`Forfait déclaré pour ${forfaitPlayer === 'player1' ? match.player1 : match.player2}`, 'warning');
     }
     window.declareForfait = declareForfait;
+
+    // Fonction pour éditer le nom d'un joueur dans un match de phase finale manuelle
+    function editFinalMatchPlayerName(dayNumber, division, matchId, playerField, newName) {
+        if (!dayNumber || !championship.days[dayNumber]) return;
+        
+        const dayData = championship.days[dayNumber];
+        const manualFinalPhase = dayData.pools?.manualFinalPhase?.divisions[division];
+        
+        if (!manualFinalPhase || !manualFinalPhase.rounds) return;
+        
+        let match = null;
+        Object.values(manualFinalPhase.rounds).forEach(function(round) {
+            if (round.matches) {
+                const foundMatch = round.matches.find(function(m) { return m.id === matchId; });
+                if (foundMatch) match = foundMatch;
+            }
+        });
+        
+        if (!match) return;
+        
+        const oldName = match[playerField];
+        newName = newName.trim();
+        
+        if (!newName || newName === oldName) return;
+        
+        // Mettre à jour le nom dans le match
+        match[playerField] = newName;
+        
+        // Mettre à jour le winner si nécessaire
+        if (match.winner === oldName) {
+            match.winner = newName;
+        }
+        
+        saveToLocalStorage();
+        
+        // Rafraîchir l'affichage
+        if (typeof global.updateManualFinalPhaseDisplay === 'function') {
+            global.updateManualFinalPhaseDisplay(dayNumber);
+        }
+        
+        if (typeof global.showNotification === 'function') {
+            global.showNotification(`Joueur renommé : "${oldName}" → "${newName}"`, 'success');
+        }
+    }
+    window.editFinalMatchPlayerName = editFinalMatchPlayerName;
+
+    // Fonction pour éditer le nom d'un joueur dans un match
+    function editMatchPlayerName(dayNumber, division, matchIndex, playerField, newName) {
+        if (!dayNumber || !championship.days[dayNumber]) return;
+        
+        const dayData = championship.days[dayNumber];
+        let match = null;
+        let isPoolMatch = false;
+        
+        // Essayer de trouver le match dans les matchs réguliers
+        if (dayData.matches && dayData.matches[division]) {
+            match = dayData.matches[division][matchIndex];
+        }
+        
+        // Si pas trouvé, chercher dans les matchs de poules
+        if (!match && dayData.pools && dayData.pools.divisions && dayData.pools.divisions[division]) {
+            const poolMatches = dayData.pools.divisions[division].matches;
+            if (poolMatches && poolMatches[matchIndex]) {
+                match = poolMatches[matchIndex];
+                isPoolMatch = true;
+            }
+        }
+        
+        if (!match) return;
+        
+        const oldName = match[playerField];
+        newName = newName.trim();
+        
+        if (!newName || newName === oldName) return;
+        
+        // Mettre à jour le nom dans le match
+        match[playerField] = newName;
+        
+        // Mettre à jour le winner si nécessaire
+        if (match.winner === oldName) {
+            match.winner = newName;
+        }
+        
+        // Mettre à jour la liste des joueurs de la division si le joueur existe
+        const divisionPlayers = dayData.players[division] || [];
+        const playerIndex = divisionPlayers.indexOf(oldName);
+        if (playerIndex !== -1) {
+            divisionPlayers[playerIndex] = newName;
+        }
+        
+        // Mettre à jour aussi dans les poules si c'est un match de poule
+        if (isPoolMatch && dayData.pools && dayData.pools.divisions && dayData.pools.divisions[division]) {
+            const pools = dayData.pools.divisions[division].pools;
+            if (pools) {
+                pools.forEach(function(pool) {
+                    if (pool.players) {
+                        const poolPlayerIndex = pool.players.indexOf(oldName);
+                        if (poolPlayerIndex !== -1) {
+                            pool.players[poolPlayerIndex] = newName;
+                        }
+                    }
+                });
+            }
+        }
+        
+        saveToLocalStorage();
+        
+        // Rafraîchir l'affichage approprié
+        if (isPoolMatch) {
+            if (typeof global.updatePoolsDisplay === 'function') global.updatePoolsDisplay(dayNumber);
+        } else {
+            updateMatchesDisplay(dayNumber);
+        }
+        
+        if (typeof global.showNotification === 'function') {
+            global.showNotification(`Joueur renommé : "${oldName}" → "${newName}"`, 'success');
+        }
+    }
+    window.editMatchPlayerName = editMatchPlayerName;
     window.updateMatchesDisplay = updateMatchesDisplay;
     window.checkMatchCompletion = checkMatchCompletion;
 

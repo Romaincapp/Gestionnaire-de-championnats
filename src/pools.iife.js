@@ -1823,7 +1823,10 @@ function updatePoolsDisplay(dayNumber) {
                     </div>
 
                     <div class="pool-matches" style="max-width: 500px; margin: 0 auto; padding: 10px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px;">
-                        ${poolMatches.map(match => generatePoolMatchHTML(match, dayNumber)).join('')}
+                        ${poolMatches.map((match, idx) => {
+                            match._matchIndex = matches.indexOf(match);
+                            return generatePoolMatchHTML(match, dayNumber);
+                        }).join('')}
                     </div>
 
                         ${completedMatches === poolMatches.length ?
@@ -1957,11 +1960,15 @@ function generatePoolMatchHTML(match, dayNumber) {
             </div>` : ''}
             
             <div class="score-container">
-                <span class="player-name-left" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player1)}')"
-                      style="cursor: pointer; text-decoration: underline dotted;"
-                      title="Cliquez pour voir les statistiques"
-                      onmouseover="this.style.color='#3498db'"
-                      onmouseout="this.style.color='#2c3e50'">${match.player1}</span>
+                ${window.showForfaitButtons ? 
+                    `<input type="text" value="${match.player1}" 
+                            onchange="editMatchPlayerName(${dayNumber}, ${match.division}, ${match._matchIndex || 0}, 'player1', this.value)"
+                            style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white; cursor: text;">`
+                    : `<span class="player-name-left" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player1)}')"
+                          style="cursor: pointer; text-decoration: underline dotted;"
+                          title="Cliquez pour voir les statistiques"
+                          onmouseover="this.style.color='#3498db'"
+                          onmouseout="this.style.color='#2c3e50'">${match.player1}</span>`}
                 <div class="score-center">
                     <input type="number"
                            value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
@@ -1977,11 +1984,15 @@ function generatePoolMatchHTML(match, dayNumber) {
                            onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
                            style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
                 </div>
-                <span class="player-name-right" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player2)}')"
-                      style="cursor: pointer; text-decoration: underline dotted;"
-                      title="Cliquez pour voir les statistiques"
-                      onmouseover="this.style.color='#3498db'"
-                      onmouseout="this.style.color='#2c3e50'">${match.player2}</span>
+                ${window.showForfaitButtons ? 
+                    `<input type="text" value="${match.player2}" 
+                            onchange="editMatchPlayerName(${dayNumber}, ${match.division}, ${match._matchIndex || 0}, 'player2', this.value)"
+                            style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white; cursor: text;">`
+                    : `<span class="player-name-right" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player2)}')"
+                          style="cursor: pointer; text-decoration: underline dotted;"
+                          title="Cliquez pour voir les statistiques"
+                          onmouseover="this.style.color='#3498db'"
+                          onmouseout="this.style.color='#2c3e50'">${match.player2}</span>`}
             </div>
 
             ${!match.completed && window.showForfaitButtons ? `
@@ -4067,7 +4078,11 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     border: 1px solid #dee2e6;
                     border-radius: 6px;
                 ">
-                    <span class="player-name-left">${match.player1}</span>
+                    ${window.showForfaitButtons ? 
+                        `<input type="text" value="${match.player1}" 
+                                onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
+                                style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">`
+                        : `<span class="player-name-left">${match.player1}</span>`}
                     <div class="score-center">
                         <input type="number"
                                value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
@@ -4083,7 +4098,11 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                                onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
                                style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
                     </div>
-                    <span class="player-name-right">${match.player2}</span>
+                    ${window.showForfaitButtons ? 
+                        `<input type="text" value="${match.player2}" 
+                                onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player2', this.value)"
+                                style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">`
+                        : `<span class="player-name-right">${match.player2}</span>`}
                 </div>
 
                 ${!isCompleted && window.showForfaitButtons ? `
@@ -5253,7 +5272,11 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                     border: 1px solid #dee2e6;
                     border-radius: 8px;
                 ">
-                    <span class="player-name-left">${match.player1}</span>
+                    ${window.showForfaitButtons ? 
+                        `<input type="text" value="${match.player1}" 
+                                onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
+                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">`
+                        : `<span class="player-name-left">${match.player1}</span>`}
                     <div class="score-center">
                         <input type="number"
                                value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
@@ -5293,7 +5316,11 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                                    padding: 8px 4px;
                                ">
                     </div>
-                    <span class="player-name-right">${match.player2}</span>
+                    ${window.showForfaitButtons ? 
+                        `<input type="text" value="${match.player2}" 
+                                onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player2', this.value)"
+                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">`
+                        : `<span class="player-name-right">${match.player2}</span>`}
                 </div>
                 
                 <div class="match-result" style="
