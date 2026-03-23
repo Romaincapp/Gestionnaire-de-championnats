@@ -53,11 +53,17 @@ function initializePoolSystem(dayNumber) {
 
 function addPoolToggleToInterface(dayNumber) {
     const section = document.querySelector(`#day-${dayNumber} .section`);
-    if (!section) return;
+    if (!section) {
+        console.error(`[Pools] Section non trouvée pour la journée ${dayNumber}`);
+        return;
+    }
 
     // Chercher le conteneur day-hub-content pour insérer le mode pool après
     const dayHubContent = document.getElementById(`day-hub-content-${dayNumber}`);
-    if (!dayHubContent) return;
+    if (!dayHubContent) {
+        console.error(`[Pools] day-hub-content non trouvé pour la journée ${dayNumber}`);
+        return;
+    }
 
     const poolToggleHTML = `
         <!-- Section Mode Poules (bouton déplacé dans la barre d'action) -->
@@ -210,6 +216,24 @@ function addPoolToggleToInterface(dayNumber) {
                         font-size: 12px;
                     ">
                         🎯 Générer Poules
+                    </button>
+
+                    <button class="btn" onclick="showModulatePoolsModal(${dayNumber})" style="
+                        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                        color: white;
+                        padding: 8px 15px;
+                        font-size: 12px;
+                    " id="modulate-pools-btn-${dayNumber}">
+                        ⚖️ Moduler Pools
+                    </button>
+
+                    <button class="btn" onclick="verifyPoolMatchesCount(${dayNumber})" style="
+                        background: linear-gradient(135deg, #17a2b8, #138496);
+                        color: white;
+                        padding: 8px 15px;
+                        font-size: 12px;
+                    " id="verify-matches-btn-${dayNumber}">
+                        🔍 Vérifier Matchs
                     </button>
 
                     <button class="btn" onclick="generateFinalPhase(${dayNumber})" style="
@@ -541,8 +565,14 @@ function calculateQualificationDistribution(numPools, totalQualified, totalPlaye
 
 // Toggle l'affichage de la section mode poules
 function togglePoolSection(dayNumber) {
-    const poolSection = document.getElementById(`pool-toggle-${dayNumber}`);
+    let poolSection = document.getElementById(`pool-toggle-${dayNumber}`);
     const toggleBtn = document.getElementById(`show-pool-btn-${dayNumber}`);
+
+    // Si la section n'existe pas, essayer de l'initialiser
+    if (!poolSection) {
+        initializePoolsForDay(dayNumber);
+        poolSection = document.getElementById(`pool-toggle-${dayNumber}`);
+    }
 
     if (poolSection) {
         if (poolSection.style.display === 'none') {
@@ -1239,11 +1269,10 @@ function generatePools(dayNumber) {
             }
         }
 
-        // Mélanger les joueurs pour équilibrer les poules
-        const shuffledPlayers = shuffleArray([...players]);
-        // En mode avancé, passer le nombre de poules exact choisi par l'utilisateur
+        // Répartir les joueurs en poules (en évitant de mettre les coéquipiers ensemble)
+        // La fonction createBalancedPoolsWithBye gère maintenant la répartition intelligente
         const targetPools = (configMode === 'advanced') ? numPools : null;
-        const pools = createBalancedPoolsWithBye(shuffledPlayers, poolSize, targetPools);
+        const pools = createBalancedPoolsWithBye(players, poolSize, targetPools);
 
         // Valider le nombre de matchs par joueur pour CHAQUE poule
         if (matchesPerPlayer) {
@@ -1289,6 +1318,51 @@ function calculateOptimalPlayerCounts(poolSize) {
     return optimal;
 }
 
+// Extrait le nom de base d'une équipe en enlevant les suffixes numériques (1, 2, Bis1, etc.)
+// Ex: "Gai Séjour Bis1" → "Gai Séjour", "Les Garances 2" → "Les Garances"
+function extractTeamBaseName(name) {
+    if (!name) return '';
+    
+    // Patterns pour détecter les suffixes : 
+    // - " 1", " 2", " 3" à la fin (avec ou sans espace)
+    // - "Bis1", "Bis2", "Bis 1", "Bis 2"
+    // - "A", "B", "C" à la fin (mais pas dans le nom principal)
+    const patterns = [
+        /\s+bis\s*\d+$/i,      // " Bis1", "Bis2", " Bis 1"
+        /(?:\s+)?\d+$/i,        // " 1", " 2", " 3" OU "1", "2", "3" (avec ou sans espace)
+        /\s+[A-C]$/i            // " A", " B", " C" (pour les équipes A/B/C)
+    ];
+    
+    let baseName = name.trim();
+    for (const pattern of patterns) {
+        baseName = baseName.replace(pattern, '');
+    }
+    
+    return baseName.trim();
+}
+
+// Regroupe les joueurs par équipe (même nom de base)
+function groupPlayersByTeam(players) {
+    const groups = {};
+    const singles = [];
+    
+    players.forEach(player => {
+        const baseName = extractTeamBaseName(player);
+        // Si après suppression du suffixe le nom est identique au nom original,
+        // ou si c'est un joueur individuel sans suffixe
+        if (baseName === player.trim() || !baseName) {
+            singles.push(player);
+        } else {
+            if (!groups[baseName]) {
+                groups[baseName] = [];
+            }
+            groups[baseName].push(player);
+        }
+    });
+    
+    return { groups, singles };
+}
+
 // Créer des poules équilibrées SANS ajouter de BYE
 // Les poules peuvent avoir des tailles légèrement différentes (ex: 8 et 7 joueurs)
 // C'est la pratique standard dans les tournois sportifs
@@ -1301,23 +1375,134 @@ function createBalancedPoolsWithBye(players, maxPoolSize, targetNumPools = null)
     // Utiliser le nombre de poules spécifié ou le calculer depuis maxPoolSize
     const numPools = targetNumPools || Math.ceil(totalPlayers / maxPoolSize);
 
-    // Répartir équitablement les joueurs sans BYE
-    // Ex: 38 joueurs, 5 poules → 3 poules de 8 + 2 poules de 7
+    // Regrouper les joueurs par équipe (même nom de base)
+    const { groups, singles } = groupPlayersByTeam(players);
+    
+    // Convertir les groupes en tableau pour faciliter la manipulation
+    const teamGroups = Object.values(groups);
+    
+    // Log pour informer des équipes détectées
+    if (teamGroups.length > 0) {
+        console.log(`🏊 Équipes détectées (${teamGroups.length}):`, teamGroups.map(g => `${extractTeamBaseName(g[0])} (${g.length})`).join(', '));
+    }
+    
+    // Trier les groupes par taille décroissante (pour placer les plus gros groupes d'abord)
+    teamGroups.sort((a, b) => b.length - a.length);
+    
+    // Initialiser les poules vides
+    const pools = Array.from({ length: numPools }, () => []);
+    const poolSizes = Array(numPools).fill(0);
+    
+    // Calculer la taille cible de chaque poule
     const baseSize = Math.floor(totalPlayers / numPools);
     const extraPlayers = totalPlayers % numPools;
-
-    const pools = [];
-    let playerIndex = 0;
-
-    for (let i = 0; i < numPools; i++) {
-        // Les premières poules ont 1 joueur de plus si nécessaire
-        const poolSize = baseSize + (i < extraPlayers ? 1 : 0);
-        const pool = players.slice(playerIndex, playerIndex + poolSize);
-        pools.push(pool);
-        playerIndex += poolSize;
+    const targetSizes = pools.map((_, i) => baseSize + (i < extraPlayers ? 1 : 0));
+    
+    // Fonction pour trouver la poule la moins remplie qui n'a pas déjà un membre de cette équipe
+    function findBestPoolForTeam(teamMembers) {
+        // Extraire les noms de base des membres déjà placés dans chaque poule
+        const poolBaseNames = pools.map(pool => 
+            pool.map(p => extractTeamBaseName(p))
+        );
+        
+        const teamBaseName = extractTeamBaseName(teamMembers[0]);
+        
+        // Chercher une poule qui n'a pas déjà un membre de cette équipe
+        let bestPoolIndex = -1;
+        let minSize = Infinity;
+        
+        for (let i = 0; i < numPools; i++) {
+            // Vérifier si cette poule contient déjà un membre de la même équipe
+            const hasSameTeam = poolBaseNames[i].some(baseName => baseName === teamBaseName);
+            
+            if (!hasSameTeam && poolSizes[i] < minSize && poolSizes[i] < targetSizes[i]) {
+                minSize = poolSizes[i];
+                bestPoolIndex = i;
+            }
+        }
+        
+        // Si aucune poule disponible (toutes ont déjà un coéquipier), prendre la moins remplie
+        if (bestPoolIndex === -1) {
+            for (let i = 0; i < numPools; i++) {
+                if (poolSizes[i] < minSize) {
+                    minSize = poolSizes[i];
+                    bestPoolIndex = i;
+                }
+            }
+        }
+        
+        return bestPoolIndex;
     }
+    
+    // Placer d'abord les groupes d'équipes (pour séparer les coéquipiers)
+    for (const teamGroup of teamGroups) {
+        for (const player of teamGroup) {
+            const poolIndex = findBestPoolForTeam([player]);
+            if (poolIndex !== -1) {
+                pools[poolIndex].push(player);
+                poolSizes[poolIndex]++;
+            }
+        }
+    }
+    
+    // Placer les joueurs individuels (sans coéquipier) pour équilibrer
+    for (const player of singles) {
+        // Trouver la poule la moins remplie
+        let minSize = Infinity;
+        let bestPoolIndex = 0;
+        
+        for (let i = 0; i < numPools; i++) {
+            if (poolSizes[i] < minSize) {
+                minSize = poolSizes[i];
+                bestPoolIndex = i;
+            }
+        }
+        
+        pools[bestPoolIndex].push(player);
+        poolSizes[bestPoolIndex]++;
+    }
+    
+    // Vérifier si des coéquipiers se retrouvent dans la même poule
+    checkForTeammatesInSamePool(pools);
+    
+    // Filtrer les poules vides (au cas où)
+    return pools.filter(pool => pool.length > 0);
+}
 
-    return pools;
+// Vérifie si des coéquipiers se retrouvent dans la même poule et affiche un avertissement
+function checkForTeammatesInSamePool(pools) {
+    const conflicts = [];
+    
+    pools.forEach((pool, poolIndex) => {
+        const baseNamesInPool = {};
+        
+        pool.forEach(player => {
+            const baseName = extractTeamBaseName(player);
+            if (!baseNamesInPool[baseName]) baseNamesInPool[baseName] = [];
+            baseNamesInPool[baseName].push(player);
+        });
+        
+        Object.entries(baseNamesInPool).forEach(([baseName, players]) => {
+            if (players.length > 1) {
+                conflicts.push({
+                    poolName: String.fromCharCode(65 + poolIndex),
+                    players: players
+                });
+            }
+        });
+    });
+    
+    if (conflicts.length > 0) {
+        console.warn('⚠️ Coéquipiers dans la même poule:');
+        conflicts.forEach(c => console.warn(`  - Poule ${c.poolName}: ${c.players.join(', ')}`));
+        
+        if (typeof showNotification === 'function') {
+            showNotification(
+                `${conflicts.length} conflit(s): coéquipiers dans la même poule. Voir console pour détails.`,
+                'warning', 8000
+            );
+        }
+    }
 }
 
 function createBalancedPools(players, maxPoolSize) {
@@ -1751,17 +1936,39 @@ function updatePoolsDisplay(dayNumber) {
             const isCompleted = completedMatches === poolMatches.length;
             const poolContentId = `pool-content-${dayNumber}-${division}-${poolIndex}`;
             const poolArrowId = `pool-arrow-${dayNumber}-${division}-${poolIndex}`;
+            
+            // Vérifier si tous les joueurs ont le bon nombre de matchs
+            const targetMatches = dayData.pools.config?.matchesPerPlayer;
+            let matchDistributionOk = true;
+            let playersWithMissingMatches = 0;
+            
+            if (targetMatches) {
+                const playerMatchCounts = {};
+                pool.forEach(p => playerMatchCounts[p] = 0);
+                poolMatches.forEach(m => {
+                    if (!m.isByeMatch) {
+                        if (playerMatchCounts.hasOwnProperty(m.player1)) playerMatchCounts[m.player1]++;
+                        if (playerMatchCounts.hasOwnProperty(m.player2)) playerMatchCounts[m.player2]++;
+                    }
+                });
+                pool.forEach(p => {
+                    if ((playerMatchCounts[p] || 0) < targetMatches) {
+                        matchDistributionOk = false;
+                        playersWithMissingMatches++;
+                    }
+                });
+            }
 
             html += `
                 <div class="pool-section" style="
                     background: white;
-                    border: 2px solid ${isCompleted ? '#27ae60' : '#3498db'};
+                    border: 2px solid ${isCompleted && matchDistributionOk ? '#27ae60' : !matchDistributionOk ? '#e74c3c' : '#3498db'};
                     border-radius: 12px;
                     padding: 20px;
                     margin-bottom: 20px;
                 ">
                     <div class="pool-header" onclick="togglePoolCollapse('${poolContentId}', '${poolArrowId}')" style="
-                        background: linear-gradient(135deg, ${isCompleted ? '#27ae60, #2ecc71' : '#3498db, #2980b9'});
+                        background: linear-gradient(135deg, ${isCompleted && matchDistributionOk ? '#27ae60, #2ecc71' : !matchDistributionOk ? '#e74c3c, #c0392b' : '#3498db, #2980b9'});
                         color: white;
                         padding: 15px;
                         border-radius: 8px;
@@ -1789,26 +1996,52 @@ function updatePoolsDisplay(dayNumber) {
                                        display: flex; align-items: center; justify-content: center;"
                                 onmouseover="this.style.background='white'; this.style.transform='translateY(-50%) scale(1.1)'"
                                 onmouseout="this.style.background='rgba(255,255,255,0.9)'; this.style.transform='translateY(-50%)'">+</button>
-                        <h4 style="margin: 0; font-size: 1.2rem;">${poolName}${isCompleted ? ' ✓' : ''}</h4>
+                        <h4 style="margin: 0; font-size: 1.2rem;">${poolName}${isCompleted && matchDistributionOk ? ' ✓' : ''}</h4>
                         <div style="font-size: 14px; margin-top: 5px;">
                             ${completedMatches}/${poolMatches.length} matchs terminés
+                            ${!matchDistributionOk && targetMatches ? `<span style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-weight: bold;">⚠️ ${playersWithMissingMatches} joueur${playersWithMissingMatches > 1 ? 's' : ''} à compléter</span>` : ''}
                         </div>
                     </div>
 
+                    ${(() => {
+                        // Calculer le nombre de matchs par joueur dans cette poule
+                        const targetMatches = dayData.pools.config?.matchesPerPlayer;
+                        const playerMatchCounts = {};
+                        pool.forEach(p => playerMatchCounts[p] = 0);
+                        poolMatches.forEach(m => {
+                            if (!m.isByeMatch) {
+                                if (playerMatchCounts.hasOwnProperty(m.player1)) playerMatchCounts[m.player1]++;
+                                if (playerMatchCounts.hasOwnProperty(m.player2)) playerMatchCounts[m.player2]++;
+                            }
+                        });
+                        
+                        return `
                     <div id="${poolContentId}" class="pool-content" style="display: block;">
                         <div class="pool-players" style="
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 10px;
-                        justify-content: center;
-                        margin-bottom: 15px;
-                        padding: 15px;
-                        background: #f8f9fa;
-                        border-radius: 8px;
-                    ">
-                        ${pool.map(player =>
-                            `<span class="pool-player-tag" onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${escapeForOnclick(player)}')" style="
-                                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 10px;
+                            justify-content: center;
+                            margin-bottom: 15px;
+                            padding: 15px;
+                            background: #f8f9fa;
+                            border-radius: 8px;
+                        ">
+                        ${pool.map(player => {
+                            const count = playerMatchCounts[player] || 0;
+                            const isMissing = targetMatches && count < targetMatches;
+                            const badge = isMissing ? `<span style="
+                                background: #e74c3c;
+                                color: white;
+                                font-size: 10px;
+                                padding: 2px 6px;
+                                border-radius: 10px;
+                                margin-left: 5px;
+                                font-weight: bold;
+                            ">${count}/${targetMatches}</span>` : '';
+                            
+                            return `<span class="pool-player-tag" onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${escapeForOnclick(player)}')" style="
+                                background: ${isMissing ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : 'linear-gradient(135deg, #27ae60, #2ecc71)'};
                                 color: white;
                                 padding: 8px 15px;
                                 border-radius: 20px;
@@ -1818,9 +2051,10 @@ function updatePoolsDisplay(dayNumber) {
                                 transition: transform 0.2s, box-shadow 0.2s;
                             " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'"
                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
-                               title="Cliquez pour voir les statistiques">${player}</span>`
-                        ).join('')}
-                    </div>
+                               title="${isMissing ? `⚠️ Il manque ${targetMatches - count} match(s)` : 'Cliquez pour voir les statistiques'}">${player}${badge}</span>`;
+                        }).join('')}
+                        </div>`;
+                    })()}
 
                     <div class="pool-matches" style="max-width: 500px; margin: 0 auto; padding: 10px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px;">
                         ${poolMatches.map((match, idx) => {
@@ -2249,14 +2483,20 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
     const dayData = championship.days[dayNumber];
     if (!dayData || !dayData.pools || !dayData.pools.enabled) return null;
 
-    const matches = [];
+    const completedMatches = [];
+    const upcomingMatches = [];
 
     // 1. Collecter les matchs de poules
     if (dayData.pools.divisions[division] && dayData.pools.divisions[division].matches) {
-        const poolMatches = dayData.pools.divisions[division].matches.filter(m =>
-            (m.player1 === playerName || m.player2 === playerName) && m.completed
-        );
-        matches.push(...poolMatches);
+        dayData.pools.divisions[division].matches.forEach(m => {
+            if (m.player1 === playerName || m.player2 === playerName) {
+                if (m.completed) {
+                    completedMatches.push(m);
+                } else {
+                    upcomingMatches.push(m);
+                }
+            }
+        });
     }
 
     // 2. Collecter les matchs de phase finale
@@ -2265,20 +2505,26 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
         if (finalPhase && finalPhase.rounds) {
             Object.values(finalPhase.rounds).forEach(round => {
                 if (round.matches) {
-                    const finalMatches = round.matches.filter(m =>
-                        (m.player1 === playerName || m.player2 === playerName) && m.completed
-                    );
-                    matches.push(...finalMatches);
+                    round.matches.forEach(m => {
+                        if (m.player1 === playerName || m.player2 === playerName) {
+                            if (m.completed) {
+                                completedMatches.push(m);
+                            } else {
+                                upcomingMatches.push(m);
+                            }
+                        }
+                    });
                 }
             });
         }
     }
 
-    // Calculer les statistiques
+    // Calculer les statistiques des matchs terminés
     let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
     const opponents = [];
 
-    matches.forEach(match => {
+    // Traiter les matchs terminés
+    completedMatches.forEach(match => {
         const isPlayer1 = match.player1 === playerName;
         const opponent = isPlayer1 ? match.player2 : match.player1;
         const score1 = parseInt(match.score1) || 0;
@@ -2315,7 +2561,24 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
             opponentScore: opponentScore,
             result: result,
             matchType: match.roundName ? `${match.roundName}` : match.poolName || 'Poule',
-            isBye: match.isBye || false
+            isBye: match.isBye || false,
+            completed: true
+        });
+    });
+
+    // Ajouter les matchs à venir
+    upcomingMatches.forEach(match => {
+        const isPlayer1 = match.player1 === playerName;
+        const opponent = isPlayer1 ? match.player2 : match.player1;
+
+        opponents.push({
+            name: opponent,
+            playerScore: null,
+            opponentScore: null,
+            result: 'UPCOMING',
+            matchType: match.roundName ? `${match.roundName}` : match.poolName || 'Poule',
+            isBye: match.isBye || false,
+            completed: false
         });
     });
 
@@ -2323,7 +2586,9 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
         playerName: playerName,
         division: division,
         dayNumber: dayNumber,
-        totalMatches: matches.length,
+        totalMatches: completedMatches.length,
+        totalScheduled: completedMatches.length + upcomingMatches.length,
+        upcomingCount: upcomingMatches.length,
         wins: wins,
         draws: draws,
         losses: losses,
@@ -2339,8 +2604,8 @@ function getPlayerPoolDayStats(dayNumber, division, playerName) {
 function showPlayerPoolSummary(dayNumber, division, playerName) {
     const stats = getPlayerPoolDayStats(dayNumber, division, playerName);
 
-    if (!stats || stats.totalMatches === 0) {
-        alert(`Aucune statistique disponible pour ${playerName} sur cette journée.`);
+    if (!stats || (stats.totalMatches === 0 && stats.upcomingCount === 0)) {
+        alert(`Aucun match programmé pour ${playerName} sur cette journée.`);
         return;
     }
 
@@ -2414,7 +2679,7 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                         border-bottom: 2px solid #3498db;
                         padding-bottom: 8px;
                     ">
-                        📊 Adversaires affrontés (${stats.totalMatches} match${stats.totalMatches > 1 ? 's' : ''})
+                        📊 Matchs (${stats.totalMatches} terminé${stats.totalMatches > 1 ? 's' : ''}${stats.upcomingCount > 0 ? `, ${stats.upcomingCount} à venir` : ''})
                     </h4>
 
                     <table style="
@@ -2436,9 +2701,67 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                         <tbody>
                             ${stats.opponents.map((opp, index) => {
                                 const bgColor = index % 2 === 0 ? '#f8f9fa' : 'white';
-                                const resultBg = opp.result === 'V' ? '#d4edda' : '#f8d7da';
-                                const resultColor = opp.result === 'V' ? '#155724' : '#721c24';
-                                const resultIcon = opp.result === 'V' ? '✓' : '✗';
+                                
+                                // Style pour les matchs à venir
+                                if (!opp.completed) {
+                                    return `
+                                        <tr style="background: ${bgColor}; border-bottom: 1px solid #dee2e6; opacity: 0.8;">
+                                            <td style="padding: 10px; font-weight: 500; color: #6c757d;">${opp.name}</td>
+                                            <td style="padding: 10px; text-align: center; font-size: 11px; color: #6c757d;">
+                                                ${opp.matchType}
+                                            </td>
+                                            <td style="padding: 10px; text-align: center; font-weight: bold; color: #95a5a6;">
+                                                - / -
+                                            </td>
+                                            <td style="padding: 10px; text-align: center;">
+                                                <span style="
+                                                    background: #fff3cd;
+                                                    color: #856404;
+                                                    padding: 4px 10px;
+                                                    border-radius: 12px;
+                                                    font-weight: bold;
+                                                    font-size: 12px;
+                                                ">
+                                                    ⏳ À venir
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }
+                                
+                                // Style pour les matchs terminés
+                                let resultBg, resultColor, resultIcon, resultText;
+                                switch(opp.result) {
+                                    case 'V':
+                                        resultBg = '#d4edda';
+                                        resultColor = '#155724';
+                                        resultIcon = '✓';
+                                        resultText = 'Victoire';
+                                        break;
+                                    case 'D':
+                                        resultBg = '#f8d7da';
+                                        resultColor = '#721c24';
+                                        resultIcon = '✗';
+                                        resultText = 'Défaite';
+                                        break;
+                                    case 'N':
+                                        resultBg = '#e3f2fd';
+                                        resultColor = '#1565c0';
+                                        resultIcon = '=';
+                                        resultText = 'Nul';
+                                        break;
+                                    case 'F':
+                                        resultBg = '#fff3cd';
+                                        resultColor = '#856404';
+                                        resultIcon = '⚠';
+                                        resultText = 'Forfait';
+                                        break;
+                                    default:
+                                        resultBg = '#f8f9fa';
+                                        resultColor = '#6c757d';
+                                        resultIcon = '?';
+                                        resultText = opp.result;
+                                }
 
                                 return `
                                     <tr style="background: ${bgColor}; border-bottom: 1px solid #dee2e6;">
@@ -2460,7 +2783,7 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                                                 font-weight: bold;
                                                 font-size: 12px;
                                             ">
-                                                ${resultIcon} ${opp.result}
+                                                ${resultIcon} ${resultText}
                                             </span>
                                         </td>
                                     </tr>
@@ -2468,6 +2791,27 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                             }).join('')}
                         </tbody>
                     </table>
+
+                    ${stats.upcomingCount > 0 ? `
+                    <!-- Progression -->
+                    <div style="
+                        margin-top: 15px;
+                        padding: 12px;
+                        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+                        border-radius: 8px;
+                        border-left: 4px solid #f39c12;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 20px;">⏳</span>
+                            <div>
+                                <div style="font-weight: 600; color: #856404;">Progression</div>
+                                <div style="font-size: 13px; color: #856404;">
+                                    ${stats.totalMatches} match${stats.totalMatches > 1 ? 's' : ''} terminé${stats.totalMatches > 1 ? 's' : ''} sur ${stats.totalScheduled} programmé${stats.totalScheduled > 1 ? 's' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <!-- Statistiques globales -->
                     <div style="
@@ -2486,6 +2830,18 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                                 <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Défaites</div>
                                 <div style="font-size: 20px; font-weight: bold; color: #e74c3c;">${stats.losses}</div>
                             </div>
+                            ${stats.draws > 0 ? `
+                            <div style="text-align: center;">
+                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Nuls</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #3498db;">${stats.draws}</div>
+                            </div>
+                            ` : ''}
+                            ${stats.forfeits > 0 ? `
+                            <div style="text-align: center;">
+                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Forfaits</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #f39c12;">${stats.forfeits}</div>
+                            </div>
+                            ` : ''}
                             <div style="text-align: center;">
                                 <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Points marqués</div>
                                 <div style="font-size: 20px; font-weight: bold; color: #3498db;">${stats.pointsWon}</div>
@@ -5342,6 +5698,399 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
 // Remplacer la fonction existante
 window.generateManualMatchHTML = generateManualMatchHTMLImproved;
 
+// ======================================
+// VÉRIFICATION ET CORRECTION DU NOMBRE DE MATCHS
+// ======================================
+
+// Vérifie le nombre de matchs par joueur et propose des corrections
+function verifyPoolMatchesCount(dayNumber) {
+    // Utiliser la fonction de détection commune
+    const detectionResult = detectBlockedPools(dayNumber);
+    
+    if (!detectionResult) {
+        const dayData = championship.days[dayNumber];
+        if (!dayData || !dayData.pools || !dayData.pools.enabled) {
+            showNotification('Le mode poules n\'est pas activé pour cette journée.', 'warning');
+        } else {
+            showNotification('Aucune limite de matchs définie (mode round-robin complet).', 'info');
+        }
+        return;
+    }
+
+    const { targetMatches: matchesPerPlayer, divisions: divisionsData } = detectionResult;
+    
+    // Collecter tous les joueurs qui manquent de matchs
+    const issues = [];
+    Object.entries(divisionsData).forEach(([division, data]) => {
+        data.poolsWithIssues.forEach(poolInfo => {
+            if (poolInfo.playersNeedingMatches > 0) {
+                // Trouver les joueurs spécifiques qui manquent de matchs
+                const realPlayers = poolInfo.pool.filter(p => !p.startsWith('BYE'));
+                
+                // Calculer le nombre de matchs par joueur
+                const matchCounts = {};
+                realPlayers.forEach(p => matchCounts[p] = 0);
+                
+                // Récupérer les matchs de cette pool
+                const dayData = championship.days[dayNumber];
+                const poolMatches = dayData.pools.divisions[division].matches.filter(
+                    m => m.poolIndex === poolInfo.poolIdx && !m.isByeMatch
+                );
+                
+                poolMatches.forEach(m => {
+                    if (!m.player1.startsWith('BYE') && !m.player2.startsWith('BYE')) {
+                        matchCounts[m.player1] = (matchCounts[m.player1] || 0) + 1;
+                        matchCounts[m.player2] = (matchCounts[m.player2] || 0) + 1;
+                    }
+                });
+                
+                // Ajouter les joueurs qui manquent de matchs
+                realPlayers.forEach(player => {
+                    const currentCount = matchCounts[player] || 0;
+                    if (currentCount < matchesPerPlayer) {
+                        issues.push({
+                            player,
+                            division: parseInt(division),
+                            poolIndex: poolInfo.poolIdx,
+                            poolName: String.fromCharCode(65 + poolInfo.poolIdx),
+                            currentCount,
+                            targetCount: matchesPerPlayer,
+                            missing: matchesPerPlayer - currentCount,
+                            isBlocked: poolInfo.hasIssue // Indique si la pool est bloquée
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    if (issues.length === 0) {
+        showNotification(`✅ Tous les joueurs ont leurs ${matchesPerPlayer} matchs programmés !`, 'success');
+        return;
+    }
+
+    // Afficher le modal avec les problèmes
+    showMatchVerificationModal(dayNumber, issues, matchesPerPlayer);
+}
+
+// Affiche le modal de vérification des matchs
+function showMatchVerificationModal(dayNumber, issues, targetCount) {
+    // Grouper les issues par division et poule
+    const groupedByPool = {};
+    issues.forEach(issue => {
+        const key = `D${issue.division}-P${issue.poolName}`;
+        if (!groupedByPool[key]) {
+            groupedByPool[key] = {
+                division: issue.division,
+                poolName: issue.poolName,
+                poolIndex: issue.poolIndex,
+                players: []
+            };
+        }
+        groupedByPool[key].players.push(issue);
+    });
+
+    const modalHTML = `
+        <div id="match-verification-modal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s;
+        " onclick="closeMatchVerificationModal()">
+            <div style="
+                background: white;
+                border-radius: 15px;
+                padding: 0;
+                max-width: 700px;
+                width: 90%;
+                max-height: 85vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                animation: slideUp 0.3s;
+            " onclick="event.stopPropagation()">
+                <!-- En-tête -->
+                <div style="
+                    background: linear-gradient(135deg, #e74c3c, #c0392b);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 15px 15px 0 0;
+                    position: relative;
+                ">
+                    <button onclick="closeMatchVerificationModal()" style="
+                        position: absolute;
+                        top: 15px;
+                        right: 15px;
+                        background: rgba(255,255,255,0.2);
+                        border: none;
+                        color: white;
+                        font-size: 24px;
+                        width: 35px;
+                        height: 35px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: background 0.2s;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
+
+                    <h3 style="margin: 0 0 10px 0; font-size: 22px;">
+                        ⚠️ Matchs manquants détectés
+                    </h3>
+                    <div style="font-size: 14px; opacity: 0.9;">
+                        ${issues.length} joueur${issues.length > 1 ? 's' : ''} n'ont pas assez de matchs (objectif: ${targetCount} matchs/joueur)
+                    </div>
+                </div>
+
+                <!-- Corps -->
+                <div style="padding: 20px;">
+                    ${Object.values(groupedByPool).map(pool => `
+                        <div style="
+                            margin-bottom: 20px;
+                            background: #f8f9fa;
+                            border-radius: 10px;
+                            padding: 15px;
+                            border-left: 4px solid #e74c3c;
+                        ">
+                            <h4 style="margin: 0 0 12px 0; color: #2c3e50; font-size: 16px;">
+                                Division ${pool.division} - Poule ${pool.poolName}
+                            </h4>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: #ecf0f1;">
+                                        <th style="padding: 8px; text-align: left;">Joueur</th>
+                                        <th style="padding: 8px; text-align: center;">Actuel</th>
+                                        <th style="padding: 8px; text-align: center;">Objectif</th>
+                                        <th style="padding: 8px; text-align: center;">Manque</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${pool.players.map((p, idx) => `
+                                        <tr style="background: ${idx % 2 === 0 ? 'white' : '#f8f9fa'};">
+                                            <td style="padding: 8px; font-weight: 600;">${p.player}</td>
+                                            <td style="padding: 8px; text-align: center;">
+                                                <span style="color: #e74c3c; font-weight: bold;">${p.currentCount}</span>
+                                            </td>
+                                            <td style="padding: 8px; text-align: center;">${p.targetCount}</td>
+                                            <td style="padding: 8px; text-align: center;">
+                                                <span style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">
+                                                    -${p.missing}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `).join('')}
+
+                    <!-- Actions -->
+                    <div style="
+                        margin-top: 20px;
+                        padding: 15px;
+                        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+                        border-radius: 10px;
+                        border-left: 4px solid #f39c12;
+                    ">
+                        <div style="font-weight: 600; color: #856404; margin-bottom: 10px;">
+                            💡 Actions possibles :
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="addMissingMatches(${dayNumber}, ${targetCount})" style="
+                                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 13px;
+                                font-weight: 600;
+                            " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                                ➕ Ajouter les matchs manquants automatiquement
+                            </button>
+                            <button onclick="openModulateFromVerification(${dayNumber})" style="
+                                background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 13px;
+                                font-weight: 600;
+                            " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                                ⚖️ Moduler les pools
+                            </button>
+                            <button onclick="closeMatchVerificationModal()" style="
+                                background: #95a5a6;
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 13px;
+                            ">
+                                Fermer
+                            </button>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 11px; color: #856404;">
+                            <p style="margin: 0 0 5px 0;">
+                                ℹ️ <strong>Ajouter les matchs</strong> : Crée des matchs supplémentaires entre les joueurs qui en ont le moins.
+                            </p>
+                            <p style="margin: 0;">
+                                ℹ️ <strong>Moduler les pools</strong> : À utiliser si toutes les paires possibles sont déjà tirées. Redistribue les joueurs entre les poules.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Ferme le modal de vérification
+function closeMatchVerificationModal() {
+    const modal = document.getElementById('match-verification-modal');
+    if (modal) modal.remove();
+}
+
+// Ajoute automatiquement les matchs manquants
+function addMissingMatches(dayNumber, targetCount) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData || !dayData.pools) return;
+
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    let addedCount = 0;
+
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionData = dayData.pools.divisions[division];
+        if (!divisionData || !divisionData.matches) continue;
+
+        // Grouper les matchs par poule
+        const matchesByPool = {};
+        divisionData.matches.forEach(match => {
+            const poolIdx = match.poolIndex || 0;
+            if (!matchesByPool[poolIdx]) {
+                matchesByPool[poolIdx] = {
+                    matches: [],
+                    matchIds: new Set()
+                };
+            }
+            matchesByPool[poolIdx].matches.push(match);
+            matchesByPool[poolIdx].matchIds.add(match.id);
+        });
+
+        // Traiter chaque poule
+        Object.entries(matchesByPool).forEach(([poolIdx, poolData]) => {
+            const poolIndex = parseInt(poolIdx);
+            const matches = poolData.matches;
+            
+            // Compter les matchs par joueur et tracker les paires existantes
+            const matchCounts = {};
+            const existingPairs = new Set();
+            const poolPlayers = new Set();
+
+            matches.forEach(match => {
+                if (!match.isByeMatch) {
+                    matchCounts[match.player1] = (matchCounts[match.player1] || 0) + 1;
+                    matchCounts[match.player2] = (matchCounts[match.player2] || 0) + 1;
+                    poolPlayers.add(match.player1);
+                    poolPlayers.add(match.player2);
+                    existingPairs.add(`${match.player1}|${match.player2}`);
+                    existingPairs.add(`${match.player2}|${match.player1}`);
+                }
+            });
+
+            // Convertir en array pour faciliter le traitement
+            const players = Array.from(poolPlayers);
+            
+            // Générer les matchs manquants
+            let matchId = Math.max(...matches.map(m => m.id), 0) + 1;
+            let maxIterations = 100; // Sécurité
+            let iteration = 0;
+
+            while (iteration < maxIterations) {
+                iteration++;
+                
+                // Trouver les joueurs qui ont besoin de matchs
+                const needyPlayers = players
+                    .map(p => ({ name: p, count: matchCounts[p] || 0 }))
+                    .filter(p => p.count < targetCount)
+                    .sort((a, b) => a.count - b.count);
+
+                if (needyPlayers.length === 0) break;
+
+                // Essayer de créer un match entre deux joueurs qui en ont besoin
+                let matchCreated = false;
+                
+                for (let i = 0; i < needyPlayers.length && !matchCreated; i++) {
+                    for (let j = i + 1; j < needyPlayers.length && !matchCreated; j++) {
+                        const p1 = needyPlayers[i].name;
+                        const p2 = needyPlayers[j].name;
+                        
+                        // Vérifier s'ils n'ont pas déjà joué
+                        if (!existingPairs.has(`${p1}|${p2}`)) {
+                            // Créer le match
+                            const newMatch = {
+                                id: matchId++,
+                                player1: p1,
+                                player2: p2,
+                                poolIndex: poolIndex,
+                                poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
+                                division: division,
+                                dayNumber: dayNumber,
+                                score1: '',
+                                score2: '',
+                                completed: false,
+                                winner: null,
+                                isPoolMatch: true,
+                                isByeMatch: false
+                            };
+                            
+                            divisionData.matches.push(newMatch);
+                            matchCounts[p1]++;
+                            matchCounts[p2]++;
+                            existingPairs.add(`${p1}|${p2}`);
+                            existingPairs.add(`${p2}|${p1}`);
+                            addedCount++;
+                            matchCreated = true;
+                        }
+                    }
+                }
+
+                // Si aucun match n'a pu être créé, arrêter
+                if (!matchCreated) break;
+            }
+        });
+    }
+
+    // Sauvegarder et mettre à jour l'affichage
+    saveToLocalStorage();
+    updatePoolsDisplay(dayNumber);
+    closeMatchVerificationModal();
+
+    if (addedCount > 0) {
+        showNotification(`✅ ${addedCount} match${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''} avec succès !`, 'success');
+        
+        // Revérifier pour voir s'il reste des problèmes
+        setTimeout(() => verifyPoolMatchesCount(dayNumber), 500);
+    } else {
+        // Impossible d'ajouter - proposer de moduler
+        if (confirm('⚠️ Impossible d\'ajouter plus de matchs : toutes les paires possibles sont déjà tirées.\n\nVoulez-vous moduler les tailles de pools pour permettre plus de combinaisons ?')) {
+            setTimeout(() => showModulatePoolsModal(dayNumber), 300);
+        }
+    }
+}
+
 // Exposer les fonctions d'étape finale pour le classement
 global.getPlayerFinalStageForDay = getPlayerFinalStageForDay;
 global.getBestPlayerStage = getBestPlayerStage;
@@ -5353,10 +6102,16 @@ global.initializePoolSystem = initializePoolSystem;
 global.toggleDayHub = toggleDayHub;
 global.toggleGeneralHub = toggleGeneralHub;
 global.togglePoolSection = togglePoolSection;
+global.togglePoolCollapse = togglePoolCollapse;
 global.togglePoolMode = togglePoolMode;
 global.togglePoolConfigMode = togglePoolConfigMode;
 global.saveCollapseState = saveCollapseState;
 global.restoreCollapseState = restoreCollapseState;
+
+// Exposer les fonctions utilitaires pour les équipes
+global.extractTeamBaseName = extractTeamBaseName;
+global.groupPlayersByTeam = groupPlayersByTeam;
+global.checkForTeammatesInSamePool = checkForTeammatesInSamePool;
 
 // Exposer les fonctions de configuration des poules
 global.updateSimpleConfigInfo = updateSimpleConfigInfo;
@@ -5388,6 +6143,668 @@ global.resetManualFinalPhase = resetManualFinalPhase;
 global.exportManualFinalResults = exportManualFinalResults;
 global.showPlayerPoolSummary = showPlayerPoolSummary;
 global.closePlayerPoolSummary = closePlayerPoolSummary;
+
+// ======================================
+// FONCTION DE DÉTECTION DES POOLS BLOQUÉES
+// ======================================
+
+// Détecte les pools bloquées pour une journée donnée
+// Retourne un objet avec les divisions et pools problématiques
+function detectBlockedPools(dayNumber) {
+    console.log(`[DEBUG] detectBlockedPools appelé pour J${dayNumber}`);
+    
+    const dayData = championship.days[dayNumber];
+    if (!dayData || !dayData.pools || !dayData.pools.enabled) {
+        console.log('[DEBUG] Mode poules non activé');
+        return null;
+    }
+
+    const targetMatches = dayData.pools.config?.matchesPerPlayer;
+    console.log(`[DEBUG] targetMatches: ${targetMatches}`);
+    
+    if (!targetMatches) {
+        console.log('[DEBUG] Mode round-robin complet');
+        return null; // Mode round-robin complet
+    }
+
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    const result = {
+        targetMatches,
+        divisions: {}
+    };
+
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionData = dayData.pools.divisions[division];
+        if (!divisionData || !divisionData.pools || divisionData.pools.length === 0) continue;
+
+        // Grouper les matchs par poule
+        const matchesByPool = {};
+        divisionData.matches.forEach(match => {
+            const poolIdx = match.poolIndex || 0;
+            if (!matchesByPool[poolIdx]) matchesByPool[poolIdx] = [];
+            matchesByPool[poolIdx].push(match);
+        });
+
+        // Analyser chaque pool
+        const poolsWithIssues = [];
+        divisionData.pools.forEach((pool, poolIdx) => {
+            const poolMatches = matchesByPool[poolIdx] || [];
+            const realPlayers = pool.filter(p => !p.startsWith('BYE'));
+            
+            if (realPlayers.length === 0) {
+                poolsWithIssues.push({
+                    poolIdx,
+                    pool,
+                    hasIssue: false,
+                    playersNeedingMatches: 0,
+                    matchCount: 0,
+                    maxPossiblePairs: 0
+                });
+                return;
+            }
+
+            // Compter les matchs par joueur
+            const matchCounts = {};
+            realPlayers.forEach(p => matchCounts[p] = 0);
+            let nonByeMatchCount = 0;
+
+            poolMatches.forEach(m => {
+                if (!m.isByeMatch && !m.player1.startsWith('BYE') && !m.player2.startsWith('BYE')) {
+                    nonByeMatchCount++;
+                    matchCounts[m.player1] = (matchCounts[m.player1] || 0) + 1;
+                    matchCounts[m.player2] = (matchCounts[m.player2] || 0) + 1;
+                }
+            });
+
+            // Joueurs qui ont besoin de matchs
+            const playersNeedingMatches = realPlayers.filter(p => (matchCounts[p] || 0) < targetMatches);
+            
+            // Nombre max de paires possibles
+            const n = realPlayers.length;
+            const maxPossiblePairs = (n * (n - 1)) / 2;
+            
+            // Bloquée si joueurs manquent de matchs ET toutes paires épuisées
+            const allPairsExhausted = nonByeMatchCount >= maxPossiblePairs;
+            const hasIssue = playersNeedingMatches.length > 0 && allPairsExhausted;
+            
+            console.log(`[DEBUG] Div${division} Pool${poolIdx}: ${nonByeMatchCount}/${maxPossiblePairs} matchs, ${playersNeedingMatches.length} joueurs manquent, bloquée=${hasIssue}`);
+
+            poolsWithIssues.push({
+                poolIdx,
+                pool,
+                hasIssue,
+                playersNeedingMatches: playersNeedingMatches.length,
+                matchCount: nonByeMatchCount,
+                maxPossiblePairs
+            });
+        });
+
+        const hasProblematicPools = poolsWithIssues.some(p => p.hasIssue);
+        const totalPlayers = divisionData.pools.reduce((sum, pool) => sum + pool.length, 0);
+
+        result.divisions[division] = {
+            pools: divisionData.pools,
+            matches: divisionData.matches || [],
+            poolsWithIssues,
+            hasProblematicPools,
+            totalPlayers
+        };
+        
+        console.log(`[DEBUG] Division ${division}: hasProblematicPools=${hasProblematicPools}, pools=${poolsWithIssues.length}`);
+    }
+
+    console.log(`[DEBUG] detectBlockedPools retourne ${Object.keys(result.divisions).length} divisions`);
+    return result;
+}
+
+// ======================================
+// MODULATION DES TAILLES DE POOLS
+// ======================================
+
+// Ouvre le modal de modulation depuis le modal de vérification
+function openModulateFromVerification(dayNumber) {
+    closeMatchVerificationModal();
+    // Utiliser setTimeout pour laisser le temps au DOM de se mettre à jour
+    setTimeout(() => {
+        showModulatePoolsModal(dayNumber);
+    }, 100);
+}
+
+// Affiche le modal pour moduler les tailles de pools
+function showModulatePoolsModal(dayNumber) {
+    console.log(`[DEBUG] showModulatePoolsModal appelé pour J${dayNumber}`);
+    
+    // Utiliser la fonction de détection commune
+    const detectionResult = detectBlockedPools(dayNumber);
+    console.log('[DEBUG] detectionResult:', detectionResult);
+    
+    if (!detectionResult) {
+        console.log('[DEBUG] detectionResult est null');
+        const dayData = championship.days[dayNumber];
+        if (!dayData || !dayData.pools || !dayData.pools.enabled) {
+            showNotification('Le mode poules n\'est pas activé pour cette journée.', 'warning');
+        } else {
+            showNotification('Mode round-robin complet - aucune modulation nécessaire.', 'info');
+        }
+        return;
+    }
+    
+    const { targetMatches, divisions: divisionsData } = detectionResult;
+    console.log(`[DEBUG] targetMatches: ${targetMatches}, divisions:`, Object.keys(divisionsData));
+    
+    if (Object.keys(divisionsData).length === 0) {
+        showNotification('Aucune poule générée pour le moment.', 'warning');
+        return;
+    }
+    
+    // Vérifier s'il y a des pools problématiques
+    const hasAnyIssues = Object.values(divisionsData).some(d => d.hasProblematicPools);
+    const problematicPools = new Set();
+    Object.entries(divisionsData).forEach(([div, data]) => {
+        console.log(`[DEBUG] Division ${div}:`, {
+            hasProblematicPools: data.hasProblematicPools,
+            poolsCount: data.pools.length,
+            poolsWithIssues: data.poolsWithIssues.map(p => ({ poolIdx: p.poolIdx, hasIssue: p.hasIssue }))
+        });
+        data.poolsWithIssues.forEach(p => {
+            if (p.hasIssue) problematicPools.add(`${div}-${p.poolIdx}`);
+        });
+    });
+    
+    console.log(`[DEBUG] Modulation pools J${dayNumber}: ${problematicPools.size} pools bloquées`);
+    console.log('[DEBUG] Pools bloquées:', Array.from(problematicPools));
+
+    // Générer le HTML du modal - afficher toutes les divisions avec problèmes en évidence
+    let divisionsHtml = '';
+    Object.entries(divisionsData).forEach(([division, data]) => {
+        const poolCount = data.pools.length;
+        const avgSize = (data.totalPlayers / poolCount).toFixed(1);
+        
+        // Afficher toutes les pools mais marquer celles qui ont des problèmes
+        divisionsHtml += `
+            <div style="margin-bottom: 25px; background: #f8f9fa; border-radius: 10px; padding: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0; color: #2c3e50;">
+                        ${division === '1' ? '🥇' : division === '2' ? '🥈' : '🥉'} Division ${division}
+                    </h4>
+                    <div style="font-size: 12px; color: #6c757d;">
+                        ${data.totalPlayers} joueurs • ${poolCount} poules • ~${avgSize}/poule
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                    ${data.poolsWithIssues.map((poolInfo) => {
+                        const poolName = String.fromCharCode(65 + poolInfo.poolIdx);
+                        const isProblematic = poolInfo.hasIssue;
+                        const realPlayerCount = poolInfo.pool.filter(p => !p.startsWith('BYE')).length;
+                        const maxPossibleMatches = (realPlayerCount * (realPlayerCount - 1)) / 2;
+                        return `
+                            <div style="
+                                background: ${isProblematic ? '#f8d7da' : 'white'};
+                                border: 2px solid ${isProblematic ? '#e74c3c' : '#3498db'};
+                                border-radius: 8px;
+                                padding: 12px;
+                                position: relative;
+                            ">
+                                ${isProblematic ? `<div style="
+                                    position: absolute;
+                                    top: -8px;
+                                    right: -8px;
+                                    background: #e74c3c;
+                                    color: white;
+                                    font-size: 10px;
+                                    padding: 2px 8px;
+                                    border-radius: 10px;
+                                    font-weight: bold;
+                                ">⚠️ Bloquée</div>` : ''}
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: ${isProblematic ? '#e74c3c' : '#3498db'};">Poule ${poolName}</strong>
+                                    <span style="font-size: 11px; color: #6c757d;">${poolInfo.matchCount}/${maxPossibleMatches} matchs</span>
+                                </div>
+                                <div style="font-size: 13px; color: #2c3e50;">
+                                    ${realPlayerCount} joueurs
+                                </div>
+                                <div style="font-size: 11px; color: #6c757d; margin-top: 5px;">
+                                    ${poolInfo.pool.filter(p => !p.startsWith('BYE')).slice(0, 3).join(', ')}${realPlayerCount > 3 ? '...' : ''}
+                                </div>
+                                ${isProblematic 
+                                    ? `<div style="font-size: 11px; color: #e74c3c; margin-top: 8px; font-weight: 600;">⚠️ ${poolInfo.playersNeedingMatches} joueur${poolInfo.playersNeedingMatches > 1 ? 's' : ''} manque de matchs</div>` 
+                                    : `<div style="font-size: 11px; color: #27ae60; margin-top: 8px;">✓ OK</div>`}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                
+                ${data.hasProblematicPools ? `
+                <div style="background: #f8d7da; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                    <strong style="color: #721c24;">⚠️ ${data.poolsWithIssues.filter(p => p.hasIssue).length} poule(s) bloquée(s) détectée(s)</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #721c24;">
+                        Les poules marquées d'un badge rouge ont épuisé toutes les paires possibles mais des joueurs n'ont pas assez de matchs.
+                        Objectif: ${targetMatches} matchs/joueur.
+                    </p>
+                </div>
+                ` : `<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                    <strong style="color: #155724;">✓ Aucune poule bloquée</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #155724;">
+                        Toutes les poules peuvent générer les matchs nécessaires ou ont déjà assez de matchs.
+                        Objectif: ${targetMatches} matchs/joueur.
+                    </p>
+                </div>`}
+                
+                <div style="background: white; border-radius: 8px; padding: 15px; border: 1px solid #dee2e6;">
+                    <div style="font-weight: 600; color: #2c3e50; margin-bottom: 10px;">
+                        🎚️ Définir les tailles des ${poolCount} poules :
+                    </div>
+                    <div style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">
+                        Total: ${data.totalPlayers} joueurs à répartir
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                        ${data.poolsWithIssues.map((poolInfo) => {
+                            const poolName = String.fromCharCode(65 + poolInfo.poolIdx);
+                            const isProblematic = poolInfo.hasIssue;
+                            const currentSize = poolInfo.pool.length;
+                            return `
+                                <div style="
+                                    background: ${isProblematic ? '#f8d7da' : '#f8f9fa'};
+                                    border: 2px solid ${isProblematic ? '#e74c3c' : '#dee2e6'};
+                                    border-radius: 8px;
+                                    padding: 10px;
+                                    position: relative;
+                                ">
+                                    ${isProblematic ? `<div style="
+                                        position: absolute;
+                                        top: -8px;
+                                        right: -8px;
+                                        background: #e74c3c;
+                                        color: white;
+                                        font-size: 10px;
+                                        padding: 2px 8px;
+                                        border-radius: 10px;
+                                        font-weight: bold;
+                                    ">⚠️ Bloquée</div>` : ''}
+                                    <label style="font-size: 12px; font-weight: 600; color: ${isProblematic ? '#e74c3c' : '#495057'}; display: block; margin-bottom: 5px;">
+                                        Poule ${poolName}
+                                    </label>
+                                    <input type="number" 
+                                           id="pool-size-div${division}-p${poolInfo.poolIdx}-${dayNumber}"
+                                           value="${currentSize}"
+                                           min="3" max="12"
+                                           onchange="validatePoolSizes(${dayNumber}, ${division})"
+                                           style="
+                                               width: 100%;
+                                               padding: 8px;
+                                               border: 2px solid ${isProblematic ? '#e74c3c' : '#3498db'};
+                                               border-radius: 4px;
+                                               font-size: 14px;
+                                               text-align: center;
+                                               background: ${isProblematic ? '#fff5f5' : 'white'};
+                                               color: ${isProblematic ? '#e74c3c' : '#2c3e50'};
+                                               font-weight: ${isProblematic ? 'bold' : 'normal'};
+                                           ">
+                                    <div style="font-size: 11px; color: ${isProblematic ? '#e74c3c' : '#6c757d'}; margin-top: 4px; font-weight: ${isProblematic ? '600' : 'normal'};">
+                                        ${isProblematic ? '⚠️ Toutes les paires tirées' : 'joueurs'}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div id="pool-sizes-status-div${division}-${dayNumber}" style="margin-bottom: 10px;">
+                        ${generatePoolSizeValidationStatus(data.totalPlayers, data.pools.map(p => p.length))}
+                    </div>
+                    <div id="redistribution-warning-div${division}-${dayNumber}" style="margin-top: 10px; display: none;">
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    const modalHTML = `
+        <div id="modulate-pools-modal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s;
+        " onclick="closeModulatePoolsModal()">
+            <div style="
+                background: white;
+                border-radius: 15px;
+                padding: 0;
+                max-width: 900px;
+                width: 95%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                animation: slideUp 0.3s;
+            " onclick="event.stopPropagation()">
+                <!-- En-tête -->
+                <div style="
+                    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 15px 15px 0 0;
+                    position: relative;
+                ">
+                    <button onclick="closeModulatePoolsModal()" style="
+                        position: absolute;
+                        top: 15px;
+                        right: 15px;
+                        background: rgba(255,255,255,0.2);
+                        border: none;
+                        color: white;
+                        font-size: 24px;
+                        width: 35px;
+                        height: 35px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: background 0.2s;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
+
+                    <h3 style="margin: 0 0 10px 0; font-size: 22px;">
+                        ⚖️ Moduler les tailles de pools
+                    </h3>
+                    <div style="font-size: 14px; opacity: 0.9;">
+                        Redistribuez les joueurs pour faciliter la génération des matchs
+                    </div>
+                </div>
+
+                <!-- Corps -->
+                <div style="padding: 20px;">
+                    ${hasAnyIssues 
+                        ? `<div style="background: #f8d7da; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                            <strong style="color: #721c24;">⚠️ ${problematicPools.size} poule${problematicPools.size > 1 ? 's' : ''} bloquée${problematicPools.size > 1 ? 's' : ''} détectée${problematicPools.size > 1 ? 's' : ''}</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; color: #721c24;">
+                                Les poules marquées d'un ⚠️ ont épuisé toutes les paires possibles. 
+                                Modifiez les tailles pour permettre de nouvelles combinaisons (le nombre de poules reste identique).
+                            </p>
+                        </div>`
+                        : `<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                            <strong style="color: #155724;">✓ Aucune poule bloquée détectée</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; color: #155724;">
+                                Toutes les poules peuvent encore générer des matchs. Vous pouvez quand même moduler les tailles si nécessaire.
+                            </p>
+                        </div>`
+                    }
+                    
+                    ${divisionsHtml}
+
+                    <!-- Actions -->
+                    <div style="
+                        margin-top: 20px;
+                        padding: 15px;
+                        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+                        border-radius: 10px;
+                        border-left: 4px solid #4caf50;
+                        display: flex;
+                        gap: 10px;
+                        flex-wrap: wrap;
+                        justify-content: center;
+                    ">
+                        <button onclick="applyPoolRedistribution(${dayNumber})" style="
+                            background: linear-gradient(135deg, #27ae60, #2ecc71);
+                            color: white;
+                            border: none;
+                            padding: 12px 25px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: 600;
+                        " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                            ✓ Appliquer la redistribution
+                        </button>
+                        <button onclick="closeModulatePoolsModal()" style="
+                            background: #95a5a6;
+                            color: white;
+                            border: none;
+                            padding: 12px 25px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Génère un aperçu de la répartition des tailles de pools
+function generatePoolSizePreview(totalPlayers, numPools) {
+    const baseSize = Math.floor(totalPlayers / numPools);
+    const remainder = totalPlayers % numPools;
+    
+    // remainder pools auront baseSize + 1 joueurs
+    // (numPools - remainder) pools auront baseSize joueurs
+    
+    if (remainder === 0) {
+        return `${numPools} poules de ${baseSize} joueurs`;
+    } else {
+        return `${remainder} poule${remainder > 1 ? 's' : ''} de ${baseSize + 1} + ${numPools - remainder} poule${(numPools - remainder) > 1 ? 's' : ''} de ${baseSize}`;
+    }
+}
+
+// Génère le statut de validation des tailles
+function generatePoolSizeValidationStatus(totalPlayers, sizes) {
+    const currentTotal = sizes.reduce((a, b) => a + b, 0);
+    const diff = totalPlayers - currentTotal;
+    
+    if (diff === 0) {
+        return `<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 10px; border-radius: 4px; font-size: 13px; color: #155724;">
+            <strong>✓ Distribution valide</strong> - Total: ${currentTotal}/${totalPlayers} joueurs
+        </div>`;
+    } else if (diff > 0) {
+        return `<div style="background: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; border-radius: 4px; font-size: 13px; color: #856404;">
+            <strong>⚠️ Distribution incomplète</strong> - Il manque ${diff} joueur${diff > 1 ? 's' : ''} (total: ${currentTotal}/${totalPlayers})
+        </div>`;
+    } else {
+        return `<div style="background: #f8d7da; border-left: 4px solid #e74c3c; padding: 10px; border-radius: 4px; font-size: 13px; color: #721c24;">
+            <strong>⚠️ Trop de joueurs</strong> - Retirez ${Math.abs(diff)} joueur${Math.abs(diff) > 1 ? 's' : ''} (total: ${currentTotal}/${totalPlayers})
+        </div>`;
+    }
+}
+
+// Valide les tailles de pools saisies
+function validatePoolSizes(dayNumber, division) {
+    const dayData = championship.days[dayNumber];
+    const divisionData = dayData.pools.divisions[division];
+    const totalPlayers = divisionData.pools.reduce((sum, pool) => sum + pool.length, 0);
+    const poolCount = divisionData.pools.length;
+    
+    // Récupérer toutes les tailles saisies
+    const sizes = [];
+    for (let i = 0; i < poolCount; i++) {
+        const input = document.getElementById(`pool-size-div${division}-p${i}-${dayNumber}`);
+        sizes.push(parseInt(input?.value) || 0);
+    }
+    
+    const currentTotal = sizes.reduce((a, b) => a + b, 0);
+    const statusEl = document.getElementById(`pool-sizes-status-div${division}-${dayNumber}`);
+    statusEl.innerHTML = generatePoolSizeValidationStatus(totalPlayers, sizes);
+    
+    // Vérifier si la configuration permet le nombre de matchs souhaité
+    const targetMatches = dayData.pools.config?.matchesPerPlayer;
+    if (targetMatches && currentTotal === totalPlayers) {
+        const minSize = Math.min(...sizes);
+        const maxPossibleMatches = minSize - 1;
+        
+        const warningEl = document.getElementById(`redistribution-warning-div${division}-${dayNumber}`);
+        if (targetMatches > maxPossibleMatches) {
+            warningEl.innerHTML = `
+                <div style="background: #f8d7da; border-left: 4px solid #e74c3c; padding: 10px; border-radius: 4px; font-size: 12px; color: #721c24;">
+                    <strong>⚠️ Attention :</strong> La plus petite poule a ${minSize} joueurs, donc le maximum de matchs par joueur sera de ${maxPossibleMatches} 
+                    (vous demandez ${targetMatches}).
+                </div>
+            `;
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.style.display = 'none';
+        }
+    }
+}
+
+// Met à jour l'aperçu de redistribution (ancienne version, gardée pour compatibilité)
+function previewPoolRedistribution(dayNumber, division) {
+    const dayData = championship.days[dayNumber];
+    const divisionData = dayData.pools.divisions[division];
+    const totalPlayers = divisionData.pools.reduce((sum, pool) => sum + pool.length, 0);
+    
+    const select = document.getElementById(`pool-count-div${division}-${dayNumber}`);
+    if (!select) return;
+    
+    const newPoolCount = parseInt(select.value);
+    
+    const previewEl = document.getElementById(`preview-div${division}-${dayNumber}`);
+    if (previewEl) {
+        previewEl.textContent = generatePoolSizePreview(totalPlayers, newPoolCount);
+    }
+}
+
+// Applique la redistribution des pools
+function applyPoolRedistribution(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    const numDivisions = championship.config?.numberOfDivisions || 3;
+    const targetMatches = dayData.pools.config?.matchesPerPlayer;
+    
+    let hasChanges = false;
+    const redistributions = [];
+    
+    // Collecter les nouvelles configurations pour TOUTES les divisions
+    for (let division = 1; division <= numDivisions; division++) {
+        const divisionData = dayData.pools.divisions[division];
+        if (!divisionData || !divisionData.pools || divisionData.pools.length === 0) continue;
+        
+        // Vérifier si cette division a des inputs de taille
+        const firstInput = document.getElementById(`pool-size-div${division}-p0-${dayNumber}`);
+        if (!firstInput) continue; // Pas de contrôles pour cette division
+        
+        const poolCount = divisionData.pools.length;
+        const totalPlayers = divisionData.pools.reduce((sum, pool) => sum + pool.length, 0);
+        
+        // Récupérer les nouvelles tailles
+        const newSizes = [];
+        let sizeSum = 0;
+        for (let i = 0; i < poolCount; i++) {
+            const input = document.getElementById(`pool-size-div${division}-p${i}-${dayNumber}`);
+            const size = parseInt(input?.value) || 0;
+            newSizes.push(size);
+            sizeSum += size;
+        }
+        
+        // Vérifier que la somme est correcte
+        if (sizeSum !== totalPlayers) {
+            showNotification(`Division ${division}: La somme des tailles (${sizeSum}) doit être égale au nombre de joueurs (${totalPlayers})`, 'error');
+            return;
+        }
+        
+        // Vérifier si les tailles ont changé
+        const currentSizes = divisionData.pools.map(p => p.length);
+        const sizesChanged = JSON.stringify(currentSizes) !== JSON.stringify(newSizes);
+        
+        if (sizesChanged) {
+            // Collecter tous les joueurs
+            const allPlayers = divisionData.pools.flat();
+            
+            redistributions.push({
+                division,
+                players: allPlayers,
+                newSizes,
+                poolCount
+            });
+            hasChanges = true;
+        }
+    }
+    
+    if (!hasChanges) {
+        showNotification('Aucune modification à appliquer.', 'info');
+        closeModulatePoolsModal();
+        return;
+    }
+    
+    // Demander confirmation si des matchs existent déjà
+    const hasExistingMatches = redistributions.some(r => {
+        const divData = dayData.pools.divisions[r.division];
+        return divData.matches && divData.matches.some(m => m.completed);
+    });
+    
+    if (hasExistingMatches) {
+        if (!confirm('⚠️ Des matchs ont déjà été joués dans certaines poules. La redistribution va réinitialiser TOUS les matchs de ces divisions. Continuer ?')) {
+            return;
+        }
+    }
+    
+    // Appliquer les redistributions
+    redistributions.forEach(({ division, players, newSizes, poolCount }) => {
+        // Créer les nouvelles poules avec les tailles spécifiées
+        const newPools = [];
+        let playerIndex = 0;
+        
+        // Mélanger légèrement les joueurs pour varier les combinaisons
+        // (tout en gardant un ordre pseudo-aléatoire déterministe)
+        const shuffledPlayers = [...players];
+        for (let i = shuffledPlayers.length - 1; i > 0; i--) {
+            const j = Math.floor((i * 7 + 13) % (i + 1)); // Pseudo-aléatoire déterministe
+            [shuffledPlayers[i], shuffledPlayers[j]] = [shuffledPlayers[j], shuffledPlayers[i]];
+        }
+        
+        newSizes.forEach((size, idx) => {
+            const pool = shuffledPlayers.slice(playerIndex, playerIndex + size);
+            newPools.push(pool);
+            playerIndex += size;
+        });
+        
+        // Mettre à jour les données
+        dayData.pools.divisions[division].pools = newPools;
+        
+        // Régénérer les matchs
+        const poolMatches = generatePoolMatches(newPools, division, dayNumber, targetMatches);
+        dayData.pools.divisions[division].matches = poolMatches;
+        
+        console.log(`✅ Division ${division}: ${players.length} joueurs redistribués selon les nouvelles tailles`, newSizes);
+    });
+    
+    // Sauvegarder et mettre à jour l'affichage
+    saveToLocalStorage();
+    updatePoolsDisplay(dayNumber);
+    closeModulatePoolsModal();
+    
+    const totalDivs = redistributions.length;
+    showNotification(`✅ Redistribution appliquée pour ${totalDivs} division${totalDivs > 1 ? 's' : ''} !`, 'success');
+}
+
+// Ferme le modal de modulation
+function closeModulatePoolsModal() {
+    const modal = document.getElementById('modulate-pools-modal');
+    if (modal) modal.remove();
+}
+
+// Exposer les fonctions de vérification des matchs
+global.verifyPoolMatchesCount = verifyPoolMatchesCount;
+global.closeMatchVerificationModal = closeMatchVerificationModal;
+global.addMissingMatches = addMissingMatches;
+
+// Exposer les fonctions de modulation des pools
+global.detectBlockedPools = detectBlockedPools;
+global.openModulateFromVerification = openModulateFromVerification;
+global.showModulatePoolsModal = showModulatePoolsModal;
+global.closeModulatePoolsModal = closeModulatePoolsModal;
+global.previewPoolRedistribution = previewPoolRedistribution;
+global.applyPoolRedistribution = applyPoolRedistribution;
+global.validatePoolSizes = validatePoolSizes;
+global.generatePoolSizeValidationStatus = generatePoolSizeValidationStatus;
 
 // Appliquer les styles au chargement
 addScoreInputStyles();
