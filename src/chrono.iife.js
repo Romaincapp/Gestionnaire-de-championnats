@@ -1663,10 +1663,11 @@ function displayRaceInterface(serie) {
     if (!serie) return;
 
     const raceInterface = document.getElementById('raceInterface');
-    const eventsList = document.getElementById('eventsList').parentElement;
+    var eventsListEl = document.getElementById('eventsList');
+    var eventsList = eventsListEl ? eventsListEl.parentElement : null;
 
-    eventsList.style.display = 'none';
-    raceInterface.style.display = 'block';
+    if (eventsList) eventsList.style.display = 'none';
+    if (raceInterface) raceInterface.style.display = 'block';
 
     const sportEmoji = {
         running: '🏃',
@@ -1805,36 +1806,43 @@ function displayRaceInterface(serie) {
 
 // Retour à la liste des épreuves
 window.backToSeriesList = function() {
-    const raceInterface = document.getElementById('raceInterface');
-    const eventsList = document.getElementById('eventsList');
-    
-    const dayNumber = raceData.currentDayNumber;
+    const dayNumber = raceData.currentDayNumber || raceData._raceDayNumber;
 
     // Sauvegarder les résultats vers le stockage par jour avant de quitter
     if (typeof saveRaceResultsToDay === 'function' && dayNumber) {
         saveRaceResultsToDay();
     }
 
-    if (raceInterface) raceInterface.style.display = 'none';
-    if (eventsList) eventsList.style.display = 'block';
-
     // Retirer l'écouteur clavier du mode couloirs
     removeLaneModeKeyListener();
 
+    // Si on venait d'une journée, restaurer le contenu chrono du jour
+    if (dayNumber) {
+        var chronoContent = document.getElementById('chrono-content-' + dayNumber);
+        if (chronoContent) {
+            // Restaurer le contenu original si sauvegardé, sinon re-render
+            if (chronoContent._originalHTML) {
+                chronoContent.innerHTML = chronoContent._originalHTML;
+                chronoContent._originalHTML = null;
+            } else if (typeof renderChronoInterfaceForDay === 'function') {
+                chronoContent.innerHTML = renderChronoInterfaceForDay(dayNumber);
+            }
+            // Réinitialiser les event cards du jour
+            if (typeof refreshChronoDisplay === 'function') {
+                refreshChronoDisplay(dayNumber);
+            }
+        }
+        return;
+    }
+
+    // Mode chrono global (fallback)
+    var raceInterface = document.getElementById('raceInterface');
+    var eventsList = document.getElementById('eventsList');
+    if (raceInterface) raceInterface.style.display = 'none';
+    if (eventsList) eventsList.style.display = 'block';
+
     if (typeof displayEventsList === 'function') {
         displayEventsList();
-    }
-    
-    // Retourner à l'onglet de la journée si on venait d'une journée
-    if (dayNumber && typeof switchTab === 'function') {
-        // Cacher la section chrono globale
-        const chronoModeSection = document.getElementById('chronoModeSection');
-        if (chronoModeSection) {
-            chronoModeSection.style.display = 'none';
-        }
-        
-        // Afficher le bon onglet de jour
-        switchTab(dayNumber);
     }
 };
 

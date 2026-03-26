@@ -955,30 +955,23 @@
         // Sauvegarder les données de course
         saveChronoToLocalStorage();
         
-        // Basculer vers la section chrono globale
-        const chronoModeSection = document.getElementById('chronoModeSection');
-        // Cacher tous les onglets de journée
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.style.display = 'none';
-        });
-        
-        // Afficher la section chrono
-        if (chronoModeSection) {
-            chronoModeSection.style.display = 'block';
+        // Injecter l'interface de course directement dans le contenu chrono du jour
+        const chronoContent = document.getElementById('chrono-content-' + dayNumber);
+        if (chronoContent) {
+            // Sauvegarder le contenu original pour le restaurer au retour
+            if (!chronoContent._originalHTML) {
+                chronoContent._originalHTML = chronoContent.innerHTML;
+            }
+
+            // Créer le conteneur de course dans le jour
+            chronoContent.innerHTML = '<div id="raceInterface" style="display:block;"></div>';
         }
-        
-        // Mettre à jour l'onglet actif dans la navigation
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        
-        // Charger l'affichage des événements puis afficher l'interface de course
-        if (typeof displayEventsList === 'function') {
-            displayEventsList();
-        }
-        
+
+        // Stocker le numéro de jour pour le retour
+        raceData._raceDayNumber = dayNumber;
+
         // Afficher l'interface de course
-        setTimeout(() => {
+        setTimeout(function() {
             displayRaceInterface(raceSerie);
         }, 100);
         
