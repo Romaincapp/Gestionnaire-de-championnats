@@ -6388,6 +6388,8 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
 window.showSwimmingImportModal = function(dayNumber) {
     // Trouver les journées sources disponibles (non-chrono avec des joueurs)
     var sourceDays = [];
+    // Trouver les journées chrono de destination (avec des épreuves)
+    var chronoDays = [];
     for (var d in championship.days) {
         if (championship.days.hasOwnProperty(d)) {
             var dd = championship.days[d];
@@ -6400,6 +6402,8 @@ window.showSwimmingImportModal = function(dayNumber) {
                 if (count > 0) {
                     sourceDays.push({ day: d, count: count });
                 }
+            } else if (dd.chronoData && dd.chronoData.events && dd.chronoData.events.length > 0) {
+                chronoDays.push({ day: d, events: dd.chronoData.events });
             }
         }
     }
@@ -6409,11 +6413,22 @@ window.showSwimmingImportModal = function(dayNumber) {
         return;
     }
 
-    var events = championship.days[dayNumber].chronoData ? championship.days[dayNumber].chronoData.events : [];
-    if (events.length === 0) {
-        showNotification('Aucune épreuve configurée dans cette journée. Créez d\'abord les épreuves.', 'warning');
-        return;
+    // Si la journée courante est chrono avec épreuves, l'utiliser comme destination
+    // Sinon, chercher une journée chrono disponible
+    var targetDay = dayNumber;
+    var currentDay = championship.days[dayNumber];
+    if (!currentDay || currentDay.dayType !== 'chrono' || !currentDay.chronoData || !currentDay.chronoData.events || currentDay.chronoData.events.length === 0) {
+        if (chronoDays.length > 0) {
+            targetDay = parseInt(chronoDays[0].day);
+        } else {
+            showNotification('Aucune journée chrono avec des épreuves configurées trouvée', 'warning');
+            return;
+        }
     }
+
+    var events = championship.days[targetDay].chronoData.events;
+    // Stocker le targetDay pour l'utiliser dans les callbacks
+    dayNumber = targetDay;
 
     var modal = document.createElement('div');
     modal.id = 'swimmingImportModal';
@@ -6421,6 +6436,10 @@ window.showSwimmingImportModal = function(dayNumber) {
 
     var sourceDayOptions = sourceDays.map(function(sd) {
         return '<option value="' + sd.day + '">Journée ' + sd.day + ' (' + sd.count + ' entrées)</option>';
+    }).join('');
+
+    var chronoDayOptions = chronoDays.map(function(cd) {
+        return '<option value="' + cd.day + '"' + (parseInt(cd.day) === targetDay ? ' selected' : '') + '>Journée ' + cd.day + ' (' + cd.events.length + ' épreuves)</option>';
     }).join('');
 
     var eventsListHtml = events.map(function(e) {
@@ -6435,6 +6454,10 @@ window.showSwimmingImportModal = function(dayNumber) {
                 <select id="swimSourceDay" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + sourceDayOptions + '</select>\
             </div>\
             <div style="margin-bottom: 12px;">\
+                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée destination (chrono avec épreuves) :</label>\
+                <select id="swimTargetDay" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + chronoDayOptions + '</select>\
+            </div>\
+            <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Nageurs par série (couloirs) :</label>\
                 <select id="swimLanesPerSerie" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">\
                     <option value="3">3 couloirs</option>\
@@ -6447,7 +6470,7 @@ window.showSwimmingImportModal = function(dayNumber) {
             </div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Épreuves cibles (J' + dayNumber + ') :</label>\
-                <div>' + eventsListHtml + '</div>\
+                <div id="swimEventsPreview">' + eventsListHtml + '</div>\
             </div>\
             <div id="swimPreviewContainer" style="margin-bottom: 12px; display: none;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Aperçu :</label>\
@@ -6466,6 +6489,7 @@ window.showSwimmingImportModal = function(dayNumber) {
 // Aperçu de l'import natation
 window.previewSwimmingImport = function(dayNumber) {
     var sourceDayNumber = parseInt(document.getElementById('swimSourceDay').value);
+    var targetDayNumber = parseInt(document.getElementById('swimTargetDay').value);
     var lanesPerSerie = parseInt(document.getElementById('swimLanesPerSerie').value);
 
     var srcDay = championship.days[sourceDayNumber];
@@ -6479,7 +6503,7 @@ window.previewSwimmingImport = function(dayNumber) {
         }
     }
 
-    var events = championship.days[dayNumber].chronoData.events;
+    var events = championship.days[targetDayNumber].chronoData.events;
 
     // Parser
     var parsed = [];
@@ -6560,14 +6584,15 @@ window.previewSwimmingImport = function(dayNumber) {
 // Confirmer et générer les séries
 window.confirmSwimmingImport = function(dayNumber) {
     var sourceDayNumber = parseInt(document.getElementById('swimSourceDay').value);
+    var targetDayNumber = parseInt(document.getElementById('swimTargetDay').value);
     var lanesPerSerie = parseInt(document.getElementById('swimLanesPerSerie').value);
 
-    var result = window.generateSwimmingSeries(dayNumber, sourceDayNumber, lanesPerSerie);
+    var result = window.generateSwimmingSeries(targetDayNumber, sourceDayNumber, lanesPerSerie);
     if (result) {
         document.getElementById('swimmingImportModal').remove();
         // Rafraîchir l'affichage chrono
         if (typeof refreshChronoDisplay === 'function') {
-            refreshChronoDisplay(dayNumber);
+            refreshChronoDisplay(targetDayNumber);
         }
     }
 };
