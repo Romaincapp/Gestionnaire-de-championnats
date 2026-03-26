@@ -5474,8 +5474,30 @@ window.confirmExportChronoCompetition = function() {
 };
 
 // Imprimer les épreuves et séries du mode chrono
-window.printChronoCompetition = function() {
-    if (raceData.events.length === 0) {
+window.printChronoCompetition = function(dayNumber) {
+    // Chercher les données chrono : d'abord dans la journée, puis dans raceData global
+    var printEvents = raceData.events;
+    var printParticipants = raceData.participants;
+
+    // Si un dayNumber est fourni, ou si raceData est vide, chercher dans les journées
+    if (printEvents.length === 0 || dayNumber) {
+        // Chercher la première journée chrono avec des épreuves
+        var days = championship ? championship.days : {};
+        for (var d in days) {
+            if (days.hasOwnProperty(d)) {
+                var dd = days[d];
+                if (dd.dayType === 'chrono' && dd.chronoData && dd.chronoData.events && dd.chronoData.events.length > 0) {
+                    if (!dayNumber || parseInt(d) === dayNumber) {
+                        printEvents = dd.chronoData.events;
+                        printParticipants = dd.chronoData.participants || [];
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (printEvents.length === 0) {
         showNotification('Aucune épreuve à imprimer', 'warning');
         return;
     }
@@ -5535,14 +5557,14 @@ window.printChronoCompetition = function() {
             <div class="print-date">Imprimé le ${new Date().toLocaleString('fr-FR')}</div>
             <h1>🏆 Compétition Chrono</h1>
             <div class="stats">
-                <div class="stat"><strong>${raceData.events.length}</strong> épreuve(s)</div>
-                <div class="stat"><strong>${raceData.events.reduce((c, e) => c + e.series.length, 0)}</strong> série(s)</div>
-                <div class="stat"><strong>${raceData.participants.length}</strong> participant(s)</div>
+                <div class="stat"><strong>${printEvents.length}</strong> épreuve(s)</div>
+                <div class="stat"><strong>${printEvents.reduce((c, e) => c + (e.series ? e.series.length : 0), 0)}</strong> série(s)</div>
+                <div class="stat"><strong>${printParticipants.length}</strong> participant(s)</div>
             </div>
     `;
 
     // Parcourir les épreuves
-    raceData.events.forEach(event => {
+    printEvents.forEach(event => {
         printContent += `
             <div class="event">
                 <h2>${sportEmoji[event.sportType] || '🏅'} ${event.name}</h2>

@@ -861,7 +861,7 @@
         }
         
         const chronoData = dayData.chronoData;
-        const serie = chronoData.series.find(s => s.id === serieId);
+        const serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) {
             showNotification('Série introuvable', 'error');
             return;
@@ -999,7 +999,7 @@
         
         if (!dayData || !dayData.chronoData) return;
         
-        const serie = dayData.chronoData.series.find(s => s.id === serieId);
+        const serie = findSerieInChronoData(dayData.chronoData, serieId);
         if (!serie) return;
         
         const raceSerie = raceData.currentSerie;

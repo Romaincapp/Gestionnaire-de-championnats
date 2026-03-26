@@ -171,6 +171,28 @@
     // GESTION DES ÉPREUVES CHRONO PAR JOURNÉE
     // ============================================
 
+    // Helper: chercher une série dans chronoData (ancien format liste plate + nouveau format imbriqué)
+    function findSerieInChronoData(chronoData, serieId) {
+        // 1. Chercher dans chronoData.series (ancien format)
+        var serie = null;
+        if (chronoData.series && chronoData.series.length > 0) {
+            serie = findSerieInChronoData(chronoData, serieId);
+            if (serie) return serie;
+        }
+        // 2. Chercher dans event.series (nouveau format imbriqué)
+        if (chronoData.events) {
+            for (var i = 0; i < chronoData.events.length; i++) {
+                var evt = chronoData.events[i];
+                if (evt.series) {
+                    serie = evt.series.find(function(s) { return s.id === serieId; });
+                    if (serie) return serie;
+                }
+            }
+        }
+        return null;
+    }
+    global.findSerieInChronoData = findSerieInChronoData;
+
     function getChronoDataForDay(dayNumber) {
         // S'assurer que la journée existe
         if (!global.championship.days[dayNumber]) {
@@ -246,7 +268,7 @@
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return null;
         
-        var serie = chronoData.series.find(function(s) { return s.id === serieId; });
+        var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return null;
         
         options = options || {};
@@ -278,7 +300,7 @@
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return false;
         
-        var serie = chronoData.series.find(function(s) { return s.id === serieId; });
+        var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return false;
         
         var participant = serie.participants.find(function(p) { return p.bib === bib; });
@@ -333,7 +355,7 @@
         html += '<span id="chrono-quick-copy-buttons-' + dayNumber + '" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>';
         html += '<span style="color: #cbd5e1;">|</span>';
         html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #1abc9c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🏊 Séries natation</button>';
-        html += '<button onclick="printChronoCompetition()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🖨️ Imprimer séries</button>';
+        html += '<button onclick="printChronoCompetition(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🖨️ Imprimer séries</button>';
         html += '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">🔄</button>';
         html += '</div>';
         
@@ -1110,7 +1132,7 @@
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
         
-        var serie = chronoData.series.find(function(s) { return s.id === serieId; });
+        var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
         
         if (document.getElementById('participantsModal-' + dayNumber)) return;
@@ -1180,7 +1202,7 @@
             
             // Rafraîchir la liste
             var chronoData = getChronoDataForDay(dayNumber);
-            var serie = chronoData.series.find(function(s) { return s.id === serieId; });
+            var serie = findSerieInChronoData(chronoData, serieId);
             var listContainer = document.getElementById('participantsList-' + dayNumber + '-' + serieId);
             if (listContainer) {
                 listContainer.innerHTML = renderParticipantsList(serie);
@@ -1199,7 +1221,7 @@
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
         
-        var serie = chronoData.series.find(function(s) { return s.id === serieId; });
+        var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
         
         if (document.getElementById('resultsModal-' + dayNumber)) return;
@@ -1275,7 +1297,7 @@
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
         
-        var serie = chronoData.series.find(function(s) { return s.id === serieId; });
+        var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
         
         var savedCount = 0;
@@ -1304,7 +1326,7 @@
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
         
-        var serie = chronoData.series.find(function(s) { return s.id === serieId; });
+        var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
         
         if (document.getElementById('rankingModal-' + dayNumber)) return;
@@ -1887,7 +1909,7 @@
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
         
-        var serie = chronoData.series.find(function(s) { return s.id === serieId; });
+        var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
         
         if (!serie.participants || serie.participants.length === 0) {
