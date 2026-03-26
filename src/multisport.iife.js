@@ -622,7 +622,10 @@
     }
 
     function renderEventCard(dayNumber, event, chronoData) {
-        var eventSeries = chronoData.series.filter(function(s) { return s.eventId === event.id; });
+        // Chercher les séries à la fois dans event.series (nouveau format) et chronoData.series (ancien format)
+        var eventSeries = (event.series && event.series.length > 0)
+            ? event.series
+            : (chronoData.series || []).filter(function(s) { return s.eventId === event.id; });
         
         var html = '<div class="chrono-event-card" style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">';
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
