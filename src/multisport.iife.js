@@ -356,6 +356,9 @@
         html += '<span style="color: #cbd5e1;">|</span>';
         html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #1abc9c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🏊 Séries natation</button>';
         html += '<button onclick="printChronoCompetition(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🖨️ Imprimer séries</button>';
+        html += '<span style="color: #cbd5e1;">|</span>';
+        html += '<button onclick="exportChronoDataForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">💾 Exporter</button>';
+        html += '<button onclick="importChronoDataForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer</button>';
         html += '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">🔄</button>';
         html += '</div>';
         
@@ -1713,6 +1716,100 @@
         }
     }
 
+    function exportChronoDataForDay(dayNumber) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        var fileName = 'competition-chrono-J' + dayNumber + '-' + new Date().toISOString().slice(0, 10);
+
+        var totalSeries = (chronoData.series || []).length +
+            (chronoData.events || []).reduce(function(n, e) { return n + (e.series ? e.series.length : 0); }, 0);
+
+        var exportData = {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            competitionName: fileName,
+            raceData: {
+                events: chronoData.events || [],
+                series: chronoData.series || [],
+                participants: chronoData.participants || [],
+                nextEventId: chronoData.nextEventId || 1,
+                nextSerieId: chronoData.nextSerieId || 1,
+                nextParticipantId: chronoData.nextParticipantId || 1
+            },
+            stats: {
+                totalEvents: (chronoData.events || []).length,
+                totalParticipants: (chronoData.participants || []).length,
+                totalSeries: totalSeries
+            }
+        };
+
+        var dataStr = JSON.stringify(exportData, null, 2);
+        var dataBlob = new Blob([dataStr], { type: 'application/json' });
+        var url = URL.createObjectURL(dataBlob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = fileName + '.json';
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showNotification('Compétition chrono J' + dayNumber + ' exportée !', 'success');
+    }
+
+    function importChronoDataForDay(dayNumber) {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    var importedData = JSON.parse(event.target.result);
+
+                    if (!importedData.version) {
+                        throw new Error('Fichier non valide : version manquante');
+                    }
+
+                    var data = importedData.raceData || importedData.chronoData;
+                    if (!data) {
+                        throw new Error('Données chrono introuvables dans le fichier');
+                    }
+
+                    var stats = importedData.stats || {};
+                    var exportDate = importedData.exportDate ? new Date(importedData.exportDate).toLocaleDateString() : '?';
+                    var confirmMsg = 'Importer cette compétition dans la Journée ' + dayNumber + ' ?\n\n' +
+                        '📅 Date d\'export : ' + exportDate + '\n' +
+                        '🏅 Épreuves : ' + (stats.totalEvents || (data.events || []).length) + '\n' +
+                        '👥 Participants : ' + (stats.totalParticipants || (data.participants || []).length) + '\n' +
+                        '📊 Séries : ' + (stats.totalSeries || (data.series || []).length) + '\n\n' +
+                        '⚠️ Cela remplacera toutes les données chrono de cette journée !';
+
+                    if (!confirm(confirmMsg)) return;
+
+                    var chronoData = getChronoDataForDay(dayNumber);
+                    chronoData.events = data.events || [];
+                    chronoData.series = data.series || [];
+                    chronoData.participants = data.participants || [];
+                    chronoData.nextEventId = data.nextEventId || 1;
+                    chronoData.nextSerieId = data.nextSerieId || 1;
+                    chronoData.nextParticipantId = data.nextParticipantId || 1;
+
+                    global.saveToLocalStorage();
+                    refreshChronoDisplay(dayNumber);
+                    showNotification('Compétition chrono importée avec succès !', 'success');
+                } catch (error) {
+                    console.error('Erreur import chrono:', error);
+                    showNotification('Erreur lors de l\'import : ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        input.click();
+    }
+
     /**
      * Génère les boutons de copie rapide pour le mode chrono
      */
@@ -2321,6 +2418,8 @@
     global.recordChronoResult = recordChronoResult;
     global.renderChronoInterfaceForDay = renderChronoInterfaceForDay;
     global.refreshChronoDisplay = refreshChronoDisplay;
+    global.exportChronoDataForDay = exportChronoDataForDay;
+    global.importChronoDataForDay = importChronoDataForDay;
     global.generateChronoQuickCopyButtons = generateChronoQuickCopyButtons;
     global.quickCopyToChrono = quickCopyToChrono;
     global.calculateMultisportRanking = calculateMultisportRanking;
