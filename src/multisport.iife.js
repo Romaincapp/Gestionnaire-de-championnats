@@ -171,15 +171,15 @@
     // GESTION DES ÉPREUVES CHRONO PAR JOURNÉE
     // ============================================
 
-    // Helper: chercher une série dans chronoData (ancien format liste plate + nouveau format imbriqué)
+    // Helper: chercher une série dans chronoData (format plat ou imbriqué dans events)
     function findSerieInChronoData(chronoData, serieId) {
-        // 1. Chercher dans chronoData.series (ancien format)
         var serie = null;
+        // 1. Format plat : chronoData.series[]
         if (chronoData.series && chronoData.series.length > 0) {
-            serie = findSerieInChronoData(chronoData, serieId);
+            serie = chronoData.series.find(function(s) { return s.id === serieId; });
             if (serie) return serie;
         }
-        // 2. Chercher dans event.series (nouveau format imbriqué)
+        // 2. Format imbriqué : event.series[]
         if (chronoData.events) {
             for (var i = 0; i < chronoData.events.length; i++) {
                 var evt = chronoData.events[i];
