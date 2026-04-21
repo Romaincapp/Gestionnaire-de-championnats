@@ -359,6 +359,7 @@
         html += '<span style="color: #cbd5e1;">|</span>';
         html += '<button onclick="exportChronoDataForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">💾 Exporter</button>';
         html += '<button onclick="importChronoDataForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer</button>';
+        html += '<button onclick="clearChronoDataForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">🗑️ Vider</button>';
         html += '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">🔄</button>';
         html += '</div>';
         
@@ -1754,6 +1755,41 @@
         showNotification('Compétition chrono J' + dayNumber + ' exportée !', 'success');
     }
 
+    function clearChronoDataForDay(dayNumber) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        var totalEvents = (chronoData.events || []).length;
+        var totalSeries = (chronoData.series || []).length +
+            (chronoData.events || []).reduce(function(n, e) { return n + (e.series ? e.series.length : 0); }, 0);
+        var totalParticipants = (chronoData.participants || []).length;
+
+        if (totalEvents === 0 && totalSeries === 0 && totalParticipants === 0) {
+            showNotification('La journée ' + dayNumber + ' est déjà vide', 'info');
+            return;
+        }
+
+        var confirmMsg = 'Vider complètement la Journée ' + dayNumber + ' (mode Courses) ?\n\n' +
+            'Cela supprimera :\n' +
+            '• ' + totalEvents + ' épreuve(s)\n' +
+            '• ' + totalSeries + ' série(s)\n' +
+            '• ' + totalParticipants + ' participant(s)\n\n' +
+            'Cette action est irréversible !';
+
+        if (!confirm(confirmMsg)) return;
+
+        global.championship.days[dayNumber].chronoData = {
+            events: [],
+            series: [],
+            participants: [],
+            nextEventId: 1,
+            nextSerieId: 1,
+            nextParticipantId: 1
+        };
+
+        global.saveToLocalStorage();
+        refreshChronoDisplay(dayNumber);
+        showNotification('Journée ' + dayNumber + ' (Courses) vidée', 'warning');
+    }
+
     function importChronoDataForDay(dayNumber) {
         var input = document.createElement('input');
         input.type = 'file';
@@ -2420,6 +2456,7 @@
     global.refreshChronoDisplay = refreshChronoDisplay;
     global.exportChronoDataForDay = exportChronoDataForDay;
     global.importChronoDataForDay = importChronoDataForDay;
+    global.clearChronoDataForDay = clearChronoDataForDay;
     global.generateChronoQuickCopyButtons = generateChronoQuickCopyButtons;
     global.quickCopyToChrono = quickCopyToChrono;
     global.calculateMultisportRanking = calculateMultisportRanking;
