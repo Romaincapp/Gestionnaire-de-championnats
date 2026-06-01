@@ -1810,6 +1810,8 @@ function displayRaceInterface(serie) {
 
     raceInterface.innerHTML = html;
 }
+// Exposer pour les autres modules (ex. startChronoRaceForDay dans ui.iife.js)
+window.displayRaceInterface = displayRaceInterface;
 
 // Retour à la liste des épreuves
 window.backToSeriesList = function() {
