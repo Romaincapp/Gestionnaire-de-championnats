@@ -956,6 +956,14 @@
         if (raceSerie.distance == null) raceSerie.distance = serie.distance || event.distance || 0;
         if (raceSerie.raceType == null) raceSerie.raceType = serie.raceType || event.raceType || 'individual';
 
+        // Resynchroniser le club depuis la série source (cas d'une série déjà lancée
+        // avant l'affectation des clubs) — matche par id puis par nom.
+        raceSerie.participants.forEach(rp => {
+            const src = serie.participants.find(sp => sp.id === rp.id) ||
+                serie.participants.find(sp => (sp.name || '').toLowerCase() === (rp.name || '').toLowerCase());
+            if (src && src.club) rp.club = src.club;
+        });
+
         // Stocker la référence au jour et série pour la sauvegarde ultérieure
         raceData.currentDayNumber = dayNumber;
         raceData.currentSerieId = serieId;

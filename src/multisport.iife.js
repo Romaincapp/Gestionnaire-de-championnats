@@ -523,25 +523,35 @@
             return;
         }
 
-        // Ids cochés (les value sont des chaînes)
+        // Ids cochés (les value sont des chaînes) + noms correspondants. Le lien
+        // global ↔ série se faisant souvent par nom (et l'import natation crée des
+        // ids distincts), on matche par id OU par nom.
         var ids = {};
+        var names = {};
         checks.forEach(function(ch) { ids[ch.value] = true; });
+        chronoData.participants.forEach(function(p) {
+            if (ids[String(p.id)] && p.name) names[p.name.toLowerCase()] = true;
+        });
+
+        function matches(p) {
+            return ids[String(p.id)] || (p.name && names[p.name.toLowerCase()]);
+        }
 
         var count = 0;
         chronoData.participants.forEach(function(p) {
-            if (ids[String(p.id)]) { p.club = club; count++; }
+            if (matches(p)) { p.club = club; count++; }
         });
 
         // Propager le club aux mêmes participants présents dans les séries
         (chronoData.series || []).forEach(function(s) {
             (s.participants || []).forEach(function(p) {
-                if (ids[String(p.id)]) p.club = club;
+                if (matches(p)) p.club = club;
             });
         });
         (chronoData.events || []).forEach(function(ev) {
             (ev.series || []).forEach(function(s) {
                 (s.participants || []).forEach(function(p) {
-                    if (ids[String(p.id)]) p.club = club;
+                    if (matches(p)) p.club = club;
                 });
             });
         });
