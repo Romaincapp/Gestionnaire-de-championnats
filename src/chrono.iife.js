@@ -2087,6 +2087,7 @@ function generateParticipantsRows(serie) {
                             <button onclick="recordLap('${p.bib}')" style="background: #3498db; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
                             <button onclick="finishParticipant('${p.bib}')" style="background: #27ae60; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
                             <button onclick="markAsDNS('${p.bib}')" style="background: none; border: 1px solid #ccc; color: #999; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
+                            <button onclick="editParticipantRowInline('${p.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
                         </div>
                     `}
                 </td>
@@ -2645,11 +2646,131 @@ function updateParticipantRow(participant) {
                     <button onclick="recordLap('${participant.bib}')" style="background: #3498db; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
                     <button onclick="finishParticipant('${participant.bib}')" style="background: #27ae60; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
                     <button onclick="markAsDNS('${participant.bib}')" style="background: none; border: 1px solid #ccc; color: #999; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
+                    <button onclick="editParticipantRowInline('${participant.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
                 </div>
             `}
         </td>
     `;
 }
+
+// Parser un temps saisi "HH:MM:SS.cc" / "MM:SS.cc" / "SS.cc" en millisecondes
+function parseTimeString(str) {
+    if (!str) return 0;
+    str = String(str).trim();
+    if (!str) return 0;
+
+    var parts = str.split(':').map(function(s) { return s.trim(); });
+    var h = 0, m = 0, secPart = '0';
+
+    if (parts.length === 3) {
+        h = parseInt(parts[0], 10) || 0;
+        m = parseInt(parts[1], 10) || 0;
+        secPart = parts[2];
+    } else if (parts.length === 2) {
+        m = parseInt(parts[0], 10) || 0;
+        secPart = parts[1];
+    } else {
+        secPart = parts[0];
+    }
+
+    var sp = secPart.split('.');
+    var s = parseInt(sp[0], 10) || 0;
+    var cc = 0;
+    if (sp.length > 1) {
+        var frac = (sp[1] + '00').slice(0, 2); // normaliser en centièmes
+        cc = parseInt(frac, 10) || 0;
+    }
+
+    return (h * 3600000) + (m * 60000) + (s * 1000) + (cc * 10);
+}
+
+// Passer une ligne de participant en mode édition inline (Tours / Distance / Temps Total)
+window.editParticipantRowInline = function(bib) {
+    var serie = raceData.currentSerie;
+    if (!serie) return;
+
+    var participant = serie.participants.find(function(p) { return String(p.bib) === String(bib); });
+    if (!participant) return;
+
+    var row = document.getElementById('participant-' + bib);
+    if (!row) return;
+
+    var cells = row.children;
+    // Ordre des colonnes : 0=Dossard 1=Participant 2=Club 3=Tours 4=Distance 5=Temps Total 6=Meilleur tour 7=Statut 8=Actions
+    var lapsCount = (participant.laps || []).length;
+    var distanceKm = ((participant.totalDistance || 0) / 1000).toFixed(2);
+    var timeStr = formatTime(participant.totalTime || participant.finishTime || 0);
+
+    cells[3].innerHTML = '<input type="number" min="0" id="edit-laps-' + bib + '" value="' + lapsCount + '" style="width: 60px; padding: 4px; text-align: center; border: 1px solid #f39c12; border-radius: 4px; font-size: 14px;">';
+    cells[4].innerHTML = '<input type="number" min="0" step="0.01" id="edit-dist-' + bib + '" value="' + distanceKm + '" style="width: 65px; padding: 4px; text-align: center; border: 1px solid #f39c12; border-radius: 4px; font-size: 14px;"> km';
+    cells[5].innerHTML = '<input type="text" id="edit-time-' + bib + '" value="' + timeStr + '" placeholder="MM:SS.cc" style="width: 95px; padding: 4px; text-align: center; font-family: monospace; border: 1px solid #f39c12; border-radius: 4px; font-size: 14px;">';
+    cells[8].innerHTML = '<div style="display: flex; gap: 4px; justify-content: center; align-items: center;">' +
+        '<button onclick="saveParticipantRowInline(\'' + bib + '\')" style="background: #27ae60; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Enregistrer">💾</button>' +
+        '<button onclick="cancelParticipantRowInline(\'' + bib + '\')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler">✖️</button>' +
+        '</div>';
+
+    var timeInput = document.getElementById('edit-time-' + bib);
+    if (timeInput) { timeInput.focus(); timeInput.select(); }
+};
+
+// Annuler l'édition inline : redessiner la ligne telle quelle
+window.cancelParticipantRowInline = function(bib) {
+    var serie = raceData.currentSerie;
+    if (!serie) return;
+    var participant = serie.participants.find(function(p) { return String(p.bib) === String(bib); });
+    if (participant) updateParticipantRow(participant);
+};
+
+// Enregistrer l'édition inline
+window.saveParticipantRowInline = function(bib) {
+    var serie = raceData.currentSerie;
+    if (!serie) return;
+
+    var participant = serie.participants.find(function(p) { return String(p.bib) === String(bib); });
+    if (!participant) return;
+
+    var lapsEl = document.getElementById('edit-laps-' + bib);
+    var distEl = document.getElementById('edit-dist-' + bib);
+    var timeEl = document.getElementById('edit-time-' + bib);
+    if (!lapsEl || !distEl || !timeEl) return;
+
+    var newLaps = parseInt(lapsEl.value, 10) || 0;
+    var newDistanceKm = parseFloat(distEl.value) || 0;
+    var newTotalTime = parseTimeString(timeEl.value);
+
+    // Appliquer le temps
+    participant.totalTime = newTotalTime;
+    participant.finishTime = newTotalTime > 0 ? newTotalTime : null;
+
+    // Appliquer la distance (saisie en km, stockée en mètres)
+    participant.totalDistance = Math.round(newDistanceKm * 1000);
+
+    // Recréer les tours pour refléter le nombre saisi
+    if (newLaps > 0) {
+        var avgLapTime = newTotalTime > 0 ? newTotalTime / newLaps : 0;
+        participant.laps = [];
+        for (var i = 0; i < newLaps; i++) {
+            participant.laps.push({
+                lapNumber: i + 1,
+                time: avgLapTime,
+                timestamp: avgLapTime * (i + 1)
+            });
+        }
+        participant.bestLap = avgLapTime > 0 ? avgLapTime : null;
+    } else {
+        participant.laps = [];
+        participant.bestLap = null;
+    }
+
+    // Si un temps a été saisi, considérer le participant comme arrivé
+    if (newTotalTime > 0 && participant.status !== 'dns') {
+        participant.status = 'finished';
+    }
+
+    saveChronoToLocalStorage();
+    updateParticipantRow(participant);
+    showNotification(participant.name + ' mis à jour', 'success');
+};
 
 // Afficher le classement
 window.showRaceRanking = function() {
