@@ -483,7 +483,12 @@
     window.switchTab = switchTab;
 
     function switchToGeneralRanking() {
-        // Si on est en mode multisport (mix de types), rediriger vers le classement multisport
+        // S'il y a des journées chrono (mix ou chrono seul), le classement pertinent
+        // est le classement combiné/multisport, pas celui des matchs.
+        if (typeof hasChronoDays === 'function' && hasChronoDays()) {
+            switchToMultisportRanking();
+            return;
+        }
         if (typeof isMultisportMode === 'function' && isMultisportMode()) {
             switchToMultisportRanking();
             return;

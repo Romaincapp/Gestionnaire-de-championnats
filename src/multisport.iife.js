@@ -89,12 +89,23 @@
         // Mode multisport = au moins une journée de chaque type
         return hasChampionship && hasChrono;
     }
-    
+
+    // Vrai s'il existe au moins une journée en mode Courses (chrono)
+    function hasChronoDays() {
+        return Object.keys(global.championship.days).some(function(dayNumber) {
+            var dayData = global.championship.days[dayNumber];
+            return dayData && dayData.dayType === DAY_TYPES.CHRONO;
+        });
+    }
+    global.hasChronoDays = hasChronoDays;
+
     function updateMultisportTabVisibility() {
         var multisportTab = document.getElementById('multisportTab');
         if (!multisportTab) return;
-        
-        if (isMultisportMode()) {
+
+        // Afficher l'onglet dès qu'il y a des journées chrono (mix OU chrono seul),
+        // car c'est lui qui porte le classement combiné / des courses.
+        if (isMultisportMode() || hasChronoDays()) {
             multisportTab.style.display = 'inline-block';
             // Petite animation pour attirer l'attention
             multisportTab.style.animation = 'pulse 1s ease-in-out';
