@@ -2768,6 +2768,10 @@ window.saveParticipantRowInline = function(bib) {
     }
 
     saveChronoToLocalStorage();
+    // Répercuter immédiatement dans le stockage par journée (carte de série + classement)
+    if (typeof saveRaceResultsToDay === 'function') {
+        saveRaceResultsToDay();
+    }
     updateParticipantRow(participant);
     showNotification(participant.name + ' mis à jour', 'success');
 };
