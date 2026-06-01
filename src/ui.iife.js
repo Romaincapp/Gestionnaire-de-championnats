@@ -1032,13 +1032,21 @@
             bestLap: p.bestLap,
             lastLapStartTime: p.lastLapStartTime
         }));
-        
+
+        // Reconstruire serie.results (lu par la carte de série, le classement par
+        // journée et le calcul de points multisport). Les participants arrivés
+        // (status 'finished') avec un temps valide deviennent des résultats.
+        serie.results = raceSerie.participants
+            .filter(p => p.status === 'finished' && (p.finishTime || p.totalTime))
+            .map(p => ({
+                bib: p.bib,
+                name: p.name,
+                time: p.finishTime || p.totalTime,
+                totalDistance: p.totalDistance || 0
+            }));
+
         // Sauvegarder dans championship
         saveToLocalStorage();
-        
-        // Nettoyer les références temporaires
-        delete raceData.currentDayNumber;
-        delete raceData.currentSerieId;
     }
     window.saveRaceResultsToDay = saveRaceResultsToDay;
 
