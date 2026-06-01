@@ -935,6 +935,12 @@
                     bestLap: p.bestLap || null,
                     lastLapStartTime: p.lastLapStartTime || 0
                 })),
+                // Hériter des caractéristiques de l'épreuve parente (sinon "undefined" dans l'interface)
+                sportType: serie.sportType || event.sportType || 'running',
+                distance: serie.distance || event.distance || 0,
+                raceType: serie.raceType || event.raceType || 'individual',
+                relayDuration: serie.relayDuration || event.relayDuration || 60,
+                interclubPoints: serie.interclubPoints || event.interclubPoints || [10,8,6,5,4,3,2,1],
                 isRunning: serie.isRunning || false,
                 startTime: serie.startTime || null,
                 currentTime: serie.currentTime || 0,
@@ -944,7 +950,12 @@
             raceData.series.push(raceSerie);
             event.series.push(raceSerie);
         }
-        
+
+        // S'assurer que les caractéristiques héritées existent (séries lancées avant ce correctif)
+        if (raceSerie.sportType == null) raceSerie.sportType = serie.sportType || event.sportType || 'running';
+        if (raceSerie.distance == null) raceSerie.distance = serie.distance || event.distance || 0;
+        if (raceSerie.raceType == null) raceSerie.raceType = serie.raceType || event.raceType || 'individual';
+
         // Stocker la référence au jour et série pour la sauvegarde ultérieure
         raceData.currentDayNumber = dayNumber;
         raceData.currentSerieId = serieId;
