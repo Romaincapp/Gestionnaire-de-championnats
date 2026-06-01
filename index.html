@@ -125,9 +125,12 @@
                         <!-- Le classement général sera généré ici -->
                     </div>
 
-                    <div id="raceInterface" style="display: none; margin-top: 20px;">
-                        <!-- Interface de gestion de course sera générée ici -->
-                    </div>
+                    <!-- NOTE: l'ancien div #raceInterface statique a été supprimé.
+                         L'interface de course est désormais injectée dynamiquement
+                         dans l'onglet de la journée (chrono-content-N) par
+                         startChronoRaceForDay(). Conserver un #raceInterface statique
+                         ici créait un doublon d'id qui captait displayRaceInterface()
+                         et laissait l'onglet du jour vide. -->
                 </div>
             </div>
 
