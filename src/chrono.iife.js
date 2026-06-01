@@ -1663,11 +1663,18 @@ function displayRaceInterface(serie) {
     if (!serie) return;
 
     const raceInterface = document.getElementById('raceInterface');
+    if (!raceInterface) {
+        // Le conteneur #raceInterface est injecté dynamiquement dans l'onglet de la
+        // journée par startChronoRaceForDay(). S'il est absent, il n'y a nulle part
+        // où afficher la course : on évite un crash sur raceInterface.innerHTML.
+        console.warn('displayRaceInterface: conteneur #raceInterface introuvable');
+        return;
+    }
     var eventsListEl = document.getElementById('eventsList');
     var eventsList = eventsListEl ? eventsListEl.parentElement : null;
 
     if (eventsList) eventsList.style.display = 'none';
-    if (raceInterface) raceInterface.style.display = 'block';
+    raceInterface.style.display = 'block';
 
     const sportEmoji = {
         running: '🏃',
