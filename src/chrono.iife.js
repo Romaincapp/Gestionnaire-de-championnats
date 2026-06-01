@@ -2767,6 +2767,9 @@ window.saveParticipantRowInline = function(bib) {
         participant.status = 'finished';
     }
 
+    // Le temps de la série correspond au temps du plus lent participant arrivé
+    recomputeSerieTime(serie);
+
     saveChronoToLocalStorage();
     // Répercuter immédiatement dans le stockage par journée (carte de série + classement)
     if (typeof saveRaceResultsToDay === 'function') {
@@ -2775,6 +2778,22 @@ window.saveParticipantRowInline = function(bib) {
     updateParticipantRow(participant);
     showNotification(participant.name + ' mis à jour', 'success');
 };
+
+// Recalcule le temps de la série = temps du plus lent participant arrivé,
+// et met à jour l'affichage du chrono principal si présent.
+function recomputeSerieTime(serie) {
+    if (!serie) return;
+    var times = (serie.participants || [])
+        .filter(function(p) { return p.status !== 'dns' && (p.finishTime || p.totalTime) > 0; })
+        .map(function(p) { return p.finishTime || p.totalTime; });
+    serie.currentTime = times.length ? Math.max.apply(null, times) : 0;
+
+    var mainDisplay = document.getElementById('mainChronoDisplay');
+    if (mainDisplay && !serie.isRunning) {
+        mainDisplay.textContent = formatTime(serie.currentTime);
+    }
+}
+window.recomputeSerieTime = recomputeSerieTime;
 
 // Afficher le classement
 window.showRaceRanking = function() {

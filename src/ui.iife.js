@@ -1034,10 +1034,11 @@
         }));
 
         // Reconstruire serie.results (lu par la carte de série, le classement par
-        // journée et le calcul de points multisport). Les participants arrivés
-        // (status 'finished') avec un temps valide deviennent des résultats.
+        // journée et le calcul de points multisport). Tout participant non-DNS
+        // ayant un temps valide (> 0) compte comme résultat, quel que soit son
+        // status (saisie manuelle inline incluse).
         serie.results = raceSerie.participants
-            .filter(p => p.status === 'finished' && (p.finishTime || p.totalTime))
+            .filter(p => p.status !== 'dns' && (p.finishTime || p.totalTime) > 0)
             .map(p => ({
                 bib: p.bib,
                 name: p.name,
