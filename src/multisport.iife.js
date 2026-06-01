@@ -414,18 +414,41 @@
         if (participants.length === 0) {
             html += '<p style="color: #95a5a6; font-size: 12px; text-align: center; margin: 0; padding: 15px;">Aucun participant encore. Ajoutez-en avec le formulaire ci-dessus, ou importez depuis une autre journée avec 📥 Importer.</p>';
         } else {
-            html += '<div style="max-height: 150px; overflow-y: auto;">';
+            // Barre d'affectation de club aux participants cochés
+            var clubSet = {};
+            if (window.clubsModule && window.clubsModule.getClubsList) {
+                window.clubsModule.getClubsList().forEach(function(c) { clubSet[c] = true; });
+            }
+            participants.forEach(function(p) { if (p.club) clubSet[p.club] = true; });
+            var datalistOptions = Object.keys(clubSet).sort().map(function(c) {
+                return '<option value="' + c + '">';
+            }).join('');
+
+            html += '<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; padding: 8px; background: #fef9e7; border-radius: 6px;">';
+            html += '<input list="clubs-datalist-' + dayNumber + '" id="assign-club-input-' + dayNumber + '" placeholder="Club à affecter" style="flex: 1; min-width: 140px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
+            html += '<datalist id="clubs-datalist-' + dayNumber + '">' + datalistOptions + '</datalist>';
+            html += '<button onclick="assignClubToSelected(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">🏷️ Affecter aux cochés</button>';
+            html += '<label style="font-size: 11px; color: #7f8c8d; cursor: pointer; white-space: nowrap;"><input type="checkbox" onchange="toggleAllParticipants(' + dayNumber + ', this.checked)" style="vertical-align: middle;"> Tout</label>';
+            html += '</div>';
+
+            html += '<div style="max-height: 200px; overflow-y: auto;">';
             participants.forEach(function(p) {
-                html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; margin-bottom: 4px; background: #f8f9fa; border-radius: 6px;">';
-                html += '<span style="font-size: 12px; color: #2c3e50;">' + p.name + '</span>';
-                
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; background: #f8f9fa; border-radius: 6px;">';
+                html += '<label style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; font-size: 12px; color: #2c3e50;">';
+                html += '<input type="checkbox" class="participant-check-' + dayNumber + '" value="' + p.id + '">';
+                html += '<span>' + p.name + '</span>';
+                if (p.club) {
+                    html += '<span style="font-size: 10px; background: #16a085; color: white; padding: 2px 6px; border-radius: 3px;">' + p.club + '</span>';
+                }
+                html += '</label>';
+
                 if (series.length > 0) {
                     html += '<button onclick="showAddToSerieModal(' + dayNumber + ', ' + p.id + ')" ' +
-                        'style="padding: 3px 8px; font-size: 11px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;">+</button>';
+                        'style="padding: 3px 8px; font-size: 11px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0;">+</button>';
                 } else {
-                    html += '<span style="font-size: 10px; color: #95a5a6;">Créez une série</span>';
+                    html += '<span style="font-size: 10px; color: #95a5a6; flex-shrink: 0;">Créez une série</span>';
                 }
-                
+
                 html += '</div>';
             });
             html += '</div>';
@@ -483,6 +506,65 @@
         refreshChronoDisplay(dayNumber);
         showNotification('Participant ajouté : ' + name, 'success');
     }
+
+    /**
+     * Affecte un club à tous les participants cochés (et propage dans les séries).
+     */
+    function assignClubToSelected(dayNumber) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+
+        var input = document.getElementById('assign-club-input-' + dayNumber);
+        var club = input ? input.value.trim() : '';
+
+        var checks = document.querySelectorAll('.participant-check-' + dayNumber + ':checked');
+        if (checks.length === 0) {
+            showNotification('Cochez au moins un participant', 'warning');
+            return;
+        }
+
+        // Ids cochés (les value sont des chaînes)
+        var ids = {};
+        checks.forEach(function(ch) { ids[ch.value] = true; });
+
+        var count = 0;
+        chronoData.participants.forEach(function(p) {
+            if (ids[String(p.id)]) { p.club = club; count++; }
+        });
+
+        // Propager le club aux mêmes participants présents dans les séries
+        (chronoData.series || []).forEach(function(s) {
+            (s.participants || []).forEach(function(p) {
+                if (ids[String(p.id)]) p.club = club;
+            });
+        });
+        (chronoData.events || []).forEach(function(ev) {
+            (ev.series || []).forEach(function(s) {
+                (s.participants || []).forEach(function(p) {
+                    if (ids[String(p.id)]) p.club = club;
+                });
+            });
+        });
+
+        // Mémoriser le club dans la liste globale s'il est nouveau
+        if (club && window.clubsModule && window.clubsModule.addClub) {
+            window.clubsModule.addClub(club);
+        }
+
+        saveToLocalStorage();
+        refreshChronoDisplay(dayNumber);
+        showNotification(count + ' participant(s) → club ' + (club || '(aucun)'), 'success');
+    }
+    global.assignClubToSelected = assignClubToSelected;
+
+    /**
+     * Coche / décoche tous les participants de la journée.
+     */
+    function toggleAllParticipants(dayNumber, checked) {
+        var checks = document.querySelectorAll('.participant-check-' + dayNumber);
+        checks.forEach(function(ch) { ch.checked = checked; });
+    }
+    global.toggleAllParticipants = toggleAllParticipants;
 
     /**
      * Affiche une modal pour ajouter plusieurs participants (bulk)
