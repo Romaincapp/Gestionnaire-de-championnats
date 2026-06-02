@@ -285,6 +285,16 @@
         return serie;
     }
 
+    // Met une majuscule à la première lettre de chaque mot d'un nom
+    // (gère espaces, traits d'union et apostrophes ; lettres accentuées incluses).
+    function toTitleCase(name) {
+        if (!name) return name;
+        return String(name).toLowerCase().replace(/(^|[\s\-'’])([a-zà-ÿ])/g, function(_, sep, ch) {
+            return sep + ch.toUpperCase();
+        });
+    }
+    global.toTitleCase = toTitleCase;
+
     function addChronoParticipant(dayNumber, serieId, name, bib, options) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return null;
@@ -296,7 +306,7 @@
         
         var participant = {
             id: chronoData.nextParticipantId++,
-            name: name,
+            name: toTitleCase(name),
             bib: bib || serie.participants.length + 1,
             club: options.club || '',
             category: options.category || '',
@@ -643,7 +653,7 @@
         var bibEl = document.getElementById('edit-pbib-' + dayNumber + '-' + participantId);
         if (!nameEl) return;
 
-        var newName = nameEl.value.trim();
+        var newName = toTitleCase(nameEl.value.trim());
         if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
 
         // Doublon de nom avec un autre participant
@@ -751,7 +761,7 @@
             
             // Format: Nom, Club ou juste Nom
             var parts = line.split(',');
-            var name = parts[0].trim();
+            var name = toTitleCase(parts[0].trim());
             var club = parts[1] ? parts[1].trim() : '';
             
             if (!name) return;
@@ -1096,7 +1106,8 @@
         // Barre d'outils : harmonisation des noms
         html += '<div style="padding: 12px 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #ecf0f1; background: #fbfbfd;">';
         html += '<button onclick="showNameHarmonizationModal()" style="padding: 8px 14px; font-size: 13px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔤 Harmoniser les noms</button>';
-        html += '<span style="font-size: 12px; color: #7f8c8d;">Fusionne les variantes d\'un même nom pour regrouper correctement les joueurs.</span>';
+        html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #16a085; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
+        html += '<span style="font-size: 12px; color: #7f8c8d;">Harmoniser : fusionne les variantes d\'un nom. Normaliser : majuscule à chaque mot.</span>';
         html += '</div>';
 
         if (sorted.length === 0) {
@@ -1242,6 +1253,22 @@
         });
     }
 
+    // Applique "Majuscule à chaque mot" à TOUS les noms existants (Courses + Championnat)
+    function normalizeAllNamesCase() {
+        var names = collectAllNames();
+        var renamed = 0;
+        names.forEach(function(item) {
+            var fixed = toTitleCase(item.name);
+            if (fixed && fixed !== item.name) {
+                renamed += renameNameEverywhere(item.name, fixed);
+            }
+        });
+        saveToLocalStorage();
+        if (typeof global.updateMultisportRanking === 'function') global.updateMultisportRanking();
+        showNotification(renamed > 0 ? (renamed + ' nom(s) normalisé(s)') : 'Tous les noms sont déjà normalisés', 'success');
+    }
+    global.normalizeAllNamesCase = normalizeAllNamesCase;
+
     function showNameHarmonizationModal() {
         if (document.getElementById('nameHarmonizationModal')) return;
         var groups = groupSimilarNames(collectAllNames());
@@ -1254,7 +1281,7 @@
             groups.forEach(function(g, gi) {
                 var distinct = {};
                 g.members.forEach(function(m) { distinct[m.name] = (distinct[m.name] || 0) + m.count; });
-                var suggestion = Object.keys(distinct).sort(function(a, b) { return distinct[b] - distinct[a]; })[0];
+                var suggestion = toTitleCase(Object.keys(distinct).sort(function(a, b) { return distinct[b] - distinct[a]; })[0]);
 
                 body += '<div style="border:1px solid #e0e0e0; border-radius:8px; padding:12px; margin:10px 0; background:#fbfbfd;">';
                 body += '<label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:600; color:#2c3e50;">' +
@@ -1721,7 +1748,7 @@
         var bibEl = document.getElementById('edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId);
         if (!nameEl) return;
 
-        var newName = nameEl.value.trim();
+        var newName = toTitleCase(nameEl.value.trim());
         if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
 
         // Doublon dans la série (autre participant)
