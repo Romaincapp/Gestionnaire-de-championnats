@@ -645,28 +645,34 @@
         var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
         var oldName = p.name;
 
-        p.name = newName;
-        p.bib = newBib;
-
-        // Propager dans les séries et résultats : match par id ou ancien nom
-        function applyTo(list) {
-            (list || []).forEach(function(sp) {
-                if (sp.id === participantId || (oldName && (sp.name || '').toLowerCase() === oldName.toLowerCase())) {
-                    sp.name = newName;
-                    sp.bib = newBib;
-                }
-            });
-        }
-        (chronoData.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
-        (chronoData.events || []).forEach(function(ev) {
-            (ev.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
-        });
+        applyParticipantRename(chronoData, participantId, oldName, newName, newBib);
 
         saveToLocalStorage();
         refreshChronoDisplay(dayNumber);
         showNotification('Participant mis à jour : ' + newName, 'success');
     }
     global.saveParticipantInfo = saveParticipantInfo;
+
+    /**
+     * Renomme / re-dossarde un participant partout : liste globale, séries,
+     * résultats et séries imbriquées dans les événements. Match par id OU ancien nom.
+     */
+    function applyParticipantRename(chronoData, participantId, oldName, newName, newBib) {
+        function applyTo(list) {
+            (list || []).forEach(function(sp) {
+                if ((participantId != null && sp.id === participantId) ||
+                    (oldName && (sp.name || '').toLowerCase() === oldName.toLowerCase())) {
+                    sp.name = newName;
+                    if (newBib != null && !isNaN(newBib)) sp.bib = newBib;
+                }
+            });
+        }
+        applyTo(chronoData.participants);
+        (chronoData.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
+        (chronoData.events || []).forEach(function(ev) {
+            (ev.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
+        });
+    }
 
     /**
      * Affiche une modal pour ajouter plusieurs participants (bulk)
@@ -1341,7 +1347,7 @@
             '</div>' +
             '</div>' +
             '<div id="participantsList-' + dayNumber + '-' + serieId + '" style="margin: 20px 0;">' +
-            renderParticipantsList(serie) +
+            renderParticipantsList(serie, dayNumber) +
             '</div>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Fermer</button>' +
@@ -1350,25 +1356,109 @@
         document.body.appendChild(modal);
     }
 
-    function renderParticipantsList(serie) {
+    function renderParticipantsList(serie, dayNumber) {
         if (!serie.participants || serie.participants.length === 0) {
             return '<p style="color: #7f8c8d; text-align: center;">Aucun participant</p>';
         }
-        
+
         var html = '<table style="width: 100%; border-collapse: collapse;">';
         html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 10px;">Dossard</th><th style="padding: 10px;">Nom</th><th style="padding: 10px;">Action</th></tr></thead><tbody>';
-        
+
         serie.participants.forEach(function(p) {
-            html += '<tr style="border-bottom: 1px solid #ecf0f1;">';
+            html += '<tr id="serie-prow-' + dayNumber + '-' + serie.id + '-' + p.id + '" style="border-bottom: 1px solid #ecf0f1;">';
             html += '<td style="padding: 10px; text-align: center;">#' + p.bib + '</td>';
             html += '<td style="padding: 10px;">' + p.name + '</td>';
-            html += '<td style="padding: 10px; text-align: center;"><button onclick="removeParticipantFromSerie(' + serie.id + ', ' + p.id + ')" class="btn btn-sm btn-danger">🗑️</button></td>';
+            html += '<td style="padding: 10px; text-align: center; white-space: nowrap;">' +
+                '<button onclick="editSerieParticipant(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm" style="background:#f39c12; color:white; margin-right:4px;" title="Éditer nom / dossard">✏️</button>' +
+                '<button onclick="removeParticipantFromSerie(' + serie.id + ', ' + p.id + ')" class="btn btn-sm btn-danger" title="Retirer">🗑️</button>' +
+                '</td>';
             html += '</tr>';
         });
-        
+
         html += '</tbody></table>';
         return html;
     }
+
+    /**
+     * Passe une ligne du modal "Gérer les participants" en édition (nom + dossard).
+     */
+    function editSerieParticipant(dayNumber, serieId, participantId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+        var p = (serie.participants || []).find(function(x) { return x.id === participantId; });
+        if (!p) return;
+        var row = document.getElementById('serie-prow-' + dayNumber + '-' + serieId + '-' + participantId);
+        if (!row) return;
+
+        var safeName = (p.name || '').replace(/"/g, '&quot;');
+        row.innerHTML =
+            '<td style="padding: 8px; text-align: center;">' +
+            '<input type="number" id="edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" style="width: 60px; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; text-align: center;">' +
+            '</td>' +
+            '<td style="padding: 8px;">' +
+            '<input type="text" id="edit-spname-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeName + '" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px;">' +
+            '</td>' +
+            '<td style="padding: 8px; text-align: center; white-space: nowrap;">' +
+            '<button onclick="saveSerieParticipant(' + dayNumber + ', ' + serieId + ', ' + participantId + ')" class="btn btn-sm" style="background:#27ae60; color:white; margin-right:4px;" title="Enregistrer">💾</button>' +
+            '<button onclick="refreshSerieParticipantsList(' + dayNumber + ', ' + serieId + ')" class="btn btn-sm btn-secondary" title="Annuler">✖️</button>' +
+            '</td>';
+
+        var nameInput = document.getElementById('edit-spname-' + dayNumber + '-' + serieId + '-' + participantId);
+        if (nameInput) { nameInput.focus(); nameInput.select(); }
+    }
+    global.editSerieParticipant = editSerieParticipant;
+
+    /**
+     * Re-rend la liste des participants dans le modal "Gérer les participants".
+     */
+    function refreshSerieParticipantsList(dayNumber, serieId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var serie = findSerieInChronoData(chronoData, serieId);
+        var listContainer = document.getElementById('participantsList-' + dayNumber + '-' + serieId);
+        if (serie && listContainer) {
+            listContainer.innerHTML = renderParticipantsList(serie, dayNumber);
+        }
+    }
+    global.refreshSerieParticipantsList = refreshSerieParticipantsList;
+
+    /**
+     * Enregistre le nom / dossard édités depuis le modal de série.
+     */
+    function saveSerieParticipant(dayNumber, serieId, participantId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+        var p = (serie.participants || []).find(function(x) { return x.id === participantId; });
+        if (!p) return;
+
+        var nameEl = document.getElementById('edit-spname-' + dayNumber + '-' + serieId + '-' + participantId);
+        var bibEl = document.getElementById('edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId);
+        if (!nameEl) return;
+
+        var newName = nameEl.value.trim();
+        if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
+
+        // Doublon dans la série (autre participant)
+        var dup = (serie.participants || []).some(function(x) {
+            return x.id !== participantId && (x.name || '').toLowerCase() === newName.toLowerCase();
+        });
+        if (dup) { showNotification('Un participant porte déjà ce nom dans cette série', 'warning'); return; }
+
+        var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
+        var oldName = p.name;
+
+        applyParticipantRename(chronoData, participantId, oldName, newName, newBib);
+
+        saveToLocalStorage();
+        refreshSerieParticipantsList(dayNumber, serieId);
+        refreshChronoDisplay(dayNumber);
+        showNotification('Participant mis à jour : ' + newName, 'success');
+    }
+    global.saveSerieParticipant = saveSerieParticipant;
 
     function addParticipantToSerie(dayNumber, serieId) {
         var nameInput = document.getElementById('participantName-' + dayNumber + '-' + serieId);
@@ -1392,9 +1482,9 @@
             var serie = findSerieInChronoData(chronoData, serieId);
             var listContainer = document.getElementById('participantsList-' + dayNumber + '-' + serieId);
             if (listContainer) {
-                listContainer.innerHTML = renderParticipantsList(serie);
+                listContainer.innerHTML = renderParticipantsList(serie, dayNumber);
             }
-            
+
             refreshChronoDisplay(dayNumber);
         }
     }
