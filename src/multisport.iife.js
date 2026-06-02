@@ -1371,7 +1371,7 @@
                     distance: distance,
                     time: time,
                     laps: laps,
-                    points: position ? calculateChronoPoints(position, sorted.length) : 0
+                    points: position ? calculateChronoPoints(position, serieRanking.length) : 0
                 });
             });
 
