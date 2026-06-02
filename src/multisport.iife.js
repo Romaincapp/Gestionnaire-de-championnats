@@ -957,51 +957,69 @@
             (ev.series || []).forEach(pushSerie);
         });
 
-        allSeries.forEach(function(serie) {
-            if (serie.results && serie.results.length > 0) {
-                // Trier par temps
-                var sorted = serie.results.slice().sort(function(a, b) {
-                    return a.time - b.time;
-                });
-
-                // Distance parcourue dans cette série (pour le classement chrono).
-                // Si la série compte des tours, on multiplie par le nb de tours du
-                // résultat, sinon on prend la distance de la série.
-                var serieDistance = serie.distance || 0;
-
-                sorted.forEach(function(result, index) {
-                    var playerName = result.name;
-                    if (!results[playerName]) {
-                        results[playerName] = {
-                            player: playerName,
-                            series: [],
-                            totalPoints: 0,
-                            bestTime: null,
-                            totalDistance: 0,
-                            totalTime: 0
-                        };
-                    }
-
-                    var points = calculateChronoPoints(index + 1, sorted.length);
-                    var laps = result.laps || serie.laps || 1;
-                    var distance = serieDistance * (laps > 0 ? laps : 1);
-
-                    results[playerName].series.push({
-                        serieName: serie.name,
-                        position: index + 1,
-                        time: result.time,
-                        distance: distance,
-                        points: points
-                    });
-                    results[playerName].totalPoints += points;
-                    results[playerName].totalDistance += distance;
-                    results[playerName].totalTime += (result.time || 0);
-
-                    if (!results[playerName].bestTime || result.time < results[playerName].bestTime) {
-                        results[playerName].bestTime = result.time;
-                    }
-                });
+        function ensurePlayer(name) {
+            if (!results[name]) {
+                results[name] = {
+                    player: name,
+                    series: [],
+                    totalPoints: 0,
+                    bestTime: null,
+                    totalDistance: 0,
+                    totalTime: 0
+                };
             }
+            return results[name];
+        }
+
+        allSeries.forEach(function(serie) {
+            if (!serie.results || serie.results.length === 0) return;
+
+            // Positions (et donc points) calculées sur les temps des résultats.
+            var sorted = serie.results.slice().sort(function(a, b) {
+                return a.time - b.time;
+            });
+            var posByName = {};
+            sorted.forEach(function(r, i) { posByName[r.name] = i + 1; });
+
+            // Index des participants de la série par nom : ils portent les VRAIS
+            // totaux (distance et temps cumulés tour par tour).
+            var partByName = {};
+            (serie.participants || []).forEach(function(p) {
+                if (p && p.name) partByName[p.name] = p;
+            });
+
+            sorted.forEach(function(result) {
+                var playerName = result.name;
+                var entry = ensurePlayer(playerName);
+                var p = partByName[playerName] || {};
+
+                // Distance et temps TOTAUX issus de la série (participant en
+                // priorité, repli sur le résultat / la distance de série).
+                var distance = (p.totalDistance != null && p.totalDistance > 0)
+                    ? p.totalDistance
+                    : (serie.distance || 0);
+                var time = (p.totalTime != null && p.totalTime > 0)
+                    ? p.totalTime
+                    : (p.finishTime || result.time || 0);
+
+                var position = posByName[playerName] || (entry.series.length + 1);
+                var points = calculateChronoPoints(position, sorted.length);
+
+                entry.series.push({
+                    serieName: serie.name,
+                    position: position,
+                    time: time,
+                    distance: distance,
+                    points: points
+                });
+                entry.totalPoints += points;
+                entry.totalDistance += distance;
+                entry.totalTime += time;
+
+                if (!entry.bestTime || time < entry.bestTime) {
+                    entry.bestTime = time;
+                }
+            });
         });
 
         return results;
