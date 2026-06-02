@@ -965,6 +965,11 @@
                     return a.time - b.time;
                 });
 
+                // Distance parcourue dans cette série (pour le classement chrono).
+                // Si la série compte des tours, on multiplie par le nb de tours du
+                // résultat, sinon on prend la distance de la série.
+                var serieDistance = serie.distance || 0;
+
                 sorted.forEach(function(result, index) {
                     var playerName = result.name;
                     if (!results[playerName]) {
@@ -972,18 +977,26 @@
                             player: playerName,
                             series: [],
                             totalPoints: 0,
-                            bestTime: null
+                            bestTime: null,
+                            totalDistance: 0,
+                            totalTime: 0
                         };
                     }
 
                     var points = calculateChronoPoints(index + 1, sorted.length);
+                    var laps = result.laps || serie.laps || 1;
+                    var distance = serieDistance * (laps > 0 ? laps : 1);
+
                     results[playerName].series.push({
                         serieName: serie.name,
                         position: index + 1,
                         time: result.time,
+                        distance: distance,
                         points: points
                     });
                     results[playerName].totalPoints += points;
+                    results[playerName].totalDistance += distance;
+                    results[playerName].totalTime += (result.time || 0);
 
                     if (!results[playerName].bestTime || result.time < results[playerName].bestTime) {
                         results[playerName].bestTime = result.time;
@@ -1063,6 +1076,8 @@
                     
                     allStats[playerName].chronoPoints += chronoResults[playerName].totalPoints;
                     allStats[playerName].chronoSeries += chronoResults[playerName].series.length;
+                    allStats[playerName].chronoDistance += chronoResults[playerName].totalDistance || 0;
+                    allStats[playerName].chronoTime += chronoResults[playerName].totalTime || 0;
                 });
             }
         });
@@ -1084,23 +1099,39 @@
             championshipWins: 0,
             chronoPoints: 0,
             chronoSeries: 0,
+            chronoDistance: 0,
+            chronoTime: 0,
             totalPoints: 0
         };
     }
 
+    // Formate une distance en mètres : "1 500 m" ou "12,30 km"
+    function formatDistance(meters) {
+        meters = meters || 0;
+        if (meters >= 1000) {
+            return (meters / 1000).toFixed(2).replace('.', ',') + ' km';
+        }
+        return Math.round(meters) + ' m';
+    }
+
     function renderMultisportRanking() {
         var ranking = calculateMultisportRanking();
-        var sorted = Object.values(ranking).sort(function(a, b) {
-            return b.totalPoints - a.totalPoints;
-        });
 
         // Mode d'affichage : chrono seul OU mixte (championnat + courses)
         var mixed = hasChampionshipDays() && hasChronoDays();
 
+        // En mode chrono pur : tri par distance (desc) puis temps (asc), pas de points.
+        // En mode multisport : tri par total de points.
+        var sorted = Object.values(ranking).sort(function(a, b) {
+            if (mixed) return b.totalPoints - a.totalPoints;
+            if (b.chronoDistance !== a.chronoDistance) return b.chronoDistance - a.chronoDistance;
+            return a.chronoTime - b.chronoTime;
+        });
+
         var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
         html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px;">';
         html += '<h2 style="margin: 0; text-align: center;">🏆 ' + (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses') + '</h2>';
-        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">' + (mixed ? 'Championship + Courses' : 'Courses (chrono)') + '</p>';
+        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">' + (mixed ? 'Championship + Courses (points)' : 'Courses — distance &amp; temps') + '</p>';
         html += '</div>';
 
         // Barre d'outils : harmonisation des noms
@@ -1120,9 +1151,13 @@
             html += '<th style="padding: 15px; text-align: center;">Club</th>';
             if (mixed) {
                 html += '<th style="padding: 15px; text-align: center;">🎾 Championship</th>';
+                html += '<th style="padding: 15px; text-align: center;">⏱️ Chrono</th>';
+                html += '<th style="padding: 15px; text-align: center; background: #e8f4f8;">Total</th>';
+            } else {
+                html += '<th style="padding: 15px; text-align: center;">📏 Distance</th>';
+                html += '<th style="padding: 15px; text-align: center;">⏱️ Temps total</th>';
+                html += '<th style="padding: 15px; text-align: center; background: #e8f4f8;">Séries</th>';
             }
-            html += '<th style="padding: 15px; text-align: center;">⏱️ Chrono</th>';
-            html += '<th style="padding: 15px; text-align: center; background: #e8f4f8;">Total</th>';
             html += '</tr></thead><tbody>';
 
             sorted.forEach(function(stat, index) {
@@ -1139,14 +1174,18 @@
                     html += '<span style="font-weight: bold; color: #3498db;">' + stat.championshipPoints + ' pts</span>';
                     html += '<br><small style="color: #7f8c8d;">' + stat.championshipWins + 'V / ' + stat.championshipMatches + 'J</small>';
                     html += '</td>';
+                    html += '<td style="padding: 15px; text-align: center;">';
+                    html += '<span style="font-weight: bold; color: #e67e22;">' + stat.chronoPoints + ' pts</span>';
+                    html += '<br><small style="color: #7f8c8d;">' + stat.chronoSeries + ' séries</small>';
+                    html += '</td>';
+                    html += '<td style="padding: 15px; text-align: center; background: #e8f4f8; font-size: 1.2em;">';
+                    html += '<strong style="color: #27ae60;">' + stat.totalPoints + '</strong>';
+                    html += '</td>';
+                } else {
+                    html += '<td style="padding: 15px; text-align: center; font-weight: bold; color: #2980b9;">' + formatDistance(stat.chronoDistance) + '</td>';
+                    html += '<td style="padding: 15px; text-align: center; font-family: monospace; color: #e67e22;">' + (stat.chronoTime ? formatTime(stat.chronoTime) : '-') + '</td>';
+                    html += '<td style="padding: 15px; text-align: center; background: #e8f4f8;"><strong style="color: #27ae60;">' + stat.chronoSeries + '</strong></td>';
                 }
-                html += '<td style="padding: 15px; text-align: center;">';
-                html += '<span style="font-weight: bold; color: #e67e22;">' + stat.chronoPoints + ' pts</span>';
-                html += '<br><small style="color: #7f8c8d;">' + stat.chronoSeries + ' séries</small>';
-                html += '</td>';
-                html += '<td style="padding: 15px; text-align: center; background: #e8f4f8; font-size: 1.2em;">';
-                html += '<strong style="color: #27ae60;">' + (mixed ? stat.totalPoints : stat.chronoPoints) + '</strong>';
-                html += '</td>';
                 html += '</tr>';
             });
 
