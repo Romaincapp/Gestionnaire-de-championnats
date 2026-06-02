@@ -1170,6 +1170,7 @@
         html += '<div style="padding: 12px 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #ecf0f1; background: #fbfbfd;">';
         html += '<button onclick="showNameHarmonizationModal()" style="padding: 8px 14px; font-size: 13px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔤 Harmoniser les noms</button>';
         html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #16a085; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
+        html += '<button onclick="printGeneralRanking()" style="padding: 8px 14px; font-size: 13px; background: #34495e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🖨️ Imprimer</button>';
         html += '<span style="font-size: 12px; color: #7f8c8d;">Harmoniser : fusionne les variantes d\'un nom. Normaliser : majuscule à chaque mot.</span>';
         html += '</div>';
 
@@ -1231,9 +1232,95 @@
         return html;
     }
 
+    // Impression du classement général, adaptée au mode courant
+    // (chrono : distance & temps, sans points ; multisport : points).
+    function printGeneralRanking() {
+        var ranking = calculateMultisportRanking();
+        var mixed = hasChampionshipDays() && hasChronoDays();
+
+        var sorted = Object.values(ranking).sort(function(a, b) {
+            if (mixed) return b.totalPoints - a.totalPoints;
+            if (b.chronoDistance !== a.chronoDistance) return b.chronoDistance - a.chronoDistance;
+            return a.chronoTime - b.chronoTime;
+        });
+
+        var title = mixed ? 'Classement Général Multisport' : 'Classement Général des Courses';
+        var champName = (global.championship && global.championship.name) ? global.championship.name : '';
+        var dateStr = new Date().toLocaleDateString('fr-FR');
+
+        var head, rows = '';
+        if (mixed) {
+            head = '<th>#</th><th style="text-align:left;">Joueur</th><th>Club</th><th>Championship</th><th>Chrono</th><th>Total</th>';
+            sorted.forEach(function(s, i) {
+                rows += '<tr><td>' + (i + 1) + '</td><td style="text-align:left;">' + s.player + '</td><td>' + (s.club || '-') + '</td>' +
+                    '<td>' + s.championshipPoints + ' pts</td><td>' + s.chronoPoints + ' pts</td><td><strong>' + s.totalPoints + '</strong></td></tr>';
+            });
+        } else {
+            head = '<th>#</th><th style="text-align:left;">Participant</th><th>Club</th><th>Distance</th><th>Temps total</th><th>Séries</th>';
+            sorted.forEach(function(s, i) {
+                rows += '<tr><td>' + (i + 1) + '</td><td style="text-align:left;">' + s.player + '</td><td>' + (s.club || '-') + '</td>' +
+                    '<td>' + formatDistance(s.chronoDistance) + '</td><td>' + (s.chronoTime ? formatDurationHMS(s.chronoTime) : '-') + '</td><td>' + s.chronoSeries + '</td></tr>';
+            });
+        }
+
+        var doc = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>' + title + '</title>' +
+            '<style>' +
+            'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:24px;}' +
+            'h1{font-size:20px;margin:0 0 4px;}' +
+            '.sub{color:#666;font-size:13px;margin-bottom:16px;}' +
+            'table{width:100%;border-collapse:collapse;font-size:13px;}' +
+            'th,td{border:1px solid #ccc;padding:7px 9px;text-align:center;}' +
+            'thead th{background:#34495e;color:#fff;}' +
+            'tbody tr:nth-child(even){background:#f4f6fb;}' +
+            '@media print{body{margin:0;} button{display:none;}}' +
+            '</style></head><body>' +
+            '<h1>🏆 ' + title + '</h1>' +
+            '<div class="sub">' + (champName ? champName + ' — ' : '') + 'Édité le ' + dateStr + '</div>' +
+            '<table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>' +
+            '<script>window.onload=function(){window.print();};<\/script>' +
+            '</body></html>';
+
+        var w = window.open('', '_blank');
+        if (!w) { showNotification('Autorise les fenêtres pop-up pour imprimer', 'warning'); return; }
+        w.document.open();
+        w.document.write(doc);
+        w.document.close();
+    }
+    global.printGeneralRanking = printGeneralRanking;
+
     // ============================================
     // DÉTAIL D'UN PARTICIPANT (épreuves / séries / journées)
     // ============================================
+
+    // Classement d'une série : distance parcourue (desc) puis temps (asc),
+    // cohérent avec le classement général. Renvoie la liste ordonnée des coureurs.
+    function getSerieRanking(serie) {
+        var byName = {};
+        (serie.participants || []).forEach(function(p) {
+            if (!p || !p.name) return;
+            byName[p.name] = {
+                name: p.name,
+                distance: p.totalDistance || 0,
+                time: (p.totalTime > 0 ? p.totalTime : (p.finishTime || 0)),
+                ran: (p.totalTime > 0 || p.totalDistance > 0 || p.finishTime != null)
+            };
+        });
+        (serie.results || []).forEach(function(r) {
+            if (!r || !r.name) return;
+            if (!byName[r.name]) {
+                byName[r.name] = { name: r.name, distance: serie.distance || 0, time: r.time || 0, ran: true };
+            } else {
+                byName[r.name].ran = true;
+                if (!byName[r.name].time) byName[r.name].time = r.time || 0;
+            }
+        });
+        var arr = Object.keys(byName).map(function(k) { return byName[k]; }).filter(function(x) { return x.ran; });
+        arr.sort(function(a, b) {
+            if (b.distance !== a.distance) return b.distance - a.distance;
+            return a.time - b.time;
+        });
+        return arr;
+    }
 
     // Rassemble toutes les participations chrono d'un joueur, journée par journée.
     function collectPlayerChronoDetail(playerName) {
@@ -1262,12 +1349,13 @@
                 var serie = e.serie;
                 if (!serie.results || serie.results.length === 0) return;
 
-                var sorted = serie.results.slice().sort(function(a, b) { return a.time - b.time; });
+                // Classement de la série (distance desc, temps asc) pour la position
+                var serieRanking = getSerieRanking(serie);
                 var position = null;
-                var resultEntry = null;
-                sorted.forEach(function(r, i) {
-                    if ((r.name || '').toLowerCase() === lower) { position = i + 1; resultEntry = r; }
+                serieRanking.forEach(function(x, i) {
+                    if ((x.name || '').toLowerCase() === lower) position = i + 1;
                 });
+                var resultEntry = serie.results.find(function(r) { return (r.name || '').toLowerCase() === lower; });
                 var p = (serie.participants || []).find(function(x) { return x && (x.name || '').toLowerCase() === lower; });
                 if (position === null && !p) return;
 
@@ -1279,7 +1367,7 @@
                     eventName: e.eventName,
                     serieName: serie.name,
                     position: position,
-                    total: sorted.length,
+                    total: serieRanking.length,
                     distance: distance,
                     time: time,
                     laps: laps,
