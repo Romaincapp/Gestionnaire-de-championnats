@@ -445,14 +445,18 @@
 
             html += '<div style="max-height: 200px; overflow-y: auto;">';
             participants.forEach(function(p) {
-                html += '<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; background: #f8f9fa; border-radius: 6px;">';
+                html += '<div id="participant-row-' + dayNumber + '-' + p.id + '" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; background: #f8f9fa; border-radius: 6px;">';
                 html += '<label style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; font-size: 12px; color: #2c3e50;">';
                 html += '<input type="checkbox" class="participant-check-' + dayNumber + '" value="' + p.id + '">';
+                html += '<span style="font-weight: bold; color: #e67e22; min-width: 26px;">#' + (p.bib != null ? p.bib : '-') + '</span>';
                 html += '<span>' + p.name + '</span>';
                 if (p.club) {
                     html += '<span style="font-size: 10px; background: #16a085; color: white; padding: 2px 6px; border-radius: 3px;">' + p.club + '</span>';
                 }
                 html += '</label>';
+
+                html += '<div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">';
+                html += '<button onclick="editParticipantInfo(' + dayNumber + ', ' + p.id + ')" style="padding: 3px 7px; font-size: 11px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Éditer nom / dossard">✏️</button>';
 
                 if (series.length > 0) {
                     html += '<button onclick="showAddToSerieModal(' + dayNumber + ', ' + p.id + ')" ' +
@@ -460,8 +464,9 @@
                 } else {
                     html += '<span style="font-size: 10px; color: #95a5a6; flex-shrink: 0;">Créez une série</span>';
                 }
+                html += '</div>'; // fin actions
 
-                html += '</div>';
+                html += '</div>'; // fin ligne participant
             });
             html += '</div>';
         }
@@ -587,6 +592,81 @@
         checks.forEach(function(ch) { ch.checked = checked; });
     }
     global.toggleAllParticipants = toggleAllParticipants;
+
+    /**
+     * Passe une ligne participant en édition inline du nom et du dossard.
+     */
+    function editParticipantInfo(dayNumber, participantId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var p = chronoData.participants.find(function(x) { return x.id === participantId; });
+        if (!p) return;
+        var row = document.getElementById('participant-row-' + dayNumber + '-' + participantId);
+        if (!row) return;
+
+        var safeName = (p.name || '').replace(/"/g, '&quot;');
+        row.innerHTML =
+            '<div style="display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap;">' +
+            '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width: 55px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px; text-align: center;">' +
+            '<input type="text" id="edit-pname-' + dayNumber + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="flex: 1; min-width: 120px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
+            '</div>' +
+            '<div style="display: flex; gap: 4px; flex-shrink: 0;">' +
+            '<button onclick="saveParticipantInfo(' + dayNumber + ', ' + participantId + ')" style="padding: 4px 8px; font-size: 11px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Enregistrer">💾</button>' +
+            '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="padding: 4px 8px; font-size: 11px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Annuler">✖️</button>' +
+            '</div>';
+
+        var nameInput = document.getElementById('edit-pname-' + dayNumber + '-' + participantId);
+        if (nameInput) { nameInput.focus(); nameInput.select(); }
+    }
+    global.editParticipantInfo = editParticipantInfo;
+
+    /**
+     * Enregistre le nom / dossard édités et propage le changement aux séries.
+     */
+    function saveParticipantInfo(dayNumber, participantId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var p = chronoData.participants.find(function(x) { return x.id === participantId; });
+        if (!p) return;
+
+        var nameEl = document.getElementById('edit-pname-' + dayNumber + '-' + participantId);
+        var bibEl = document.getElementById('edit-pbib-' + dayNumber + '-' + participantId);
+        if (!nameEl) return;
+
+        var newName = nameEl.value.trim();
+        if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
+
+        // Doublon de nom avec un autre participant
+        var dup = chronoData.participants.some(function(x) {
+            return x.id !== participantId && (x.name || '').toLowerCase() === newName.toLowerCase();
+        });
+        if (dup) { showNotification('Un participant porte déjà ce nom', 'warning'); return; }
+
+        var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
+        var oldName = p.name;
+
+        p.name = newName;
+        p.bib = newBib;
+
+        // Propager dans les séries et résultats : match par id ou ancien nom
+        function applyTo(list) {
+            (list || []).forEach(function(sp) {
+                if (sp.id === participantId || (oldName && (sp.name || '').toLowerCase() === oldName.toLowerCase())) {
+                    sp.name = newName;
+                    sp.bib = newBib;
+                }
+            });
+        }
+        (chronoData.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
+        (chronoData.events || []).forEach(function(ev) {
+            (ev.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
+        });
+
+        saveToLocalStorage();
+        refreshChronoDisplay(dayNumber);
+        showNotification('Participant mis à jour : ' + newName, 'success');
+    }
+    global.saveParticipantInfo = saveParticipantInfo;
 
     /**
      * Affiche une modal pour ajouter plusieurs participants (bulk)
