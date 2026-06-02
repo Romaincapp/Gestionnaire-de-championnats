@@ -671,6 +671,16 @@
         (chronoData.events || []).forEach(function(ev) {
             (ev.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
         });
+
+        // Garder synchronisée la copie "course" de l'ancien système (raceData) si une
+        // course est en cours / déjà lancée.
+        if (window.raceData) {
+            if (window.raceData.currentSerie) applyTo(window.raceData.currentSerie.participants);
+            (window.raceData.series || []).forEach(function(s) { applyTo(s.participants); });
+            (window.raceData.events || []).forEach(function(ev) {
+                (ev.series || []).forEach(function(s) { applyTo(s.participants); });
+            });
+        }
     }
 
     /**
