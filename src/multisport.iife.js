@@ -99,6 +99,16 @@
     }
     global.hasChronoDays = hasChronoDays;
 
+    // Vrai s'il existe au moins une journée en mode Championnat (matchs)
+    function hasChampionshipDays() {
+        return Object.keys(global.championship.days).some(function(dayNumber) {
+            var dayData = global.championship.days[dayNumber];
+            // Une journée sans dayType est considérée Championship par défaut
+            return dayData && (!dayData.dayType || dayData.dayType === DAY_TYPES.CHAMPIONSHIP);
+        });
+    }
+    global.hasChampionshipDays = hasChampionshipDays;
+
     function updateMultisportTabVisibility() {
         var multisportTab = document.getElementById('multisportTab');
         if (!multisportTab) return;
@@ -921,16 +931,30 @@
     function getChronoResultsForDay(dayNumber) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return {};
-        
+
         var results = {};
-        
-        chronoData.series.forEach(function(serie) {
+
+        // Rassembler les séries des deux formats (liste plate + imbriquées dans les
+        // événements), sans doublon.
+        var allSeries = [];
+        var seen = [];
+        function pushSerie(s) {
+            if (!s || seen.indexOf(s) !== -1) return;
+            seen.push(s);
+            allSeries.push(s);
+        }
+        (chronoData.series || []).forEach(pushSerie);
+        (chronoData.events || []).forEach(function(ev) {
+            (ev.series || []).forEach(pushSerie);
+        });
+
+        allSeries.forEach(function(serie) {
             if (serie.results && serie.results.length > 0) {
                 // Trier par temps
                 var sorted = serie.results.slice().sort(function(a, b) {
                     return a.time - b.time;
                 });
-                
+
                 sorted.forEach(function(result, index) {
                     var playerName = result.name;
                     if (!results[playerName]) {
@@ -941,7 +965,7 @@
                             bestTime: null
                         };
                     }
-                    
+
                     var points = calculateChronoPoints(index + 1, sorted.length);
                     results[playerName].series.push({
                         serieName: serie.name,
@@ -950,14 +974,14 @@
                         points: points
                     });
                     results[playerName].totalPoints += points;
-                    
+
                     if (!results[playerName].bestTime || result.time < results[playerName].bestTime) {
                         results[playerName].bestTime = result.time;
                     }
                 });
             }
         });
-        
+
         return results;
     }
 
@@ -1059,13 +1083,22 @@
         var sorted = Object.values(ranking).sort(function(a, b) {
             return b.totalPoints - a.totalPoints;
         });
-        
+
+        // Mode d'affichage : chrono seul OU mixte (championnat + courses)
+        var mixed = hasChampionshipDays() && hasChronoDays();
+
         var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
         html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px;">';
-        html += '<h2 style="margin: 0; text-align: center;">🏆 Classement Général Multisport</h2>';
-        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">Championship + Courses</p>';
+        html += '<h2 style="margin: 0; text-align: center;">🏆 ' + (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses') + '</h2>';
+        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">' + (mixed ? 'Championship + Courses' : 'Courses (chrono)') + '</p>';
         html += '</div>';
-        
+
+        // Barre d'outils : harmonisation des noms
+        html += '<div style="padding: 12px 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #ecf0f1; background: #fbfbfd;">';
+        html += '<button onclick="showNameHarmonizationModal()" style="padding: 8px 14px; font-size: 13px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔤 Harmoniser les noms</button>';
+        html += '<span style="font-size: 12px; color: #7f8c8d;">Fusionne les variantes d\'un même nom pour regrouper correctement les joueurs.</span>';
+        html += '</div>';
+
         if (sorted.length === 0) {
             html += '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Aucune donnée disponible</p>';
         } else {
@@ -1074,40 +1107,279 @@
             html += '<th style="padding: 15px; text-align: center;">#</th>';
             html += '<th style="padding: 15px; text-align: left;">Joueur</th>';
             html += '<th style="padding: 15px; text-align: center;">Club</th>';
-            html += '<th style="padding: 15px; text-align: center;">🎾 Championship</th>';
+            if (mixed) {
+                html += '<th style="padding: 15px; text-align: center;">🎾 Championship</th>';
+            }
             html += '<th style="padding: 15px; text-align: center;">⏱️ Chrono</th>';
             html += '<th style="padding: 15px; text-align: center; background: #e8f4f8;">Total</th>';
             html += '</tr></thead><tbody>';
-            
+
             sorted.forEach(function(stat, index) {
                 var rankClass = index < 3 ? 'rank-' + (index + 1) : '';
                 var rowStyle = index % 2 === 0 ? 'background: white;' : 'background: #f8f9fa;';
                 var clubBadge = stat.club ? '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px;">' + stat.club + '</span>' : '-';
-                
+
                 html += '<tr class="' + rankClass + '" style="' + rowStyle + ' border-bottom: 1px solid #ecf0f1;">';
                 html += '<td style="padding: 15px; text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
                 html += '<td style="padding: 15px; font-weight: bold; color: #2c3e50;">' + stat.player + '</td>';
                 html += '<td style="padding: 15px; text-align: center;">' + clubBadge + '</td>';
-                html += '<td style="padding: 15px; text-align: center;">';
-                html += '<span style="font-weight: bold; color: #3498db;">' + stat.championshipPoints + ' pts</span>';
-                html += '<br><small style="color: #7f8c8d;">' + stat.championshipWins + 'V / ' + stat.championshipMatches + 'J</small>';
-                html += '</td>';
+                if (mixed) {
+                    html += '<td style="padding: 15px; text-align: center;">';
+                    html += '<span style="font-weight: bold; color: #3498db;">' + stat.championshipPoints + ' pts</span>';
+                    html += '<br><small style="color: #7f8c8d;">' + stat.championshipWins + 'V / ' + stat.championshipMatches + 'J</small>';
+                    html += '</td>';
+                }
                 html += '<td style="padding: 15px; text-align: center;">';
                 html += '<span style="font-weight: bold; color: #e67e22;">' + stat.chronoPoints + ' pts</span>';
                 html += '<br><small style="color: #7f8c8d;">' + stat.chronoSeries + ' séries</small>';
                 html += '</td>';
                 html += '<td style="padding: 15px; text-align: center; background: #e8f4f8; font-size: 1.2em;">';
-                html += '<strong style="color: #27ae60;">' + stat.totalPoints + '</strong>';
+                html += '<strong style="color: #27ae60;">' + (mixed ? stat.totalPoints : stat.chronoPoints) + '</strong>';
                 html += '</td>';
                 html += '</tr>';
             });
-            
+
             html += '</tbody></table>';
         }
-        
+
         html += '</div>';
         return html;
     }
+
+    // ============================================
+    // HARMONISATION DES NOMS
+    // ============================================
+
+    function deburr(str) {
+        str = String(str || '');
+        return str.normalize ? str.normalize('NFD').replace(/[̀-ͯ]/g, '') : str;
+    }
+
+    // Clé normalisée : sans accents, minuscules, ponctuation retirée, mots triés
+    // (pour matcher "Jean Dupont" et "Dupont Jean").
+    function normalizeNameKey(name) {
+        var s = deburr(name).toLowerCase();
+        s = s.replace(/[.,'’\-_]/g, ' ').replace(/\s+/g, ' ').trim();
+        var tokens = s.split(' ').filter(Boolean).sort();
+        return tokens.join(' ');
+    }
+
+    function levenshtein(a, b) {
+        a = a || ''; b = b || '';
+        var m = a.length, n = b.length;
+        if (!m) return n;
+        if (!n) return m;
+        var prev = [], cur = [], i, j;
+        for (j = 0; j <= n; j++) prev[j] = j;
+        for (i = 1; i <= m; i++) {
+            cur[0] = i;
+            for (j = 1; j <= n; j++) {
+                var cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+                cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+            }
+            for (j = 0; j <= n; j++) prev[j] = cur[j];
+        }
+        return prev[n];
+    }
+
+    function getNameOf(pl) {
+        if (global.clubsModule && global.clubsModule.getPlayerName) return global.clubsModule.getPlayerName(pl);
+        return typeof pl === 'string' ? pl : (pl && pl.name) || '';
+    }
+
+    // Recense tous les noms (Courses + Championnat) avec leur fréquence
+    function collectAllNames() {
+        var counts = {};
+        function add(name) {
+            if (!name) return;
+            name = String(name).trim();
+            if (!name) return;
+            counts[name] = (counts[name] || 0) + 1;
+        }
+        Object.keys(global.championship.days).forEach(function(dayNumber) {
+            var dayData = global.championship.days[dayNumber];
+            if (!dayData) return;
+            if (dayData.chronoData) {
+                (dayData.chronoData.participants || []).forEach(function(p) { add(p.name); });
+                var scan = function(list) {
+                    (list || []).forEach(function(s) {
+                        (s.participants || []).forEach(function(p) { add(p.name); });
+                        (s.results || []).forEach(function(r) { add(r.name); });
+                    });
+                };
+                scan(dayData.chronoData.series);
+                (dayData.chronoData.events || []).forEach(function(ev) { scan(ev.series); });
+            }
+            if (dayData.players) {
+                Object.keys(dayData.players).forEach(function(div) {
+                    (dayData.players[div] || []).forEach(function(pl) { add(getNameOf(pl)); });
+                });
+            }
+        });
+        return Object.keys(counts).map(function(n) { return { name: n, count: counts[n] }; });
+    }
+
+    // Regroupe les noms similaires (clé normalisée identique ou distance d'édition faible)
+    function groupSimilarNames(names) {
+        var groups = [];
+        names.forEach(function(item) {
+            var norm = normalizeNameKey(item.name);
+            var best = null;
+            for (var i = 0; i < groups.length; i++) {
+                var g = groups[i];
+                if (g.norm === norm) { best = g; break; }
+                var d = levenshtein(g.norm, norm);
+                var tol = Math.max(1, Math.floor(Math.min(g.norm.length, norm.length) / 6));
+                if (d <= tol) { best = g; break; }
+            }
+            if (best) best.members.push(item);
+            else groups.push({ norm: norm, members: [item] });
+        });
+        return groups.filter(function(g) {
+            var distinct = {};
+            g.members.forEach(function(m) { distinct[m.name] = true; });
+            return Object.keys(distinct).length > 1;
+        });
+    }
+
+    function showNameHarmonizationModal() {
+        if (document.getElementById('nameHarmonizationModal')) return;
+        var groups = groupSimilarNames(collectAllNames());
+
+        var body;
+        if (groups.length === 0) {
+            body = '<p style="color:#7f8c8d; text-align:center; padding:20px;">✅ Aucune similitude détectée. Les noms semblent déjà harmonisés.</p>';
+        } else {
+            body = '<p style="color:#7f8c8d; font-size:13px;">' + groups.length + ' groupe(s) de noms similaires détecté(s). Choisis le nom final, décoche ce que tu veux ignorer, puis applique.</p>';
+            groups.forEach(function(g, gi) {
+                var distinct = {};
+                g.members.forEach(function(m) { distinct[m.name] = (distinct[m.name] || 0) + m.count; });
+                var suggestion = Object.keys(distinct).sort(function(a, b) { return distinct[b] - distinct[a]; })[0];
+
+                body += '<div style="border:1px solid #e0e0e0; border-radius:8px; padding:12px; margin:10px 0; background:#fbfbfd;">';
+                body += '<label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:600; color:#2c3e50;">' +
+                    '<input type="checkbox" class="harmo-group-check" data-group="' + gi + '" checked> Fusionner ce groupe</label>';
+                body += '<div style="font-size:12px; color:#7f8c8d; margin-bottom:8px;">Variantes : ' +
+                    Object.keys(distinct).map(function(n) { return n + ' (' + distinct[n] + ')'; }).join(' · ') + '</div>';
+                body += '<label style="font-size:12px; color:#34495e;">Nom final :</label>';
+                body += '<input type="text" class="harmo-canonical" data-group="' + gi + '" value="' + suggestion.replace(/"/g, '&quot;') + '" style="width:100%; padding:8px; border:1px solid #8e44ad; border-radius:5px; margin-top:4px; box-sizing:border-box;">';
+                body += '<input type="hidden" class="harmo-variants" data-group="' + gi + '" value="' + Object.keys(distinct).join('||').replace(/"/g, '&quot;') + '">';
+                body += '</div>';
+            });
+        }
+
+        var modal = document.createElement('div');
+        modal.id = 'nameHarmonizationModal';
+        modal.innerHTML =
+            '<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;" onclick="if(event.target===this)closeNameHarmonizationModal()">' +
+            '<div style="background:white; padding:25px; border-radius:10px; max-width:600px; width:92%; max-height:85vh; overflow-y:auto;">' +
+            '<h3 style="margin-top:0;">🔤 Harmoniser les noms</h3>' +
+            body +
+            '<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:18px;">' +
+            '<button onclick="closeNameHarmonizationModal()" class="btn btn-secondary">Fermer</button>' +
+            (groups.length ? '<button onclick="applyNameHarmonization()" class="btn btn-primary" style="background:#8e44ad;">Appliquer</button>' : '') +
+            '</div></div></div>';
+        document.body.appendChild(modal);
+    }
+    global.showNameHarmonizationModal = showNameHarmonizationModal;
+
+    function closeNameHarmonizationModal() {
+        var m = document.getElementById('nameHarmonizationModal');
+        if (m) m.remove();
+    }
+    global.closeNameHarmonizationModal = closeNameHarmonizationModal;
+
+    function applyNameHarmonization() {
+        var checks = document.querySelectorAll('.harmo-group-check');
+        var renamed = 0;
+        checks.forEach(function(ch) {
+            if (!ch.checked) return;
+            var gi = ch.getAttribute('data-group');
+            var canonicalEl = document.querySelector('.harmo-canonical[data-group="' + gi + '"]');
+            var variantsEl = document.querySelector('.harmo-variants[data-group="' + gi + '"]');
+            if (!canonicalEl || !variantsEl) return;
+            var canonical = canonicalEl.value.trim();
+            if (!canonical) return;
+            variantsEl.value.split('||').forEach(function(v) {
+                if (v && v !== canonical) renamed += renameNameEverywhere(v, canonical);
+            });
+        });
+        saveToLocalStorage();
+        closeNameHarmonizationModal();
+        if (typeof global.updateMultisportRanking === 'function') global.updateMultisportRanking();
+        showNotification(renamed + ' renommage(s) appliqué(s)', 'success');
+    }
+    global.applyNameHarmonization = applyNameHarmonization;
+
+    // Renomme un nom partout : Courses (participants/séries/résultats) + Championnat
+    // (joueurs, matchs, poules).
+    function renameNameEverywhere(oldName, newName) {
+        if (!oldName || !newName || oldName === newName) return 0;
+        var lower = oldName.toLowerCase();
+        var changed = 0;
+
+        Object.keys(global.championship.days).forEach(function(dayNumber) {
+            var dayData = global.championship.days[dayNumber];
+            if (!dayData) return;
+
+            if (dayData.chronoData) {
+                applyParticipantRename(dayData.chronoData, null, oldName, newName, null);
+            }
+
+            if (dayData.players) {
+                Object.keys(dayData.players).forEach(function(div) {
+                    var arr = dayData.players[div];
+                    if (!Array.isArray(arr)) return;
+                    arr.forEach(function(pl, idx) {
+                        if ((getNameOf(pl) || '').toLowerCase() === lower) {
+                            if (typeof pl === 'string') arr[idx] = newName;
+                            else pl.name = newName;
+                            changed++;
+                        }
+                    });
+                });
+            }
+
+            if (dayData.matches) {
+                Object.keys(dayData.matches).forEach(function(div) {
+                    var arr = dayData.matches[div];
+                    if (!Array.isArray(arr)) return;
+                    arr.forEach(function(m) {
+                        if (m.player1 && m.player1.toLowerCase() === lower) { m.player1 = newName; changed++; }
+                        if (m.player2 && m.player2.toLowerCase() === lower) { m.player2 = newName; changed++; }
+                        if (m.winner && m.winner.toLowerCase() === lower) m.winner = newName;
+                    });
+                });
+            }
+
+            if (dayData.pools) {
+                Object.keys(dayData.pools).forEach(function(div) {
+                    var pools = dayData.pools[div];
+                    if (!Array.isArray(pools)) return;
+                    pools.forEach(function(pool) {
+                        if (pool && Array.isArray(pool.players)) {
+                            pool.players.forEach(function(pl, idx) {
+                                if ((getNameOf(pl) || '').toLowerCase() === lower) {
+                                    if (typeof pl === 'string') pool.players[idx] = newName;
+                                    else pl.name = newName;
+                                }
+                            });
+                        }
+                        if (pool && Array.isArray(pool.matches)) {
+                            pool.matches.forEach(function(m) {
+                                if (m.player1 && m.player1.toLowerCase() === lower) m.player1 = newName;
+                                if (m.player2 && m.player2.toLowerCase() === lower) m.player2 = newName;
+                                if (m.winner && m.winner.toLowerCase() === lower) m.winner = newName;
+                            });
+                        }
+                    });
+                });
+            }
+        });
+
+        return changed;
+    }
+    global.renameNameEverywhere = renameNameEverywhere;
 
     // ============================================
     // MODALES POUR GESTION CHRONO PAR JOURNÉE
