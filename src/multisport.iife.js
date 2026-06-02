@@ -1131,6 +1131,20 @@
         return Math.round(meters) + ' m';
     }
 
+    // Formate une durée (ms) de façon lisible : "1h23m45s", "23m45s" ou "45s"
+    function formatDurationHMS(ms) {
+        ms = ms || 0;
+        var totalSec = Math.round(ms / 1000);
+        var h = Math.floor(totalSec / 3600);
+        var m = Math.floor((totalSec % 3600) / 60);
+        var s = totalSec % 60;
+        var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+        if (h > 0) return h + 'h' + pad(m) + 'm' + pad(s) + 's';
+        if (m > 0) return m + 'm' + pad(s) + 's';
+        return s + 's';
+    }
+    global.formatDurationHMS = formatDurationHMS;
+
     function renderMultisportRanking() {
         var ranking = calculateMultisportRanking();
 
@@ -1184,7 +1198,10 @@
 
                 html += '<tr class="' + rankClass + '" style="' + rowStyle + ' border-bottom: 1px solid #ecf0f1;">';
                 html += '<td style="padding: 15px; text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
-                html += '<td style="padding: 15px; font-weight: bold; color: #2c3e50;">' + stat.player + '</td>';
+                html += '<td style="padding: 15px; font-weight: bold; color: #2c3e50;">' +
+                    '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(stat.player) + '\')" ' +
+                    'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
+                    'title="Voir le détail des épreuves">' + stat.player + ' 🔍</span></td>';
                 html += '<td style="padding: 15px; text-align: center;">' + clubBadge + '</td>';
                 if (mixed) {
                     html += '<td style="padding: 15px; text-align: center;">';
@@ -1200,7 +1217,7 @@
                     html += '</td>';
                 } else {
                     html += '<td style="padding: 15px; text-align: center; font-weight: bold; color: #2980b9;">' + formatDistance(stat.chronoDistance) + '</td>';
-                    html += '<td style="padding: 15px; text-align: center; font-family: monospace; color: #e67e22;">' + (stat.chronoTime ? formatTime(stat.chronoTime) : '-') + '</td>';
+                    html += '<td style="padding: 15px; text-align: center; font-family: monospace; color: #e67e22;">' + (stat.chronoTime ? formatDurationHMS(stat.chronoTime) : '-') + '</td>';
                     html += '<td style="padding: 15px; text-align: center; background: #e8f4f8;"><strong style="color: #27ae60;">' + stat.chronoSeries + '</strong></td>';
                 }
                 html += '</tr>';
@@ -1212,6 +1229,143 @@
         html += '</div>';
         return html;
     }
+
+    // ============================================
+    // DÉTAIL D'UN PARTICIPANT (épreuves / séries / journées)
+    // ============================================
+
+    // Rassemble toutes les participations chrono d'un joueur, journée par journée.
+    function collectPlayerChronoDetail(playerName) {
+        var lower = (playerName || '').toLowerCase();
+        var days = [];
+
+        Object.keys(global.championship.days).sort(function(a, b) { return a - b; }).forEach(function(dayNumber) {
+            var dayData = global.championship.days[dayNumber];
+            if (!dayData || !dayData.chronoData) return;
+            var cd = dayData.chronoData;
+
+            // Séries avec contexte d'événement, sans doublon (objet identique).
+            var seen = [];
+            var entries = [];
+            (cd.events || []).forEach(function(ev) {
+                (ev.series || []).forEach(function(s) {
+                    if (s && seen.indexOf(s) === -1) { seen.push(s); entries.push({ serie: s, eventName: ev.name }); }
+                });
+            });
+            (cd.series || []).forEach(function(s) {
+                if (s && seen.indexOf(s) === -1) { seen.push(s); entries.push({ serie: s, eventName: null }); }
+            });
+
+            var rows = [];
+            entries.forEach(function(e) {
+                var serie = e.serie;
+                if (!serie.results || serie.results.length === 0) return;
+
+                var sorted = serie.results.slice().sort(function(a, b) { return a.time - b.time; });
+                var position = null;
+                var resultEntry = null;
+                sorted.forEach(function(r, i) {
+                    if ((r.name || '').toLowerCase() === lower) { position = i + 1; resultEntry = r; }
+                });
+                var p = (serie.participants || []).find(function(x) { return x && (x.name || '').toLowerCase() === lower; });
+                if (position === null && !p) return;
+
+                var distance = (p && p.totalDistance > 0) ? p.totalDistance : (serie.distance || 0);
+                var time = (p && p.totalTime > 0) ? p.totalTime : ((p && p.finishTime) || (resultEntry && resultEntry.time) || 0);
+                var laps = (p && p.laps && p.laps.length) ? p.laps.length : null;
+
+                rows.push({
+                    eventName: e.eventName,
+                    serieName: serie.name,
+                    position: position,
+                    total: sorted.length,
+                    distance: distance,
+                    time: time,
+                    laps: laps,
+                    points: position ? calculateChronoPoints(position, sorted.length) : 0
+                });
+            });
+
+            if (rows.length) days.push({ day: dayNumber, rows: rows });
+        });
+
+        return days;
+    }
+
+    function showPlayerChronoDetail(encodedName) {
+        var playerName = decodeURIComponent(encodedName);
+        var existing = document.getElementById('playerChronoDetailModal');
+        if (existing) existing.remove();
+
+        var days = collectPlayerChronoDetail(playerName);
+
+        var grandDistance = 0, grandTime = 0, grandSeries = 0, grandPoints = 0;
+        var body = '';
+
+        if (days.length === 0) {
+            body = '<p style="color:#7f8c8d; text-align:center; padding:20px;">Aucune épreuve trouvée pour ce participant.</p>';
+        } else {
+            days.forEach(function(d) {
+                var dayDistance = 0, dayTime = 0;
+                body += '<div style="margin:14px 0 6px; font-weight:700; color:#2c3e50; border-bottom:2px solid #667eea; padding-bottom:4px;">📅 Journée ' + d.day + '</div>';
+                body += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
+                body += '<thead><tr style="background:#f4f6fb; color:#34495e;">' +
+                    '<th style="padding:6px 8px; text-align:left;">Épreuve</th>' +
+                    '<th style="padding:6px 8px; text-align:left;">Série</th>' +
+                    '<th style="padding:6px 8px; text-align:center;">Pos.</th>' +
+                    '<th style="padding:6px 8px; text-align:center;">Tours</th>' +
+                    '<th style="padding:6px 8px; text-align:center;">Distance</th>' +
+                    '<th style="padding:6px 8px; text-align:center;">Temps</th>' +
+                    '</tr></thead><tbody>';
+                d.rows.forEach(function(r) {
+                    dayDistance += r.distance; dayTime += r.time;
+                    grandDistance += r.distance; grandTime += r.time; grandSeries++; grandPoints += r.points;
+                    var posTxt = r.position ? (r.position + ' / ' + r.total) : '-';
+                    body += '<tr style="border-bottom:1px solid #ecf0f1;">' +
+                        '<td style="padding:6px 8px;">' + (r.eventName || '<span style="color:#bbb;">—</span>') + '</td>' +
+                        '<td style="padding:6px 8px;">' + (r.serieName || '') + '</td>' +
+                        '<td style="padding:6px 8px; text-align:center; font-weight:600;">' + posTxt + '</td>' +
+                        '<td style="padding:6px 8px; text-align:center;">' + (r.laps != null ? r.laps : '-') + '</td>' +
+                        '<td style="padding:6px 8px; text-align:center; color:#2980b9;">' + formatDistance(r.distance) + '</td>' +
+                        '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#e67e22;">' + (r.time ? formatDurationHMS(r.time) : '-') + '</td>' +
+                        '</tr>';
+                });
+                body += '<tr style="background:#fbfbfd; font-weight:700;">' +
+                    '<td colspan="4" style="padding:6px 8px; text-align:right;">Sous-total journée :</td>' +
+                    '<td style="padding:6px 8px; text-align:center; color:#2980b9;">' + formatDistance(dayDistance) + '</td>' +
+                    '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#e67e22;">' + formatDurationHMS(dayTime) + '</td>' +
+                    '</tr>';
+                body += '</tbody></table>';
+            });
+
+            body += '<div style="margin-top:16px; padding:12px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:8px; display:flex; justify-content:space-around; flex-wrap:wrap; gap:8px; text-align:center;">' +
+                '<div><div style="font-size:11px; opacity:.85;">Séries</div><div style="font-size:18px; font-weight:700;">' + grandSeries + '</div></div>' +
+                '<div><div style="font-size:11px; opacity:.85;">Distance totale</div><div style="font-size:18px; font-weight:700;">' + formatDistance(grandDistance) + '</div></div>' +
+                '<div><div style="font-size:11px; opacity:.85;">Temps total</div><div style="font-size:18px; font-weight:700;">' + formatDurationHMS(grandTime) + '</div></div>' +
+                '<div><div style="font-size:11px; opacity:.85;">Points (multisport)</div><div style="font-size:18px; font-weight:700;">' + grandPoints + '</div></div>' +
+                '</div>';
+        }
+
+        var modal = document.createElement('div');
+        modal.id = 'playerChronoDetailModal';
+        modal.innerHTML =
+            '<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;" onclick="if(event.target===this)closePlayerChronoDetail()">' +
+            '<div style="background:white; padding:25px; border-radius:10px; max-width:720px; width:94%; max-height:88vh; overflow-y:auto;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+            '<h3 style="margin:0;">🔍 ' + playerName + '</h3>' +
+            '<button onclick="closePlayerChronoDetail()" style="border:none; background:#ecf0f1; border-radius:6px; padding:6px 12px; cursor:pointer;">✕</button>' +
+            '</div>' +
+            body +
+            '</div></div>';
+        document.body.appendChild(modal);
+    }
+    global.showPlayerChronoDetail = showPlayerChronoDetail;
+
+    function closePlayerChronoDetail() {
+        var m = document.getElementById('playerChronoDetailModal');
+        if (m) m.remove();
+    }
+    global.closePlayerChronoDetail = closePlayerChronoDetail;
 
     // ============================================
     // HARMONISATION DES NOMS
