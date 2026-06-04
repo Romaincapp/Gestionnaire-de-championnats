@@ -2207,15 +2207,15 @@ function generatePoolMatchHTML(match, dayNumber) {
                     <input type="number"
                            value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
                            placeholder="0"
-                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score1', this.value)"
-                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
+                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score1', this.value, ${match.division})"
+                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}', ${match.division})"
                            style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
                     <span style="font-weight: bold; color: #7f8c8d; font-size: 14px;">-</span>
                     <input type="number"
                            value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
                            placeholder="0"
-                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value)"
-                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}')"
+                           onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value, ${match.division})"
+                           onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}', ${match.division})"
                            style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
                 </div>
                 ${window.showForfaitButtons ? 
@@ -2274,42 +2274,53 @@ function generatePoolMatchHTML(match, dayNumber) {
 // GESTION DES SCORES DE POULES
 // ======================================
 
-function updatePoolMatchScore(dayNumber, matchId, scoreField, value) {
-    const dayData = championship.days[dayNumber];
+// Helper: retrouver un match de poule en ciblant sa division.
+// Les IDs de match ne sont PAS uniques entre divisions (ils repartent de 0
+// dans chaque division), il faut donc impérativement cibler la bonne division.
+function findPoolMatch(dayData, matchId, division) {
     const numDivisions = championship.config.numDivisions || 3;
 
-    for (let division = 1; division <= numDivisions; division++) {
+    // Si la division est connue, chercher uniquement dans celle-ci
+    if (division !== undefined && division !== null && dayData.pools.divisions[division]) {
         const match = dayData.pools.divisions[division].matches.find(m => m.id == matchId);
-        if (match) {
-            match[scoreField] = value;
-            // Annuler le forfait si les scores sont modifiés manuellement
-            if (match.forfaitBy) {
-                delete match.forfaitBy;
-            }
-            // NE PAS régénérer le DOM ici pour permettre la navigation Tab naturelle
-            // La régénération se fera dans handlePoolMatchEnter quand le match est validé
-            saveToLocalStorage();
-            break;
+        if (match) return { match: match, division: Number(division) };
+    }
+
+    // Fallback (rétrocompatibilité) : parcourir toutes les divisions
+    for (let div = 1; div <= numDivisions; div++) {
+        if (!dayData.pools.divisions[div]) continue;
+        const match = dayData.pools.divisions[div].matches.find(m => m.id == matchId);
+        if (match) return { match: match, division: div };
+    }
+
+    return { match: null, division: null };
+}
+
+function updatePoolMatchScore(dayNumber, matchId, scoreField, value, division) {
+    const dayData = championship.days[dayNumber];
+
+    const { match } = findPoolMatch(dayData, matchId, division);
+    if (match) {
+        match[scoreField] = value;
+        // Annuler le forfait si les scores sont modifiés manuellement
+        if (match.forfaitBy) {
+            delete match.forfaitBy;
         }
+        // NE PAS régénérer le DOM ici pour permettre la navigation Tab naturelle
+        // La régénération se fera dans handlePoolMatchEnter quand le match est validé
+        saveToLocalStorage();
     }
 }
 
-function handlePoolMatchEnter(event, dayNumber, matchId) {
-    console.log('🔵 handlePoolMatchEnter appelé - Key:', event.key, 'MatchId:', matchId);
+function handlePoolMatchEnter(event, dayNumber, matchId, division) {
+    console.log('🔵 handlePoolMatchEnter appelé - Key:', event.key, 'MatchId:', matchId, 'Division:', division);
 
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
-    let match = null;
-    let currentDivision = null;
 
-    // Trouver le match et sa division
-    for (let division = 1; division <= numDivisions; division++) {
-        match = dayData.pools.divisions[division].matches.find(m => m.id == matchId);
-        if (match) {
-            currentDivision = division;
-            break;
-        }
-    }
+    // Trouver le match en ciblant sa division (IDs non uniques entre divisions)
+    const found = findPoolMatch(dayData, matchId, division);
+    const match = found.match;
+    const currentDivision = found.division;
 
     if (!match) {
         console.log('❌ Match non trouvé');
@@ -2361,7 +2372,7 @@ function handlePoolMatchEnter(event, dayNumber, matchId) {
         const wasCompleted = match.completed;
 
         // Compléter le match et régénérer le DOM
-        checkPoolMatchCompletion(dayNumber, matchId);
+        checkPoolMatchCompletion(dayNumber, matchId, currentDivision);
 
         // Auto-collapse le match qui vient d'être complété
         if (!wasCompleted && match.completed) {
@@ -2410,44 +2421,39 @@ function handlePoolMatchEnter(event, dayNumber, matchId) {
     }
 }
 
-function checkPoolMatchCompletion(dayNumber, matchId) {
+function checkPoolMatchCompletion(dayNumber, matchId, division) {
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
 
-    for (let division = 1; division <= numDivisions; division++) {
-        const match = dayData.pools.divisions[division].matches.find(m => m.id == matchId);
-        if (match) {
-            const wasCompleted = match.completed;
+    const { match } = findPoolMatch(dayData, matchId, division);
+    if (!match) return;
 
-            if (match.score1 !== '' && match.score2 !== '') {
-                const score1 = parseInt(match.score1);
-                const score2 = parseInt(match.score2);
+    const wasCompleted = match.completed;
 
-                if (score1 > score2) {
-                    match.completed = true;
-                    match.winner = match.player1;
-                } else if (score2 > score1) {
-                    match.completed = true;
-                    match.winner = match.player2;
-                } else {
-                    match.completed = true;
-                    match.winner = null;
-                }
-            } else {
-                // Si l'un des scores est vide, remettre le match en attente
-                match.completed = false;
-                match.winner = null;
-            }
+    if (match.score1 !== '' && match.score2 !== '') {
+        const score1 = parseInt(match.score1);
+        const score2 = parseInt(match.score2);
 
-            // Notification du changement d'état
-            if (!wasCompleted && match.completed) {
-                showNotification(`🏆 ${match.winner || 'Match nul'} remporte le match !`, 'success');
-            } else if (wasCompleted && !match.completed) {
-                showNotification(`⏸️ Match remis en attente`, 'info');
-            }
-
-            break;
+        if (score1 > score2) {
+            match.completed = true;
+            match.winner = match.player1;
+        } else if (score2 > score1) {
+            match.completed = true;
+            match.winner = match.player2;
+        } else {
+            match.completed = true;
+            match.winner = null;
         }
+    } else {
+        // Si l'un des scores est vide, remettre le match en attente
+        match.completed = false;
+        match.winner = null;
+    }
+
+    // Notification du changement d'état
+    if (!wasCompleted && match.completed) {
+        showNotification(`🏆 ${match.winner || 'Match nul'} remporte le match !`, 'success');
+    } else if (wasCompleted && !match.completed) {
+        showNotification(`⏸️ Match remis en attente`, 'info');
     }
 }
 
