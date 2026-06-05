@@ -1806,6 +1806,74 @@
             }
         }
     }
+    // Réconcilie la liste des joueurs avec les noms réellement présents dans les
+    // matchs : tout joueur figurant dans un match (régulier ou de poule) mais absent
+    // du listing de sa division y est ajouté. Permet de rattraper les joueurs saisis
+    // directement dans les matchs avant d'être listés (sinon invisibles au classement).
+    // Retourne le nombre de joueurs ajoutés. Si dayNumber est fourni, ne traite que
+    // cette journée ; sinon, toutes les journées.
+    function reconcilePlayersFromMatches(dayNumber) {
+        let added = 0;
+        const days = dayNumber ? [dayNumber] : Object.keys(championship.days || {});
+
+        days.forEach(function(day) {
+            const dayData = championship.days[day];
+            if (!dayData) return;
+
+            // Rassembler tous les noms de match par division
+            const namesByDivision = {};
+            function collect(division, name) {
+                const clean = getPlayerName(name);
+                if (!clean || clean.toUpperCase() === 'BYE') return;
+                if (!namesByDivision[division]) namesByDivision[division] = [];
+                namesByDivision[division].push(clean);
+            }
+
+            // Matchs réguliers
+            if (dayData.matches) {
+                Object.keys(dayData.matches).forEach(function(division) {
+                    (dayData.matches[division] || []).forEach(function(m) {
+                        collect(division, m.player1);
+                        collect(division, m.player2);
+                    });
+                });
+            }
+
+            // Matchs de poules
+            if (dayData.pools && dayData.pools.divisions) {
+                Object.keys(dayData.pools.divisions).forEach(function(division) {
+                    const poolMatches = dayData.pools.divisions[division].matches || [];
+                    poolMatches.forEach(function(m) {
+                        collect(division, m.player1);
+                        collect(division, m.player2);
+                    });
+                });
+            }
+
+            // Ajouter au listing ceux qui manquent
+            Object.keys(namesByDivision).forEach(function(division) {
+                if (!dayData.players[division]) dayData.players[division] = [];
+                const listed = dayData.players[division];
+                namesByDivision[division].forEach(function(name) {
+                    const exists = listed.some(function(p) { return getPlayerName(p) === name; });
+                    if (!exists) {
+                        listed.push({ name: name, club: '' });
+                        added++;
+                    }
+                });
+            });
+        });
+
+        if (added > 0) {
+            saveToLocalStorage();
+            const refreshDay = dayNumber || championship.currentDay;
+            if (typeof global.updatePlayersDisplay === 'function') global.updatePlayersDisplay(refreshDay);
+        }
+
+        return added;
+    }
+    window.reconcilePlayersFromMatches = reconcilePlayersFromMatches;
+
     window.editMatchPlayerName = editMatchPlayerName;
     window.updateMatchesDisplay = updateMatchesDisplay;
     window.checkMatchCompletion = checkMatchCompletion;

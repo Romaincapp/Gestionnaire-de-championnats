@@ -74,8 +74,17 @@
             btn.innerHTML = showForfaitButtons ? '⚠️ Actions ON' : '⚠️ Actions OFF';
         });
 
-        // Rafraîchir l'affichage des matchs
         var currentDay = championship.currentDay;
+
+        // À la fermeture du mode Actions : vérifier que tous les joueurs présents dans
+        // les matchs figurent bien au listing (rattrape les joueurs saisis directement
+        // dans un match), même sans édition explicite.
+        var reconciled = 0;
+        if (!showForfaitButtons && typeof global.reconcilePlayersFromMatches === 'function') {
+            reconciled = global.reconcilePlayersFromMatches();
+        }
+
+        // Rafraîchir l'affichage des matchs
         if (typeof global.updateMatchesDisplay === 'function') global.updateMatchesDisplay(currentDay);
         if (championship.days[currentDay] && championship.days[currentDay].pools && championship.days[currentDay].pools.enabled) {
             if (typeof global.updatePoolsDisplay === 'function') global.updatePoolsDisplay(currentDay);
@@ -89,6 +98,12 @@
                 showForfaitButtons ? 'Actions dangereuses activées (forfaits + suppressions)' : 'Actions dangereuses masquées',
                 showForfaitButtons ? 'warning' : 'info'
             );
+            if (reconciled > 0) {
+                global.showNotification(
+                    `${reconciled} joueur(s) présent(s) dans les matchs ajouté(s) au listing`,
+                    'success'
+                );
+            }
         }
     }
 
