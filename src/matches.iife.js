@@ -1740,11 +1740,30 @@
             match.winner = newName;
         }
         
-        // Mettre à jour la liste des joueurs de la division si le joueur existe
-        const divisionPlayers = dayData.players[division] || [];
-        const playerIndex = divisionPlayers.indexOf(oldName);
-        if (playerIndex !== -1) {
-            divisionPlayers[playerIndex] = newName;
+        // Mettre à jour la liste des joueurs de la division.
+        // - Si l'ancien nom y figure : on le renomme (en conservant le format string/objet).
+        // - Sinon : il s'agit d'un nouveau joueur saisi directement dans le match,
+        //   on l'ajoute d'office pour qu'il apparaisse au classement.
+        if (!dayData.players[division]) dayData.players[division] = [];
+        const divisionPlayers = dayData.players[division];
+        const oldIndex = divisionPlayers.findIndex(function(p) { return getPlayerName(p) === oldName; });
+        const alreadyListed = divisionPlayers.some(function(p) { return getPlayerName(p) === newName; });
+        let playerAdded = false;
+
+        if (oldIndex !== -1) {
+            const existing = divisionPlayers[oldIndex];
+            if (alreadyListed) {
+                // newName existe déjà ailleurs : on supprime l'ancienne entrée pour éviter un doublon
+                divisionPlayers.splice(oldIndex, 1);
+            } else if (typeof existing === 'object' && existing !== null) {
+                existing.name = newName;
+            } else {
+                divisionPlayers[oldIndex] = newName;
+            }
+        } else if (!alreadyListed && newName.toUpperCase() !== 'BYE') {
+            // Nouveau joueur ajouté directement via l'édition du match
+            divisionPlayers.push({ name: newName, club: '' });
+            playerAdded = true;
         }
         
         // Mettre à jour aussi dans les poules si c'est un match de poule
@@ -1753,9 +1772,14 @@
             if (pools) {
                 pools.forEach(function(pool) {
                     if (pool.players) {
-                        const poolPlayerIndex = pool.players.indexOf(oldName);
+                        const poolPlayerIndex = pool.players.findIndex(function(p) { return getPlayerName(p) === oldName; });
                         if (poolPlayerIndex !== -1) {
-                            pool.players[poolPlayerIndex] = newName;
+                            const existing = pool.players[poolPlayerIndex];
+                            if (typeof existing === 'object' && existing !== null) {
+                                existing.name = newName;
+                            } else {
+                                pool.players[poolPlayerIndex] = newName;
+                            }
                         }
                     }
                 });
@@ -1770,9 +1794,16 @@
         } else {
             updateMatchesDisplay(dayNumber);
         }
-        
+
+        // Rafraîchir la liste des joueurs pour refléter un éventuel ajout/renommage
+        if (typeof global.updatePlayersDisplay === 'function') global.updatePlayersDisplay(dayNumber);
+
         if (typeof global.showNotification === 'function') {
-            global.showNotification(`Joueur renommé : "${oldName}" → "${newName}"`, 'success');
+            if (playerAdded) {
+                global.showNotification(`Nouveau joueur ajouté au listing : "${newName}"`, 'success');
+            } else {
+                global.showNotification(`Joueur renommé : "${oldName}" → "${newName}"`, 'success');
+            }
         }
     }
     window.editMatchPlayerName = editMatchPlayerName;
