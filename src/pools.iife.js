@@ -2394,16 +2394,16 @@ function handlePoolMatchEnter(event, dayNumber, matchId, division) {
             console.log('📝 Nombre d\'inputs visibles:', visibleInputs.length);
 
             // Trouver le prochain match non-complété (le match actuel est maintenant collapsed)
-            // On cherche simplement le premier input disponible dont le matchId est différent de celui qu'on vient de compléter
+            // On exclut le match courant par référence DOM (et NON par data-match-id) car
+            // les IDs ne sont pas uniques entre divisions : comparer les IDs sauterait à tort
+            // un match d'une autre division partageant le même id.
             let foundNext = false;
             for (let i = 0; i < visibleInputs.length; i++) {
                 const inputMatchElement = visibleInputs[i].closest('.pool-match');
-                const inputMatchId = inputMatchElement?.getAttribute('data-match-id');
 
-                // Si c'est un match différent (donc le match actuel est déjà collapsed et exclu)
-                // Prendre le premier input
-                if (inputMatchId && inputMatchId !== matchId) {
-                    console.log('➡️ Focus sur le match suivant:', inputMatchId);
+                // Si c'est un autre élément de match que celui qu'on vient de compléter
+                if (inputMatchElement && inputMatchElement !== matchContainer) {
+                    console.log('➡️ Focus sur le match suivant:', inputMatchElement.getAttribute('data-match-id'));
                     // Empêcher le scroll automatique
                     visibleInputs[i].focus({ preventScroll: true });
                     visibleInputs[i].select();
