@@ -928,7 +928,13 @@
 
             let html = '';
 
-            for (let tour = 1; tour <= 4; tour++) {
+            // Parcourir les tours réellement présents dans les données (pas de borne en dur à 4)
+            const tourNumbers = Object.keys(matchsByTour)
+                .map(Number)
+                .filter(t => Number.isFinite(t))
+                .sort((a, b) => a - b);
+
+            for (const tour of tourNumbers) {
                 if (matchsByTour[tour] && matchsByTour[tour].length > 0) {
                     const tourMatches = matchsByTour[tour];
                     const completedMatches = tourMatches.filter(m => m.completed).length;
