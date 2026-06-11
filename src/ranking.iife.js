@@ -2016,10 +2016,13 @@ function normalizeNameForCheck(name) {
         .trim();
 }
 
+// Distance de Damerau-Levenshtein (variante OSA) : insertion, suppression,
+// substitution et transposition de lettres adjacentes comptent chacune 1
 function levenshteinForCheck(a, b) {
     if (a === b) return 0;
     if (!a.length) return b.length;
     if (!b.length) return a.length;
+    let prevPrev = [];
     let prev = [];
     for (let j = 0; j <= b.length; j++) prev[j] = j;
     for (let i = 1; i <= a.length; i++) {
@@ -2027,7 +2030,11 @@ function levenshteinForCheck(a, b) {
         for (let j = 1; j <= b.length; j++) {
             const cost = a[i - 1] === b[j - 1] ? 0 : 1;
             curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+            if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+                curr[j] = Math.min(curr[j], prevPrev[j - 2] + 1);
+            }
         }
+        prevPrev = prev;
         prev = curr;
     }
     return prev[b.length];
@@ -2042,8 +2049,11 @@ function collectChampionshipPlayerNames() {
         if (!dayData) return;
 
         const add = (rawName, div) => {
-            const name = (rawName || '').trim();
-            if (!name || name.toUpperCase().startsWith('BYE')) return;
+            // Conserver le nom brut (espaces compris) : le classement compare les
+            // chaînes exactes, donc « Jean Dupont » et « Jean Dupont  » sont deux
+            // joueurs différents qu'il faut pouvoir détecter et fusionner
+            const name = rawName === null || rawName === undefined ? '' : String(rawName);
+            if (!name.trim() || name.trim().toUpperCase().startsWith('BYE')) return;
             if (!byName[name]) {
                 byName[name] = { name: name, count: 0, days: {}, divisions: {} };
             }
@@ -2190,7 +2200,7 @@ function showNameCheckModal() {
         nameCheckGroups.forEach((group, gi) => {
             // Suggestion : la variante la plus fréquente
             const sorted = group.members.slice().sort((a, b) => b.count - a.count);
-            const suggestion = sorted[0].name;
+            const suggestion = sorted[0].name.trim();
 
             const variantsHtml = group.members.map(m => {
                 const days = Object.keys(m.days).map(d => parseInt(d)).sort((a, b) => a - b);
