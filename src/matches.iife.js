@@ -928,7 +928,13 @@
 
             let html = '';
 
-            for (let tour = 1; tour <= 4; tour++) {
+            // Parcourir les tours réellement présents dans les données (pas de borne en dur à 4)
+            const tourNumbers = Object.keys(matchsByTour)
+                .map(Number)
+                .filter(t => Number.isFinite(t))
+                .sort((a, b) => a - b);
+
+            for (const tour of tourNumbers) {
                 if (matchsByTour[tour] && matchsByTour[tour].length > 0) {
                     const tourMatches = matchsByTour[tour];
                     const completedMatches = tourMatches.filter(m => m.completed).length;
@@ -949,8 +955,10 @@
                     // Organiser les matchs par terrain
                     const matchesByCourt = {};
                     tourMatches.forEach((match, idx) => {
-                        // Assigner automatiquement un terrain si pas déjà fait
-                        if (!match.court) {
+                        // Assigner un terrain si pas déjà fait, ou réassigner si le terrain
+                        // enregistré est hors de la plage actuelle de la division (config modifiée) :
+                        // la boucle d'affichage ne parcourt que first..last et perdrait ces matchs
+                        if (!match.court || match.court < divisionCourts.first || match.court > divisionCourts.last) {
                             // Calculer le numéro de terrain relatif (0 à count-1)
                             const relativeCourtIndex = idx % divisionCourts.count;
                             // Convertir en numéro de terrain absolu

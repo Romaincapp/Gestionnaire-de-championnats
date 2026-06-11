@@ -283,7 +283,14 @@
             const completionRate = Math.round((completedMatches / totalMatches) * 100);
             
             let tourStats = '';
-            for (let tour = 1; tour <= 4; tour++) {
+            // Couvrir tous les tours présents dans les données (pas de borne en dur à 4)
+            let maxTour = 4;
+            for (let division = 1; division <= numDivisions; division++) {
+                (dayData.matches[division] || []).forEach(m => {
+                    if (Number.isFinite(m.tour) && m.tour > maxTour) maxTour = m.tour;
+                });
+            }
+            for (let tour = 1; tour <= maxTour; tour++) {
                 let tourTotal = 0;
                 let tourCompleted = 0;
 
