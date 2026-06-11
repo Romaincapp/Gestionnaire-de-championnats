@@ -2846,7 +2846,12 @@ function generateRaceRanking() {
 
     let html = `
         <div style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); padding: 20px; border-radius: 10px;">
-            <h3 style="color: white; text-align: center; margin-bottom: 20px;">🏆 Classement Général</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="color: white; margin: 0;">🏆 Classement Général</h3>
+                <button onclick="exportRaceRankingToPDF()" style="background: white; color: #16a085; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                    📄 Exporter en PDF
+                </button>
+            </div>
             <div style="background: white; border-radius: 10px; padding: 20px;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
@@ -2946,6 +2951,112 @@ function generateRaceRanking() {
 
     rankingSection.innerHTML = html;
 }
+
+// Exporter le classement général de la série en PDF
+window.exportRaceRankingToPDF = function() {
+    const serie = raceData.currentSerie;
+    if (!serie) return;
+
+    const ranked = [...serie.participants].sort((a, b) => {
+        if (a.status === 'dns' && b.status !== 'dns') return 1;
+        if (b.status === 'dns' && a.status !== 'dns') return -1;
+        if (a.status === 'finished' && b.status !== 'finished') return -1;
+        if (b.status === 'finished' && a.status !== 'finished') return 1;
+        if (a.totalDistance !== b.totalDistance) return b.totalDistance - a.totalDistance;
+        return a.totalTime - b.totalTime;
+    });
+
+    const currentDate = new Date().toLocaleDateString('fr-FR', {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    const medals = ['🥇', '🥈', '🥉'];
+    const serieName = serie.name || 'Série';
+
+    const rows = ranked.map((p, index) => {
+        const position = index + 1;
+        const isDNS = p.status === 'dns';
+        const medal = isDNS ? 'DNS' : (position <= 3 ? medals[position - 1] : position);
+        const rowBg = isDNS ? '#fdeaea' : (position <= 3 ? '#fff9e6' : (index % 2 === 0 ? '#f8f9fa' : 'white'));
+        const timeDisplay = p.status === 'finished' ? formatTime(p.finishTime) : formatTime(p.totalTime);
+        const statusText = p.status === 'finished' ? 'Terminé' : (p.status === 'dns' ? 'DNS' : 'En cours');
+
+        return `<tr style="background: ${rowBg}; border-bottom: 1px solid #dee2e6;">
+            <td style="padding: 10px; text-align: center; font-size: ${isDNS ? '13px' : '20px'}; font-weight: bold; color: ${isDNS ? '#e74c3c' : 'inherit'};">${medal}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; color: #3498db;">#${p.bib}</td>
+            <td style="padding: 10px;">
+                <div style="font-weight: bold;">${p.name}</div>
+                <div style="font-size: 11px; color: #7f8c8d;">${p.category || '-'}</div>
+            </td>
+            <td style="padding: 10px; color: #16a085; font-weight: bold;">${p.club || '-'}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold;">${p.laps.length}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold;">${(p.totalDistance / 1000).toFixed(2)} km</td>
+            <td style="padding: 10px; text-align: center; font-family: monospace; font-weight: bold;">${timeDisplay}</td>
+            <td style="padding: 10px; text-align: center; font-family: monospace;">${p.bestLap ? formatTime(p.bestLap) : '-'}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; color: ${p.status === 'finished' ? '#27ae60' : (p.status === 'dns' ? '#e74c3c' : '#e67e22')};">${statusText}</td>
+        </tr>`;
+    }).join('');
+
+    const totalDistance = (serie.participants.reduce((sum, p) => sum + p.totalDistance, 0) / 1000).toFixed(2);
+    const finishedCount = serie.participants.filter(p => p.status === 'finished').length;
+    const totalLaps = serie.participants.reduce((sum, p) => sum + p.laps.length, 0);
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Classement Général - ${serieName}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #2c3e50; }
+        h1 { text-align: center; color: #16a085; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead tr { background: linear-gradient(135deg, #16a085, #1abc9c); color: white; }
+        th { padding: 10px 8px; text-align: center; font-weight: bold; }
+        th:nth-child(3) { text-align: left; }
+        th:nth-child(4) { text-align: left; }
+        td { border-bottom: 1px solid #dee2e6; }
+        .stats { display: flex; gap: 15px; margin-top: 20px; justify-content: center; }
+        .stat-card { background: #f0faf8; border: 2px solid #16a085; border-radius: 8px; padding: 12px 20px; text-align: center; }
+        .stat-label { font-size: 11px; color: #7f8c8d; }
+        .stat-value { font-size: 22px; font-weight: bold; color: #16a085; }
+        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #95a5a6; }
+        @media print { button { display: none; } }
+    </style>
+</head>
+<body>
+    <h1>🏆 Classement Général</h1>
+    <p class="subtitle">${serieName} &nbsp;|&nbsp; Généré le ${currentDate}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Pos.</th>
+                <th>Dossard</th>
+                <th style="text-align: left;">Participant</th>
+                <th style="text-align: left;">Club</th>
+                <th>Tours</th>
+                <th>Distance</th>
+                <th>Temps</th>
+                <th>Meilleur Tour</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+    </table>
+    <div class="stats">
+        <div class="stat-card"><div class="stat-label">Participants</div><div class="stat-value">${serie.participants.length}</div></div>
+        <div class="stat-card"><div class="stat-label">Terminés</div><div class="stat-value">${finishedCount}</div></div>
+        <div class="stat-card"><div class="stat-label">Distance totale</div><div class="stat-value">${totalDistance} km</div></div>
+        <div class="stat-card"><div class="stat-label">Tours totaux</div><div class="stat-value">${totalLaps}</div></div>
+    </div>
+    <p class="footer">Gestionnaire de Championnats</p>
+    <script>window.onload = function() { window.print(); }<\/script>
+</body>
+</html>`);
+    printWindow.document.close();
+};
 
 // Afficher le classement par club pour une série
 window.showSerieClubRanking = function() {
