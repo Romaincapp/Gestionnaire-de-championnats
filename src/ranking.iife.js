@@ -1993,6 +1993,279 @@ generalRanking.divisions[division].forEach((player, index) => {
     showNotification('Page d\'export PDF ouverte dans un nouvel onglet !', 'success');
 }
 
+// ============================================
+// VÉRIFICATION DES NOMS DE JOUEURS (fautes de frappe)
+// ============================================
+
+// Groupes de noms similaires détectés, conservés pour les boutons "Fusionner" du modal
+let nameCheckGroups = [];
+
+function escapeHtmlForNameCheck(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// Clé de comparaison : minuscules, sans accents ni ponctuation
+function normalizeNameForCheck(name) {
+    return String(name).toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+}
+
+function levenshteinForCheck(a, b) {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+    let prev = [];
+    for (let j = 0; j <= b.length; j++) prev[j] = j;
+    for (let i = 1; i <= a.length; i++) {
+        const curr = [i];
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+        }
+        prev = curr;
+    }
+    return prev[b.length];
+}
+
+// Recense tous les noms de joueurs du championnat (toutes journées, toutes divisions),
+// dans les listes de joueurs ET dans les matchs (classiques, poules, phases finales)
+function collectChampionshipPlayerNames() {
+    const byName = {};
+    Object.keys(championship.days).forEach(dayNumber => {
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return;
+
+        const add = (rawName, div) => {
+            const name = (rawName || '').trim();
+            if (!name || name.toUpperCase().startsWith('BYE')) return;
+            if (!byName[name]) {
+                byName[name] = { name: name, count: 0, days: {}, divisions: {} };
+            }
+            byName[name].count++;
+            byName[name].days[dayNumber] = true;
+            if (div) byName[name].divisions[div] = true;
+        };
+        const addFromMatch = (m, div) => {
+            if (!m) return;
+            add(m.player1, div);
+            add(m.player2, div);
+        };
+
+        Object.keys(dayData.players || {}).forEach(div => {
+            (dayData.players[div] || []).forEach(p => add(getPlayerName(p), div));
+        });
+        Object.keys(dayData.matches || {}).forEach(div => {
+            (dayData.matches[div] || []).forEach(m => addFromMatch(m, div));
+        });
+        if (dayData.pools && dayData.pools.divisions) {
+            Object.keys(dayData.pools.divisions).forEach(div => {
+                const divPools = dayData.pools.divisions[div];
+                if (!divPools) return;
+                (divPools.matches || []).forEach(m => addFromMatch(m, div));
+                (divPools.finalPhase || []).forEach(m => addFromMatch(m, div));
+            });
+        }
+        if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions) {
+            Object.keys(dayData.pools.manualFinalPhase.divisions).forEach(div => {
+                const divPhase = dayData.pools.manualFinalPhase.divisions[div];
+                if (!divPhase || !divPhase.rounds) return;
+                Object.values(divPhase.rounds).forEach(round => {
+                    (round.matches || []).forEach(m => addFromMatch(m, div));
+                });
+            });
+        }
+    });
+    return Object.values(byName);
+}
+
+// Regroupe les noms très similaires (clé normalisée identique ou distance d'édition faible)
+function groupSimilarPlayerNames(names) {
+    const groups = [];
+    names.forEach(item => {
+        const norm = normalizeNameForCheck(item.name);
+        let target = null;
+        for (let i = 0; i < groups.length; i++) {
+            const g = groups[i];
+            if (g.norm === norm) { target = g; break; }
+            const tolerance = Math.max(1, Math.floor(Math.min(g.norm.length, norm.length) / 6));
+            if (levenshteinForCheck(g.norm, norm) <= tolerance) { target = g; break; }
+        }
+        if (target) target.members.push(item);
+        else groups.push({ norm: norm, members: [item] });
+    });
+    // Ne garder que les groupes avec au moins 2 noms distincts
+    return groups.filter(g => g.members.length > 1);
+}
+
+// Renomme un joueur partout dans le championnat : listes de joueurs, matchs,
+// poules (composition + matchs + phase finale) et phase finale manuelle.
+function renamePlayerEverywhereInChampionship(oldName, newName) {
+    if (!oldName || !newName || oldName === newName) return 0;
+    const oldLower = String(oldName).trim().toLowerCase();
+    let changed = 0;
+
+    // n !== newName : ne pas recompter les entrées déjà au nom canonique lors d'une fusion de casse
+    const matchesOld = n => n && n !== newName && String(n).trim().toLowerCase() === oldLower;
+    const renameInMatch = m => {
+        if (!m) return;
+        if (matchesOld(m.player1)) { m.player1 = newName; changed++; }
+        if (matchesOld(m.player2)) { m.player2 = newName; changed++; }
+        if (matchesOld(m.winner)) m.winner = newName;
+    };
+
+    Object.keys(championship.days).forEach(dayNumber => {
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return;
+
+        // Listes de joueurs (format string ou objet {name, club})
+        Object.keys(dayData.players || {}).forEach(div => {
+            const arr = dayData.players[div];
+            if (!Array.isArray(arr)) return;
+            arr.forEach((p, idx) => {
+                if (matchesOld(getPlayerName(p))) {
+                    if (p && typeof p === 'object') p.name = newName;
+                    else arr[idx] = newName;
+                    changed++;
+                }
+            });
+        });
+
+        // Matchs classiques
+        Object.keys(dayData.matches || {}).forEach(div => {
+            (dayData.matches[div] || []).forEach(renameInMatch);
+        });
+
+        // Poules : composition, matchs de poules, phase finale (ancien système)
+        if (dayData.pools && dayData.pools.divisions) {
+            Object.keys(dayData.pools.divisions).forEach(div => {
+                const divPools = dayData.pools.divisions[div];
+                if (!divPools) return;
+                (divPools.pools || []).forEach(pool => {
+                    if (!Array.isArray(pool)) return;
+                    pool.forEach((p, idx) => {
+                        const pName = p && typeof p === 'object' ? p.name : p;
+                        if (matchesOld(pName)) {
+                            if (p && typeof p === 'object') p.name = newName;
+                            else pool[idx] = newName;
+                            changed++;
+                        }
+                    });
+                });
+                (divPools.matches || []).forEach(renameInMatch);
+                (divPools.finalPhase || []).forEach(renameInMatch);
+            });
+        }
+
+        // Phase finale manuelle (nouveau système)
+        if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions) {
+            Object.values(dayData.pools.manualFinalPhase.divisions).forEach(divPhase => {
+                if (!divPhase || !divPhase.rounds) return;
+                Object.values(divPhase.rounds).forEach(round => {
+                    (round.matches || []).forEach(renameInMatch);
+                });
+            });
+        }
+    });
+
+    return changed;
+}
+
+function showNameCheckModal() {
+    closeNameCheckModal();
+    nameCheckGroups = groupSimilarPlayerNames(collectChampionshipPlayerNames());
+
+    let body;
+    if (nameCheckGroups.length === 0) {
+        body = '<p style="color:#7f8c8d; text-align:center; padding:20px;">✅ Aucun nom similaire détecté. Les noms des joueurs semblent cohérents.</p>';
+    } else {
+        body = '<p style="color:#7f8c8d; font-size:13px;">' + nameCheckGroups.length +
+            ' groupe(s) de noms très similaires détecté(s). Pour chaque ligne, vérifie le nom final suggéré (modifiable) puis clique sur Fusionner : toutes les variantes seront renommées dans toutes les journées.</p>';
+
+        nameCheckGroups.forEach((group, gi) => {
+            // Suggestion : la variante la plus fréquente
+            const sorted = group.members.slice().sort((a, b) => b.count - a.count);
+            const suggestion = sorted[0].name;
+
+            const variantsHtml = group.members.map(m => {
+                const days = Object.keys(m.days).map(d => parseInt(d)).sort((a, b) => a - b);
+                const divisions = Object.keys(m.divisions).sort();
+                return '<div style="font-size:12px; color:#555; padding:2px 0;">• <strong>' +
+                    escapeHtmlForNameCheck(m.name) + '</strong> — ' + m.count + ' occurrence(s), J' +
+                    days.join(', J') + ', Div ' + divisions.join('/') + '</div>';
+            }).join('');
+
+            body += '<div id="nameCheckGroup-' + gi + '" style="border:1px solid #e0e0e0; border-radius:8px; padding:12px; margin:10px 0; background:#fbfbfd;">' +
+                variantsHtml +
+                '<div style="display:flex; gap:8px; align-items:center; margin-top:8px;">' +
+                '<input type="text" id="nameCheckInput-' + gi + '" value="' + escapeHtmlForNameCheck(suggestion) + '" ' +
+                'style="flex:1; padding:8px; border:1px solid #e67e22; border-radius:5px; box-sizing:border-box;">' +
+                '<button class="btn btn-warning" style="padding:8px 14px; font-size:13px; white-space:nowrap;" onclick="applyNameCheckMerge(' + gi + ')">🔁 Fusionner</button>' +
+                '</div></div>';
+        });
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'nameCheckModal';
+    modal.innerHTML =
+        '<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;" onclick="if(event.target===this)closeNameCheckModal()">' +
+        '<div style="background:white; padding:25px; border-radius:10px; max-width:650px; width:92%; max-height:85vh; overflow-y:auto;">' +
+        '<h3 style="margin-top:0; color:#2c3e50;">🔍 Vérifier les noms des joueurs</h3>' +
+        body +
+        '<div style="display:flex; justify-content:flex-end; margin-top:18px;">' +
+        '<button onclick="closeNameCheckModal()" class="btn btn-secondary">Fermer</button>' +
+        '</div></div></div>';
+    document.body.appendChild(modal);
+}
+window.showNameCheckModal = showNameCheckModal;
+
+function closeNameCheckModal() {
+    const modal = document.getElementById('nameCheckModal');
+    if (modal) modal.remove();
+}
+window.closeNameCheckModal = closeNameCheckModal;
+
+function applyNameCheckMerge(groupIndex) {
+    const group = nameCheckGroups[groupIndex];
+    const input = document.getElementById('nameCheckInput-' + groupIndex);
+    if (!group || !input) return;
+
+    const canonical = input.value.trim();
+    if (!canonical) {
+        showNotification('Veuillez entrer un nom final', 'warning');
+        return;
+    }
+
+    let changed = 0;
+    group.members.forEach(m => {
+        if (m.name !== canonical) {
+            changed += renamePlayerEverywhereInChampionship(m.name, canonical);
+        }
+    });
+
+    saveToLocalStorage();
+
+    // Marquer la ligne comme traitée
+    const groupEl = document.getElementById('nameCheckGroup-' + groupIndex);
+    if (groupEl) {
+        groupEl.innerHTML = '<div style="color:#27ae60; font-weight:600; font-size:13px;">✅ Fusionné en « ' +
+            escapeHtmlForNameCheck(canonical) + ' » (' + changed + ' remplacement(s))</div>';
+        groupEl.style.background = '#eafaf1';
+        groupEl.style.borderColor = '#27ae60';
+    }
+
+    showNotification(changed + ' remplacement(s) : noms fusionnés en « ' + canonical + ' »', 'success');
+
+    // Rafraîchir le classement général avec les noms corrigés
+    updateGeneralRanking();
+}
+window.applyNameCheckMerge = applyNameCheckMerge;
+
 // Assigner la fonction à l'objet window pour qu'elle soit accessible globalement
 window.exportGeneralRanking = exportGeneralRanking;
 window.exportGeneralRankingToPDF = exportGeneralRankingToPDF;
