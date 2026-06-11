@@ -2016,10 +2016,13 @@ function normalizeNameForCheck(name) {
         .trim();
 }
 
+// Distance de Damerau-Levenshtein (variante OSA) : insertion, suppression,
+// substitution et transposition de lettres adjacentes comptent chacune 1
 function levenshteinForCheck(a, b) {
     if (a === b) return 0;
     if (!a.length) return b.length;
     if (!b.length) return a.length;
+    let prevPrev = [];
     let prev = [];
     for (let j = 0; j <= b.length; j++) prev[j] = j;
     for (let i = 1; i <= a.length; i++) {
@@ -2027,7 +2030,11 @@ function levenshteinForCheck(a, b) {
         for (let j = 1; j <= b.length; j++) {
             const cost = a[i - 1] === b[j - 1] ? 0 : 1;
             curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+            if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+                curr[j] = Math.min(curr[j], prevPrev[j - 2] + 1);
+            }
         }
+        prevPrev = prev;
         prev = curr;
     }
     return prev[b.length];
@@ -2042,8 +2049,11 @@ function collectChampionshipPlayerNames() {
         if (!dayData) return;
 
         const add = (rawName, div) => {
-            const name = (rawName || '').trim();
-            if (!name || name.toUpperCase().startsWith('BYE')) return;
+            // Conserver le nom brut (espaces compris) : le classement compare les
+            // chaînes exactes, donc « Jean Dupont » et « Jean Dupont  » sont deux
+            // joueurs différents qu'il faut pouvoir détecter et fusionner
+            const name = rawName === null || rawName === undefined ? '' : String(rawName);
+            if (!name.trim() || name.trim().toUpperCase().startsWith('BYE')) return;
             if (!byName[name]) {
                 byName[name] = { name: name, count: 0, days: {}, divisions: {} };
             }
@@ -2084,7 +2094,29 @@ function collectChampionshipPlayerNames() {
     return Object.values(byName);
 }
 
-// Regroupe les noms très similaires (clé normalisée identique ou distance d'édition faible)
+// Vrai si le nom court (normalisé) correspond exactement aux premiers mots du nom
+// long : typiquement « jean » vs « jean la boule joyeuse » (nom saisi avec le club)
+function isNameIncludedIn(shortNorm, longNorm) {
+    if (shortNorm.length < 3 || shortNorm.length >= longNorm.length) return false;
+    return longNorm.startsWith(shortNorm + ' ');
+}
+
+// Score de similitude 0-100 entre deux noms normalisés
+// (100 = identiques après normalisation, inclusion = score sur la partie commune)
+function nameSimilarityScore(normA, normB) {
+    if (normA === normB) return 100;
+    if (isNameIncludedIn(normA, normB) || isNameIncludedIn(normB, normA)) {
+        const short = normA.length < normB.length ? normA : normB;
+        const long = normA.length < normB.length ? normB : normA;
+        return Math.max(50, Math.round(100 * short.length / long.length));
+    }
+    const d = levenshteinForCheck(normA, normB);
+    const maxLen = Math.max(normA.length, normB.length) || 1;
+    return Math.max(0, Math.round(100 * (1 - d / maxLen)));
+}
+
+// Regroupe les noms très similaires : clé normalisée identique, distance d'édition
+// faible, ou inclusion (nom court = début d'un nom long, ex. nom + club)
 function groupSimilarPlayerNames(names) {
     const groups = [];
     names.forEach(item => {
@@ -2093,14 +2125,34 @@ function groupSimilarPlayerNames(names) {
         for (let i = 0; i < groups.length; i++) {
             const g = groups[i];
             if (g.norm === norm) { target = g; break; }
+            if (isNameIncludedIn(norm, g.norm) || isNameIncludedIn(g.norm, norm)) { target = g; break; }
             const tolerance = Math.max(1, Math.floor(Math.min(g.norm.length, norm.length) / 6));
             if (levenshteinForCheck(g.norm, norm) <= tolerance) { target = g; break; }
         }
-        if (target) target.members.push(item);
+        if (target) {
+            target.members.push(item);
+            // Garder la clé la plus courte comme référence du groupe pour que
+            // d'autres variantes longues du même nom puissent s'y rattacher
+            if (norm.length < target.norm.length && isNameIncludedIn(norm, target.norm)) target.norm = norm;
+        }
         else groups.push({ norm: norm, members: [item] });
     });
-    // Ne garder que les groupes avec au moins 2 noms distincts
-    return groups.filter(g => g.members.length > 1);
+    // Ne garder que les groupes avec au moins 2 noms distincts,
+    // triés des plus sûrs aux plus incertains (score minimal du groupe)
+    return groups
+        .filter(g => g.members.length > 1)
+        .map(g => {
+            const norms = g.members.map(m => normalizeNameForCheck(m.name));
+            let minScore = 100;
+            for (let i = 0; i < norms.length; i++) {
+                for (let j = i + 1; j < norms.length; j++) {
+                    minScore = Math.min(minScore, nameSimilarityScore(norms[i], norms[j]));
+                }
+            }
+            g.minScore = minScore;
+            return g;
+        })
+        .sort((a, b) => b.minScore - a.minScore);
 }
 
 // Renomme un joueur partout dans le championnat : listes de joueurs, matchs,
@@ -2190,18 +2242,35 @@ function showNameCheckModal() {
         nameCheckGroups.forEach((group, gi) => {
             // Suggestion : la variante la plus fréquente
             const sorted = group.members.slice().sort((a, b) => b.count - a.count);
-            const suggestion = sorted[0].name;
+            const suggestion = sorted[0].name.trim();
+            const suggestionNorm = normalizeNameForCheck(suggestion);
+
+            // Badge de confiance du groupe selon le score minimal entre variantes
+            const score = group.minScore;
+            const badgeColor = score >= 85 ? '#27ae60' : score >= 65 ? '#e67e22' : '#e74c3c';
+            const badgeLabel = score >= 85 ? 'similitude forte' : score >= 65 ? 'à vérifier' : 'incertain';
+            const badgeHtml = '<div style="margin-bottom:6px;"><span style="background:' + badgeColor +
+                '; color:white; font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px;">🎯 ' +
+                score + '% — ' + badgeLabel + '</span></div>';
 
             const variantsHtml = group.members.map(m => {
                 const days = Object.keys(m.days).map(d => parseInt(d)).sort((a, b) => a - b);
                 const divisions = Object.keys(m.divisions).sort();
+                const mNorm = normalizeNameForCheck(m.name);
+                let scoreHtml = '';
+                if (mNorm !== suggestionNorm) {
+                    const inclusion = isNameIncludedIn(suggestionNorm, mNorm) || isNameIncludedIn(mNorm, suggestionNorm);
+                    const s = nameSimilarityScore(mNorm, suggestionNorm);
+                    scoreHtml = ' — <span style="color:' + (s >= 85 ? '#27ae60' : s >= 65 ? '#e67e22' : '#e74c3c') +
+                        '; font-weight:600;">' + s + '%' + (inclusion ? ' (nom inclus, club ajouté ?)' : '') + '</span>';
+                }
                 return '<div style="font-size:12px; color:#555; padding:2px 0;">• <strong>' +
                     escapeHtmlForNameCheck(m.name) + '</strong> — ' + m.count + ' occurrence(s), J' +
-                    days.join(', J') + ', Div ' + divisions.join('/') + '</div>';
+                    days.join(', J') + ', Div ' + divisions.join('/') + scoreHtml + '</div>';
             }).join('');
 
             body += '<div id="nameCheckGroup-' + gi + '" style="border:1px solid #e0e0e0; border-radius:8px; padding:12px; margin:10px 0; background:#fbfbfd;">' +
-                variantsHtml +
+                badgeHtml + variantsHtml +
                 '<div style="display:flex; gap:8px; align-items:center; margin-top:8px;">' +
                 '<input type="text" id="nameCheckInput-' + gi + '" value="' + escapeHtmlForNameCheck(suggestion) + '" ' +
                 'style="flex:1; padding:8px; border:1px solid #e67e22; border-radius:5px; box-sizing:border-box;">' +
