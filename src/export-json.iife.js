@@ -187,8 +187,8 @@
                     throw new Error('Format de fichier non reconnu');
                 }
                 
-                // Étape 1 : Analyser et proposer la configuration
-                showImportConfigModal();
+                // Appliquer automatiquement la configuration détectée depuis le JSON
+                autoImportWithConfig();
                 
             } catch (error) {
                 alert('Erreur lors de la lecture du fichier :\n' + error.message + '\n\nVérifiez que le fichier est un export valide.');
@@ -265,6 +265,44 @@
             divisions: maxDivision,
             courts: maxCourt
         };
+    }
+
+    /**
+     * Applique automatiquement la configuration détectée depuis le JSON importé
+     * puis lance l'import sans intervention de l'utilisateur
+     */
+    function autoImportWithConfig() {
+        const detected = analyzeImportConfig();
+        const numDivisions = detected.divisions;
+        const numCourts = detected.courts;
+
+        // Injecter la config dans les données importées
+        if (!global.importedChampionshipData.championship.config) {
+            global.importedChampionshipData.championship.config = {};
+        }
+        global.importedChampionshipData.championship.config.numberOfDivisions = numDivisions;
+        global.importedChampionshipData.championship.config.numDivisions = numDivisions;
+        global.importedChampionshipData.championship.config.numberOfCourts = numCourts;
+        global.importedChampionshipData.championship.config.numCourts = numCourts;
+
+        // Mettre à jour les sélecteurs HTML en ajoutant l'option si elle manque
+        function setSelectValue(id, value) {
+            const select = document.getElementById(id);
+            if (!select) return;
+            const strVal = String(value);
+            if (!Array.from(select.options).some(o => o.value === strVal)) {
+                const opt = document.createElement('option');
+                opt.value = strVal;
+                opt.textContent = strVal;
+                select.appendChild(opt);
+            }
+            select.value = strVal;
+        }
+
+        setSelectValue('divisionConfig', numDivisions);
+        setSelectValue('courtConfig', numCourts);
+
+        processImport();
     }
 
     /**
@@ -654,7 +692,13 @@
             global.importedChampionshipData = null;
 
             closeImportModal();
-            showNotification('Championnat importé avec succès !', 'success');
+            const _divs = championship.config?.numberOfDivisions || championship.config?.numDivisions || '?';
+            const _courts = championship.config?.numberOfCourts || championship.config?.numCourts || '?';
+            const _days = Object.keys(championship.days || {}).length;
+            showNotification(
+                `✅ Import réussi — ${_days} journée${_days > 1 ? 's' : ''}, ${_divs} division${_divs > 1 ? 's' : ''}, ${_courts} terrain${_courts > 1 ? 's' : ''}`,
+                'success'
+            );
 
             // Forcer l'affichage de J1 après toutes les opérations
             switchTab(1);
