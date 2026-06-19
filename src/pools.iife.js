@@ -254,6 +254,15 @@ function addPoolToggleToInterface(dayNumber) {
                         ⚡ Élimination Directe
                     </button>
 
+                    <button class="btn" onclick="showImportPoolRankingsModal(${dayNumber})" style="
+                        background: linear-gradient(135deg, #1abc9c, #16a085);
+                        color: white;
+                        padding: 8px 15px;
+                        font-size: 12px;
+                    " id="import-pool-rankings-btn-${dayNumber}">
+                        📋 Import classements
+                    </button>
+
                     <button class="btn" onclick="generateSeasonFinalPhase(${dayNumber})" style="
                         background: linear-gradient(135deg, #f39c12, #e67e22);
                         color: white;
@@ -3623,6 +3632,188 @@ function generateDirectFinalPhase(dayNumber) {
     }, 100);
 }
 window.generateDirectFinalPhase = generateDirectFinalPhase;
+
+// ======================================
+// IMPORT CLASSEMENTS DE POOLS → ÉLIMINATION DIRECTE
+// ======================================
+
+function showImportPoolRankingsModal(dayNumber) {
+    const existing = document.getElementById('importPoolRankingsModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'importPoolRankingsModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:flex-start;z-index:10002;overflow-y:auto;padding:20px;box-sizing:border-box;';
+
+    modal.innerHTML = `
+        <div style="background:white;padding:25px;border-radius:12px;max-width:720px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4);margin:auto;">
+            <h3 style="margin:0 0 6px 0;color:#2c3e50;font-size:18px;">📋 Import depuis classements de pools</h3>
+            <p style="margin:0 0 20px 0;color:#7f8c8d;font-size:13px;">
+                Importez les classements de vos pools de saison pour générer un tableau croisé :<br>
+                les 1ers de chaque pool ne se rencontrent pas dès le premier tour.
+            </p>
+
+            <div style="margin-bottom:18px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:#333;">Nombre de pools</label>
+                <select id="numPoolsInput" onchange="renderPoolInputs(${dayNumber})"
+                    style="padding:8px 14px;border:2px solid #ddd;border-radius:6px;font-size:14px;cursor:pointer;">
+                    <option value="2">2 pools</option>
+                    <option value="3">3 pools</option>
+                    <option value="4">4 pools</option>
+                    <option value="1">1 liste (ordre imposé)</option>
+                    <option value="5">5 pools</option>
+                    <option value="6">6 pools</option>
+                </select>
+            </div>
+
+            <div id="poolInputsContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:18px;"></div>
+
+            <div style="background:#eaf4fb;padding:10px 14px;border-radius:6px;margin-bottom:20px;font-size:12px;color:#2980b9;">
+                💡 <strong>Un joueur par ligne</strong>, dans l'ordre du classement (1er en haut). Les joueurs d'une même pool seront séparés dans le tableau de sorte à ne se rencontrer qu'en finale.
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button onclick="document.getElementById('importPoolRankingsModal').remove()"
+                    style="padding:10px 20px;border:1px solid #ddd;background:#f5f5f5;border-radius:6px;cursor:pointer;font-size:13px;">
+                    Annuler
+                </button>
+                <button onclick="applyImportPoolRankings(${dayNumber})"
+                    style="padding:10px 20px;border:none;background:linear-gradient(135deg,#1abc9c,#16a085);color:white;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">
+                    ⚡ Générer le tableau
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    renderPoolInputs(dayNumber);
+}
+window.showImportPoolRankingsModal = showImportPoolRankingsModal;
+
+function renderPoolInputs(dayNumber) {
+    const container = document.getElementById('poolInputsContainer');
+    if (!container) return;
+    const numPools = parseInt(document.getElementById('numPoolsInput').value) || 2;
+    const poolLetters = 'ABCDEFGH';
+
+    container.style.gridTemplateColumns = numPools === 1 ? '1fr' : '1fr 1fr';
+
+    container.innerHTML = Array.from({ length: numPools }, (_, i) => {
+        const label = numPools === 1 ? 'Classement' : `Pool ${poolLetters[i]}`;
+        return `
+            <div>
+                <label style="display:block;margin-bottom:5px;font-size:13px;font-weight:600;color:#555;">🎯 ${label}</label>
+                <textarea id="poolInput_${i}"
+                    placeholder="1er joueur&#10;2ème joueur&#10;3ème joueur&#10;..."
+                    style="width:100%;height:150px;padding:8px;border:2px solid #ddd;border-radius:6px;font-size:12px;resize:vertical;font-family:monospace;box-sizing:border-box;"></textarea>
+            </div>
+        `;
+    }).join('');
+}
+window.renderPoolInputs = renderPoolInputs;
+
+function applyImportPoolRankings(dayNumber) {
+    const numPools = parseInt(document.getElementById('numPoolsInput').value) || 2;
+    const poolLetters = 'ABCDEFGH';
+
+    const poolRankings = [];
+    for (let i = 0; i < numPools; i++) {
+        const textarea = document.getElementById(`poolInput_${i}`);
+        if (!textarea) continue;
+        const players = textarea.value
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0 && line.toUpperCase() !== 'BYE');
+        const label = numPools === 1 ? 'Classement' : `Pool ${poolLetters[i]}`;
+        poolRankings.push({ name: label, players });
+    }
+
+    const totalPlayers = poolRankings.reduce((sum, p) => sum + p.players.length, 0);
+    if (totalPlayers < 2) {
+        alert('⚠️ Veuillez saisir au moins 2 joueurs au total.');
+        return;
+    }
+
+    // Vérifier doublons
+    const allNames = poolRankings.flatMap(p => p.players);
+    const uniqueNames = new Set(allNames.map(n => n.toLowerCase()));
+    if (uniqueNames.size < allNames.length) {
+        if (!confirm('⚠️ Des noms en double ont été détectés. Continuer quand même ?')) return;
+    }
+
+    document.getElementById('importPoolRankingsModal').remove();
+    generateDirectFromImportedRankings(dayNumber, poolRankings);
+}
+window.applyImportPoolRankings = applyImportPoolRankings;
+
+function generateDirectFromImportedRankings(dayNumber, poolRankings) {
+    const dayData = championship.days[dayNumber];
+    if (!dayData) { alert('Journée non trouvée !'); return; }
+
+    // Construire la liste des qualifiés avec les infos de pool pour le cross-seeding
+    const allQualified = [];
+    poolRankings.forEach((pool, poolIndex) => {
+        pool.players.forEach((name, rankIndex) => {
+            allQualified.push({
+                name: typeof formatProperName === 'function' ? formatProperName(name) : name,
+                seed: allQualified.length + 1,
+                qualificationMethod: 'Import classement',
+                isDirect: true,
+                wins: 0, losses: 0, points: 0, diff: 0, pointsWon: 0,
+                poolRank: rankIndex + 1,
+                poolIndex: poolIndex,
+                poolName: pool.name
+            });
+        });
+    });
+
+    // Initialiser la structure pools
+    if (!dayData.pools) {
+        dayData.pools = { enabled: true, config: { mode: 'direct' }, divisions: {} };
+    } else {
+        dayData.pools.enabled = true;
+        dayData.pools.config = dayData.pools.config || {};
+        dayData.pools.config.mode = 'direct';
+    }
+
+    const numDivisions = championship.config?.numberOfDivisions || 1;
+    for (let div = 1; div <= numDivisions; div++) {
+        if (!dayData.pools.divisions[div]) {
+            dayData.pools.divisions[div] = { pools: [], matches: [] };
+        }
+    }
+
+    initializeManualFinalPhase(dayNumber);
+
+    // Tous les joueurs importés vont en division 1
+    const division = 1;
+    dayData.pools.manualFinalPhase.divisions[division].qualified = allQualified;
+    dayData.pools.manualFinalPhase.enabled = true;
+
+    const adjustedQualified = adjustToPowerOfTwo(allQualified);
+    const firstRoundName = determineFirstRound(adjustedQualified.length);
+
+    if (firstRoundName && adjustedQualified.length >= 2) {
+        generateFirstRoundDirect(dayNumber, division, adjustedQualified, firstRoundName);
+    }
+
+    updateManualFinalPhaseDisplay(dayNumber);
+    saveToLocalStorage();
+
+    const importBtn = document.getElementById(`import-pool-rankings-btn-${dayNumber}`);
+    if (importBtn) { importBtn.disabled = true; importBtn.style.opacity = '0.5'; }
+    const directBtn = document.getElementById(`direct-final-btn-${dayNumber}`);
+    if (directBtn) { directBtn.disabled = true; directBtn.style.opacity = '0.5'; }
+
+    const poolSummary = poolRankings.map(p => `${p.name} (${p.players.length})`).join(', ');
+    showNotification(`⚡ Tableau généré — ${allQualified.length} joueurs : ${poolSummary}`, 'success');
+
+    setTimeout(() => {
+        const firstFinalPhase = document.querySelector('.manual-final-phase-container');
+        if (firstFinalPhase) firstFinalPhase.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+window.generateDirectFromImportedRankings = generateDirectFromImportedRankings;
 
 // ======================================
 // FINALE DE SAISON (basée sur classement général)
