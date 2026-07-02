@@ -3595,17 +3595,11 @@ function generateDirectFinalPhase(dayNumber) {
             player.seed = idx + 1;
         });
 
-        dayData.pools.manualFinalPhase.divisions[division].qualified = shuffledQualified;
         totalQualified += shuffledQualified.length;
 
-        // Ajuster le nombre de joueurs à une puissance de 2 (avec BYEs si nécessaire)
-        const adjustedQualified = adjustToPowerOfTwo(shuffledQualified);
-
-        // Déterminer le premier tour selon le nombre de joueurs
-        const firstRoundName = determineFirstRound(adjustedQualified.length);
-        if (firstRoundName && adjustedQualified.length >= 2) {
-            generateFirstRoundDirect(dayNumber, division, adjustedQualified, firstRoundName);
-        }
+        // Génère le tableau ; si le nombre de joueurs n'est pas une puissance de 2,
+        // seuls les joueurs en trop disputent un tour de barrage (pas de BYE affiché)
+        startEliminationBracket(dayNumber, division, shuffledQualified);
     }
 
     dayData.pools.manualFinalPhase.enabled = true;
@@ -3748,48 +3742,6 @@ function applyImportPoolRankings(dayNumber) {
 }
 window.applyImportPoolRankings = applyImportPoolRankings;
 
-/**
- * Construit le tableau (ordre des matchs du 1er tour) à partir des classements importés.
- * Les meilleurs classés reçoivent les BYEs, et chaque classement est réparti en
- * serpentine dans les moitiés du tableau : deux joueurs du même classement se
- * rencontrent le plus tard possible.
- */
-function buildBracketFromRankings(rankingLists) {
-    const totalPlayers = rankingLists.reduce((s, l) => s + l.length, 0);
-    const bracketSize = Math.pow(2, Math.ceil(Math.log2(Math.max(2, totalPlayers))));
-
-    // Seeds globaux par groupe de rang : tous les 1ers d'abord, puis les 2èmes, etc.
-    let seedCounter = 1;
-    const maxRank = Math.max(...rankingLists.map(l => l.length));
-    for (let r = 0; r < maxRank; r++) {
-        rankingLists.forEach(list => {
-            if (list[r]) list[r].seed = seedCounter++;
-        });
-    }
-
-    // Compléter avec des BYEs en fin des listes les plus courtes :
-    // placés en bas de classement, ils tombent face aux têtes de série
-    const lists = rankingLists.map(l => [...l]);
-    let byesToAdd = bracketSize - totalPlayers;
-    while (byesToAdd > 0) {
-        let minIdx = 0;
-        lists.forEach((l, i) => { if (l.length < lists[minIdx].length) minIdx = i; });
-        lists[minIdx].push({
-            name: 'BYE', seed: seedCounter++, isBye: true,
-            qualificationMethod: 'BYE', isDirect: false, poolIndex: -1
-        });
-        byesToAdd--;
-    }
-
-    // Un seul classement : placement classique tête de série (1er vs dernier, etc.)
-    if (lists.length === 1) {
-        const positions = generateBracketPositions(bracketSize);
-        return positions.map(idx => lists[0][idx]);
-    }
-
-    return serpentineDistribute(lists, bracketSize);
-}
-
 function serpentineDistribute(lists, size) {
     if (size <= 2) {
         return lists.flat();
@@ -3827,6 +3779,170 @@ function serpentineDistribute(lists, size) {
     ];
 }
 
+// ======================================
+// TOUR DE BARRAGE (évite d'afficher un tour saturé de matchs BYE)
+// ======================================
+
+function prevPowerOfTwo(n) {
+    let p = 1;
+    while (p * 2 <= n) p *= 2;
+    return p;
+}
+
+/**
+ * Sépare les qualifiés entre ceux exemptés d'office (meilleures seeds) et ceux
+ * qui doivent disputer un tour de barrage. Utilisé quand le nombre de joueurs
+ * n'est pas une puissance de 2, pour ne générer QUE les matchs nécessaires
+ * plutôt qu'un tour entier saturé de BYE.
+ */
+function splitForBarrage(qualifiedSortedBySeed) {
+    const n = qualifiedSortedBySeed.length;
+    const prevPow = prevPowerOfTwo(n);
+    const matchesPrelim = n - prevPow;
+    const directQualifiers = qualifiedSortedBySeed.slice(0, prevPow - matchesPrelim);
+    const barrageParticipants = qualifiedSortedBySeed.slice(prevPow - matchesPrelim);
+    return { directQualifiers, barrageParticipants, matchesPrelim, prevPow };
+}
+
+/**
+ * Associe les joueurs du tour de barrage par paires équilibrées
+ * (meilleure seed du groupe contre la moins bonne, etc.)
+ */
+function pairBarrage(barrageParticipants) {
+    const sorted = [...barrageParticipants].sort((a, b) => a.seed - b.seed);
+    const m = sorted.length / 2;
+    const pairs = [];
+    for (let i = 0; i < m; i++) {
+        pairs.push([sorted[i], sorted[sorted.length - 1 - i]]);
+    }
+    return pairs;
+}
+
+function generateBarrageRound(dayNumber, division, pairs, directQualifiers, prevPow) {
+    const dayData = championship.days[dayNumber];
+    const finalPhaseDiv = dayData.pools.manualFinalPhase.divisions[division];
+    const rounds = finalPhaseDiv.rounds;
+
+    const matches = pairs.map((pair, i) => {
+        const [p1, p2] = pair;
+        return {
+            id: `Barrage-${division}-${i + 1}`,
+            player1: p1.name,
+            player2: p2.name,
+            player1Seed: p1.seed,
+            player2Seed: p2.seed,
+            score1: '',
+            score2: '',
+            completed: false,
+            winner: null,
+            roundName: 'Barrage',
+            position: i + 1,
+            isBye: false
+        };
+    });
+
+    rounds['Barrage'] = {
+        name: 'Barrage',
+        matches: matches,
+        completed: false,
+        nextRound: determineFirstRound(prevPow),
+        isBarrage: true,
+        createdAt: new Date().toISOString()
+    };
+
+    finalPhaseDiv.barrageDirectQualifiers = directQualifiers;
+    dayData.pools.manualFinalPhase.currentRound = 'Barrage';
+}
+
+/**
+ * Place un groupe de joueurs déjà constitué (fusion barrage + exemptés, ou
+ * qualifiés directs si puissance de 2) dans l'ordre du tableau. Réutilise la
+ * séparation par classement d'origine (serpentine) si l'info est disponible,
+ * sinon l'algorithme générique organizeSeeds.
+ */
+function seedPlayersForBracket(players) {
+    const hasPoolInfo = players.some(p => p.poolIndex !== undefined && p.poolIndex >= 0);
+    if (!hasPoolInfo) {
+        return organizeSeeds(players);
+    }
+
+    const groups = {};
+    players.forEach(p => {
+        const key = p.poolIndex;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(p);
+    });
+    Object.keys(groups).forEach(key => groups[key].sort((a, b) => (a.poolRank || 0) - (b.poolRank || 0)));
+    const lists = Object.keys(groups).sort((a, b) => a - b).map(key => groups[key]);
+
+    if (lists.length === 1) {
+        const positions = generateBracketPositions(players.length);
+        return positions.map(idx => lists[0][idx]);
+    }
+
+    return serpentineDistribute(lists, players.length);
+}
+
+/**
+ * Fusionne les vainqueurs du tour de barrage avec les joueurs exemptés
+ * puis génère le vrai premier tour du tableau (sans aucun BYE).
+ */
+function resolveBarrageAndGenerateFirstRound(dayNumber, division) {
+    const dayData = championship.days[dayNumber];
+    const finalPhaseDiv = dayData.pools.manualFinalPhase.divisions[division];
+    const barrageRound = finalPhaseDiv.rounds['Barrage'];
+
+    const winners = barrageRound.matches
+        .filter(m => m.completed && m.winner)
+        .map(m => {
+            const winnerSeed = m.winner === m.player1 ? m.player1Seed : m.player2Seed;
+            const original = (finalPhaseDiv.qualified || []).find(q => q.name === m.winner);
+            return original || { name: m.winner, seed: winnerSeed };
+        });
+
+    const directQualifiers = finalPhaseDiv.barrageDirectQualifiers || [];
+    const merged = [...directQualifiers, ...winners];
+
+    const seeded = seedPlayersForBracket(merged);
+    const roundName = determineFirstRound(seeded.length);
+
+    generateFirstRoundDirect(dayNumber, division, seeded, roundName, true);
+
+    updateManualFinalPhaseDisplay(dayNumber);
+    saveToLocalStorage();
+
+    showNotification(`🎯 ${roundName} générés ! ${seeded.length} joueurs qualifiés.`, 'success');
+}
+
+/**
+ * Point d'entrée unique pour démarrer un tableau à élimination directe.
+ * Si le nombre de joueurs n'est pas une puissance de 2, un tour de barrage
+ * est généré avec seulement les matchs nécessaires (aucun BYE affiché) ;
+ * les meilleures seeds sont exemptées d'office et rejoignent directement
+ * le premier vrai tour une fois le barrage terminé.
+ */
+function startEliminationBracket(dayNumber, division, qualifiedPlayers) {
+    const dayData = championship.days[dayNumber];
+    const finalPhaseDiv = dayData.pools.manualFinalPhase.divisions[division];
+    finalPhaseDiv.qualified = qualifiedPlayers;
+
+    const n = qualifiedPlayers.length;
+    if (n < 2) return;
+
+    const isPowerOfTwo = (n & (n - 1)) === 0;
+    if (isPowerOfTwo) {
+        const seeded = seedPlayersForBracket(qualifiedPlayers);
+        const roundName = determineFirstRound(n);
+        generateFirstRoundDirect(dayNumber, division, seeded, roundName, true);
+        return;
+    }
+
+    const sorted = [...qualifiedPlayers].sort((a, b) => a.seed - b.seed);
+    const { directQualifiers, barrageParticipants, prevPow } = splitForBarrage(sorted);
+    const pairs = pairBarrage(barrageParticipants);
+    generateBarrageRound(dayNumber, division, pairs, directQualifiers, prevPow);
+}
+
 function generateDirectFromImportedRankings(dayNumber, rankings) {
     const dayData = championship.days[dayNumber];
     if (!dayData) { alert('Journée non trouvée !'); return; }
@@ -3835,7 +3951,7 @@ function generateDirectFromImportedRankings(dayNumber, rankings) {
     const rankingLists = rankings.map((ranking, listIndex) =>
         ranking.players.map((name, rankIndex) => ({
             name: typeof formatProperName === 'function' ? formatProperName(name) : name,
-            seed: 0, // attribué par buildBracketFromRankings
+            seed: 0, // attribué ci-dessous
             qualificationMethod: `${ranking.name} — ${rankIndex + 1}${rankIndex === 0 ? 'er' : 'ème'}`,
             isDirect: true,
             wins: 0, losses: 0, points: 0, diff: 0, pointsWon: 0,
@@ -3844,6 +3960,16 @@ function generateDirectFromImportedRankings(dayNumber, rankings) {
             poolName: ranking.name
         }))
     );
+
+    // Seeds globaux par groupe de rang : tous les 1ers d'abord, puis les 2èmes, etc.
+    let seedCounter = 1;
+    const maxRank = Math.max(...rankingLists.map(l => l.length));
+    for (let r = 0; r < maxRank; r++) {
+        rankingLists.forEach(list => {
+            if (list[r]) list[r].seed = seedCounter++;
+        });
+    }
+
     const allQualified = rankingLists.flat();
 
     // Initialiser la structure pools
@@ -3864,18 +3990,13 @@ function generateDirectFromImportedRankings(dayNumber, rankings) {
 
     initializeManualFinalPhase(dayNumber);
 
-    // Le tableau est construit ici (croisement + BYEs), sans repasser par organizeSeeds
-    const bracket = buildBracketFromRankings(rankingLists);
-
     // Tous les joueurs importés vont en division 1
     const division = 1;
-    dayData.pools.manualFinalPhase.divisions[division].qualified = allQualified;
     dayData.pools.manualFinalPhase.enabled = true;
 
-    const firstRoundName = determineFirstRound(bracket.length);
-    if (firstRoundName && bracket.length >= 2) {
-        generateFirstRoundDirect(dayNumber, division, bracket, firstRoundName, true);
-    }
+    // Génère le tableau ; si le nombre de joueurs n'est pas une puissance de 2,
+    // seuls les joueurs en trop disputent un tour de barrage (pas de BYE affiché)
+    startEliminationBracket(dayNumber, division, allQualified);
 
     updateManualFinalPhaseDisplay(dayNumber);
     saveToLocalStorage();
@@ -4022,16 +4143,14 @@ function generateSeasonFinalPhase(dayNumber) {
             avgWinRate: player.avgWinRate
         }));
 
-        // Ajuster à une puissance de 2 si nécessaire
-        const adjustedQualified = adjustToPowerOfTwo(qualified);
+        totalQualified += qualified.length;
 
-        dayData.pools.manualFinalPhase.divisions[division].qualified = adjustedQualified;
-        totalQualified += qualified.length; // Compter seulement les vrais joueurs, pas les BYEs
-
-        // Déterminer et générer le premier tour
-        const firstRoundName = determineFirstRound(adjustedQualified.length);
-        if (firstRoundName && adjustedQualified.length >= 4) {
-            generateFirstRoundDirect(dayNumber, division, adjustedQualified, firstRoundName);
+        // Génère le tableau ; si le nombre de joueurs n'est pas une puissance de 2,
+        // seuls les joueurs en trop disputent un tour de barrage (pas de BYE affiché)
+        if (qualified.length >= 4) {
+            startEliminationBracket(dayNumber, division, qualified);
+        } else {
+            dayData.pools.manualFinalPhase.divisions[division].qualified = qualified;
         }
 
         qualificationSummary.push(`Division ${division}: ${qualified.length} qualifiés (top ${qualified.length} du classement)`);
@@ -4558,7 +4677,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
 function generateRoundsHTML(dayNumber, division, rounds, currentRound) {
     let html = '';
     
-    const roundOrder = ["16èmes", "8èmes", "Quarts", "Demi-finales", "Petite finale", "Finale"];
+    const roundOrder = ["Barrage", "32èmes", "16èmes", "8èmes", "Quarts", "Demi-finales", "Petite finale", "Finale"];
     
     for (const roundName of roundOrder) {
         if (!rounds[roundName]) continue;
@@ -4623,8 +4742,10 @@ function generateRoundsHTML(dayNumber, division, rounds, currentRound) {
 
 function getRoundIcon(roundName) {
     const icons = {
+        "Barrage": "🚧",
+        "32èmes": "🎯",
         "16èmes": "🎯",
-        "8èmes": "🔥", 
+        "8èmes": "🔥",
         "Quarts": "⚡",
         "Demi-finales": "🚀",
         "Petite finale": "🥉",
@@ -5120,6 +5241,13 @@ function generateNextManualRound(dayNumber, division, currentRoundName) {
     const allMatchesCompleted = currentRound.matches.every(m => m.completed);
     if (!currentRound.completed && !allMatchesCompleted) {
         alert('⚠️ Terminez d\'abord tous les matchs du tour actuel !');
+        return;
+    }
+
+    // Le tour de barrage fusionne ses vainqueurs avec les joueurs exemptés
+    // avant de générer le vrai premier tour (logique dédiée, pas de pairage simple)
+    if (currentRoundName === 'Barrage') {
+        resolveBarrageAndGenerateFirstRound(dayNumber, division);
         return;
     }
 
