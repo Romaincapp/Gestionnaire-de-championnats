@@ -260,7 +260,7 @@ function addPoolToggleToInterface(dayNumber) {
                         padding: 8px 15px;
                         font-size: 12px;
                     " id="import-pool-rankings-btn-${dayNumber}">
-                        📋 Import classements
+                        📋 Finale depuis classements
                     </button>
 
                     <button class="btn" onclick="generateSeasonFinalPhase(${dayNumber})" style="
@@ -3634,7 +3634,7 @@ function generateDirectFinalPhase(dayNumber) {
 window.generateDirectFinalPhase = generateDirectFinalPhase;
 
 // ======================================
-// IMPORT CLASSEMENTS DE POOLS → ÉLIMINATION DIRECTE
+// PHASE FINALE DEPUIS CLASSEMENTS DE SAISON
 // ======================================
 
 function showImportPoolRankingsModal(dayNumber) {
@@ -3647,29 +3647,33 @@ function showImportPoolRankingsModal(dayNumber) {
 
     modal.innerHTML = `
         <div style="background:white;padding:25px;border-radius:12px;max-width:720px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4);margin:auto;">
-            <h3 style="margin:0 0 6px 0;color:#2c3e50;font-size:18px;">📋 Import depuis classements de pools</h3>
+            <h3 style="margin:0 0 6px 0;color:#2c3e50;font-size:18px;">🏆 Phase finale depuis vos classements</h3>
             <p style="margin:0 0 20px 0;color:#7f8c8d;font-size:13px;">
-                Importez les classements de vos pools de saison pour générer un tableau croisé :<br>
-                les 1ers de chaque pool ne se rencontrent pas dès le premier tour.
+                Collez les classements finaux de vos groupes joués pendant l'année.
+                Aucun match de poule ne sera créé : le tableau à élimination directe est généré
+                immédiatement, en croisant les classements (le 1er du classement 1 et le 1er du
+                classement 2 ne peuvent se rencontrer qu'en finale).
             </p>
 
             <div style="margin-bottom:18px;">
-                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:#333;">Nombre de pools</label>
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:#333;">Nombre de classements à importer</label>
                 <select id="numPoolsInput" onchange="renderPoolInputs(${dayNumber})"
                     style="padding:8px 14px;border:2px solid #ddd;border-radius:6px;font-size:14px;cursor:pointer;">
-                    <option value="2">2 pools</option>
-                    <option value="3">3 pools</option>
-                    <option value="4">4 pools</option>
-                    <option value="1">1 liste (ordre imposé)</option>
-                    <option value="5">5 pools</option>
-                    <option value="6">6 pools</option>
+                    <option value="2">2 classements</option>
+                    <option value="3">3 classements</option>
+                    <option value="4">4 classements</option>
+                    <option value="1">1 seul classement (ordre imposé)</option>
+                    <option value="5">5 classements</option>
+                    <option value="6">6 classements</option>
                 </select>
             </div>
 
             <div id="poolInputsContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:18px;"></div>
 
             <div style="background:#eaf4fb;padding:10px 14px;border-radius:6px;margin-bottom:20px;font-size:12px;color:#2980b9;">
-                💡 <strong>Un joueur par ligne</strong>, dans l'ordre du classement (1er en haut). Les joueurs d'une même pool seront séparés dans le tableau de sorte à ne se rencontrer qu'en finale.
+                💡 <strong>Un joueur par ligne</strong>, du 1er au dernier du classement.
+                Les mieux classés sont têtes de série (exemptés en priorité si le nombre de joueurs est impair)
+                et les joueurs d'un même classement sont placés dans des parties opposées du tableau.
             </div>
 
             <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -3679,7 +3683,7 @@ function showImportPoolRankingsModal(dayNumber) {
                 </button>
                 <button onclick="applyImportPoolRankings(${dayNumber})"
                     style="padding:10px 20px;border:none;background:linear-gradient(135deg,#1abc9c,#16a085);color:white;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">
-                    ⚡ Générer le tableau
+                    ⚡ Générer la phase finale
                 </button>
             </div>
         </div>
@@ -3693,18 +3697,17 @@ window.showImportPoolRankingsModal = showImportPoolRankingsModal;
 function renderPoolInputs(dayNumber) {
     const container = document.getElementById('poolInputsContainer');
     if (!container) return;
-    const numPools = parseInt(document.getElementById('numPoolsInput').value) || 2;
-    const poolLetters = 'ABCDEFGH';
+    const numLists = parseInt(document.getElementById('numPoolsInput').value) || 2;
 
-    container.style.gridTemplateColumns = numPools === 1 ? '1fr' : '1fr 1fr';
+    container.style.gridTemplateColumns = numLists === 1 ? '1fr' : '1fr 1fr';
 
-    container.innerHTML = Array.from({ length: numPools }, (_, i) => {
-        const label = numPools === 1 ? 'Classement' : `Pool ${poolLetters[i]}`;
+    container.innerHTML = Array.from({ length: numLists }, (_, i) => {
+        const label = numLists === 1 ? 'Classement' : `Classement ${i + 1}`;
         return `
             <div>
-                <label style="display:block;margin-bottom:5px;font-size:13px;font-weight:600;color:#555;">🎯 ${label}</label>
+                <label style="display:block;margin-bottom:5px;font-size:13px;font-weight:600;color:#555;">📋 ${label}</label>
                 <textarea id="poolInput_${i}"
-                    placeholder="1er joueur&#10;2ème joueur&#10;3ème joueur&#10;..."
+                    placeholder="1er du classement&#10;2ème&#10;3ème&#10;..."
                     style="width:100%;height:150px;padding:8px;border:2px solid #ddd;border-radius:6px;font-size:12px;resize:vertical;font-family:monospace;box-sizing:border-box;"></textarea>
             </div>
         `;
@@ -3713,59 +3716,135 @@ function renderPoolInputs(dayNumber) {
 window.renderPoolInputs = renderPoolInputs;
 
 function applyImportPoolRankings(dayNumber) {
-    const numPools = parseInt(document.getElementById('numPoolsInput').value) || 2;
-    const poolLetters = 'ABCDEFGH';
+    const numLists = parseInt(document.getElementById('numPoolsInput').value) || 2;
 
-    const poolRankings = [];
-    for (let i = 0; i < numPools; i++) {
+    const rankings = [];
+    for (let i = 0; i < numLists; i++) {
         const textarea = document.getElementById(`poolInput_${i}`);
         if (!textarea) continue;
         const players = textarea.value
             .split('\n')
             .map(line => line.trim())
             .filter(line => line.length > 0 && line.toUpperCase() !== 'BYE');
-        const label = numPools === 1 ? 'Classement' : `Pool ${poolLetters[i]}`;
-        poolRankings.push({ name: label, players });
+        const label = numLists === 1 ? 'Classement' : `Classement ${i + 1}`;
+        if (players.length > 0) rankings.push({ name: label, players });
     }
 
-    const totalPlayers = poolRankings.reduce((sum, p) => sum + p.players.length, 0);
+    const totalPlayers = rankings.reduce((sum, r) => sum + r.players.length, 0);
     if (totalPlayers < 2) {
         alert('⚠️ Veuillez saisir au moins 2 joueurs au total.');
         return;
     }
 
     // Vérifier doublons
-    const allNames = poolRankings.flatMap(p => p.players);
+    const allNames = rankings.flatMap(r => r.players);
     const uniqueNames = new Set(allNames.map(n => n.toLowerCase()));
     if (uniqueNames.size < allNames.length) {
         if (!confirm('⚠️ Des noms en double ont été détectés. Continuer quand même ?')) return;
     }
 
     document.getElementById('importPoolRankingsModal').remove();
-    generateDirectFromImportedRankings(dayNumber, poolRankings);
+    generateDirectFromImportedRankings(dayNumber, rankings);
 }
 window.applyImportPoolRankings = applyImportPoolRankings;
 
-function generateDirectFromImportedRankings(dayNumber, poolRankings) {
+/**
+ * Construit le tableau (ordre des matchs du 1er tour) à partir des classements importés.
+ * Les meilleurs classés reçoivent les BYEs, et chaque classement est réparti en
+ * serpentine dans les moitiés du tableau : deux joueurs du même classement se
+ * rencontrent le plus tard possible.
+ */
+function buildBracketFromRankings(rankingLists) {
+    const totalPlayers = rankingLists.reduce((s, l) => s + l.length, 0);
+    const bracketSize = Math.pow(2, Math.ceil(Math.log2(Math.max(2, totalPlayers))));
+
+    // Seeds globaux par groupe de rang : tous les 1ers d'abord, puis les 2èmes, etc.
+    let seedCounter = 1;
+    const maxRank = Math.max(...rankingLists.map(l => l.length));
+    for (let r = 0; r < maxRank; r++) {
+        rankingLists.forEach(list => {
+            if (list[r]) list[r].seed = seedCounter++;
+        });
+    }
+
+    // Compléter avec des BYEs en fin des listes les plus courtes :
+    // placés en bas de classement, ils tombent face aux têtes de série
+    const lists = rankingLists.map(l => [...l]);
+    let byesToAdd = bracketSize - totalPlayers;
+    while (byesToAdd > 0) {
+        let minIdx = 0;
+        lists.forEach((l, i) => { if (l.length < lists[minIdx].length) minIdx = i; });
+        lists[minIdx].push({
+            name: 'BYE', seed: seedCounter++, isBye: true,
+            qualificationMethod: 'BYE', isDirect: false, poolIndex: -1
+        });
+        byesToAdd--;
+    }
+
+    // Un seul classement : placement classique tête de série (1er vs dernier, etc.)
+    if (lists.length === 1) {
+        const positions = generateBracketPositions(bracketSize);
+        return positions.map(idx => lists[0][idx]);
+    }
+
+    return serpentineDistribute(lists, bracketSize);
+}
+
+function serpentineDistribute(lists, size) {
+    if (size <= 2) {
+        return lists.flat();
+    }
+    const half = size / 2;
+    const topLists = lists.map(() => []);
+    const bottomLists = lists.map(() => []);
+    let topCount = 0;
+    let bottomCount = 0;
+
+    // Les listes sont alternées haut/bas dans l'ordre de leur meilleur joueur
+    // restant : les têtes de liste se retrouvent dans des moitiés opposées
+    const bestRank = list => list.length ? Math.min(...list.map(p => p.poolRank || 999)) : Infinity;
+    const order = lists
+        .map((list, li) => ({ li, best: bestRank(list) }))
+        .filter(e => e.best !== Infinity)
+        .sort((a, b) => a.best - b.best || a.li - b.li);
+    const startsTop = {};
+    order.forEach((e, k) => { startsTop[e.li] = (k % 2 === 0); });
+
+    lists.forEach((list, li) => {
+        list.forEach((player, pi) => {
+            // Chaque liste alterne rang par rang entre les deux moitiés
+            let toTop = startsTop[li] ? (pi % 2 === 0) : (pi % 2 === 1);
+            if (toTop && topCount >= half) toTop = false;
+            if (!toTop && bottomCount >= half) toTop = true;
+            if (toTop) { topLists[li].push(player); topCount++; }
+            else { bottomLists[li].push(player); bottomCount++; }
+        });
+    });
+
+    return [
+        ...serpentineDistribute(topLists, half),
+        ...serpentineDistribute(bottomLists, half)
+    ];
+}
+
+function generateDirectFromImportedRankings(dayNumber, rankings) {
     const dayData = championship.days[dayNumber];
     if (!dayData) { alert('Journée non trouvée !'); return; }
 
-    // Construire la liste des qualifiés avec les infos de pool pour le cross-seeding
-    const allQualified = [];
-    poolRankings.forEach((pool, poolIndex) => {
-        pool.players.forEach((name, rankIndex) => {
-            allQualified.push({
-                name: typeof formatProperName === 'function' ? formatProperName(name) : name,
-                seed: allQualified.length + 1,
-                qualificationMethod: 'Import classement',
-                isDirect: true,
-                wins: 0, losses: 0, points: 0, diff: 0, pointsWon: 0,
-                poolRank: rankIndex + 1,
-                poolIndex: poolIndex,
-                poolName: pool.name
-            });
-        });
-    });
+    // Construire les listes de joueurs avec leurs infos de classement
+    const rankingLists = rankings.map((ranking, listIndex) =>
+        ranking.players.map((name, rankIndex) => ({
+            name: typeof formatProperName === 'function' ? formatProperName(name) : name,
+            seed: 0, // attribué par buildBracketFromRankings
+            qualificationMethod: `${ranking.name} — ${rankIndex + 1}${rankIndex === 0 ? 'er' : 'ème'}`,
+            isDirect: true,
+            wins: 0, losses: 0, points: 0, diff: 0, pointsWon: 0,
+            poolRank: rankIndex + 1,
+            poolIndex: listIndex,
+            poolName: ranking.name
+        }))
+    );
+    const allQualified = rankingLists.flat();
 
     // Initialiser la structure pools
     if (!dayData.pools) {
@@ -3785,16 +3864,17 @@ function generateDirectFromImportedRankings(dayNumber, poolRankings) {
 
     initializeManualFinalPhase(dayNumber);
 
+    // Le tableau est construit ici (croisement + BYEs), sans repasser par organizeSeeds
+    const bracket = buildBracketFromRankings(rankingLists);
+
     // Tous les joueurs importés vont en division 1
     const division = 1;
     dayData.pools.manualFinalPhase.divisions[division].qualified = allQualified;
     dayData.pools.manualFinalPhase.enabled = true;
 
-    const adjustedQualified = adjustToPowerOfTwo(allQualified);
-    const firstRoundName = determineFirstRound(adjustedQualified.length);
-
-    if (firstRoundName && adjustedQualified.length >= 2) {
-        generateFirstRoundDirect(dayNumber, division, adjustedQualified, firstRoundName);
+    const firstRoundName = determineFirstRound(bracket.length);
+    if (firstRoundName && bracket.length >= 2) {
+        generateFirstRoundDirect(dayNumber, division, bracket, firstRoundName, true);
     }
 
     updateManualFinalPhaseDisplay(dayNumber);
@@ -3805,8 +3885,8 @@ function generateDirectFromImportedRankings(dayNumber, poolRankings) {
     const directBtn = document.getElementById(`direct-final-btn-${dayNumber}`);
     if (directBtn) { directBtn.disabled = true; directBtn.style.opacity = '0.5'; }
 
-    const poolSummary = poolRankings.map(p => `${p.name} (${p.players.length})`).join(', ');
-    showNotification(`⚡ Tableau généré — ${allQualified.length} joueurs : ${poolSummary}`, 'success');
+    const summary = rankings.map(r => `${r.name} (${r.players.length})`).join(', ');
+    showNotification(`🏆 Phase finale générée — ${allQualified.length} joueurs : ${summary}`, 'success');
 
     setTimeout(() => {
         const firstFinalPhase = document.querySelector('.manual-final-phase-container');
@@ -4029,12 +4109,13 @@ function adjustToPowerOfTwo(players) {
 /**
  * Génère le premier tour pour l'élimination directe
  */
-function generateFirstRoundDirect(dayNumber, division, qualified, roundName) {
+function generateFirstRoundDirect(dayNumber, division, qualified, roundName, preSeeded) {
     const dayData = championship.days[dayNumber];
     const rounds = dayData.pools.manualFinalPhase.divisions[division].rounds;
 
     // Organiser les seeds pour un bracket équilibré
-    const seededPlayers = organizeSeeds(qualified);
+    // (sauf si le tableau est déjà construit, ex. import de classements)
+    const seededPlayers = preSeeded ? qualified : organizeSeeds(qualified);
     const matches = [];
 
     for (let i = 0; i < seededPlayers.length; i += 2) {
