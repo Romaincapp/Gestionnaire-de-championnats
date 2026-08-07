@@ -6333,6 +6333,54 @@ var KNOWN_SWIMMING_CLUBS = [
     'Jalon'
 ].sort(function(a, b) { return b.length - a.length; });
 
+// Ordres de couloirs partagés (le plus rapide au centre) — source unique de vérité
+// utilisée à la fois par l'aperçu et la génération, pour qu'ils ne divergent jamais.
+var SWIMMING_LANE_ORDERS = {
+    3: [2, 3, 1],
+    4: [2, 3, 1, 4],
+    5: [3, 4, 2, 5, 1],
+    6: [3, 4, 2, 5, 1, 6],
+    7: [4, 5, 3, 6, 2, 7, 1],
+    8: [4, 5, 3, 6, 2, 7, 1, 8],
+    9: [5, 6, 4, 7, 3, 8, 2, 9, 1],
+    10: [5, 6, 4, 7, 3, 8, 2, 9, 1, 10]
+};
+function getSwimmingLaneOrder(lanesPerSerie) {
+    return SWIMMING_LANE_ORDERS[lanesPerSerie] || SWIMMING_LANE_ORDERS[5];
+}
+
+// Nages reconnues — source unique de vérité (fautes de frappe fréquentes incluses).
+// Ordre important : les motifs les plus longs/spécifiques d'abord.
+var SWIMMING_STROKE_PATTERN =
+    'papillon|butterfly|pap\\b|4\\s*nages|quatre\\s*nages|4\\s*styles|nage\\s*libre|' +
+    'libre|crawl|brasse|breaststroke|dos|backstroke|freestyle|' +
+    'assist[eéè]\\w*|asssit[eéè]\\w*|assit[eéè]\\w*';
+var SWIMMING_STROKE_REGEX = new RegExp('(' + SWIMMING_STROKE_PATTERN + ')', 'i');
+var SWIMMING_STROKE_REGEX_G = new RegExp('(' + SWIMMING_STROKE_PATTERN + ')', 'gi');
+
+// Normaliser un libellé de nage vers une forme canonique
+function normalizeSwimmingStroke(raw) {
+    var s = (raw || '').toLowerCase().trim();
+    if (/^ass|^asss|^assit/.test(s)) return 'assisté';
+    if (/^pap|butterfly/.test(s)) return 'papillon';
+    if (/nages|styles|^4|quatre/.test(s)) return '4 nages';
+    if (/nage\s*libre|crawl|freestyle/.test(s)) return 'libre';
+    if (/^libre/.test(s)) return 'libre';
+    if (/brasse|breaststroke/.test(s)) return 'brasse';
+    if (/dos|backstroke/.test(s)) return 'dos';
+    return s;
+}
+
+// Termes à chercher dans le nom d'une épreuve pour matcher une nage canonique
+var SWIMMING_STROKE_ALIASES = {
+    'assisté': ['assist', 'assisté', 'assiste'],
+    'libre': ['libre', 'crawl', 'freestyle', 'nage libre'],
+    'papillon': ['papillon', 'pap', 'butterfly'],
+    '4 nages': ['4 nages', 'quatre nages', '4nages', '4 styles'],
+    'brasse': ['brasse', 'breaststroke'],
+    'dos': ['dos', 'backstroke']
+};
+
 // Parse un temps de natation depuis divers formats → millisecondes
 function parseSwimmingTime(text) {
     if (!text) return { timeMs: 0, timeStr: '' };
@@ -6402,20 +6450,18 @@ function parseSwimmingEntry(rawName) {
     }
 
     // Extraire la nage (sans \b car accents mal gérés)
-    var strokeRegex = /(brasse|dos|libre|assist[eéè]\w*|asssit[eéè]\w*)/i;
-    var strokeMatch = text.match(strokeRegex);
+    var strokeMatch = text.match(SWIMMING_STROKE_REGEX);
     if (!strokeMatch) return null;
 
-    var stroke = strokeMatch[1].toLowerCase();
-    if (stroke.match(/^ass/)) stroke = 'assisté';
+    var stroke = normalizeSwimmingStroke(strokeMatch[1]);
 
-    // Extraire la distance (25 ou 50)
-    var distRegex = /\b(\d+)\s*(?:m[eè]tres?|m)\b/i;
+    // Extraire la distance (n'importe quelle distance en mètres : 25, 50, 100, 200...)
+    var distRegex = /\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i;
     var distMatch = text.match(distRegex);
     if (!distMatch) return null;
 
     var distance = parseInt(distMatch[1]);
-    if (distance !== 25 && distance !== 50) return null;
+    if (!distance || distance <= 0) return null;
 
     // Extraire le temps
     var timeResult = parseSwimmingTime(text);
@@ -6427,7 +6473,7 @@ function parseSwimmingEntry(rawName) {
     }
     // Retirer TOUTES les occurrences de la nage (parfois dupliquée) + variantes
     remaining = remaining.replace(new RegExp(strokeMatch[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-    remaining = remaining.replace(/(brasse|dos|libre|assist[eéè]\w*|asssit[eéè]\w*)/gi, ' ');
+    remaining = remaining.replace(SWIMMING_STROKE_REGEX_G, ' ');
     remaining = remaining.replace(distRegex, ' ');
     remaining = remaining.replace(/\(bord\)/gi, ' ');
     remaining = remaining.replace(/\bLent\b/i, ' ');
@@ -6476,14 +6522,15 @@ function parseSwimmingEntry(rawName) {
 
 // Matcher une entrée parsée à une épreuve
 function matchEntryToEvent(entry, events) {
+    var aliases = SWIMMING_STROKE_ALIASES[entry.stroke] || [entry.stroke];
     for (var i = 0; i < events.length; i++) {
         var evtName = events[i].name.toLowerCase().replace(/\s+/g, ' ');
         var hasDistance = evtName.indexOf(entry.distance + 'm') !== -1 || evtName.indexOf(entry.distance + ' m') !== -1;
         if (!hasDistance) continue;
 
-        // Vérifier la nage
-        var normalizedStroke = entry.stroke === 'assisté' ? 'assist' : entry.stroke;
-        if (evtName.indexOf(normalizedStroke) !== -1) {
+        // Vérifier la nage (tolérant : accepte les alias/synonymes)
+        var strokeOk = aliases.some(function(a) { return evtName.indexOf(a) !== -1; });
+        if (strokeOk) {
             return events[i];
         }
     }
@@ -6566,28 +6613,32 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         }
     });
 
-    // Ordres de couloirs (le plus rapide au milieu)
-    var laneOrders = {
-        3: [2, 3, 1],
-        4: [2, 3, 1, 4],
-        5: [3, 4, 2, 5, 1],
-        6: [3, 4, 2, 5, 1, 6],
-        7: [4, 5, 3, 6, 2, 7, 1],
-        8: [4, 5, 3, 6, 2, 7, 1, 8],
-        9: [5, 6, 4, 7, 3, 8, 2, 9, 1]
-    };
-    var laneOrder = laneOrders[lanesPerSerie] || laneOrders[5];
+    // Ordres de couloirs (le plus rapide au milieu) — constante partagée
+    var laneOrder = getSwimmingLaneOrder(lanesPerSerie);
 
     // Créer les séries pour chaque épreuve
     var nextSerieId = dayData.chronoData.nextSerieId || 1;
     var nextParticipantId = dayData.chronoData.nextParticipantId || 1;
     var allParticipants = [];
     var totalSeries = 0;
+
+    // Compteur de dossards continu : repartir du plus grand dossard déjà attribué
+    // pour éviter les collisions entre épreuves/journées lors des régénérations.
     var bibCounter = 1;
+    if (dayData.chronoData.participants && dayData.chronoData.participants.length > 0) {
+        dayData.chronoData.participants.forEach(function(p) {
+            if (p && typeof p.bib === 'number' && p.bib >= bibCounter) bibCounter = p.bib + 1;
+        });
+    }
 
     events.forEach(function(evt) {
         var entries = eventGroups[evt.id];
-        if (!entries || entries.length === 0) return;
+        // Réinitialiser les séries de TOUTES les épreuves ciblées (même vides),
+        // pour ne pas laisser d'anciennes séries traîner lors d'une régénération.
+        if (!entries || entries.length === 0) {
+            evt.series = [];
+            return;
+        }
 
         // Trier : avec temps d'abord (ASC), puis sans temps
         var withTime = entries.filter(function(e) { return e.timeMs > 0; })
@@ -6749,7 +6800,7 @@ window.showSwimmingImportModal = function(dayNumber) {
             </div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée destination (chrono avec épreuves) :</label>\
-                <select id="swimTargetDay" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + chronoDayOptions + '</select>\
+                <select id="swimTargetDay" onchange="updateSwimmingEventsPreview()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + chronoDayOptions + '</select>\
             </div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Nageurs par série (couloirs) :</label>\
@@ -6760,10 +6811,12 @@ window.showSwimmingImportModal = function(dayNumber) {
                     <option value="6">6 couloirs</option>\
                     <option value="7">7 couloirs</option>\
                     <option value="8">8 couloirs</option>\
+                    <option value="9">9 couloirs</option>\
+                    <option value="10">10 couloirs</option>\
                 </select>\
             </div>\
             <div style="margin-bottom: 12px;">\
-                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Épreuves cibles (J' + dayNumber + ') :</label>\
+                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Épreuves cibles (<span id="swimEventsDayLabel">J' + dayNumber + '</span>) :</label>\
                 <div id="swimEventsPreview">' + eventsListHtml + '</div>\
             </div>\
             <div id="swimPreviewContainer" style="margin-bottom: 12px; display: none;">\
@@ -6778,6 +6831,29 @@ window.showSwimmingImportModal = function(dayNumber) {
         </div>';
 
     document.body.appendChild(modal);
+};
+
+// Rafraîchir la liste des épreuves cibles quand la journée destination change
+window.updateSwimmingEventsPreview = function() {
+    var sel = document.getElementById('swimTargetDay');
+    var previewDiv = document.getElementById('swimEventsPreview');
+    var dayLabel = document.getElementById('swimEventsDayLabel');
+    if (!sel || !previewDiv) return;
+
+    var targetDay = parseInt(sel.value);
+    var dd = championship.days[targetDay];
+    var events = (dd && dd.chronoData && dd.chronoData.events) ? dd.chronoData.events : [];
+
+    if (dayLabel) dayLabel.textContent = 'J' + targetDay;
+    previewDiv.innerHTML = events.length > 0
+        ? events.map(function(e) {
+            return '<span style="display:inline-block;padding:3px 8px;margin:2px;background:#e8f4f8;border-radius:4px;font-size:11px;">' + e.name + '</span>';
+        }).join('')
+        : '<span style="font-size:11px;color:#e74c3c;">Aucune épreuve configurée sur cette journée</span>';
+
+    // Masquer un ancien aperçu devenu obsolète (il pointait sur l'autre journée)
+    var previewContainer = document.getElementById('swimPreviewContainer');
+    if (previewContainer) previewContainer.style.display = 'none';
 };
 
 // Aperçu de l'import natation
@@ -6818,8 +6894,7 @@ window.previewSwimmingImport = function(dayNumber) {
         if (evt) { eventGroups[evt.id].entries.push(entry); } else { unmatched.push(entry); }
     });
 
-    var laneOrders = { 3: [2,3,1], 4: [2,3,1,4], 5: [3,4,2,5,1], 6: [3,4,2,5,1,6], 7: [4,5,3,6,2,7,1], 8: [4,5,3,6,2,7,1,8] };
-    var laneOrder = laneOrders[lanesPerSerie] || laneOrders[5];
+    var laneOrder = getSwimmingLaneOrder(lanesPerSerie);
 
     // Générer l'aperçu HTML
     var html = '<div style="margin-bottom:8px;padding:6px;background:#d4edda;border-radius:4px;"><strong>✅ ' + parsed.length + ' entrées parsées</strong>';
