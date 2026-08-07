@@ -595,7 +595,7 @@
         <div class="container">
         <h1>🏅 Classement Multisport</h1>
         <table>
-        <thead><tr><th>#</th><th>Joueur</th><th>Club</th><th>🎾 Championship</th><th>⏱️ Chrono</th><th>Total</th></tr></thead>
+        <thead><tr><th>#</th><th>Joueur</th><th>Club</th><th>🎾 Matchs</th><th>⏱️ Courses</th><th>Total</th></tr></thead>
         <tbody>`;
         
         sorted.forEach((stat, index) => {
@@ -782,6 +782,8 @@
             reader.readAsBinaryString(file);
         }
     }
+    // Exposé sur window : référencé par init.iife.js (addEventListener sur l'input fichier).
+    window.handleFileImport = handleFileImport;
 
     function parseCSV(text) {
         const lines = text.split('\n');

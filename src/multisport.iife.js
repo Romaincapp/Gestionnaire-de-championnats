@@ -1251,7 +1251,7 @@
         var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
         html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px;">';
         html += '<h2 style="margin: 0; text-align: center;">🏆 ' + (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses') + '</h2>';
-        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">' + (mixed ? 'Championship + Courses (points)' : 'Courses — distance &amp; temps') + '</p>';
+        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">' + (mixed ? 'Matchs + Courses (points)' : 'Courses — distance &amp; temps') + '</p>';
         html += '</div>';
 
         // Barre d'outils : harmonisation des noms
@@ -1271,8 +1271,8 @@
             html += '<th style="padding: 15px; text-align: left;">Joueur</th>';
             html += '<th style="padding: 15px; text-align: center;">Club</th>';
             if (mixed) {
-                html += '<th style="padding: 15px; text-align: center;">🎾 Championship</th>';
-                html += '<th style="padding: 15px; text-align: center;">⏱️ Chrono</th>';
+                html += '<th style="padding: 15px; text-align: center;">🎾 Matchs</th>';
+                html += '<th style="padding: 15px; text-align: center;">⏱️ Courses</th>';
                 html += '<th style="padding: 15px; text-align: center; background: #e8f4f8;">Total</th>';
             } else {
                 html += '<th style="padding: 15px; text-align: center;">📏 Distance</th>';
