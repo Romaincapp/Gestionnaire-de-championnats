@@ -1928,8 +1928,15 @@ window.finishLane = function(laneNumber) {
     showNotification(`Couloir ${laneNumber} - ${participant.name}: ${formatTime(currentTime)}`, 'success');
     saveChronoToLocalStorage();
 
-    // Vérifier si tous les participants ont terminé
-    checkAllFinished();
+    // Si tous les couloirs ont terminé, arrêter aussi le chrono général de la série
+    const allFinished = serie.participants.every(p => p.status === 'finished');
+    if (allFinished) {
+        if (serie.isRunning) {
+            toggleRaceTimer(); // arrête le chrono général (fige le temps affiché)
+        }
+        saveChronoToLocalStorage();
+        showNotification('Tous les couloirs ont terminé! 🎉', 'success');
+    }
 };
 
 // Mettre à jour l'affichage d'un couloir après finish
