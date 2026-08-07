@@ -2226,39 +2226,6 @@
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // Retrouver l'épreuve qui contient une série
-    function getEventForSerie(chronoData, serie) {
-        if (!serie || !chronoData.events) return null;
-        for (var i = 0; i < chronoData.events.length; i++) {
-            var evt = chronoData.events[i];
-            if (evt.id === serie.eventId) return evt;
-            if (evt.series && evt.series.some(function(s) { return s.id === serie.id; })) return evt;
-        }
-        return null;
-    }
-
-    // Toutes les séries de la même épreuve (format imbriqué ou plat)
-    function getSeriesOfEvent(chronoData, evt, serie) {
-        if (evt && evt.series && evt.series.length) return evt.series;
-        if (chronoData.series && serie && serie.eventId != null) {
-            return chronoData.series.filter(function(s) { return s.eventId === serie.eventId; });
-        }
-        return serie ? [serie] : [];
-    }
-
-    // Vivier : tous les nageurs de l'épreuve, avec leur série d'origine
-    function getEventSwimmerPool(chronoData, serie) {
-        var evt = getEventForSerie(chronoData, serie);
-        var seriesList = getSeriesOfEvent(chronoData, evt, serie);
-        var pool = [];
-        seriesList.forEach(function(s) {
-            (s.participants || []).forEach(function(p) {
-                pool.push({ p: p, serieId: s.id, serieName: s.name });
-            });
-        });
-        return { evt: evt, seriesList: seriesList, pool: pool };
-    }
-
     function computeDefaultLaneCount(serie) {
         var maxLane = 0, placed = 0;
         (serie.participants || []).forEach(function(p) {
@@ -2293,28 +2260,34 @@
         if (!serie) return '';
         laneCount = Math.max(1, Math.min(20, laneCount || 8));
 
-        var info = getEventSwimmerPool(chronoData, serie);
-        var pool = info.pool;
+        var pool = chronoData.participants || [];
 
-        // Options communes à tous les couloirs (tout le vivier de l'épreuve)
+        // Options : tous les « Participants disponibles » de la journée
         function optionsFor(selectedId) {
             var html = '<option value="">— vide —</option>';
-            pool.forEach(function(e) {
-                var label = (e.p.name && e.p.name.trim()) ? e.p.name : ('Nageur ' + e.p.bib);
-                if (e.serieId !== serie.id) label += ' (' + e.serieName + ')';
-                html += '<option value="' + e.p.id + '"' + (e.p.id === selectedId ? ' selected' : '') + '>' +
+            pool.forEach(function(pp) {
+                var label = (pp.name && pp.name.trim()) ? pp.name : ('Nageur ' + (pp.bib != null ? pp.bib : '?'));
+                if (pp.club) label += ' — ' + pp.club;
+                html += '<option value="' + pp.id + '"' + (pp.id === selectedId ? ' selected' : '') + '>' +
                     escapeLaneHtml(label) + '</option>';
             });
             return html;
         }
 
-        // Occupant actuel de chaque couloir (dans CETTE série)
+        // Occupant actuel de chaque couloir (participant de la série ↔ pool, lié par le nom)
+        var poolByName = {};
+        pool.forEach(function(pp) { poolByName[(pp.name || '').toLowerCase()] = pp; });
         var byLane = {};
-        (serie.participants || []).forEach(function(p) { if (p.laneNumber) byLane[p.laneNumber] = p; });
+        (serie.participants || []).forEach(function(p) {
+            if (p.laneNumber) {
+                var match = poolByName[(p.name || '').toLowerCase()];
+                byLane[p.laneNumber] = match ? match.id : null;
+            }
+        });
 
         var html = '';
         html += '<h3 style="margin:0 0 4px 0; color:#16a085;">🏊 Couloirs — ' + escapeLaneHtml(serie.name) + '</h3>';
-        html += '<p style="color:#7f8c8d; font-size:12px; margin:0 0 14px 0;">Choisis le nageur de chaque couloir. Tu peux piocher n\'importe quel nageur de l\'épreuve (les autres séries apparaissent entre parenthèses ; le déplacer le retire de sa série d\'origine).</p>';
+        html += '<p style="color:#7f8c8d; font-size:12px; margin:0 0 14px 0;">Choisis le nageur de chaque couloir dans la liste des « Participants disponibles » de la journée. Les nageurs non placés restent disponibles pour les autres séries.</p>';
 
         // Nombre de couloirs
         html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">';
@@ -2325,20 +2298,20 @@
         // Grille des couloirs
         html += '<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">';
         for (var k = 1; k <= laneCount; k++) {
-            var occ = byLane[k];
+            var occId = byLane[k];
             html += '<div style="display:flex; align-items:center; gap:8px;">';
             html += '<span style="flex:0 0 78px; font-size:12px; font-weight:600; color:#16a085;">Couloir ' + k + '</span>';
             html += '<select id="laneSel-' + dayNumber + '-' + k + '" style="flex:1; padding:7px; border:1px solid #ddd; border-radius:4px; font-size:13px;">' +
-                optionsFor(occ ? occ.id : null) + '</select>';
+                optionsFor(occId != null ? occId : null) + '</select>';
             html += '</div>';
         }
         html += '</div>';
 
-        // Coller une liste de noms → réserve
+        // Coller une liste de noms → pool "Participants disponibles"
         html += '<div style="margin-bottom:14px; padding:10px; background:#f0fbf9; border:1px solid #cdeae4; border-radius:6px;">';
-        html += '<label style="display:block; font-size:12px; color:#16a085; font-weight:600; margin-bottom:5px;">➕ Ajouter des nageurs (un nom par ligne) :</label>';
+        html += '<label style="display:block; font-size:12px; color:#16a085; font-weight:600; margin-bottom:5px;">➕ Ajouter des nageurs aux Participants disponibles (un nom par ligne) :</label>';
         html += '<textarea id="laneReserve-' + dayNumber + '" rows="3" placeholder="Dupont Jean\nMartin Alice\n…" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:13px; box-sizing:border-box;"></textarea>';
-        html += '<button onclick="addReserveNamesToSerie(' + dayNumber + ', ' + serieId + ')" style="margin-top:6px; padding:6px 12px; border:none; background:#16a085; color:white; border-radius:4px; cursor:pointer; font-size:12px;">Ajouter à la série</button>';
+        html += '<button onclick="addReserveNamesToSerie(' + dayNumber + ', ' + serieId + ')" style="margin-top:6px; padding:6px 12px; border:none; background:#16a085; color:white; border-radius:4px; cursor:pointer; font-size:12px;">Ajouter à la liste</button>';
         html += '<span style="font-size:11px; color:#7f8c8d; margin-left:8px;">Ils apparaîtront dans les listes déroulantes ci-dessus.</span>';
         html += '</div>';
 
@@ -2381,13 +2354,28 @@
     function addReserveNamesToSerie(dayNumber, serieId) {
         var ta = document.getElementById('laneReserve-' + dayNumber);
         if (!ta || !ta.value.trim()) { showNotification('Aucun nom à ajouter', 'warning'); return; }
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        if (!chronoData.participants) chronoData.participants = [];
         var names = ta.value.split(/\r?\n/).map(function(s) { return s.trim(); }).filter(Boolean);
         var added = 0;
         names.forEach(function(name) {
-            var p = addChronoParticipant(dayNumber, serieId, name, null, { laneNumber: null });
-            if (p) added++;
+            var exists = chronoData.participants.some(function(p) {
+                return (p.name || '').toLowerCase() === name.toLowerCase();
+            });
+            if (exists) return;
+            chronoData.participants.push({
+                id: chronoData.nextParticipantId++,
+                name: toTitleCase(name),
+                club: '',
+                bib: chronoData.participants.length + 1,
+                totalTime: null,
+                laps: 0
+            });
+            added++;
         });
-        showNotification(added + ' nageur(s) ajouté(s) à la série', 'success');
+        saveToLocalStorage();
+        showNotification(added + ' nageur(s) ajouté(s) aux Participants disponibles', 'success');
         // Redessiner en conservant les sélections en cours
         var input = document.getElementById('laneCount-' + dayNumber);
         var count = input ? (parseInt(input.value) || 8) : 8;
@@ -2409,9 +2397,10 @@
         var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
 
-        var info = getEventSwimmerPool(chronoData, serie);
-        var byId = {};
-        info.pool.forEach(function(e) { byId[e.p.id] = e; });
+        // Source : les « Participants disponibles » de la journée
+        var pool = chronoData.participants || [];
+        var poolById = {};
+        pool.forEach(function(pp) { poolById[pp.id] = pp; });
 
         // Lire les couloirs + détecter les doublons
         var chosen = [];
@@ -2423,7 +2412,7 @@
             if (!sel || !sel.value) continue;
             var pid = parseInt(sel.value);
             if (seen[pid]) {
-                var dupName = byId[pid] ? byId[pid].p.name : ('#' + pid);
+                var dupName = poolById[pid] ? poolById[pid].name : ('#' + pid);
                 showNotification('« ' + dupName + ' » est affecté à deux couloirs', 'warning');
                 return;
             }
@@ -2431,27 +2420,45 @@
             chosen.push({ lane: k, pid: pid });
         }
 
-        // 1. Retirer les nageurs choisis de leur série d'origine (dans l'épreuve)
+        // Reconstruire les participants de la série depuis les choix.
+        // On réutilise l'objet participant existant (même nom) pour conserver
+        // son dossard et d'éventuels résultats ; sinon on crée une copie.
+        var existingByName = {};
+        (serie.participants || []).forEach(function(sp) {
+            existingByName[(sp.name || '').toLowerCase()] = sp;
+        });
+
+        var newParticipants = [];
         chosen.forEach(function(c) {
-            var e = byId[c.pid];
-            if (!e) return;
-            var src = info.seriesList.find(function(s) { return s.id === e.serieId; });
+            var src = poolById[c.pid];
             if (!src) return;
-            var idx = src.participants.findIndex(function(p) { return p.id === c.pid; });
-            if (idx >= 0) src.participants.splice(idx, 1);
+            var key = (src.name || '').toLowerCase();
+            var sp = existingByName[key];
+            if (sp) {
+                sp.laneNumber = c.lane;
+                delete existingByName[key];
+                newParticipants.push(sp);
+            } else {
+                newParticipants.push({
+                    id: chronoData.nextParticipantId++,
+                    name: src.name,
+                    bib: (src.bib != null ? src.bib : newParticipants.length + 1),
+                    club: src.club || '',
+                    category: src.category || '',
+                    division: src.division || null,
+                    laneNumber: c.lane,
+                    status: 'ready',
+                    totalTime: 0,
+                    finishTime: null,
+                    laps: [],
+                    totalDistance: 0,
+                    bestLap: null,
+                    lastLapStartTime: 0
+                });
+            }
         });
 
-        // 2. Les participants restants de CETTE série (non choisis) passent en réserve (sans couloir)
-        (serie.participants || []).forEach(function(p) { p.laneNumber = null; });
-
-        // 3. Placer les nageurs choisis dans cette série, avec leur couloir
-        chosen.forEach(function(c) {
-            var e = byId[c.pid];
-            if (!e) return;
-            e.p.laneNumber = c.lane;
-            serie.participants.push(e.p);
-        });
-
+        serie.participants = newParticipants;
         serie.laneMode = true;
         saveToLocalStorage();
         closeLaneAssignModal(dayNumber);
