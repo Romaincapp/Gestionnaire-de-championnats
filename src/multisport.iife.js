@@ -2095,7 +2095,9 @@
         serie.participants.forEach(function(p) {
             html += '<tr id="serie-prow-' + dayNumber + '-' + serie.id + '-' + p.id + '" style="border-bottom: 1px solid #ecf0f1;">';
             html += '<td style="padding: 10px; text-align: center;">#' + p.bib + '</td>';
-            html += '<td style="padding: 10px;">' + p.name + '</td>';
+            html += '<td style="padding: 10px;">' + p.name +
+                (p.club ? '<span style="font-size:10px; background:#16a085; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.club + '</span>' : '') +
+                '</td>';
             html += '<td style="padding: 10px; text-align: center; white-space: nowrap;">' +
                 '<button onclick="editSerieParticipant(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm" style="background:#f39c12; color:white; margin-right:4px;" title="Éditer nom / dossard">✏️</button>' +
                 '<button onclick="removeParticipantFromSerie(' + serie.id + ', ' + p.id + ')" class="btn btn-sm btn-danger" title="Retirer">🗑️</button>' +
@@ -2121,12 +2123,14 @@
         if (!row) return;
 
         var safeName = (p.name || '').replace(/"/g, '&quot;');
+        var safeClub = (p.club || '').replace(/"/g, '&quot;');
         row.innerHTML =
             '<td style="padding: 8px; text-align: center;">' +
             '<input type="number" id="edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" style="width: 60px; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; text-align: center;">' +
             '</td>' +
             '<td style="padding: 8px;">' +
-            '<input type="text" id="edit-spname-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeName + '" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px;">' +
+            '<input type="text" id="edit-spname-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; margin-bottom: 4px;">' +
+            '<input type="text" id="edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px;">' +
             '</td>' +
             '<td style="padding: 8px; text-align: center; white-space: nowrap;">' +
             '<button onclick="saveSerieParticipant(' + dayNumber + ', ' + serieId + ', ' + participantId + ')" class="btn btn-sm" style="background:#27ae60; color:white; margin-right:4px;" title="Enregistrer">💾</button>' +
@@ -2177,9 +2181,11 @@
         if (dup) { showNotification('Un participant porte déjà ce nom dans cette série', 'warning'); return; }
 
         var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
+        var clubEl = document.getElementById('edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId);
+        var newClub = clubEl ? clubEl.value.trim() : undefined;
         var oldName = p.name;
 
-        applyParticipantRename(chronoData, participantId, oldName, newName, newBib);
+        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub);
 
         saveToLocalStorage();
         refreshSerieParticipantsList(dayNumber, serieId);
