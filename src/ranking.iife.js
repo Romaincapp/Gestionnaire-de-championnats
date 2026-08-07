@@ -1390,6 +1390,12 @@ generalRanking.divisions[division].forEach((player, index) => {
     window.toggleDayMatches = toggleDayMatches;
 
     function exportGeneralRanking() {
+        // En mode multisport, exporter le classement multisport (barème) au lieu du 3/victoire.
+        if (typeof window.hasChronoDays === 'function' && window.hasChronoDays()
+            && typeof window.exportMultisportRanking === 'function') {
+            window.exportMultisportRanking();
+            return;
+        }
         const generalRanking = calculateGeneralRanking();
         const generalStats = calculateGeneralStats();
         
@@ -1423,6 +1429,12 @@ generalRanking.divisions[division].forEach((player, index) => {
       
     
    function exportGeneralRankingToPDF() {
+    // En mode multisport, imprimer le classement multisport (barème) au lieu du 3/victoire.
+    if (typeof window.hasChronoDays === 'function' && window.hasChronoDays()
+        && typeof window.printGeneralRanking === 'function') {
+        window.printGeneralRanking();
+        return;
+    }
     // Utiliser le classement déjà calculé si disponible (pour préserver l'ordre exact)
     const generalRanking = window.lastCalculatedGeneralRanking || calculateGeneralRanking();
 

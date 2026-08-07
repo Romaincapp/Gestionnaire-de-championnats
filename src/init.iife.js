@@ -81,6 +81,13 @@
     let rankingWindowTarget = null;
 
     function openRankingInNewWindow(dayOrGeneral) {
+        // En mode multisport (présence de journées chrono), le classement général
+        // pertinent est le classement multisport (barème), pas le 3/victoire.
+        if (dayOrGeneral === 'general' && typeof window.hasChronoDays === 'function' && window.hasChronoDays()
+            && typeof window.openMultisportRankingInNewWindow === 'function') {
+            window.openMultisportRankingInNewWindow();
+            return;
+        }
         rankingWindowTarget = dayOrGeneral;
         refreshRankingWindow(dayOrGeneral);
     }
@@ -1087,6 +1094,12 @@ function showByeManagementModal(dayNumber) {
         }
     }
 function exportGeneralRankingToHTML() {
+    // En mode multisport, exporter le classement multisport (barème) au lieu du 3/victoire.
+    if (typeof window.hasChronoDays === 'function' && window.hasChronoDays()
+        && typeof window.exportMultisportRankingToHTML === 'function') {
+        window.exportMultisportRankingToHTML();
+        return;
+    }
     const generalRanking = calculateGeneralRanking();
 
     const generalStats = calculateGeneralStats();

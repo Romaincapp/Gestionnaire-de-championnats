@@ -1322,7 +1322,10 @@
 
     // Impression du classement général, adaptée au mode courant
     // (chrono : distance & temps, sans points ; multisport : points).
-    function printGeneralRanking() {
+    // Construit le document HTML autonome du classement général multisport.
+    // autoPrint=true ajoute le déclenchement de l'impression (pour la fenêtre
+    // d'impression / export PDF) ; false produit un fichier HTML à télécharger.
+    function buildMultisportRankingDoc(autoPrint) {
         var ranking = calculateMultisportRanking();
         var mixed = hasChampionshipDays() && hasChronoDays();
 
@@ -1335,10 +1338,11 @@
         var title = mixed ? 'Classement Général Multisport' : 'Classement Général des Courses';
         var champName = (global.championship && global.championship.name) ? global.championship.name : '';
         var dateStr = new Date().toLocaleDateString('fr-FR');
+        var bareme = mixed ? 'Barème par journée : 25 / 19 / 17 / 15 / 12 / 10 / 8 / 6 / 4 / 2 (0 au-delà), par division pour les matchs.' : '';
 
         var head, rows = '';
         if (mixed) {
-            head = '<th>#</th><th style="text-align:left;">Joueur</th><th>Club</th><th>Championship</th><th>Chrono</th><th>Total</th>';
+            head = '<th>#</th><th style="text-align:left;">Joueur</th><th>Club</th><th>Matchs</th><th>Courses</th><th>Total</th>';
             sorted.forEach(function(s, i) {
                 rows += '<tr><td>' + (i + 1) + '</td><td style="text-align:left;">' + s.player + '</td><td>' + (s.club || '-') + '</td>' +
                     '<td>' + s.championshipPoints + ' pts</td><td>' + s.chronoPoints + ' pts</td><td><strong>' + s.totalPoints + '</strong></td></tr>';
@@ -1351,11 +1355,12 @@
             });
         }
 
-        var doc = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>' + title + '</title>' +
+        return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>' + title + '</title>' +
             '<style>' +
             'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:24px;}' +
             'h1{font-size:20px;margin:0 0 4px;}' +
-            '.sub{color:#666;font-size:13px;margin-bottom:16px;}' +
+            '.sub{color:#666;font-size:13px;margin-bottom:4px;}' +
+            '.bareme{color:#8e44ad;font-size:12px;margin-bottom:16px;}' +
             'table{width:100%;border-collapse:collapse;font-size:13px;}' +
             'th,td{border:1px solid #ccc;padding:7px 9px;text-align:center;}' +
             'thead th{background:#34495e;color:#fff;}' +
@@ -1364,10 +1369,15 @@
             '</style></head><body>' +
             '<h1>🏆 ' + title + '</h1>' +
             '<div class="sub">' + (champName ? champName + ' — ' : '') + 'Édité le ' + dateStr + '</div>' +
+            (bareme ? '<div class="bareme">🏅 ' + bareme + '</div>' : '') +
             '<table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>' +
-            '<script>window.onload=function(){window.print();};<\/script>' +
+            (autoPrint ? '<script>window.onload=function(){window.print();};<\/script>' : '') +
             '</body></html>';
+    }
+    global.buildMultisportRankingDoc = buildMultisportRankingDoc;
 
+    function printGeneralRanking() {
+        var doc = buildMultisportRankingDoc(true);
         var w = window.open('', '_blank');
         if (!w) { showNotification('Autorise les fenêtres pop-up pour imprimer', 'warning'); return; }
         w.document.open();
@@ -1375,6 +1385,22 @@
         w.document.close();
     }
     global.printGeneralRanking = printGeneralRanking;
+
+    // Télécharge le classement général multisport en fichier HTML autonome.
+    function exportMultisportRankingToHTML() {
+        var doc = buildMultisportRankingDoc(false);
+        var blob = new Blob([doc], { type: 'text/html' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'classement-multisport-' + new Date().toISOString().split('T')[0] + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        if (typeof showNotification === 'function') showNotification('Classement multisport exporté (HTML) !', 'success');
+    }
+    global.exportMultisportRankingToHTML = exportMultisportRankingToHTML;
 
     // ============================================
     // DÉTAIL D'UN PARTICIPANT (épreuves / séries / journées)
