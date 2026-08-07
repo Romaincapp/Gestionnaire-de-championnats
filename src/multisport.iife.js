@@ -910,6 +910,7 @@
         html += '</div>';
         html += '<div style="display: flex; gap: 4px;">';
         html += '<button onclick="manageSerieParticipants(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Gérer les participants">👥</button>';
+        html += '<button onclick="assignSerieLanes(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #1abc9c; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Affecter les nageurs aux couloirs">🏊</button>';
         // Bouton Démarrer la course (si des participants existent)
         if (totalCount > 0) {
             html += '<button onclick="startChronoRaceForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;" title="Démarrer la course avec chronométrage">▶️ Course</button>';
@@ -2215,6 +2216,255 @@
         var modal = document.getElementById('participantsModal-' + dayNumber);
         if (modal) modal.remove();
     }
+
+    // ============================================
+    // AFFECTATION MANUELLE DES COULOIRS
+    // ============================================
+
+    function escapeLaneHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Retrouver l'épreuve qui contient une série
+    function getEventForSerie(chronoData, serie) {
+        if (!serie || !chronoData.events) return null;
+        for (var i = 0; i < chronoData.events.length; i++) {
+            var evt = chronoData.events[i];
+            if (evt.id === serie.eventId) return evt;
+            if (evt.series && evt.series.some(function(s) { return s.id === serie.id; })) return evt;
+        }
+        return null;
+    }
+
+    // Toutes les séries de la même épreuve (format imbriqué ou plat)
+    function getSeriesOfEvent(chronoData, evt, serie) {
+        if (evt && evt.series && evt.series.length) return evt.series;
+        if (chronoData.series && serie && serie.eventId != null) {
+            return chronoData.series.filter(function(s) { return s.eventId === serie.eventId; });
+        }
+        return serie ? [serie] : [];
+    }
+
+    // Vivier : tous les nageurs de l'épreuve, avec leur série d'origine
+    function getEventSwimmerPool(chronoData, serie) {
+        var evt = getEventForSerie(chronoData, serie);
+        var seriesList = getSeriesOfEvent(chronoData, evt, serie);
+        var pool = [];
+        seriesList.forEach(function(s) {
+            (s.participants || []).forEach(function(p) {
+                pool.push({ p: p, serieId: s.id, serieName: s.name });
+            });
+        });
+        return { evt: evt, seriesList: seriesList, pool: pool };
+    }
+
+    function computeDefaultLaneCount(serie) {
+        var maxLane = 0, placed = 0;
+        (serie.participants || []).forEach(function(p) {
+            if (p.laneNumber) { placed++; if (p.laneNumber > maxLane) maxLane = p.laneNumber; }
+        });
+        return Math.max(maxLane, placed, (serie.participants || []).length, 8);
+    }
+
+    function assignSerieLanes(dayNumber, serieId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+        if (document.getElementById('laneAssignModal-' + dayNumber)) return;
+
+        var modal = document.createElement('div');
+        modal.id = 'laneAssignModal-' + dayNumber;
+        modal.innerHTML =
+            '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); ' +
+            'display: flex; justify-content: center; align-items: center; z-index: 10000;" ' +
+            'onclick="if(event.target===this)closeLaneAssignModal(' + dayNumber + ')">' +
+            '<div id="laneAssignBody-' + dayNumber + '" style="background: white; padding: 24px; border-radius: 10px; max-width: 560px; width: 92%; max-height: 85vh; overflow-y: auto;">' +
+            renderLaneAssignBody(dayNumber, serieId, computeDefaultLaneCount(serie)) +
+            '</div></div>';
+        document.body.appendChild(modal);
+    }
+    global.assignSerieLanes = assignSerieLanes;
+
+    function renderLaneAssignBody(dayNumber, serieId, laneCount) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return '';
+        laneCount = Math.max(1, Math.min(20, laneCount || 8));
+
+        var info = getEventSwimmerPool(chronoData, serie);
+        var pool = info.pool;
+
+        // Options communes à tous les couloirs (tout le vivier de l'épreuve)
+        function optionsFor(selectedId) {
+            var html = '<option value="">— vide —</option>';
+            pool.forEach(function(e) {
+                var label = (e.p.name && e.p.name.trim()) ? e.p.name : ('Nageur ' + e.p.bib);
+                if (e.serieId !== serie.id) label += ' (' + e.serieName + ')';
+                html += '<option value="' + e.p.id + '"' + (e.p.id === selectedId ? ' selected' : '') + '>' +
+                    escapeLaneHtml(label) + '</option>';
+            });
+            return html;
+        }
+
+        // Occupant actuel de chaque couloir (dans CETTE série)
+        var byLane = {};
+        (serie.participants || []).forEach(function(p) { if (p.laneNumber) byLane[p.laneNumber] = p; });
+
+        var html = '';
+        html += '<h3 style="margin:0 0 4px 0; color:#16a085;">🏊 Couloirs — ' + escapeLaneHtml(serie.name) + '</h3>';
+        html += '<p style="color:#7f8c8d; font-size:12px; margin:0 0 14px 0;">Choisis le nageur de chaque couloir. Tu peux piocher n\'importe quel nageur de l\'épreuve (les autres séries apparaissent entre parenthèses ; le déplacer le retire de sa série d\'origine).</p>';
+
+        // Nombre de couloirs
+        html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">';
+        html += '<label style="font-size:13px; color:#555; font-weight:600;">Nombre de couloirs :</label>';
+        html += '<input type="number" id="laneCount-' + dayNumber + '" value="' + laneCount + '" min="1" max="20" style="width:70px; padding:6px; border:1px solid #ddd; border-radius:4px;" onchange="changeLaneCount(' + dayNumber + ', ' + serieId + ')">';
+        html += '</div>';
+
+        // Grille des couloirs
+        html += '<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">';
+        for (var k = 1; k <= laneCount; k++) {
+            var occ = byLane[k];
+            html += '<div style="display:flex; align-items:center; gap:8px;">';
+            html += '<span style="flex:0 0 78px; font-size:12px; font-weight:600; color:#16a085;">Couloir ' + k + '</span>';
+            html += '<select id="laneSel-' + dayNumber + '-' + k + '" style="flex:1; padding:7px; border:1px solid #ddd; border-radius:4px; font-size:13px;">' +
+                optionsFor(occ ? occ.id : null) + '</select>';
+            html += '</div>';
+        }
+        html += '</div>';
+
+        // Coller une liste de noms → réserve
+        html += '<div style="margin-bottom:14px; padding:10px; background:#f0fbf9; border:1px solid #cdeae4; border-radius:6px;">';
+        html += '<label style="display:block; font-size:12px; color:#16a085; font-weight:600; margin-bottom:5px;">➕ Ajouter des nageurs (un nom par ligne) :</label>';
+        html += '<textarea id="laneReserve-' + dayNumber + '" rows="3" placeholder="Dupont Jean\nMartin Alice\n…" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:13px; box-sizing:border-box;"></textarea>';
+        html += '<button onclick="addReserveNamesToSerie(' + dayNumber + ', ' + serieId + ')" style="margin-top:6px; padding:6px 12px; border:none; background:#16a085; color:white; border-radius:4px; cursor:pointer; font-size:12px;">Ajouter à la série</button>';
+        html += '<span style="font-size:11px; color:#7f8c8d; margin-left:8px;">Ils apparaîtront dans les listes déroulantes ci-dessus.</span>';
+        html += '</div>';
+
+        // Actions
+        html += '<div style="display:flex; gap:10px; justify-content:flex-end;">';
+        html += '<button onclick="closeLaneAssignModal(' + dayNumber + ')" style="padding:8px 15px; border:1px solid #ddd; background:#f5f5f5; border-radius:4px; cursor:pointer; font-size:13px;">Annuler</button>';
+        html += '<button onclick="saveSerieLanes(' + dayNumber + ', ' + serieId + ')" style="padding:8px 15px; border:none; background:#16a085; color:white; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">💾 Enregistrer</button>';
+        html += '</div>';
+
+        return html;
+    }
+    global.renderLaneAssignBody = renderLaneAssignBody;
+
+    function changeLaneCount(dayNumber, serieId) {
+        var input = document.getElementById('laneCount-' + dayNumber);
+        var body = document.getElementById('laneAssignBody-' + dayNumber);
+        if (!input || !body) return;
+        // Conserver les choix déjà faits dans les couloirs avant de redessiner
+        var count = Math.max(1, Math.min(20, parseInt(input.value) || 8));
+        var picks = readLaneSelections(dayNumber);
+        body.innerHTML = renderLaneAssignBody(dayNumber, serieId, count);
+        // Restaurer les sélections
+        Object.keys(picks).forEach(function(k) {
+            var sel = document.getElementById('laneSel-' + dayNumber + '-' + k);
+            if (sel) sel.value = picks[k];
+        });
+    }
+    global.changeLaneCount = changeLaneCount;
+
+    // Lire les sélections courantes { laneNumber: participantId(str) }
+    function readLaneSelections(dayNumber) {
+        var picks = {};
+        for (var k = 1; k <= 20; k++) {
+            var sel = document.getElementById('laneSel-' + dayNumber + '-' + k);
+            if (sel && sel.value) picks[k] = sel.value;
+        }
+        return picks;
+    }
+
+    function addReserveNamesToSerie(dayNumber, serieId) {
+        var ta = document.getElementById('laneReserve-' + dayNumber);
+        if (!ta || !ta.value.trim()) { showNotification('Aucun nom à ajouter', 'warning'); return; }
+        var names = ta.value.split(/\r?\n/).map(function(s) { return s.trim(); }).filter(Boolean);
+        var added = 0;
+        names.forEach(function(name) {
+            var p = addChronoParticipant(dayNumber, serieId, name, null, { laneNumber: null });
+            if (p) added++;
+        });
+        showNotification(added + ' nageur(s) ajouté(s) à la série', 'success');
+        // Redessiner en conservant les sélections en cours
+        var input = document.getElementById('laneCount-' + dayNumber);
+        var count = input ? (parseInt(input.value) || 8) : 8;
+        var picks = readLaneSelections(dayNumber);
+        var body = document.getElementById('laneAssignBody-' + dayNumber);
+        if (body) {
+            body.innerHTML = renderLaneAssignBody(dayNumber, serieId, count);
+            Object.keys(picks).forEach(function(k) {
+                var sel = document.getElementById('laneSel-' + dayNumber + '-' + k);
+                if (sel) sel.value = picks[k];
+            });
+        }
+    }
+    global.addReserveNamesToSerie = addReserveNamesToSerie;
+
+    function saveSerieLanes(dayNumber, serieId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+
+        var info = getEventSwimmerPool(chronoData, serie);
+        var byId = {};
+        info.pool.forEach(function(e) { byId[e.p.id] = e; });
+
+        // Lire les couloirs + détecter les doublons
+        var chosen = [];
+        var seen = {};
+        var input = document.getElementById('laneCount-' + dayNumber);
+        var laneCount = input ? Math.max(1, Math.min(20, parseInt(input.value) || 8)) : 20;
+        for (var k = 1; k <= laneCount; k++) {
+            var sel = document.getElementById('laneSel-' + dayNumber + '-' + k);
+            if (!sel || !sel.value) continue;
+            var pid = parseInt(sel.value);
+            if (seen[pid]) {
+                var dupName = byId[pid] ? byId[pid].p.name : ('#' + pid);
+                showNotification('« ' + dupName + ' » est affecté à deux couloirs', 'warning');
+                return;
+            }
+            seen[pid] = true;
+            chosen.push({ lane: k, pid: pid });
+        }
+
+        // 1. Retirer les nageurs choisis de leur série d'origine (dans l'épreuve)
+        chosen.forEach(function(c) {
+            var e = byId[c.pid];
+            if (!e) return;
+            var src = info.seriesList.find(function(s) { return s.id === e.serieId; });
+            if (!src) return;
+            var idx = src.participants.findIndex(function(p) { return p.id === c.pid; });
+            if (idx >= 0) src.participants.splice(idx, 1);
+        });
+
+        // 2. Les participants restants de CETTE série (non choisis) passent en réserve (sans couloir)
+        (serie.participants || []).forEach(function(p) { p.laneNumber = null; });
+
+        // 3. Placer les nageurs choisis dans cette série, avec leur couloir
+        chosen.forEach(function(c) {
+            var e = byId[c.pid];
+            if (!e) return;
+            e.p.laneNumber = c.lane;
+            serie.participants.push(e.p);
+        });
+
+        serie.laneMode = true;
+        saveToLocalStorage();
+        closeLaneAssignModal(dayNumber);
+        refreshChronoDisplay(dayNumber);
+        showNotification(chosen.length + ' nageur(s) placé(s) dans « ' + serie.name + ' »', 'success');
+    }
+    global.saveSerieLanes = saveSerieLanes;
+
+    function closeLaneAssignModal(dayNumber) {
+        var modal = document.getElementById('laneAssignModal-' + dayNumber);
+        if (modal) modal.remove();
+    }
+    global.closeLaneAssignModal = closeLaneAssignModal;
 
     function enterSerieResults(dayNumber, serieId) {
         var chronoData = getChronoDataForDay(dayNumber);
