@@ -6549,8 +6549,9 @@ function formatSwimmingTimePreview(ms) {
     return sec.toFixed(2) + 's';
 }
 
-// Fonction principale : générer les séries natation depuis les joueurs d'une journée source
-window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSerie) {
+// Fonction principale : générer les séries natation depuis les joueurs d'une journée source.
+// preParsed (optionnel) : tableau d'entrées déjà parsées (mode colonnes via la modale).
+window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSerie, preParsed) {
     lanesPerSerie = lanesPerSerie || 5;
 
     var dayData = championship.days[dayNumber];
@@ -6566,32 +6567,36 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         return null;
     }
 
-    var sourcePlayers = [];
-    var numDiv = championship.config && championship.config.numberOfDivisions ? championship.config.numberOfDivisions : 3;
-    for (var div = 1; div <= numDiv; div++) {
-        if (srcDay.players && srcDay.players[div]) {
-            sourcePlayers = sourcePlayers.concat(srcDay.players[div]);
-        }
-    }
-
-    if (sourcePlayers.length === 0) {
-        showNotification('Aucun joueur dans la journée ' + sourceDayNumber, 'error');
-        return null;
-    }
-
-    // Parser toutes les entrées
+    // Parser toutes les entrées (ou réutiliser celles déjà parsées par la modale)
     var parsed = [];
     var errors = [];
-    sourcePlayers.forEach(function(p) {
-        var name = typeof p === 'string' ? p : p.name;
-        if (!name) return;
-        var entry = parseSwimmingEntry(name);
-        if (entry) {
-            parsed.push(entry);
-        } else {
-            errors.push(name);
+    if (Array.isArray(preParsed)) {
+        parsed = preParsed;
+    } else {
+        var sourcePlayers = [];
+        var numDiv = championship.config && championship.config.numberOfDivisions ? championship.config.numberOfDivisions : 3;
+        for (var div = 1; div <= numDiv; div++) {
+            if (srcDay.players && srcDay.players[div]) {
+                sourcePlayers = sourcePlayers.concat(srcDay.players[div]);
+            }
         }
-    });
+
+        if (sourcePlayers.length === 0) {
+            showNotification('Aucun joueur dans la journée ' + sourceDayNumber, 'error');
+            return null;
+        }
+
+        sourcePlayers.forEach(function(p) {
+            var name = typeof p === 'string' ? p : p.name;
+            if (!name) return;
+            var entry = parseSwimmingEntry(name);
+            if (entry) {
+                parsed.push(entry);
+            } else {
+                errors.push(name);
+            }
+        });
+    }
 
     if (parsed.length === 0) {
         showNotification('Aucune entrée n\'a pu être parsée', 'error');
@@ -6796,7 +6801,7 @@ window.showSwimmingImportModal = function(dayNumber) {
             <h3 style="margin: 0 0 15px 0; color: #16a085; font-size: 16px;">🏊 Import natation → Séries par couloirs</h3>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée source (avec noms bruts) :</label>\
-                <select id="swimSourceDay" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + sourceDayOptions + '</select>\
+                <select id="swimSourceDay" onchange="renderSwimmingColumnMapping()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + sourceDayOptions + '</select>\
             </div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée destination (chrono avec épreuves) :</label>\
@@ -6814,6 +6819,23 @@ window.showSwimmingImportModal = function(dayNumber) {
                     <option value="9">9 couloirs</option>\
                     <option value="10">10 couloirs</option>\
                 </select>\
+            </div>\
+            <div style="margin-bottom: 12px; padding: 10px; background: #f0fbf9; border: 1px solid #cdeae4; border-radius: 6px;">\
+                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #16a085; font-weight: 600;">📋 Séparateur de colonnes (façon Excel) :</label>\
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">\
+                    <select id="swimSeparator" onchange="renderSwimmingColumnMapping()" style="flex:1; min-width:180px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">\
+                        <option value="auto" selected>Automatique (ligne entière, détection intelligente)</option>\
+                        <option value="tab">Tabulation</option>\
+                        <option value=";">Point-virgule ( ; )</option>\
+                        <option value=",">Virgule ( , )</option>\
+                        <option value="-">Tiret ( - )</option>\
+                        <option value="|">Barre verticale ( | )</option>\
+                        <option value="space">Espace</option>\
+                        <option value="custom">Personnalisé…</option>\
+                    </select>\
+                    <input type="text" id="swimSeparatorCustom" oninput="renderSwimmingColumnMapping()" placeholder="séparateur" maxlength="3" style="display:none; width:90px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">\
+                </div>\
+                <div id="swimColumnMapping" style="display:none; margin-top:10px;"></div>\
             </div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Épreuves cibles (<span id="swimEventsDayLabel">J' + dayNumber + '</span>) :</label>\
@@ -6856,6 +6878,242 @@ window.updateSwimmingEventsPreview = function() {
     if (previewContainer) previewContainer.style.display = 'none';
 };
 
+// --- Import "façon Excel" : séparateur + mapping de colonnes -----------------
+
+// Caractère séparateur choisi, ou null pour le mode "ligne entière" (parser auto)
+function getSwimmingSeparatorChar() {
+    var sel = document.getElementById('swimSeparator');
+    if (!sel) return null;
+    var v = sel.value;
+    if (v === 'auto') return null;
+    if (v === 'tab') return '\t';
+    if (v === 'space') return ' ';
+    if (v === 'custom') {
+        var c = document.getElementById('swimSeparatorCustom');
+        return (c && c.value) ? c.value : null;
+    }
+    return v; // ';', ',', '-', '|'
+}
+
+// Découper une ligne en colonnes selon le séparateur
+function splitSwimmingLine(line, sep) {
+    if (sep === ' ') {
+        return line.trim().split(/\s+/).map(function(s) { return s.trim(); }).filter(Boolean);
+    }
+    return String(line).split(sep).map(function(s) { return s.trim(); });
+}
+
+// Récupérer les lignes brutes de la journée source
+function getSwimmingSourceLines(sourceDayNumber) {
+    var lines = [];
+    var srcDay = championship.days[sourceDayNumber];
+    if (!srcDay) return lines;
+    var numDiv = championship.config && championship.config.numberOfDivisions ? championship.config.numberOfDivisions : 3;
+    for (var div = 1; div <= numDiv; div++) {
+        if (srcDay.players && srcDay.players[div]) {
+            srcDay.players[div].forEach(function(p) {
+                var name = typeof p === 'string' ? p : (p && p.name);
+                if (name) lines.push(name);
+            });
+        }
+    }
+    return lines;
+}
+
+// Vrai si la valeur commence par un club connu
+function looksLikeKnownClub(v) {
+    if (!v) return false;
+    for (var i = 0; i < KNOWN_SWIMMING_CLUBS.length; i++) {
+        var escaped = KNOWN_SWIMMING_CLUBS[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp('^' + escaped, 'i').test(v)) return true;
+    }
+    return false;
+}
+
+// Deviner le rôle d'une colonne à partir d'échantillons de valeurs
+function guessSwimmingColumnRole(samples, colIndex) {
+    var timeHits = 0, eventHits = 0, strokeHits = 0, distHits = 0, clubHits = 0, n = 0;
+    var distRe = /\b\d{2,4}\s*(?:m[eè]tres?|m)\b/i;
+    var distOnlyRe = /^\d{2,4}\s*(?:m[eè]tres?|m)?$/i; // colonne distance "nue" : 50, 100, 50m...
+    samples.forEach(function(v) {
+        if (!v) return;
+        n++;
+        if (parseSwimmingTime(v).timeMs > 0) timeHits++;
+        var hasStroke = SWIMMING_STROKE_REGEX.test(v);
+        var hasDist = distRe.test(v) || distOnlyRe.test(v);
+        if (hasStroke && distRe.test(v)) eventHits++;
+        else if (hasStroke) strokeHits++;
+        else if (hasDist) distHits++;
+        if (looksLikeKnownClub(v)) clubHits++;
+    });
+    if (n === 0) return 'ignore';
+    if (timeHits / n > 0.5) return 'time';
+    if (eventHits / n > 0.4) return 'event';
+    if (strokeHits / n > 0.5) return 'stroke';
+    if (distHits / n > 0.5) return 'distance';
+    if (clubHits / n > 0.4) return 'club';
+    if (colIndex === 0) return 'club';
+    return 'name';
+}
+
+var SWIMMING_COLUMN_ROLES = [
+    ['ignore', '— (ignorer)'],
+    ['club', 'Club'],
+    ['name', 'Nom'],
+    ['event', 'Épreuve (distance + nage)'],
+    ['distance', 'Distance'],
+    ['stroke', 'Nage'],
+    ['time', 'Temps']
+];
+
+function escapeSwimHtml(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Construire/rafraîchir le tableau de mapping des colonnes
+window.renderSwimmingColumnMapping = function() {
+    var sel = document.getElementById('swimSeparator');
+    var customInput = document.getElementById('swimSeparatorCustom');
+    var container = document.getElementById('swimColumnMapping');
+    if (customInput) customInput.style.display = (sel && sel.value === 'custom') ? 'inline-block' : 'none';
+    if (!container) return;
+
+    var sepChar = getSwimmingSeparatorChar();
+    if (sepChar === null) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+    container.style.display = 'block';
+
+    var srcSel = document.getElementById('swimSourceDay');
+    var lines = srcSel ? getSwimmingSourceLines(parseInt(srcSel.value)) : [];
+    if (lines.length === 0) {
+        container.innerHTML = '<span style="font-size:11px;color:#e74c3c;">Aucune ligne dans la journée source</span>';
+        return;
+    }
+
+    var rows = lines.map(function(l) { return splitSwimmingLine(l, sepChar); });
+    var maxCols = rows.reduce(function(m, r) { return Math.max(m, r.length); }, 0);
+
+    if (maxCols <= 1) {
+        container.innerHTML = '<span style="font-size:11px;color:#e67e22;">⚠️ Ce séparateur ne découpe rien (une seule colonne). Vérifie le séparateur ou repasse en « Automatique ».</span>';
+        return;
+    }
+
+    // Préserver les choix déjà faits par l'utilisateur
+    var existing = {};
+    for (var c = 0; c < maxCols; c++) {
+        var s = document.getElementById('swimColRole' + c);
+        if (s) existing[c] = s.value;
+    }
+
+    var html = '<div style="font-size:11px;color:#555;margin-bottom:6px;">Associe chaque colonne (« Nom » peut être coché sur plusieurs colonnes) :</div>';
+    html += '<div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:11px;min-width:100%;">';
+    // Ligne des sélecteurs de rôle
+    html += '<tr>';
+    for (var col = 0; col < maxCols; col++) {
+        var samples = rows.slice(0, 12).map(function(r) { return r[col] || ''; });
+        var role = existing[col] || guessSwimmingColumnRole(samples, col);
+        var opts = SWIMMING_COLUMN_ROLES.map(function(o) {
+            return '<option value="' + o[0] + '"' + (o[0] === role ? ' selected' : '') + '>' + o[1] + '</option>';
+        }).join('');
+        html += '<th style="border:1px solid #cdeae4;padding:3px;background:#e8f4f8;">' +
+            '<select id="swimColRole' + col + '" style="font-size:11px;padding:2px;border:1px solid #ddd;border-radius:3px;">' + opts + '</select></th>';
+    }
+    html += '</tr>';
+    // Aperçu des premières lignes
+    rows.slice(0, 5).forEach(function(r) {
+        html += '<tr>';
+        for (var col2 = 0; col2 < maxCols; col2++) {
+            html += '<td style="border:1px solid #e0e0e0;padding:3px 6px;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;">' +
+                escapeSwimHtml(r[col2] || '') + '</td>';
+        }
+        html += '</tr>';
+    });
+    html += '</table></div>';
+    container.innerHTML = html;
+};
+
+// Lire le mapping choisi → { role: colIndex(es) }
+function readSwimmingColumnMapping() {
+    var map = { name: [] };
+    var c = 0;
+    while (true) {
+        var s = document.getElementById('swimColRole' + c);
+        if (!s) break;
+        var role = s.value;
+        if (role === 'name') map.name.push(c);
+        else if (role !== 'ignore' && map[role] == null) map[role] = c;
+        c++;
+    }
+    return map;
+}
+
+// Construire une entrée natation depuis des colonnes déjà découpées
+function buildSwimmingEntryFromColumns(cols, map, raw) {
+    function col(i) { return (i != null && cols[i] != null) ? String(cols[i]).trim() : ''; }
+
+    var club = map.club != null ? col(map.club) : '';
+    var name = (map.name || []).map(col).filter(Boolean).join(' ').trim();
+
+    var distance = 0, stroke = '';
+    if (map.event != null) {
+        var ev = col(map.event);
+        var dm = ev.match(/\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i) || ev.match(/(\d{2,4})/);
+        if (dm) distance = parseInt(dm[1]);
+        var sm = ev.match(SWIMMING_STROKE_REGEX);
+        if (sm) stroke = normalizeSwimmingStroke(sm[1]);
+    }
+    if (map.distance != null) {
+        var d = col(map.distance).match(/(\d{2,4})/);
+        if (d) distance = parseInt(d[1]);
+    }
+    if (map.stroke != null) {
+        var sc = col(map.stroke);
+        if (sc) stroke = normalizeSwimmingStroke(sc);
+    }
+    var timeMs = 0;
+    if (map.time != null) timeMs = parseSwimmingTime(col(map.time)).timeMs;
+
+    if (name) {
+        name = name.split(/\s+/).map(function(w) {
+            return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
+        }).join(' ');
+    }
+
+    // Sans nage ni distance, impossible de rattacher à une épreuve
+    if (!stroke || !distance) return null;
+
+    return { club: club, swimmerName: name, distance: distance, stroke: stroke, timeMs: timeMs, rawName: raw };
+}
+
+// Collecteur unifié : renvoie { parsed, errors } selon le mode (auto ou colonnes)
+function collectSwimmingEntries(sourceDayNumber) {
+    var lines = getSwimmingSourceLines(sourceDayNumber);
+    var sepChar = getSwimmingSeparatorChar();
+    var parsed = [], errors = [];
+
+    if (sepChar === null) {
+        // Mode "ligne entière" : parser auto historique
+        lines.forEach(function(l) {
+            var e = parseSwimmingEntry(l);
+            if (e) parsed.push(e); else errors.push(l);
+        });
+        return { parsed: parsed, errors: errors };
+    }
+
+    // Mode colonnes : utiliser le mapping choisi
+    var map = readSwimmingColumnMapping();
+    lines.forEach(function(l) {
+        var cols = splitSwimmingLine(l, sepChar);
+        var e = buildSwimmingEntryFromColumns(cols, map, l);
+        if (e) parsed.push(e); else errors.push(l);
+    });
+    return { parsed: parsed, errors: errors };
+}
+
 // Aperçu de l'import natation
 window.previewSwimmingImport = function(dayNumber) {
     var sourceDayNumber = parseInt(document.getElementById('swimSourceDay').value);
@@ -6865,25 +7123,12 @@ window.previewSwimmingImport = function(dayNumber) {
     var srcDay = championship.days[sourceDayNumber];
     if (!srcDay) return;
 
-    var sourcePlayers = [];
-    var numDiv = championship.config && championship.config.numberOfDivisions ? championship.config.numberOfDivisions : 3;
-    for (var div = 1; div <= numDiv; div++) {
-        if (srcDay.players && srcDay.players[div]) {
-            sourcePlayers = sourcePlayers.concat(srcDay.players[div]);
-        }
-    }
-
     var events = championship.days[targetDayNumber].chronoData.events;
 
-    // Parser
-    var parsed = [];
-    var errors = [];
-    sourcePlayers.forEach(function(p) {
-        var name = typeof p === 'string' ? p : p.name;
-        if (!name) return;
-        var entry = parseSwimmingEntry(name);
-        if (entry) { parsed.push(entry); } else { errors.push(name); }
-    });
+    // Parser (mode auto ou colonnes selon le séparateur choisi)
+    var collected = collectSwimmingEntries(sourceDayNumber);
+    var parsed = collected.parsed;
+    var errors = collected.errors;
 
     // Grouper par épreuve
     var eventGroups = {};
@@ -6956,7 +7201,14 @@ window.confirmSwimmingImport = function(dayNumber) {
     var targetDayNumber = parseInt(document.getElementById('swimTargetDay').value);
     var lanesPerSerie = parseInt(document.getElementById('swimLanesPerSerie').value);
 
-    var result = window.generateSwimmingSeries(targetDayNumber, sourceDayNumber, lanesPerSerie);
+    // Collecter les entrées selon le mode choisi (auto ou colonnes façon Excel)
+    var collected = collectSwimmingEntries(sourceDayNumber);
+    if (collected.parsed.length === 0) {
+        showNotification('Aucune entrée n\'a pu être parsée avec ce séparateur/mapping', 'error');
+        return;
+    }
+
+    var result = window.generateSwimmingSeries(targetDayNumber, sourceDayNumber, lanesPerSerie, collected.parsed);
     if (result) {
         document.getElementById('swimmingImportModal').remove();
         // Rafraîchir l'affichage chrono
