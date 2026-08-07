@@ -938,6 +938,74 @@
         return 1; // Point de participation
     }
 
+    // ============================================
+    // BARÈME MULTISPORT (points par position de journée)
+    // ============================================
+    // Utilisé UNIQUEMENT en mode multisport (au moins une journée Matchs ET une
+    // journée Courses). Chaque journée classe les joueurs — par division pour les
+    // Matchs, par classement de course pour le Chrono — et la POSITION donne les
+    // points. Ne modifie NI le mode Championnat pur (3 pts/victoire) NI le mode
+    // Chrono pur (barème CHRONO_POINTS 20/17…), qui gardent leur calcul d'origine.
+    var MULTISPORT_POINTS = [25, 19, 17, 15, 12, 10, 8, 6, 4, 2]; // 1er→25, 2e→19… ; 0 au-delà de la 10e place
+
+    function calculateMultisportPositionPoints(position) {
+        if (position < 1) return 0;
+        if (position <= MULTISPORT_POINTS.length) return MULTISPORT_POINTS[position - 1];
+        return 0; // au-delà de la 10e place : 0 point
+    }
+
+    // Classement d'une journée MATCHS pour une division : liste ordonnée des
+    // joueurs AYANT JOUÉ (même tri que le classement de journée affiché :
+    // points, victoires, goal-average, points pour, nom ; en mode poules
+    // l'étape finale prime). L'index dans la liste = la position (0 = 1er).
+    function getMatchsDayDivisionOrder(dayNumber, division) {
+        var dayData = global.championship.days[dayNumber];
+        if (!dayData || !dayData.players || !dayData.players[division]) return [];
+        var isPoolMode = !!(dayData.pools && dayData.pools.enabled);
+        var rows = [];
+        dayData.players[division].forEach(function(p) {
+            var name = getPlayerName(p);
+            if (!name || name.toUpperCase() === 'BYE') return;
+            var stats = (typeof global.calculatePlayerStats === 'function')
+                ? global.calculatePlayerStats(dayNumber, division, name) : null;
+            // Seuls les joueurs ayant réellement joué un match marquent des points.
+            if (!stats || !(stats.matchesPlayed > 0)) return;
+            var stage = (isPoolMode && typeof global.getPlayerFinalStageForDay === 'function')
+                ? global.getPlayerFinalStageForDay(name, dayNumber, division) : null;
+            rows.push({
+                name: name,
+                club: getPlayerClub(p),
+                totalPoints: stats.totalPoints,
+                wins: stats.wins,
+                matchesPlayed: stats.matchesPlayed,
+                goalAverage: stats.pointsWon - stats.pointsLost,
+                pointsWon: stats.pointsWon,
+                stageWeight: stage ? stage.stageWeight : 0
+            });
+        });
+        rows.sort(function(a, b) {
+            if (isPoolMode && b.stageWeight !== a.stageWeight) return b.stageWeight - a.stageWeight;
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            if (b.goalAverage !== a.goalAverage) return b.goalAverage - a.goalAverage;
+            if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
+            return a.name.localeCompare(b.name);
+        });
+        return rows;
+    }
+
+    // Classement d'une journée CHRONO : ordre des joueurs sur l'ensemble des
+    // séries du jour (distance décroissante puis temps croissant, cohérent avec
+    // getSerieRanking et le classement des courses). L'index = la position.
+    function getChronoDayOrder(dayNumber) {
+        var results = getChronoResultsForDay(dayNumber); // { name: {player,series,totalDistance,totalTime,…} }
+        return Object.keys(results).map(function(name) { return results[name]; })
+            .sort(function(a, b) {
+                if ((b.totalDistance || 0) !== (a.totalDistance || 0)) return (b.totalDistance || 0) - (a.totalDistance || 0);
+                return (a.totalTime || 0) - (b.totalTime || 0);
+            });
+    }
+
     function getChronoResultsForDay(dayNumber) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return {};
@@ -1047,64 +1115,85 @@
 
     function calculateMultisportRanking() {
         var allStats = {};
-        
+        // Mode multisport = au moins une journée Matchs ET une journée Courses.
+        // Dans ce cas, les points viennent du BARÈME de position (25/19/17…),
+        // par division pour les Matchs et par course pour le Chrono.
+        var multisport = isMultisportMode();
+        var numDivisions = (global.config && global.config.numberOfDivisions) ? global.config.numberOfDivisions : 3;
+
+        function ensureStats(playerName, club) {
+            if (!allStats[playerName]) allStats[playerName] = createEmptyPlayerStats(playerName, club || '');
+            if (club && !allStats[playerName].club) allStats[playerName].club = club;
+            return allStats[playerName];
+        }
+
         // Parcourir toutes les journées
         Object.keys(global.championship.days).forEach(function(dayNumber) {
             var dayData = global.championship.days[dayNumber];
             if (!dayData) return;
-            
+
+            var dayNum = parseInt(dayNumber);
             var dayType = getDayType(dayNumber);
-            
+
             if (dayType === DAY_TYPES.CHAMPIONSHIP) {
-                // Récupérer les points du championnat
-                if (dayData.players) {
-                    for (var division = 1; division <= (global.config ? global.config.numberOfDivisions : 3); division++) {
-                        var players = dayData.players[division] || [];
-                        
-                        players.forEach(function(player) {
+                if (!dayData.players) return;
+
+                for (var division = 1; division <= numDivisions; division++) {
+                    if (multisport) {
+                        // BARÈME MULTISPORT : position dans la division → points
+                        var order = getMatchsDayDivisionOrder(dayNum, division);
+                        order.forEach(function(row, index) {
+                            var entry = ensureStats(row.name, row.club);
+                            entry.championshipPoints += calculateMultisportPositionPoints(index + 1);
+                            entry.championshipMatches += row.matchesPlayed;
+                            entry.championshipWins += row.wins;
+                        });
+                    } else {
+                        // MODE CHAMPIONNAT PUR : comportement d'origine (3 pts/victoire)
+                        (dayData.players[division] || []).forEach(function(player) {
                             var playerName = getPlayerName(player);
-                            var playerClub = getPlayerClub(player);
-                            
-                            if (!allStats[playerName]) {
-                                allStats[playerName] = createEmptyPlayerStats(playerName, playerClub);
-                            }
-                            
-                            // Mettre à jour le club si on en trouve un
-                            if (playerClub && !allStats[playerName].club) {
-                                allStats[playerName].club = playerClub;
-                            }
-                            
-                            var stats = global.calculatePlayerStats ? global.calculatePlayerStats(player, parseInt(dayNumber), division) : null;
+                            if (!playerName || playerName.toUpperCase() === 'BYE') return;
+                            var entry = ensureStats(playerName, getPlayerClub(player));
+                            var stats = (typeof global.calculatePlayerStats === 'function')
+                                ? global.calculatePlayerStats(dayNum, division, playerName) : null;
                             if (stats) {
-                                allStats[playerName].championshipPoints += stats.points;
-                                allStats[playerName].championshipMatches += stats.played;
-                                allStats[playerName].championshipWins += stats.wins;
+                                entry.championshipPoints += stats.totalPoints;
+                                entry.championshipMatches += stats.matchesPlayed;
+                                entry.championshipWins += stats.wins;
                             }
                         });
                     }
                 }
             } else if (dayType === DAY_TYPES.CHRONO) {
-                // Récupérer les points chrono
-                var chronoResults = getChronoResultsForDay(dayNumber);
-                
-                Object.keys(chronoResults).forEach(function(playerName) {
-                    if (!allStats[playerName]) {
-                        allStats[playerName] = createEmptyPlayerStats(playerName, '');
-                    }
-                    
-                    allStats[playerName].chronoPoints += chronoResults[playerName].totalPoints;
-                    allStats[playerName].chronoSeries += chronoResults[playerName].series.length;
-                    allStats[playerName].chronoDistance += chronoResults[playerName].totalDistance || 0;
-                    allStats[playerName].chronoTime += chronoResults[playerName].totalTime || 0;
-                });
+                var chronoResults = getChronoResultsForDay(dayNum);
+
+                if (multisport) {
+                    // BARÈME MULTISPORT : position dans la course → points
+                    getChronoDayOrder(dayNum).forEach(function(res, index) {
+                        var entry = ensureStats(res.player, '');
+                        entry.chronoPoints += calculateMultisportPositionPoints(index + 1);
+                        entry.chronoSeries += res.series.length;
+                        entry.chronoDistance += res.totalDistance || 0;
+                        entry.chronoTime += res.totalTime || 0;
+                    });
+                } else {
+                    // MODE CHRONO PUR : comportement d'origine (barème CHRONO_POINTS)
+                    Object.keys(chronoResults).forEach(function(playerName) {
+                        var entry = ensureStats(playerName, '');
+                        entry.chronoPoints += chronoResults[playerName].totalPoints;
+                        entry.chronoSeries += chronoResults[playerName].series.length;
+                        entry.chronoDistance += chronoResults[playerName].totalDistance || 0;
+                        entry.chronoTime += chronoResults[playerName].totalTime || 0;
+                    });
+                }
             }
         });
-        
+
         // Calculer le total
         Object.keys(allStats).forEach(function(player) {
             allStats[player].totalPoints = allStats[player].championshipPoints + allStats[player].chronoPoints;
         });
-        
+
         return allStats;
     }
 
@@ -3343,6 +3432,10 @@
     global.calculateMultisportRanking = calculateMultisportRanking;
     global.renderMultisportRanking = renderMultisportRanking;
     global.calculateChronoPoints = calculateChronoPoints;
+    global.MULTISPORT_POINTS = MULTISPORT_POINTS;
+    global.calculateMultisportPositionPoints = calculateMultisportPositionPoints;
+    global.getMatchsDayDivisionOrder = getMatchsDayDivisionOrder;
+    global.getChronoDayOrder = getChronoDayOrder;
     global.getChronoResultsForDay = getChronoResultsForDay;
     // Modales
     global.showAddEventModalForDay = showAddEventModalForDay;

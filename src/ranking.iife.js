@@ -484,7 +484,20 @@ if (sortBy === 'points') {
         return a.name.localeCompare(b.name);
     });
 }
-            
+
+            // Mode multisport : points de journée selon le barème 25/19/17… (par division).
+            // La position dans CE classement de division donne les points multisport.
+            // N'apparaît qu'en mode multisport ; sans impact sur les modes purs.
+            const isMulti = typeof window.isMultisportMode === 'function' && window.isMultisportMode();
+            let msPointsByName = {};
+            if (isMulti && typeof window.getMatchsDayDivisionOrder === 'function') {
+                const msOrder = window.getMatchsDayDivisionOrder(dayNumber, division);
+                msOrder.forEach((row, i) => {
+                    msPointsByName[row.name] = (typeof window.calculateMultisportPositionPoints === 'function')
+                        ? window.calculateMultisportPositionPoints(i + 1) : 0;
+                });
+            }
+
            rankingsHtml += `
     <div style="margin-bottom: 30px;">
         <h3 style="color: #2c3e50; margin-bottom: 15px;">
@@ -497,6 +510,7 @@ if (sortBy === 'points') {
                     <th>Joueur</th>
                     ${isPoolMode ? '<th>Étape</th>' : ''}
                     <th>Points</th>
+                    ${isMulti ? '<th title="Points multisport de la journée (barème 25/19/17…)">🏅 Multi</th>' : ''}
                     <th>V/N/D/F</th>
                     <th>% Vict.</th>
                     <th>PP/PC</th>
@@ -543,6 +557,7 @@ playerStats.forEach((player, index) => {
             <td style="font-weight: 600;">${player.name}</td>
             ${isPoolMode ? `<td style="${stageStyle} text-align: center; border-radius: 4px;">${stageIcon}${player.stageLabel}</td>` : ''}
             <td class="stat-value">${player.totalPoints}</td>
+            ${isMulti ? `<td class="stat-value" style="color:#8e44ad; font-weight:bold;">${msPointsByName[player.name] != null ? msPointsByName[player.name] : '-'}</td>` : ''}
             <td>${player.wins}/${player.draws || 0}/${player.losses}/${player.forfeits || 0}</td>
             <td>${player.winRate}%</td>
             <td>${player.pointsWon}/${player.pointsLost}</td>
@@ -569,6 +584,8 @@ playerStats.forEach((player, index) => {
         }
     }
     window.updateRankingsForDay = updateRankingsForDay;
+    // Exposé pour le module multisport (calcul des points de journée par barème).
+    window.calculatePlayerStats = calculatePlayerStats;
 
     // CLASSEMENT GÉNÉRAL
     function updateGeneralRanking() {
