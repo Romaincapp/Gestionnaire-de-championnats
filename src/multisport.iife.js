@@ -625,10 +625,12 @@
         if (!row) return;
 
         var safeName = (p.name || '').replace(/"/g, '&quot;');
+        var safeClub = (p.club || '').replace(/"/g, '&quot;');
         row.innerHTML =
             '<div style="display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap;">' +
             '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width: 55px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px; text-align: center;">' +
             '<input type="text" id="edit-pname-' + dayNumber + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="flex: 1; min-width: 120px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
+            '<input type="text" id="edit-pclub-' + dayNumber + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 110px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
             '</div>' +
             '<div style="display: flex; gap: 4px; flex-shrink: 0;">' +
             '<button onclick="saveParticipantInfo(' + dayNumber + ', ' + participantId + ')" style="padding: 4px 8px; font-size: 11px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Enregistrer">💾</button>' +
@@ -663,9 +665,11 @@
         if (dup) { showNotification('Un participant porte déjà ce nom', 'warning'); return; }
 
         var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
+        var clubEl = document.getElementById('edit-pclub-' + dayNumber + '-' + participantId);
+        var newClub = clubEl ? clubEl.value.trim() : undefined;
         var oldName = p.name;
 
-        applyParticipantRename(chronoData, participantId, oldName, newName, newBib);
+        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub);
 
         saveToLocalStorage();
         refreshChronoDisplay(dayNumber);
@@ -677,13 +681,14 @@
      * Renomme / re-dossarde un participant partout : liste globale, séries,
      * résultats et séries imbriquées dans les événements. Match par id OU ancien nom.
      */
-    function applyParticipantRename(chronoData, participantId, oldName, newName, newBib) {
+    function applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub) {
         function applyTo(list) {
             (list || []).forEach(function(sp) {
                 if ((participantId != null && sp.id === participantId) ||
                     (oldName && (sp.name || '').toLowerCase() === oldName.toLowerCase())) {
                     sp.name = newName;
                     if (newBib != null && !isNaN(newBib)) sp.bib = newBib;
+                    if (newClub !== undefined) sp.club = newClub;
                 }
             });
         }
@@ -2303,7 +2308,9 @@
             html += '<span style="flex:0 0 78px; font-size:12px; font-weight:600; color:#16a085;">Couloir ' + k + '</span>';
             html += '<select id="laneSel-' + dayNumber + '-' + k + '" style="flex:1; padding:7px; border:1px solid #ddd; border-radius:4px; font-size:13px;">' +
                 optionsFor(occId != null ? occId : null) + '</select>';
+            html += '<button onclick="editLaneSwimmer(' + dayNumber + ', ' + serieId + ', ' + k + ')" title="Éditer nom / club / dossard" style="flex:0 0 auto; padding:6px 9px; font-size:12px; background:#f39c12; color:white; border:none; border-radius:4px; cursor:pointer;">✏️</button>';
             html += '</div>';
+            html += '<div id="laneEdit-' + dayNumber + '-' + k + '"></div>';
         }
         html += '</div>';
 
@@ -2390,6 +2397,79 @@
         }
     }
     global.addReserveNamesToSerie = addReserveNamesToSerie;
+
+    // Éditer (inline) le nageur actuellement choisi dans un couloir
+    function editLaneSwimmer(dayNumber, serieId, lane) {
+        var sel = document.getElementById('laneSel-' + dayNumber + '-' + lane);
+        if (!sel || !sel.value) {
+            showNotification('Choisis d\'abord un nageur dans ce couloir', 'warning');
+            return;
+        }
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var pid = parseInt(sel.value);
+        var p = (chronoData.participants || []).find(function(x) { return x.id === pid; });
+        if (!p) return;
+        var wrap = document.getElementById('laneEdit-' + dayNumber + '-' + lane);
+        if (!wrap) return;
+
+        var safeName = (p.name || '').replace(/"/g, '&quot;');
+        var safeClub = (p.club || '').replace(/"/g, '&quot;');
+        wrap.innerHTML =
+            '<div style="display:flex; gap:6px; align-items:center; margin:2px 0 6px 86px; flex-wrap:wrap;">' +
+            '<input type="number" id="laneEditBib-' + dayNumber + '-' + lane + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width:52px; padding:5px; border:1px solid #f39c12; border-radius:4px; font-size:12px; text-align:center;">' +
+            '<input type="text" id="laneEditName-' + dayNumber + '-' + lane + '" value="' + safeName + '" placeholder="Nom" style="flex:1; min-width:120px; padding:5px; border:1px solid #f39c12; border-radius:4px; font-size:12px;">' +
+            '<input type="text" id="laneEditClub-' + dayNumber + '-' + lane + '" value="' + safeClub + '" placeholder="Club" style="width:100px; padding:5px; border:1px solid #f39c12; border-radius:4px; font-size:12px;">' +
+            '<button onclick="saveLaneSwimmer(' + dayNumber + ', ' + serieId + ', ' + lane + ', ' + p.id + ')" style="padding:4px 8px; font-size:11px; background:#27ae60; color:white; border:none; border-radius:4px; cursor:pointer;" title="Enregistrer">💾</button>' +
+            '<button onclick="document.getElementById(\'laneEdit-' + dayNumber + '-' + lane + '\').innerHTML=\'\'" style="padding:4px 8px; font-size:11px; background:#95a5a6; color:white; border:none; border-radius:4px; cursor:pointer;" title="Annuler">✖️</button>' +
+            '</div>';
+        var ni = document.getElementById('laneEditName-' + dayNumber + '-' + lane);
+        if (ni) { ni.focus(); ni.select(); }
+    }
+    global.editLaneSwimmer = editLaneSwimmer;
+
+    function saveLaneSwimmer(dayNumber, serieId, lane, participantId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var p = (chronoData.participants || []).find(function(x) { return x.id === participantId; });
+        if (!p) return;
+
+        var nameEl = document.getElementById('laneEditName-' + dayNumber + '-' + lane);
+        var bibEl = document.getElementById('laneEditBib-' + dayNumber + '-' + lane);
+        var clubEl = document.getElementById('laneEditClub-' + dayNumber + '-' + lane);
+        if (!nameEl) return;
+
+        var newName = toTitleCase(nameEl.value.trim());
+        if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
+
+        var dup = (chronoData.participants || []).some(function(x) {
+            return x.id !== participantId && (x.name || '').toLowerCase() === newName.toLowerCase();
+        });
+        if (dup) { showNotification('Un participant porte déjà ce nom', 'warning'); return; }
+
+        var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
+        var newClub = clubEl ? clubEl.value.trim() : undefined;
+        var oldName = p.name;
+
+        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub);
+        saveToLocalStorage();
+
+        // Redessiner la modale en conservant les sélections (identifiées par id du pool)
+        var input = document.getElementById('laneCount-' + dayNumber);
+        var count = input ? (parseInt(input.value) || 8) : 8;
+        var picks = readLaneSelections(dayNumber);
+        var body = document.getElementById('laneAssignBody-' + dayNumber);
+        if (body) {
+            body.innerHTML = renderLaneAssignBody(dayNumber, serieId, count);
+            Object.keys(picks).forEach(function(k) {
+                var s = document.getElementById('laneSel-' + dayNumber + '-' + k);
+                if (s) s.value = picks[k];
+            });
+        }
+        refreshChronoDisplay(dayNumber);
+        showNotification('Nageur mis à jour : ' + newName, 'success');
+    }
+    global.saveLaneSwimmer = saveLaneSwimmer;
 
     function saveSerieLanes(dayNumber, serieId) {
         var chronoData = getChronoDataForDay(dayNumber);
