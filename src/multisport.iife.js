@@ -1165,8 +1165,6 @@
                     }
                 }
             } else if (dayType === DAY_TYPES.CHRONO) {
-                var chronoResults = getChronoResultsForDay(dayNum);
-
                 if (multisport) {
                     // BARÈME MULTISPORT : position dans la course → points
                     getChronoDayOrder(dayNum).forEach(function(res, index) {
@@ -1178,6 +1176,7 @@
                     });
                 } else {
                     // MODE CHRONO PUR : comportement d'origine (barème CHRONO_POINTS)
+                    var chronoResults = getChronoResultsForDay(dayNum);
                     Object.keys(chronoResults).forEach(function(playerName) {
                         var entry = ensureStats(playerName, '');
                         entry.chronoPoints += chronoResults[playerName].totalPoints;
