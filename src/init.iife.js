@@ -15,19 +15,28 @@
     // GESTION DES MATCHS BYE MANUELS
     // ======================================
 
-    function addByeMatchForPlayer(dayNumber, division, playerName) {
+    function addByeMatchForPlayer(dayNumber, division, playerName, score1, score2) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
-        // Créer un match BYE (victoire automatique)
+        // Scores : utiliser ceux fournis, sinon victoire automatique par défaut (5-0)
+        let s1 = (score1 !== undefined && score1 !== null && score1 !== '') ? parseInt(score1, 10) : 5;
+        let s2 = (score2 !== undefined && score2 !== null && score2 !== '') ? parseInt(score2, 10) : 0;
+        if (isNaN(s1)) s1 = 5;
+        if (isNaN(s2)) s2 = 0;
+
+        // Déterminer le vainqueur en fonction des scores choisis
+        const winner = s1 >= s2 ? playerName : "BYE";
+
+        // Créer un match BYE avec les scores choisis
         const byeMatch = {
             player1: playerName,
             player2: "BYE",
             tour: 4, // Mettre au tour 4 par défaut
-            score1: 5,
-            score2: 0,
+            score1: s1,
+            score2: s2,
             completed: true,
-            winner: playerName,
+            winner: winner,
             isBye: true
         };
 
@@ -41,6 +50,140 @@
         showNotification(`Match BYE ajouté pour ${playerName} en D${division}`, 'success');
     }
     window.addByeMatchForPlayer = addByeMatchForPlayer;
+
+    // ======================================
+    // ÉTAPE DE CHOIX DU SCORE POUR UN MATCH BYE
+    // ======================================
+
+    // Construit le HTML commun (inputs de score + presets) partagé par les
+    // deux modales (un seul joueur / tous les joueurs).
+    function buildByeScoreInputs(playerLabel) {
+        return `
+            <div style="display:flex; align-items:flex-end; justify-content:center; gap:15px; margin-bottom:20px;">
+                <div style="text-align:center;">
+                    <label style="display:block; font-size:12px; color:#555; margin-bottom:5px;">${playerLabel}</label>
+                    <input type="number" id="byeScorePlayer" value="5" min="0"
+                           style="width:70px; padding:8px; text-align:center; font-size:18px; border:2px solid #27ae60; border-radius:6px;">
+                </div>
+                <span style="font-size:22px; font-weight:bold; color:#555; padding-bottom:6px;">-</span>
+                <div style="text-align:center;">
+                    <label style="display:block; font-size:12px; color:#555; margin-bottom:5px;">BYE</label>
+                    <input type="number" id="byeScoreOpponent" value="0" min="0"
+                           style="width:70px; padding:8px; text-align:center; font-size:18px; border:2px solid #bbb; border-radius:6px;">
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
+                <button onclick="setByeScorePreset(5,0)" class="btn" style="background:#27ae60; color:white; padding:6px 14px;">5 - 0</button>
+                <button onclick="setByeScorePreset(4,1)" class="btn" style="background:#2ecc71; color:white; padding:6px 14px;">4 - 1</button>
+                <button onclick="setByeScorePreset(3,2)" class="btn" style="background:#95a5a6; color:white; padding:6px 14px;">3 - 2</button>
+            </div>
+        `;
+    }
+
+    function setByeScorePreset(s1, s2) {
+        const p = document.getElementById('byeScorePlayer');
+        const o = document.getElementById('byeScoreOpponent');
+        if (p) p.value = s1;
+        if (o) o.value = s2;
+    }
+    window.setByeScorePreset = setByeScorePreset;
+
+    function closeByeScoreModal() {
+        const modal = document.getElementById('byeScoreModal');
+        if (modal) modal.remove();
+    }
+    window.closeByeScoreModal = closeByeScoreModal;
+
+    function openByeScoreModal(innerHTML) {
+        const existing = document.getElementById('byeScoreModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'byeScoreModal';
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.zIndex = '10000'; // au-dessus de la modale de gestion BYE
+        modal.innerHTML = innerHTML;
+
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeByeScoreModal();
+        });
+
+        // Focus + sélection du champ principal pour une saisie rapide
+        const p = document.getElementById('byeScorePlayer');
+        if (p) { p.focus(); p.select(); }
+    }
+
+    // Étape de choix du score pour UN joueur, déclenchée au clic sur "+ BYE".
+    function showByeScoreModal(dayNumber, division, playerName) {
+        const escapedPlayerName = escapeForOnclick(playerName);
+        openByeScoreModal(`
+            <div class="modal-content" style="max-width: 420px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3 style="margin:0; color:#2c3e50;">🎯 Score du match BYE</h3>
+                    <button onclick="closeByeScoreModal()" class="close-modal">×</button>
+                </div>
+                <p style="margin-bottom:15px; color:#555;">
+                    Choisissez le score attribué à <strong>${playerName}</strong> (D${division}) pour son match BYE.
+                </p>
+                ${buildByeScoreInputs(playerName)}
+                <div class="modal-buttons">
+                    <button onclick="confirmByeScore(${dayNumber}, ${division}, '${escapedPlayerName}')" class="btn btn-success">
+                        ✅ Valider
+                    </button>
+                    <button onclick="closeByeScoreModal()" class="btn" style="background:#95a5a6;">Annuler</button>
+                </div>
+            </div>
+        `);
+    }
+    window.showByeScoreModal = showByeScoreModal;
+
+    function confirmByeScore(dayNumber, division, playerName) {
+        const p = document.getElementById('byeScorePlayer');
+        const o = document.getElementById('byeScoreOpponent');
+        const s1 = p ? p.value : 5;
+        const s2 = o ? o.value : 0;
+        closeByeScoreModal();
+        addByeMatchForPlayer(dayNumber, division, playerName, s1, s2);
+        setTimeout(() => showByeManagementModal(dayNumber), 100);
+    }
+    window.confirmByeScore = confirmByeScore;
+
+    // Étape de choix du score commune à TOUS les joueurs manquants.
+    function showByeScoreModalForAll(dayNumber) {
+        openByeScoreModal(`
+            <div class="modal-content" style="max-width: 420px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3 style="margin:0; color:#2c3e50;">🎯 Score des matchs BYE</h3>
+                    <button onclick="closeByeScoreModal()" class="close-modal">×</button>
+                </div>
+                <p style="margin-bottom:15px; color:#555;">
+                    Ce score sera appliqué à <strong>tous</strong> les matchs BYE ajoutés automatiquement
+                    (le joueur figure à gauche, le BYE à droite).
+                </p>
+                ${buildByeScoreInputs('Joueur')}
+                <div class="modal-buttons">
+                    <button onclick="confirmByeScoreForAll(${dayNumber})" class="btn btn-success">
+                        ✅ Ajouter BYE à TOUS
+                    </button>
+                    <button onclick="closeByeScoreModal()" class="btn" style="background:#95a5a6;">Annuler</button>
+                </div>
+            </div>
+        `);
+    }
+    window.showByeScoreModalForAll = showByeScoreModalForAll;
+
+    function confirmByeScoreForAll(dayNumber) {
+        const p = document.getElementById('byeScorePlayer');
+        const o = document.getElementById('byeScoreOpponent');
+        const s1 = p ? p.value : 5;
+        const s2 = o ? o.value : 0;
+        closeByeScoreModal();
+        addByeToAll(dayNumber, s1, s2);
+        setTimeout(() => showByeManagementModal(dayNumber), 100);
+    }
+    window.confirmByeScoreForAll = confirmByeScoreForAll;
 
     // ========== MODAL GÉNÉRATION DE MATCHS ==========
     let currentMatchGenerationDay = 1;
@@ -917,7 +1060,7 @@ function showByeManagementModal(dayNumber) {
                         ${player.missingMatches}
                     </td>
                     <td style="padding: 10px; text-align: center;">
-                        <button onclick="addByeMatchForPlayer(${dayNumber}, ${player.division}, '${escapedPlayerName}'); setTimeout(() => showByeManagementModal(${dayNumber}), 200);"
+                        <button onclick="showByeScoreModal(${dayNumber}, ${player.division}, '${escapedPlayerName}');"
                                 style="
                             background: linear-gradient(135deg, #27ae60, #2ecc71);
                             color: white;
@@ -971,7 +1114,7 @@ function showByeManagementModal(dayNumber) {
                 </div>
                 ${modalHTML}
                 <div class="modal-buttons" style="margin-top: 20px;">
-                    <button onclick="addByeToAll(${dayNumber}); setTimeout(() => showByeManagementModal(${dayNumber}), 200);" class="btn btn-success">
+                    <button onclick="showByeScoreModalForAll(${dayNumber});" class="btn btn-success">
                         ✅ Ajouter BYE à TOUS
                     </button>
                     <button onclick="closeByeModal()" class="btn" style="background: #95a5a6;">
@@ -998,7 +1141,7 @@ function showByeManagementModal(dayNumber) {
     }
     window.closeByeModal = closeByeModal;
 
-    function addByeToAll(dayNumber) {
+    function addByeToAll(dayNumber, score1, score2) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
@@ -1039,7 +1182,7 @@ function showByeManagementModal(dayNumber) {
                 const missingMatches = 4 - matchCount;
 
                 for (let i = 0; i < missingMatches; i++) {
-                    addByeMatchForPlayer(dayNumber, division, playerName);
+                    addByeMatchForPlayer(dayNumber, division, playerName, score1, score2);
                     addedCount++;
                 }
             });
