@@ -460,6 +460,9 @@
             html += '<input list="clubs-datalist-' + dayNumber + '" id="assign-club-input-' + dayNumber + '" placeholder="Club à affecter" style="flex: 1; min-width: 140px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
             html += '<datalist id="clubs-datalist-' + dayNumber + '">' + datalistOptions + '</datalist>';
             html += '<button onclick="assignClubToSelected(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">🏷️ Affecter aux cochés</button>';
+            if (series.length > 0) {
+                html += '<button onclick="showBulkAddToSerieModal(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">➕ Ajouter à une série</button>';
+            }
             html += '<label style="font-size: 11px; color: #7f8c8d; cursor: pointer; white-space: nowrap;"><input type="checkbox" onchange="toggleAllParticipants(' + dayNumber + ', this.checked)" style="vertical-align: middle;"> Tout</label>';
             html += '</div>';
 
@@ -612,6 +615,99 @@
         checks.forEach(function(ch) { ch.checked = checked; });
     }
     global.toggleAllParticipants = toggleAllParticipants;
+
+    /**
+     * Affiche une modal pour ajouter en masse les participants cochés à une série.
+     */
+    function showBulkAddToSerieModal(dayNumber) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+
+        var checks = document.querySelectorAll('.participant-check-' + dayNumber + ':checked');
+        if (checks.length === 0) {
+            showNotification('Cochez au moins un participant', 'warning');
+            return;
+        }
+
+        var series = chronoData.series || [];
+        if (series.length === 0) {
+            showNotification('Créez d\'abord une série', 'warning');
+            return;
+        }
+
+        if (document.getElementById('bulkAddToSerieModal-' + dayNumber)) return;
+
+        var html = '<div id="bulkAddToSerieModal-' + dayNumber + '" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
+            'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
+            'align-items: center; z-index: 10000;">' +
+            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 420px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
+            '<h3>➕ Ajouter ' + checks.length + ' participant(s) à une série</h3>' +
+            '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
+            '<div style="margin: 15px 0;">';
+
+        series.forEach(function(serie) {
+            var evt = (chronoData.events || []).find(function(e) { return e.id === serie.eventId; });
+            var label = (evt ? evt.name + ' — ' : '') + serie.name;
+
+            html += '<div onclick="bulkAddParticipantsToSerie(' + dayNumber + ', ' + serie.id + ')" ' +
+                'style="padding: 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; cursor: pointer; ' +
+                'border: 2px solid transparent; transition: all 0.2s;" ' +
+                'onmouseover="this.style.borderColor=\'#27ae60\'; this.style.background=\'#e8f5e9\';" ' +
+                'onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'#f8f9fa\';">' +
+                '<strong style="font-size: 14px;">🏃 ' + label + '</strong>' +
+                '<span style="color: #7f8c8d; font-size: 12px; margin-left: 10px;">' + serie.participants.length + ' participants</span>' +
+                '</div>';
+        });
+
+        html += '</div>' +
+            '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
+            '<button onclick="closeBulkAddToSerieModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
+            '</div></div></div>';
+
+        document.body.insertAdjacentHTML('beforeend', html);
+    }
+    global.showBulkAddToSerieModal = showBulkAddToSerieModal;
+
+    function closeBulkAddToSerieModal(dayNumber) {
+        var modal = document.getElementById('bulkAddToSerieModal-' + dayNumber);
+        if (modal) modal.remove();
+    }
+    global.closeBulkAddToSerieModal = closeBulkAddToSerieModal;
+
+    function bulkAddParticipantsToSerie(dayNumber, serieId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+
+        var checks = document.querySelectorAll('.participant-check-' + dayNumber + ':checked');
+        var ids = Array.prototype.map.call(checks, function(ch) { return parseInt(ch.value, 10); });
+
+        var added = 0, skipped = 0;
+        ids.forEach(function(id) {
+            var participant = chronoData.participants.find(function(p) { return p.id === id; });
+            if (!participant) return;
+
+            var alreadyInSerie = serie.participants.some(function(existing) {
+                return existing.name.toLowerCase() === participant.name.toLowerCase();
+            });
+            if (alreadyInSerie) { skipped++; return; }
+
+            if (addChronoParticipant(dayNumber, serieId, participant.name, null, { club: participant.club })) {
+                added++;
+            }
+        });
+
+        saveToLocalStorage();
+        closeBulkAddToSerieModal(dayNumber);
+        refreshChronoDisplay(dayNumber);
+
+        var msg = added + ' participant(s) ajouté(s) à "' + serie.name + '"';
+        if (skipped > 0) msg += ' (' + skipped + ' déjà présent(s))';
+        showNotification(msg, 'success');
+    }
+    global.bulkAddParticipantsToSerie = bulkAddParticipantsToSerie;
 
     /**
      * Passe une ligne participant en édition inline du nom et du dossard.
