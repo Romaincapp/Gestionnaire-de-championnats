@@ -882,6 +882,7 @@
         html += '<div style="display: flex; align-items: center; gap: 8px;">';
         html += '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">🎯 ' + event.name + '</h4>';
         html += '<button onclick="editEvent(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
+        html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
         html += '</div>';
         html += '<span style="color: #7f8c8d; font-size: 11px;">' + (event.date || '') + '</span>';
         html += '</div>';
@@ -1945,6 +1946,28 @@
         closeEditEventModal(dayNumber);
         refreshChronoDisplay(dayNumber);
         showNotification('Épreuve mise à jour !', 'success');
+    }
+
+    function deleteEventForDay(dayNumber, eventId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+
+        var event = chronoData.events.find(function(e) { return e.id === eventId; });
+        if (!event) return;
+
+        var seriesCount = chronoData.series.filter(function(s) { return s.eventId === eventId; }).length;
+        var confirmMessage = seriesCount > 0
+            ? 'Êtes-vous sûr de vouloir supprimer "' + event.name + '" et ses ' + seriesCount + ' série(s) ?'
+            : 'Êtes-vous sûr de vouloir supprimer "' + event.name + '" ?';
+
+        if (!confirm(confirmMessage)) return;
+
+        chronoData.events = chronoData.events.filter(function(e) { return e.id !== eventId; });
+        chronoData.series = chronoData.series.filter(function(s) { return s.eventId !== eventId; });
+
+        saveToLocalStorage();
+        refreshChronoDisplay(dayNumber);
+        showNotification('Épreuve supprimée', 'success');
     }
 
     function showAddSerieModalForDay(dayNumber) {
@@ -3812,6 +3835,7 @@
     global.editEvent = editEvent;
     global.closeEditEventModal = closeEditEventModal;
     global.saveEditedEvent = saveEditedEvent;
+    global.deleteEventForDay = deleteEventForDay;
     global.showImportPlayersModal = showImportPlayersModal;
     global.closeImportPlayersModal = closeImportPlayersModal;
     global.importPlayersFromDay = importPlayersFromDay;
