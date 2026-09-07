@@ -729,7 +729,7 @@
             '</div>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeAddParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
-            '<button onclick="saveBulkParticipants(' + dayNumber + ')" class="btn btn-primary">💾 Ajouter</button>' +
+            '<button onclick="saveBulkParticipantsForDay(' + dayNumber + ')" class="btn btn-primary">💾 Ajouter</button>' +
             '</div></div></div>';
         
         document.body.appendChild(modal);
@@ -746,7 +746,7 @@
         if (modal) modal.remove();
     }
 
-    function saveBulkParticipants(dayNumber) {
+    function saveBulkParticipantsForDay(dayNumber) {
         var textarea = document.getElementById('bulk-participants-' + dayNumber);
         if (!textarea || !textarea.value.trim()) {
             showNotification('Veuillez entrer au moins un nom', 'warning');
@@ -881,7 +881,7 @@
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
         html += '<div style="display: flex; align-items: center; gap: 8px;">';
         html += '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">🎯 ' + event.name + '</h4>';
-        html += '<button onclick="editEvent(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
+        html += '<button onclick="editEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
         html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
         html += '</div>';
         html += '<span style="color: #7f8c8d; font-size: 11px;">' + (event.date || '') + '</span>';
@@ -1885,7 +1885,7 @@
     // ÉDITION D'ÉPREUVE
     // ============================================
 
-    function editEvent(dayNumber, eventId) {
+    function editEventForDay(dayNumber, eventId) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
         
@@ -3832,7 +3832,7 @@
     global.showAddEventModalForDay = showAddEventModalForDay;
     global.closeEventModalForDay = closeEventModalForDay;
     global.saveEventForDay = saveEventForDay;
-    global.editEvent = editEvent;
+    global.editEventForDay = editEventForDay;
     global.closeEditEventModal = closeEditEventModal;
     global.saveEditedEvent = saveEditedEvent;
     global.deleteEventForDay = deleteEventForDay;
@@ -3851,7 +3851,7 @@
     global.quickAddParticipantToDay = quickAddParticipantToDay;
     global.showAddParticipantManualModal = showAddParticipantManualModal;
     global.closeAddParticipantsModal = closeAddParticipantsModal;
-    global.saveBulkParticipants = saveBulkParticipants;
+    global.saveBulkParticipantsForDay = saveBulkParticipantsForDay;
     global.showAddToSerieModal = showAddToSerieModal;
     global.closeAddToSerieModal = closeAddToSerieModal;
     global.addExistingParticipantToSerie = addExistingParticipantToSerie;
