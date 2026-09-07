@@ -811,7 +811,7 @@
         
         var html = '<div id="addToSerieModal-' + dayNumber + '" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
-            'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeAddToSerieModal(' + dayNumber + ')">' +
+            'align-items: center; z-index: 10000;">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">' +
             '<h3>➕ Ajouter ' + participant.name + '</h3>' +
             '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
@@ -1959,7 +1959,7 @@
         modal.innerHTML = 
             '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
-            'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeSerieModalForDay(' + dayNumber + ')">' +
+            'align-items: center; z-index: 10000;">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 450px; width: 90%; max-height: 90vh; overflow-y: auto;">' +
             '<h3>🏃 Nouvelle Série - Journée ' + dayNumber + '</h3>' +
             '<div style="margin: 15px 0;">' +
