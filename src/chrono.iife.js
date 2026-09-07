@@ -2757,9 +2757,13 @@ window.saveParticipantRowInline = function(bib) {
     var newDistanceKm = parseFloat(distEl.value) || 0;
     var newTotalTime = parseTimeString(timeEl.value);
 
-    // Appliquer le temps
+    // Appliquer le temps. Cette édition sert à corriger tours/distance/temps
+    // (ex: clic LAP accidentel) — elle ne doit jamais terminer la course pour
+    // ce participant : son statut (ex: "En course") reste inchangé.
     participant.totalTime = newTotalTime;
-    participant.finishTime = newTotalTime > 0 ? newTotalTime : null;
+    if (participant.status === 'finished') {
+        participant.finishTime = newTotalTime > 0 ? newTotalTime : null;
+    }
 
     // Appliquer la distance (saisie en km, stockée en mètres)
     participant.totalDistance = Math.round(newDistanceKm * 1000);
@@ -2779,11 +2783,6 @@ window.saveParticipantRowInline = function(bib) {
     } else {
         participant.laps = [];
         participant.bestLap = null;
-    }
-
-    // Si un temps a été saisi, considérer le participant comme arrivé
-    if (newTotalTime > 0 && participant.status !== 'dns') {
-        participant.status = 'finished';
     }
 
     // Le temps de la série correspond au temps du plus lent participant arrivé
