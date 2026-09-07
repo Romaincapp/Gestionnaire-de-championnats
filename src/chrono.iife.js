@@ -2198,6 +2198,10 @@ function updateParticipantsTimes() {
 
     serie.participants.forEach(p => {
         if (p.status === 'running') {
+            // Ne pas écraser la cellule si sa ligne est en cours d'édition inline
+            // (editParticipantRowInline y a placé un <input id="edit-time-...">) :
+            // sinon le tick de 100ms efface le champ avant que "Enregistrer" ne s'exécute.
+            if (document.getElementById(`edit-time-${p.bib}`)) return;
             const timeDisplay = document.getElementById(`time-${p.bib}`);
             if (timeDisplay) {
                 timeDisplay.textContent = formatTime(serie.currentTime - p.lastLapStartTime + p.totalTime);
