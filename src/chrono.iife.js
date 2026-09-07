@@ -643,8 +643,13 @@ window.previewBulkParticipants = function() {
 };
 
 window.saveBulkParticipants = function() {
+    // Si l'utilisateur n'a pas cliqué sur "Prévisualiser", on le fait pour lui
+    // afin que le bouton "Ajouter" fonctionne directement en un clic.
     if (bulkParticipantsData.length === 0) {
-        showNotification('Veuillez d\'abord prévisualiser les données', 'warning');
+        previewBulkParticipants();
+    }
+
+    if (bulkParticipantsData.length === 0) {
         return;
     }
 
