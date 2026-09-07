@@ -573,34 +573,18 @@
     }
     window.toggleMultisportHub = toggleMultisportHub;
 
-    function openMultisportRankingInNewWindow() {
+    // Fenêtre "Afficher" du classement Multisport : contenu regénéré à la demande
+    // (rafraîchissement auto + manuel), sur le même principe que le classement général.
+    let multisportRankingWindow = null;
+
+    function buildMultisportRankingContentHTML() {
         const ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
         const sorted = Object.values(ranking).sort((a, b) => b.totalPoints - a.totalPoints);
-        
-        let html = `<!DOCTYPE html>
-        <html><head><meta charset="UTF-8"><title>Classement Multisport</title>
-        <style>
-            body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
-            .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
-            h1 { text-align: center; color: #667eea; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; }
-            td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; }
-            tr:nth-child(1) { background: linear-gradient(135deg, #ffd700, #ffed4a); }
-            tr:nth-child(2) { background: linear-gradient(135deg, #c0c0c0, #e0e0e0); }
-            tr:nth-child(3) { background: linear-gradient(135deg, #cd7f32, #daa520); color: white; }
-            .total { font-size: 1.3em; font-weight: bold; color: #27ae60; }
-            .club-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 11px; padding: 3px 10px; border-radius: 12px; }
-        </style></head><body>
-        <div class="container">
-        <h1>🏅 Classement Multisport</h1>
-        <table>
-        <thead><tr><th>#</th><th>Joueur</th><th>Club</th><th>🎾 Matchs</th><th>⏱️ Courses</th><th>Total</th></tr></thead>
-        <tbody>`;
-        
+
+        let rows = '';
         sorted.forEach((stat, index) => {
             const clubBadge = stat.club ? `<span class="club-badge">${stat.club}</span>` : '-';
-            html += `<tr>
+            rows += `<tr>
                 <td>${index + 1}</td>
                 <td><strong>${stat.player}</strong></td>
                 <td>${clubBadge}</td>
@@ -609,14 +593,108 @@
                 <td class="total">${stat.totalPoints}</td>
             </tr>`;
         });
-        
-        html += `</tbody></table></div></body></html>`;
-        
-        const win = window.open('', '_blank');
-        win.document.write(html);
-        win.document.close();
+
+        return `<table>
+        <thead><tr><th>#</th><th>Joueur</th><th>Club</th><th>🎾 Matchs</th><th>⏱️ Courses</th><th>Total</th></tr></thead>
+        <tbody>${rows}</tbody></table>`;
+    }
+
+    function openMultisportRankingInNewWindow() {
+        const content = buildMultisportRankingContentHTML();
+
+        const html = `<!DOCTYPE html>
+        <html><head><meta charset="UTF-8"><title>🏅 Classement Multisport</title>
+        <style>
+            * { box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+            .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+            h1 { text-align: center; color: #667eea; margin: 0; }
+            .update-time { text-align: center; font-size: 0.85em; color: #7f8c8d; margin-top: 5px; margin-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; }
+            td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; }
+            tr:nth-child(1) { background: linear-gradient(135deg, #ffd700, #ffed4a); }
+            tr:nth-child(2) { background: linear-gradient(135deg, #c0c0c0, #e0e0e0); }
+            tr:nth-child(3) { background: linear-gradient(135deg, #cd7f32, #daa520); color: white; }
+            .total { font-size: 1.3em; font-weight: bold; color: #27ae60; }
+            .club-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 11px; padding: 3px 10px; border-radius: 12px; }
+            .auto-refresh {
+                position: fixed; bottom: 20px; left: 20px; background: rgba(255,255,255,0.95);
+                padding: 10px 15px; border-radius: 25px; color: #2c3e50; font-size: 13px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            }
+            .refresh-btn {
+                position: fixed; bottom: 20px; right: 20px;
+                background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none;
+                padding: 15px 25px; border-radius: 50px; font-size: 16px; cursor: pointer;
+                box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
+            }
+            .refreshing { animation: pulse 1s ease-in-out; }
+            @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        </style></head><body>
+        <div class="container">
+            <h1>🏅 Classement Multisport</h1>
+            <div class="update-time" id="updateTime">Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}</div>
+            <div id="rankingContent">${content}</div>
+        </div>
+        <div class="auto-refresh">
+            <label><input type="checkbox" id="autoRefresh" checked> Auto-refresh (5s)</label>
+        </div>
+        <button class="refresh-btn" onclick="requestRefresh()">🔄 Rafraîchir</button>
+        <script>
+            let autoRefreshInterval;
+            const checkbox = document.getElementById('autoRefresh');
+
+            function requestRefresh() {
+                if (window.opener && !window.opener.closed) {
+                    document.body.classList.add('refreshing');
+                    window.opener.postMessage({ action: 'refreshMultisportRanking' }, '*');
+                }
+            }
+
+            function startAutoRefresh() { autoRefreshInterval = setInterval(requestRefresh, 5000); }
+            function stopAutoRefresh() { clearInterval(autoRefreshInterval); }
+
+            checkbox.addEventListener('change', function(e) {
+                if (e.target.checked) startAutoRefresh(); else stopAutoRefresh();
+            });
+
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.action === 'updateMultisportContent') {
+                    document.getElementById('rankingContent').innerHTML = event.data.content;
+                    document.getElementById('updateTime').textContent = 'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR');
+                    document.body.classList.remove('refreshing');
+                }
+            });
+
+            startAutoRefresh();
+        <\/script>
+        </body></html>`;
+
+        if (multisportRankingWindow && !multisportRankingWindow.closed) {
+            multisportRankingWindow.document.open();
+            multisportRankingWindow.document.write(html);
+            multisportRankingWindow.document.close();
+            multisportRankingWindow.focus();
+        } else {
+            multisportRankingWindow = window.open('', 'MultisportRankingDisplay', 'width=900,height=700,menubar=no,toolbar=no,location=no,status=no');
+            if (multisportRankingWindow) {
+                multisportRankingWindow.document.write(html);
+                multisportRankingWindow.document.close();
+            }
+        }
     }
     window.openMultisportRankingInNewWindow = openMultisportRankingInNewWindow;
+
+    // Répond aux demandes de rafraîchissement envoyées par la fenêtre d'affichage
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.action === 'refreshMultisportRanking') {
+            if (multisportRankingWindow && !multisportRankingWindow.closed) {
+                const content = buildMultisportRankingContentHTML();
+                multisportRankingWindow.postMessage({ action: 'updateMultisportContent', content: content }, '*');
+            }
+        }
+    });
 
     function exportMultisportRanking() {
         const ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
