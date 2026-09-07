@@ -1781,6 +1781,9 @@ function displayRaceInterface(serie) {
                 <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #16a085, #1abc9c); margin-right: 10px;">
                     🏆 Voir Classement
                 </button>
+                <button class="btn" onclick="openLiveRaceDisplayWindow()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); margin-right: 10px;">
+                    🖥️ Afficher
+                </button>
                 <button class="btn btn-danger" onclick="endSerie()">
                     🏁 Terminer la Série
                 </button>
@@ -2963,6 +2966,152 @@ function generateRaceRanking() {
 
     rankingSection.innerHTML = html;
 }
+
+// ============================================
+// AFFICHAGE LIVE (2e ÉCRAN) DE LA COURSE EN COURS
+// ============================================
+
+// Construit le contenu (chrono + tableau de classement) affiché dans la
+// fenêtre "🖥️ Afficher", à partir de l'état courant de la course.
+function buildLiveRaceDisplayContentHTML() {
+    const serie = raceData.currentSerie;
+    if (!serie) {
+        return { title: 'Aucune course en cours', body: '<p style="text-align:center; padding:40px; color:#7f8c8d;">Aucune course en cours.</p>' };
+    }
+
+    const ranked = [...serie.participants].sort((a, b) => {
+        if (a.status === 'dns' && b.status !== 'dns') return 1;
+        if (b.status === 'dns' && a.status !== 'dns') return -1;
+        if (a.status === 'finished' && b.status !== 'finished') return -1;
+        if (b.status === 'finished' && a.status !== 'finished') return 1;
+        if (a.totalDistance !== b.totalDistance) return b.totalDistance - a.totalDistance;
+        return a.totalTime - b.totalTime;
+    });
+
+    const medals = ['🥇', '🥈', '🥉'];
+
+    const rows = ranked.map((p, index) => {
+        const position = index + 1;
+        const isDNS = p.status === 'dns';
+        const medal = isDNS ? 'DNS' : (position <= 3 ? medals[position - 1] : position);
+        const rowBg = isDNS ? 'background: rgba(231,76,60,0.15); opacity: 0.7;' : (position <= 3 ? 'background: rgba(255,215,0,0.12);' : '');
+        const statusHtml = p.status === 'finished'
+            ? '<span style="color: #2ecc71; font-weight: bold;">✅ Terminé</span>'
+            : (isDNS ? '<span style="color: #e74c3c; font-weight: bold;">🚫 DNS</span>' : '<span style="color: #f39c12; font-weight: bold;">⏳ En cours</span>');
+
+        return `
+            <tr style="${rowBg} border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <td style="padding: 12px; text-align: center; font-size: ${isDNS ? '14px' : '22px'}; font-weight: bold;">${medal}</td>
+                <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px; color: #3498db;">#${p.bib}</td>
+                <td style="padding: 12px; font-weight: bold;">${p.name}${p.club ? '<div style="font-size:11px; color:#94a3b8; font-weight:normal;">' + p.club + '</div>' : ''}</td>
+                <td style="padding: 12px; text-align: center; font-weight: bold;">${p.laps.length}</td>
+                <td style="padding: 12px; text-align: center; font-weight: bold;">${(p.totalDistance / 1000).toFixed(2)} km</td>
+                <td style="padding: 12px; text-align: center; font-family: monospace; font-weight: bold;">${p.status === 'finished' ? formatTime(p.finishTime) : formatTime(p.totalTime)}</td>
+                <td style="padding: 12px; text-align: center;">${statusHtml}</td>
+            </tr>`;
+    }).join('');
+
+    const body = `
+        <div style="text-align: center; font-family: 'Courier New', monospace; font-size: 48px; font-weight: bold; color: #00ff88; text-shadow: 0 0 20px rgba(0,255,136,0.3); margin-bottom: 25px; letter-spacing: 3px;">
+            ${formatTime(serie.currentTime || 0)}
+        </div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: rgba(255,255,255,0.08);">
+                    <th style="padding: 12px; text-align: center;">Pos.</th>
+                    <th style="padding: 12px; text-align: center;">Dossard</th>
+                    <th style="padding: 12px; text-align: left;">Participant</th>
+                    <th style="padding: 12px; text-align: center;">Tours</th>
+                    <th style="padding: 12px; text-align: center;">Distance</th>
+                    <th style="padding: 12px; text-align: center;">Temps</th>
+                    <th style="padding: 12px; text-align: center;">Statut</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+
+    return { title: serie.name, body: body };
+}
+
+let liveRaceDisplayWindow = null;
+
+window.openLiveRaceDisplayWindow = function() {
+    const data = buildLiveRaceDisplayContentHTML();
+
+    const html = `<!DOCTYPE html>
+    <html><head><meta charset="UTF-8"><title>🖥️ ${data.title}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 25px; }
+        h1 { text-align: center; margin: 0 0 5px 0; font-size: 26px; }
+        .update-time { text-align: center; font-size: 0.85em; color: #94a3b8; margin-bottom: 20px; }
+        table { width: 100%; }
+        td, th { font-size: 15px; }
+        .auto-refresh { position: fixed; bottom: 20px; left: 20px; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 25px; font-size: 13px; }
+        .refresh-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 15px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; }
+        .refreshing { animation: pulse 1s ease-in-out; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style></head><body>
+        <h1>🏁 ${data.title}</h1>
+        <div class="update-time" id="updateTime">Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}</div>
+        <div id="liveRaceContent">${data.body}</div>
+        <div class="auto-refresh"><label><input type="checkbox" id="autoRefresh" checked> Auto-refresh (3s)</label></div>
+        <button class="refresh-btn" onclick="requestRefresh()">🔄 Rafraîchir</button>
+        <script>
+            let autoRefreshInterval;
+            const checkbox = document.getElementById('autoRefresh');
+
+            function requestRefresh() {
+                if (window.opener && !window.opener.closed) {
+                    document.body.classList.add('refreshing');
+                    window.opener.postMessage({ action: 'refreshLiveRaceDisplay' }, '*');
+                }
+            }
+
+            function startAutoRefresh() { autoRefreshInterval = setInterval(requestRefresh, 3000); }
+            function stopAutoRefresh() { clearInterval(autoRefreshInterval); }
+
+            checkbox.addEventListener('change', function(e) {
+                if (e.target.checked) startAutoRefresh(); else stopAutoRefresh();
+            });
+
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.action === 'updateLiveRaceDisplay') {
+                    document.title = '🖥️ ' + event.data.title;
+                    document.querySelector('h1').textContent = '🏁 ' + event.data.title;
+                    document.getElementById('liveRaceContent').innerHTML = event.data.body;
+                    document.getElementById('updateTime').textContent = 'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR');
+                    document.body.classList.remove('refreshing');
+                }
+            });
+
+            startAutoRefresh();
+        <\/script>
+    </body></html>`;
+
+    if (liveRaceDisplayWindow && !liveRaceDisplayWindow.closed) {
+        liveRaceDisplayWindow.document.open();
+        liveRaceDisplayWindow.document.write(html);
+        liveRaceDisplayWindow.document.close();
+        liveRaceDisplayWindow.focus();
+    } else {
+        liveRaceDisplayWindow = window.open('', 'LiveRaceDisplay', 'width=900,height=700,menubar=no,toolbar=no,location=no,status=no');
+        if (liveRaceDisplayWindow) {
+            liveRaceDisplayWindow.document.write(html);
+            liveRaceDisplayWindow.document.close();
+        }
+    }
+};
+
+// Répond aux demandes de rafraîchissement envoyées par la fenêtre d'affichage
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.action === 'refreshLiveRaceDisplay') {
+        if (liveRaceDisplayWindow && !liveRaceDisplayWindow.closed) {
+            const data = buildLiveRaceDisplayContentHTML();
+            liveRaceDisplayWindow.postMessage({ action: 'updateLiveRaceDisplay', title: data.title, body: data.body }, '*');
+        }
+    }
+});
 
 // Exporter le classement général de la série en PDF
 window.exportRaceRankingToPDF = function() {
