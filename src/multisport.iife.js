@@ -723,9 +723,9 @@
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeAddParticipantsModal(' + dayNumber + ')">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>➕ Ajouter des participants - Journée ' + dayNumber + '</h3>' +
-            '<p style="color: #7f8c8d; font-size: 13px;">Entrez les noms (un par ligne). Format: Nom, Club (optionnel)</p>' +
+            '<p style="color: #7f8c8d; font-size: 13px;">Entrez les noms (un par ligne). Formats acceptés : Nom · Nom, Club · Dossard + Nom (séparés par tabulation ou virgule, colonnes en trop ignorées)</p>' +
             '<div style="margin: 15px 0;">' +
-            '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\nDurand Paul\n..."></textarea>' +
+            '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\n1\tGringos 1\n2\tGringos 2\n..."></textarea>' +
             '</div>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeAddParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
@@ -763,25 +763,42 @@
         lines.forEach(function(line) {
             line = line.trim();
             if (!line) return;
-            
-            // Format: Nom, Club ou juste Nom
-            var parts = line.split(',');
-            var name = toTitleCase(parts[0].trim());
-            var club = parts[1] ? parts[1].trim() : '';
-            
+
+            // Formats acceptés : "Nom", "Nom, Club", ou "Dossard, Nom, ..." /
+            // "Dossard<TAB>Nom<TAB>..." (colonnes en trop, ex: catégorie, ignorées)
+            var parts;
+            if (line.indexOf('\t') !== -1) {
+                parts = line.split('\t').map(function(p) { return p.trim(); });
+            } else {
+                parts = line.split(',').map(function(p) { return p.trim(); });
+            }
+            while (parts.length > 1 && !parts[parts.length - 1]) parts.pop();
+
+            var bib = null, name, club = '';
+            if (parts.length >= 2 && /^\d+$/.test(parts[0])) {
+                // Dossard, Nom, [Club/Catégorie ignorée]
+                bib = parseInt(parts[0], 10);
+                name = parts[1];
+            } else {
+                // Nom, [Club]
+                name = parts[0];
+                club = parts[1] || '';
+            }
+            name = toTitleCase(name);
+
             if (!name) return;
-            
+
             // Vérifier si existe déjà
             var exists = chronoData.participants.some(function(p) {
                 return p.name.toLowerCase() === name.toLowerCase();
             });
-            
+
             if (!exists) {
                 chronoData.participants.push({
                     id: chronoData.nextParticipantId++,
                     name: name,
                     club: club,
-                    bib: chronoData.participants.length + 1,
+                    bib: bib != null ? bib : chronoData.participants.length + 1,
                     totalTime: null,
                     laps: 0
                 });
