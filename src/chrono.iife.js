@@ -2038,6 +2038,17 @@ window.endSerie = function() {
     backToSeriesList();
 };
 
+// Statuts qui sortent le participant de la course (non partant / disqualifié) :
+// exclus du classement au chrono, affichés à part et à la fin.
+function isOutOfRaceStatus(status) {
+    return status === 'dns' || status === 'disq';
+}
+
+// Libellé court affiché pour ces statuts (position dans le classement, badge...)
+function outOfRaceLabel(status) {
+    return status === 'disq' ? 'DISQ' : 'DNS';
+}
+
 // Générer les lignes de participants
 function generateParticipantsRows(serie) {
     if (!serie) serie = raceData.currentSerie;
@@ -2048,14 +2059,16 @@ function generateParticipantsRows(serie) {
             ready: '#95a5a6',
             running: '#3498db',
             finished: '#27ae60',
-            dns: '#e74c3c'
+            dns: '#e74c3c',
+            disq: '#8e44ad'
         };
 
         const statusText = {
             ready: '⏸️ Prêt',
             running: '▶️ En course',
             finished: '🏁 Terminé',
-            dns: '🚫 DNS'
+            dns: '🚫 DNS',
+            disq: '⛔ DISQ'
         };
 
         return `
@@ -2088,9 +2101,9 @@ function generateParticipantsRows(serie) {
                     </span>
                 </td>
                 <td style="padding: 8px; text-align: center;">
-                    ${p.status === 'dns' ? `
+                    ${isOutOfRaceStatus(p.status) ? `
                         <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                            <button onclick="cancelDNS('${p.bib}')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler DNS">↩️</button>
+                            <button onclick="${p.status === 'disq' ? 'cancelDISQ' : 'cancelDNS'}('${p.bib}')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler ${outOfRaceLabel(p.status)}">↩️</button>
                         </div>
                     ` : p.status === 'finished' ? `
                         <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
@@ -2102,6 +2115,7 @@ function generateParticipantsRows(serie) {
                             <button onclick="recordLap('${p.bib}')" style="background: #3498db; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
                             <button onclick="finishParticipant('${p.bib}')" style="background: #27ae60; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
                             <button onclick="markAsDNS('${p.bib}')" style="background: none; border: 1px solid #ccc; color: #999; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
+                            <button onclick="markAsDISQ('${p.bib}')" style="background: none; border: 1px solid #e74c3c; color: #e74c3c; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Disqualifier">DISQ</button>
                             <button onclick="editParticipantRowInline('${p.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
                         </div>
                     `}
@@ -2374,6 +2388,49 @@ window.cancelDNS = function(bib) {
     showNotification(`${participant.name} remis en course`, 'success');
 };
 
+// Marquer un participant comme disqualifié (DISQ). Contrairement au DNS, on
+// conserve ses tours/distance/temps déjà enregistrés (utile pour justifier
+// la disqualification a posteriori) — seul le statut change.
+window.markAsDISQ = function(bib) {
+    const serie = raceData.currentSerie;
+    if (!serie) return;
+
+    const participant = serie.participants.find(p => String(p.bib) === String(bib));
+    if (!participant) return;
+
+    participant.status = 'disq';
+
+    saveChronoToLocalStorage();
+    if (typeof saveRaceResultsToDay === 'function') saveRaceResultsToDay();
+    updateParticipantRow(participant);
+    showNotification(`${participant.name} disqualifié`, 'warning');
+};
+
+// Annuler la disqualification d'un participant
+window.cancelDISQ = function(bib) {
+    const serie = raceData.currentSerie;
+    if (!serie) return;
+
+    const participant = serie.participants.find(p => String(p.bib) === String(bib));
+    if (!participant) return;
+
+    // S'il avait déjà un temps d'arrivée (disqualifié après coup depuis le
+    // modal d'édition), on le remet "Terminé" plutôt qu'en course.
+    if (participant.finishTime) {
+        participant.status = 'finished';
+    } else {
+        participant.status = serie.isRunning ? 'running' : 'ready';
+        if (serie.isRunning) {
+            participant.lastLapStartTime = serie.currentTime;
+        }
+    }
+
+    saveChronoToLocalStorage();
+    if (typeof saveRaceResultsToDay === 'function') saveRaceResultsToDay();
+    updateParticipantRow(participant);
+    showNotification(`${participant.name} réintégré`, 'success');
+};
+
 // Éditer le temps d'un participant
 let editingParticipantBib = null;
 
@@ -2444,6 +2501,17 @@ function updateDistancePreview() {
 window.closeEditTimeModal = function() {
     document.getElementById('editTimeModal').style.display = 'none';
     editingParticipantBib = null;
+};
+
+// Disqualifier le participant depuis le modal d'édition (accessible même
+// quand sa course est déjà terminée, pour disqualifier a posteriori).
+window.disqualifyFromEditTimeModal = function() {
+    if (!editingParticipantBib) return;
+    if (!confirm('Disqualifier ce participant ?')) return;
+
+    const bib = editingParticipantBib;
+    window.closeEditTimeModal();
+    window.markAsDISQ(bib);
 };
 
 window.saveEditedTime = function() {
@@ -2611,14 +2679,16 @@ function updateParticipantRow(participant) {
         ready: '#95a5a6',
         running: '#3498db',
         finished: '#27ae60',
-        dns: '#e74c3c'
+        dns: '#e74c3c',
+        disq: '#8e44ad'
     };
 
     const statusText = {
         ready: '⏸️ Prêt',
         running: '▶️ En course',
         finished: '🏁 Terminé',
-        dns: '🚫 DNS'
+        dns: '🚫 DNS',
+        disq: '⛔ DISQ'
     };
 
     // Reconstruire la ligne complète du participant
@@ -2651,9 +2721,9 @@ function updateParticipantRow(participant) {
             </span>
         </td>
         <td style="padding: 8px; text-align: center;">
-            ${participant.status === 'dns' ? `
+            ${isOutOfRaceStatus(participant.status) ? `
                 <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                    <button onclick="cancelDNS('${participant.bib}')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler DNS">↩️</button>
+                    <button onclick="${participant.status === 'disq' ? 'cancelDISQ' : 'cancelDNS'}('${participant.bib}')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler ${outOfRaceLabel(participant.status)}">↩️</button>
                 </div>
             ` : participant.status === 'finished' ? `
                 <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
@@ -2665,6 +2735,7 @@ function updateParticipantRow(participant) {
                     <button onclick="recordLap('${participant.bib}')" style="background: #3498db; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
                     <button onclick="finishParticipant('${participant.bib}')" style="background: #27ae60; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
                     <button onclick="markAsDNS('${participant.bib}')" style="background: none; border: 1px solid #ccc; color: #999; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
+                    <button onclick="markAsDISQ('${participant.bib}')" style="background: none; border: 1px solid #e74c3c; color: #e74c3c; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Disqualifier">DISQ</button>
                     <button onclick="editParticipantRowInline('${participant.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
                 </div>
             `}
@@ -2835,8 +2906,8 @@ function generateRaceRanking() {
     // Trier les participants
     const ranked = [...serie.participants].sort((a, b) => {
         // Les DNS à la fin
-        if (a.status === 'dns' && b.status !== 'dns') return 1;
-        if (b.status === 'dns' && a.status !== 'dns') return -1;
+        if (isOutOfRaceStatus(a.status) && !isOutOfRaceStatus(b.status)) return 1;
+        if (isOutOfRaceStatus(b.status) && !isOutOfRaceStatus(a.status)) return -1;
 
         // Les terminés d'abord
         if (a.status === 'finished' && b.status !== 'finished') return -1;
@@ -2888,8 +2959,8 @@ function generateRaceRanking() {
                     <tbody>
                         ${ranked.map((p, index) => {
                             const position = index + 1;
-                            const isDNS = p.status === 'dns';
-                            const medal = isDNS ? 'DNS' : (position <= 3 ? medals[position - 1] : position);
+                            const isDNS = isOutOfRaceStatus(p.status);
+                            const medal = isDNS ? outOfRaceLabel(p.status) : (position <= 3 ? medals[position - 1] : position);
                             const rowBg = isDNS ? 'background: #fdeaea; opacity: 0.7;' : (position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : '');
 
                             return `
@@ -2924,6 +2995,8 @@ function generateRaceRanking() {
                                             '<span style="color: #27ae60; font-weight: bold;">✅ Terminé</span>' :
                                             p.status === 'dns' ?
                                             '<span style="color: #e74c3c; font-weight: bold;">🚫 DNS</span>' :
+                                            p.status === 'disq' ?
+                                            '<span style="color: #8e44ad; font-weight: bold;">⛔ DISQ</span>' :
                                             '<span style="color: #e67e22; font-weight: bold;">⏳ En cours</span>'
                                         }
                                     </td>
@@ -2983,8 +3056,8 @@ function buildLiveRaceDisplayContentHTML() {
     }
 
     const ranked = [...serie.participants].sort((a, b) => {
-        if (a.status === 'dns' && b.status !== 'dns') return 1;
-        if (b.status === 'dns' && a.status !== 'dns') return -1;
+        if (isOutOfRaceStatus(a.status) && !isOutOfRaceStatus(b.status)) return 1;
+        if (isOutOfRaceStatus(b.status) && !isOutOfRaceStatus(a.status)) return -1;
         if (a.status === 'finished' && b.status !== 'finished') return -1;
         if (b.status === 'finished' && a.status !== 'finished') return 1;
         if (a.totalDistance !== b.totalDistance) return b.totalDistance - a.totalDistance;
@@ -2995,11 +3068,13 @@ function buildLiveRaceDisplayContentHTML() {
 
     const rows = ranked.map((p, index) => {
         const position = index + 1;
-        const isDNS = p.status === 'dns';
-        const medal = isDNS ? 'DNS' : (position <= 3 ? medals[position - 1] : position);
+        const isDNS = isOutOfRaceStatus(p.status);
+        const medal = isDNS ? outOfRaceLabel(p.status) : (position <= 3 ? medals[position - 1] : position);
         const rowBg = isDNS ? 'background: rgba(231,76,60,0.15); opacity: 0.7;' : (position <= 3 ? 'background: rgba(255,215,0,0.12);' : '');
         const statusHtml = p.status === 'finished'
             ? '<span style="color: #2ecc71; font-weight: bold;">✅ Terminé</span>'
+            : p.status === 'disq'
+            ? '<span style="color: #c39bd3; font-weight: bold;">⛔ DISQ</span>'
             : (isDNS ? '<span style="color: #e74c3c; font-weight: bold;">🚫 DNS</span>' : '<span style="color: #f39c12; font-weight: bold;">⏳ En cours</span>');
 
         return `
@@ -3122,8 +3197,8 @@ window.exportRaceRankingToPDF = function() {
     if (!serie) return;
 
     const ranked = [...serie.participants].sort((a, b) => {
-        if (a.status === 'dns' && b.status !== 'dns') return 1;
-        if (b.status === 'dns' && a.status !== 'dns') return -1;
+        if (isOutOfRaceStatus(a.status) && !isOutOfRaceStatus(b.status)) return 1;
+        if (isOutOfRaceStatus(b.status) && !isOutOfRaceStatus(a.status)) return -1;
         if (a.status === 'finished' && b.status !== 'finished') return -1;
         if (b.status === 'finished' && a.status !== 'finished') return 1;
         if (a.totalDistance !== b.totalDistance) return b.totalDistance - a.totalDistance;
@@ -3140,11 +3215,12 @@ window.exportRaceRankingToPDF = function() {
 
     const rows = ranked.map((p, index) => {
         const position = index + 1;
-        const isDNS = p.status === 'dns';
-        const medal = isDNS ? 'DNS' : (position <= 3 ? medals[position - 1] : position);
+        const isDNS = isOutOfRaceStatus(p.status);
+        const medal = isDNS ? outOfRaceLabel(p.status) : (position <= 3 ? medals[position - 1] : position);
         const rowBg = isDNS ? '#fdeaea' : (position <= 3 ? '#fff9e6' : (index % 2 === 0 ? '#f8f9fa' : 'white'));
         const timeDisplay = p.status === 'finished' ? formatTime(p.finishTime) : formatTime(p.totalTime);
-        const statusText = p.status === 'finished' ? 'Terminé' : (p.status === 'dns' ? 'DNS' : 'En cours');
+        const statusText = p.status === 'finished' ? 'Terminé' : (p.status === 'disq' ? 'DISQ' : (p.status === 'dns' ? 'DNS' : 'En cours'));
+        const statusColorForText = p.status === 'finished' ? '#27ae60' : (p.status === 'disq' ? '#8e44ad' : (p.status === 'dns' ? '#e74c3c' : '#e67e22'));
 
         return `<tr style="background: ${rowBg}; border-bottom: 1px solid #dee2e6;">
             <td style="padding: 10px; text-align: center; font-size: ${isDNS ? '13px' : '20px'}; font-weight: bold; color: ${isDNS ? '#e74c3c' : 'inherit'};">${medal}</td>
@@ -3158,7 +3234,7 @@ window.exportRaceRankingToPDF = function() {
             <td style="padding: 10px; text-align: center; font-weight: bold;">${(p.totalDistance / 1000).toFixed(2)} km</td>
             <td style="padding: 10px; text-align: center; font-family: monospace; font-weight: bold;">${timeDisplay}</td>
             <td style="padding: 10px; text-align: center; font-family: monospace;">${p.bestLap ? formatTime(p.bestLap) : '-'}</td>
-            <td style="padding: 10px; text-align: center; font-weight: bold; color: ${p.status === 'finished' ? '#27ae60' : (p.status === 'dns' ? '#e74c3c' : '#e67e22')};">${statusText}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; color: ${statusColorForText};">${statusText}</td>
         </tr>`;
     }).join('');
 
