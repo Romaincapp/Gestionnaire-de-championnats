@@ -517,3 +517,11 @@ peu importe la taille du changement dès qu'un commit est fait) :
 Ces mises à jour de documentation doivent être **incluses dans le(s) même(s) commit(s)** que
 le changement de code, pas laissées "pour plus tard" — c'est justement le "plus tard" qui n'a
 jamais eu lieu la dernière fois.
+
+### Garde-fou automatique (non bloquant)
+
+Ce protocole n'est **pas appliqué automatiquement** par du code — il repose sur le fait de le
+suivre à chaque session. En complément, `.github/workflows/devlog-reminder.yml` poste un
+commentaire de rappel sur toute PR qui modifie `src/*.iife.js`, `index.html` ou `script.js`
+sans toucher `DEVLOG.md`. Ce check est volontairement **non bloquant** (il ne fait jamais
+échouer la CI) : c'est un filet de sécurité, pas un substitut au protocole ci-dessus.
