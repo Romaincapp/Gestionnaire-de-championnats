@@ -2,39 +2,90 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> ⚠️ **Read `DEVLOG.md` first** (most recent entries) before starting work — it tells you
+> what the last sessions actually changed, on which files, and whether any of the guidance
+> below is currently being reworked. This file, `AGENTS.md`, `README.md`, `TODO.md` and
+> `CHANGELOG.md` drifted badly out of sync with the code for ~2.5 years (Feb 2024 → Sep 2026)
+> before being restored — see the "Protocole de fin de session" below for how we keep that
+> from happening again. Do not skip it.
+
 ## Project Overview
 
-**Gestionnaire de Championnats** - A single-page web application for managing sports competitions with two distinct modes:
-1. **Championship Mode** (Mode Championnat) - Multi-day tournament management for table tennis
-2. **Chrono Mode** (Mode Chrono) - Race timing system for running, cycling, swimming events
+**Gestionnaire de Championnats** - A single-page web application for managing sports
+competitions, with modes that can be **combined day by day** within the same competition:
+1. **Championship Mode** (Mode Championnat) - Multi-day tournament management (table tennis by default), with an optional **Pool** sub-mode (poules + phase finale)
+2. **Chrono Mode** (Mode Chrono) - Race timing system for running, cycling, swimming events, including lane ("couloirs") mode and participant statuses Ready/Running/Finished/DNS/**DISQ**
+3. **Multisport Mode** - Appears automatically once a competition mixes Championship and Chrono days; combines rankings across heterogeneous events using a position-based points scale. See `MULTISPORT.md`.
 
-Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence.
+A transverse **Clubs** module (`clubs.iife.js`) attaches a club to any participant in any mode. See `CLUBS.md`.
+
+Built with vanilla JavaScript (ES5-compatible), HTML, and CSS. No build system, no external
+dependencies. Runs entirely client-side with localStorage persistence.
 
 ## Running the Application
 
 Open `index.html` in a web browser. That's it. All functionality runs client-side.
 
+## File Structure (current, not the pre-refactor one)
+
+```
+├── index.html            # Complete UI, loads styles.css then every src/*.iife.js in order, then script.js
+├── script.js             # Legacy residue (~37 lines) — the migration to src/ modules is DONE, don't add logic here
+├── styles.css             # Styling
+├── src/                   # 16 IIFE modules — see AGENTS.md for the full map of each module's exposed functions
+│   ├── config.iife.js, utils.iife.js, notifications.iife.js, state.iife.js
+│   ├── clubs.iife.js              # transverse: club per participant, all modes
+│   ├── players.iife.js, ui.iife.js, init.iife.js
+│   ├── matches.iife.js            # Championship mode
+│   ├── pools.iife.js              # Pool mode + final phase
+│   ├── chrono.iife.js             # Chrono mode (biggest module)
+│   ├── multisport.iife.js         # Multisport mode (mixed days, combined ranking)
+│   ├── ranking.iife.js
+│   └── export.iife.js, export-json.iife.js, export-print.iife.js
+├── AGENTS.md              # Technical doc: full module-by-module function map
+├── DEVLOG.md              # Chronological session log — read this to know current state
+├── CHANGELOG.md, TODO.md, README.md, CLUBS.md, MULTISPORT.md, CONTRIBUTING.md
+└── CLAUDE.md              # This file
+```
+
+No build process. ES5-compatible JavaScript for broad browser support (`var`, no
+arrow functions/classes in `src/`, per `CONTRIBUTING.md`).
+
+**Do not trust a hardcoded line count or module count anywhere in prose** (including
+older text you might find in git history) — check `wc -l src/*.iife.js` or `DEVLOG.md`
+for the current, real numbers instead of restating stale ones.
+
 ## Architecture Overview
 
-### Dual-Mode System (Mutually Exclusive)
+### Mode Selection Is Per-Day, Not a Global Toggle
 
-The application operates in one of two modes, toggled via the "Mode Chrono" checkbox:
+There used to be a global "Mode Chrono" checkbox. **It has been removed.** Each day
+(`Journée`) now has its own type selector (Championship / Chrono), and the app auto-detects
+"Multisport" the moment a competition contains days of more than one type — there is no
+manual multisport toggle either. If you find code or docs referring to a global chrono
+checkbox, that code path is dead; don't extend it, and flag/remove it.
 
-**Championship Mode** (default):
-- Multi-day tournament structure (Journée 1, 2, 3...)
+**Championship days**:
 - Division-based player organization (1-6 configurable divisions)
 - Court assignment system (1-10 courts)
 - Multiple match generation algorithms
-- Pool/qualification system with knockout phases
+- Optional Pool/qualification system with knockout phases
 - Rankings by points, wins, goal average
 
-**Chrono Mode**:
-- Event-based structure (course, vélo, natation, multisport)
-- Series (séries) within events
-- Participant management with bibs (dossards) and categories
+**Chrono days**:
+- Event-based structure (course, vélo, natation)
+- Series (séries) within events, optionally with a "couloirs" (lanes) layout for swimming
+- Participant management with bibs (dossards), category, and club
 - Individual races or relay races (relais)
-- Live timing with lap recording
+- Live timing with lap recording; a second-screen "Afficher" view can follow a race in real time
+- Participant statuses: `ready` / `running` / `finished` / `DNS` / `DISQ`
+- Inline editing of laps/distance/time **while a race is running**, without ending it
 - Intelligent ranking types (by sport, distance, category, multi-events)
+
+**Multisport** (`multisport.iife.js`): once a competition has both day types, an extra tab
+appears with a combined ranking driven by a position-based points scale (25/19/17…) instead
+of raw points, so heterogeneous events can be compared. See `MULTISPORT.md` for the full
+model and UI flow.
 
 ### Core Data Structures
 
@@ -48,7 +99,8 @@ The application operates in one of two modes, toggled via the "Mode Chrono" chec
   },
   days: {
     [dayNumber]: {
-      players: { [division]: [playerNames] },
+      type: 'championship' | 'chrono',   // per-day type, see "Mode Selection" above
+      players: { [division]: [{ name, club }] },   // club field added by clubs.iife.js
       matches: { [division]: [matchObjects] },
       pools: {                          // Optional, when pool mode enabled
         enabled: boolean,
@@ -77,10 +129,11 @@ Stored in localStorage as `tennisTableChampionship`.
       id, name, eventId,
       sportType, distance, raceType: 'individual'|'relay',
       relayDuration,  // in minutes for relay races
+      lanes: {},      // optional, swimming "couloirs" mode: lane number -> participant
       participants: [
         {
-          bib, name, category,
-          status: 'ready'|'running'|'finished',
+          bib, name, category, club,
+          status: 'ready'|'running'|'finished'|'DNS'|'DISQ',
           time,            // total time in ms
           laps: [],        // lap history with timestamps
           totalDistance,
@@ -91,7 +144,7 @@ Stored in localStorage as `tennisTableChampionship`.
       startTime, currentTime, isRunning, timerInterval
     }
   ],
-  participants: [{ id, name, bib, category }],
+  participants: [{ id, name, bib, category, club }],
   nextEventId, nextSerieId, nextParticipantId
 }
 ```
@@ -101,11 +154,11 @@ Stored in localStorage as `chronoRaceData`.
 
 ### 1. Mode Separation (CRITICAL)
 
-**Championship and Chrono modes are completely independent.** Never mix data structures.
+**Championship and Chrono data structures are independent** even though a single competition
+can now mix days of both types (Multisport). Never merge their data structures directly —
+`multisport.iife.js` reads from both `championship` and `raceData` to build a combined view,
+but each mode still owns and saves its own data.
 
-When mode changes (`toggleChronoMode()`):
-- Championship UI elements are hidden (tabs, divisions, courts, apply button)
-- Chrono UI section is shown (events, series, timing interface)
 - Each mode has its own localStorage key
 - Each mode has its own save functions
 
@@ -219,14 +272,10 @@ Always check these function types:
 To find hardcoded divisions in the codebase:
 
 ```bash
-# Search for hardcoded loops
-grep -n "division <= 3" script.js
-
-# Search for hardcoded structures
-grep -n "{ 1: \[\], 2: \[\], 3: \[\] }" script.js
-
-# Search for hardcoded validation
-grep -n "\[1, 2, 3\]" script.js
+# Search across the actual modules (not the empty legacy script.js)
+grep -rn "division <= 3" src/
+grep -rn "{ 1: \[\], 2: \[\], 3: \[\] }" src/
+grep -rn "\[1, 2, 3\]" src/
 ```
 
 #### Configuration Access Patterns
@@ -301,6 +350,8 @@ function mergeSerieData(oldSerie, newData) {
 ```
 
 **Never overwrite** `status`, `startTime`, `currentTime`, `participants[].time`, `participants[].laps`.
+This also applies to the inline lap/distance/time editing added in Sept 2026: it must patch
+the running serie in place, not go through a code path that treats the serie as freshly created.
 
 ### 5. Relay Auto-Detection (Smart Feature)
 
@@ -321,17 +372,19 @@ Implemented in `handlePoolMatchEnter()` and `handleManualMatchEnter()`. Uses `se
 
 ## Important Functions by Feature
 
+See `AGENTS.md` for the exhaustive module-by-module map of exposed `window` functions. Highlights:
+
 ### Championship Management
 - `addNewDay()` - Creates new tournament day with proper structure
 - `generateMatches(dayNumber, division, type)` - Types: 'round-robin', 'optimized', 'court', 'swiss'
 - `calculatePlayerStats(dayNumber, division, playerName)` - Must include pool/final matches
-- `calculateGeneralRanking()` - Aggregates across all days and divisions
+- `calculateGeneralRanking()` - Aggregates across all days and divisions (handles pure-championship, pure-chrono, and mixed/multisport competitions)
 - `preFillFromGeneralRanking(dayNumber)` - J2+ only, distributes players by rank
 
 ### Pool System
 - `togglePoolSection(dayNumber)` - Show/hide pool controls (default hidden)
 - `generatePools(dayNumber, division)` - Creates balanced pools from division players
-- `generateFinalPhase(dayNumber, division)` - Creates knockout/consolation from qualified players
+- `generateFinalPhase(dayNumber, division)` - Creates knockout/consolation from qualified players (with a barrage round instead of a BYE-saturated round when needed)
 
 ### Chrono/Timing
 - `toggleRaceTimer(serieId)` - Start/pause timer, MUST call `saveChronoToLocalStorage()`
@@ -339,11 +392,20 @@ Implemented in `handlePoolMatchEnter()` and `handleManualMatchEnter()`. Uses `se
 - `recordLap(serie, participant)` - Records intermediate lap time
 - `finishParticipant(serie, participant)` - Records final time
 - `mergeSerieData(oldSerie, newData)` - Preserves timing when editing series
+- `displayRaceInterface()` - Live race screen; also the "Afficher" second-screen entry point
+
+### Clubs (transverse)
+- `window.clubsModule.getClubsList()` / `addClub(name)` - see `CLUBS.md`
+
+### Multisport
+- Combined ranking with position-based points scale — see `MULTISPORT.md`
+- Bulk-add checked participants to a serie, incl. `bib<TAB>` pasted lists
 
 ### Rankings
 - `showChronoRankingTypeModal()` - Analyzes completed events, shows relevant ranking types
 - `generateRankingBySport/ByDistance/ByCategory()` - Specialized ranking algorithms
 - `showChronoPdfConfigModal()` - Customizable PDF export (title, columns)
+- Similar-name detection (similarity score, transpositions, stray spaces) to catch duplicate players before ranking
 
 ### Persistence
 - `saveToLocalStorage()` - Championship → `tennisTableChampionship`
@@ -381,10 +443,13 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 1. **❌ Hardcoding division counts** - Always use `config.numberOfDivisions`
 2. **❌ Forgetting pool/final matches in rankings** - Use the Match Collection Pattern
 3. **❌ Overwriting timing data when editing series** - Use `mergeSerieData()`
-4. **❌ Mixing championship and chrono data** - Completely separate systems
+4. **❌ Mixing championship and chrono data structures** - They stay separate even in Multisport competitions; only read across them, never merge in place
 5. **❌ Forgetting to save** - Call `saveToLocalStorage()` or `saveChronoToLocalStorage()` after changes
 6. **❌ Excessive spacing** - Follow compact design (≤15px padding)
 7. **❌ Not preserving existing HTML IDs** - When modifying UI, maintain IDs for event handlers
+8. **❌ Writing new logic into `script.js`** - The migration is done; add new code to the relevant `src/*.iife.js` module (or a new one)
+9. **❌ Referring to the removed global "Mode Chrono" checkbox** - selection is per-day now
+10. **❌ Finishing a session without updating the docs** - see the protocol right below; this is exactly how this file went stale for 2.5 years
 
 ## Testing Scenarios
 
@@ -399,31 +464,56 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 8. Export/Import championship JSON
 
 **Chrono Mode:**
-1. Add participants with bibs (dossards)
+1. Add participants with bibs (dossards) and clubs
 2. Create event (running/cycling/swimming) → Create series
-3. Add participants to series
-4. Start timer → Record laps (relay) or finish (individual)
+3. Add participants to series (individually, in bulk, or via bib+tab paste)
+4. Start timer → Record laps (relay) or finish (individual); for swimming, try lane ("couloirs") mode with keys 1-9
 5. Test relay auto-detection: bib entry before/after relay duration
 6. Edit series while timing data exists → Verify chronos preserved
-7. View different ranking types (by sport, distance, category, multi-events)
-8. Export PDF with custom title and column selection
+7. Edit laps/distance/time inline **while the race is running** → verify it does not end the race
+8. Set a participant to DISQ → verify it's excluded/flagged correctly in rankings
+9. View different ranking types (by sport, distance, category, multi-events)
+10. Export PDF with custom title and column selection
 
-## File Structure
-
-```
-├── index.html        # Complete UI (7000+ lines)
-├── script.js         # All logic (10000+ lines, no modules)
-├── styles.css        # Styling
-├── testpool.json     # Sample pool mode data (24 players, 3 divisions)
-└── CLAUDE.md         # This file
-```
-
-No build process. ES5-compatible JavaScript for broad browser support.
+**Multisport:**
+1. Create a competition with at least one Championship day and one Chrono day
+2. Verify the "🌐 Multisport" tab appears automatically
+3. Bulk-add checked participants to a serie, and via bib+tab paste
+4. Open the "Afficher" second-screen view and verify it updates live
+5. Verify the combined ranking uses the position-based points scale
 
 ## Development Notes
 
-- **File size**: `script.js` is ~10,000 lines - be mindful of context when making changes
 - **No transpilation**: Vanilla JavaScript, compatible with older browsers
 - **Manual JSON import/export**: Used for data portability between instances
 - **Notifications**: Use inline styles (not CSS classes) for guaranteed visibility via `showNotification(message, type)`
 - **Console logging**: Extensive console.log for debugging - check browser console
+
+## Protocole de fin de session (obligatoire pour tout agent, Claude ou humain)
+
+Ce projet est développé en solo/à quelques mains sur de longues périodes entre deux sessions.
+Sans ce protocole, la doc dérive silencieusement du code — c'est précisément ce qui s'est
+passé entre 2024-02-02 et 2026-09, où `CHANGELOG.md`/`TODO.md`/`AGENTS.md` décrivaient encore
+l'état du tout début du refactoring pendant que 50+ commits changeaient l'appli en profondeur.
+
+**Avant de considérer une session terminée** (fin de tâche, fin de debug, fin de feature —
+peu importe la taille du changement dès qu'un commit est fait) :
+
+1. **Ajouter une entrée à `DEVLOG.md`** (créer le fichier s'il n'existe pas encore — modèle
+   en tête de ce fichier). Une entrée minimale contient : la date, un résumé en une ou deux
+   phrases de ce qui a été fait/débogué, les fichiers ou modules touchés, et le hash ou la
+   référence du/des commit(s). C'est la trace que le prochain dev (ou agent) doit pouvoir lire
+   en priorité pour savoir où en est le projet sans relire tout l'historique git.
+2. **Mettre à jour `CHANGELOG.md`** si le changement est visible pour l'utilisateur final
+   (nouvelle fonctionnalité, correction de bug, changement de comportement). Ajouter l'entrée
+   sous une section `[Unreleased]` ou une nouvelle version mineure, en haut du fichier.
+3. **Mettre à jour `AGENTS.md`** si un module est ajouté, renommé, scindé, ou si des fonctions
+   exposées sur `window` changent.
+4. **Mettre à jour `TODO.md`** : cocher les tâches terminées, retirer celles devenues
+   obsolètes, ajouter les nouvelles.
+5. **Mettre à jour ce fichier (`CLAUDE.md`)** si le changement touche un pattern décrit
+   ci-dessus (structures de données, pièges connus, mode de sélection des journées, etc.).
+
+Ces mises à jour de documentation doivent être **incluses dans le(s) même(s) commit(s)** que
+le changement de code, pas laissées "pour plus tard" — c'est justement le "plus tard" qui n'a
+jamais eu lieu la dernière fois.

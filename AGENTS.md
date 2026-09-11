@@ -1,34 +1,57 @@
 # 📚 Documentation Technique - Gestionnaire de Championnats
 
+> ⚠️ Avant de modifier ce fichier, lis `DEVLOG.md` (état courant + dernières sessions) et
+> mets-le à jour toi-même en fin de session si tu touches à l'architecture. Voir la section
+> [🗓️ Journal de développement](#️-journal-de-développement--protocole-de-session) en bas de ce fichier.
+
 ## 🎯 Vue d'ensemble
 
-Application de gestion de championnats de tennis de table avec 3 modes de fonctionnement :
+Application de gestion de championnats sportifs avec 4 modes de fonctionnement, combinables
+au sein d'une même compétition (journée par journée) :
 - 🎾 **Championship** : Matchs par tours (round-robin, suisse)
-- 🏆 **POOL** : Poules + phase finale
-- ⏱️ **CHRONO** : Courses avec chronométrage
+- 🏆 **POOL** : Poules + phase finale (extension du mode Championship)
+- ⏱️ **CHRONO** : Courses chronométrées (course à pied, cyclisme, natation, y compris mode
+  couloirs et statuts Prêt/En course/Terminé/DNS/**DISQ**)
+- 🌐 **MULTISPORT** : Journées mixtes Championship/Chrono + classement combiné inter-club
+  (barème de points par position). Voir [MULTISPORT.md](./MULTISPORT.md).
+
+Un module transverse **Clubs** permet d'associer un club à chaque participant, dans tous
+les modes. Voir [CLUBS.md](./CLUBS.md).
 
 ## 📁 Architecture du projet
 
 ```
 .
-├── index.html              # Point d'entrée principal
-├── styles.css              # Styles globaux
-├── script.js               # Fichier legacy (fonctions restantes à migrer)
-├── AGENTS.md               # Cette documentation
-├── src/                    # Modules refactorisés
-│   ├── config.iife.js      # Configuration (divisions, terrains)
-│   ├── utils.iife.js       # Fonctions utilitaires
-│   ├── notifications.iife.js # Système de notifications
-│   ├── state.iife.js       # État global et localStorage
-│   ├── players.iife.js     # Gestion des joueurs
-│   ├── ui.iife.js          # UI générale (onglets, modales)
-│   ├── matches.iife.js     # Mode CHAMPIONSHIP
-│   ├── pools.iife.js       # Mode POOL
-│   ├── chrono.iife.js      # Mode CHRONO
-│   ├── ranking.iife.js     # Classements et statistiques
-│   └── export.iife.js      # Export PDF et données
-└── json/                   # Données JSON (si besoin)
+├── index.html                 # Point d'entrée principal (UI complète)
+├── styles.css                 # Styles globaux
+├── script.js                  # Résidu legacy (~37 lignes) — la migration vers src/ est terminée
+├── AGENTS.md                  # Cette documentation
+├── DEVLOG.md                  # Journal chronologique des sessions/modifs (source de vérité court terme)
+├── src/                       # Modules refactorisés (16 fichiers IIFE)
+│   ├── config.iife.js         # Configuration (divisions, terrains)
+│   ├── utils.iife.js          # Fonctions utilitaires
+│   ├── notifications.iife.js  # Système de notifications
+│   ├── state.iife.js          # État global et localStorage
+│   ├── clubs.iife.js          # Gestion des clubs (transverse à tous les modes)
+│   ├── players.iife.js        # Gestion des joueurs
+│   ├── ui.iife.js             # UI générale (onglets, journées, sélecteur multisport)
+│   ├── init.iife.js           # BYE, modales génériques, event listeners globaux
+│   ├── matches.iife.js        # Mode CHAMPIONSHIP
+│   ├── pools.iife.js          # Mode POOL + phases finales
+│   ├── chrono.iife.js         # Mode CHRONO (courses, couloirs, DISQ...)
+│   ├── multisport.iife.js     # Mode MULTISPORT (mix Championship/Chrono, classement combiné)
+│   ├── ranking.iife.js        # Classements et statistiques
+│   ├── export.iife.js         # Orchestration export PDF/données (legacy, en réduction)
+│   ├── export-json.iife.js    # Export/Import JSON (championnat + chrono)
+│   └── export-print.iife.js   # Impression des feuilles de match / classements
+└── json/                      # Données JSON d'exemple (si besoin)
 ```
+
+**Tailles indicatives** (voir `DEVLOG.md` pour l'état exact à jour) : les plus gros modules
+sont `pools.iife.js` et `chrono.iife.js` (plusieurs milliers de lignes chacun), suivis de
+`multisport.iife.js` et `export-print.iife.js`. `script.js` n'est plus qu'un résidu légataire
+— **il n'y a plus de migration en cours**, contrairement à ce que laissaient penser d'anciennes
+versions de cette documentation.
 
 ## 🔧 Modules détaillés
 
@@ -80,7 +103,17 @@ Application de gestion de championnats de tennis de table avec 3 modes de foncti
 - `loadFromLocalStorage()` - Charge depuis le localStorage
 - `toggleForfaitButtons()` - Bascule l'affichage des boutons forfait
 
-### 5. players.iife.js
+### 5. clubs.iife.js
+**Rôle** : Gestion des clubs, transverse à tous les modes (Championship, Pool, Chrono,
+Multisport). Documentation complète : [CLUBS.md](./CLUBS.md).
+
+**Fonctions exposées** via `window.clubsModule` (extrait) :
+- `getClubsList()` - Liste des clubs connus (prédéfinis + clubs personnalisés ajoutés)
+- `addClub(name)` - Ajoute un club personnalisé
+- Structure joueur étendue de `"Nom"` à `{ name, club }` (migration automatique des anciennes
+  données sans club)
+
+### 6. players.iife.js
 **Rôle** : Gestion des joueurs
 
 **Fonctions exposées** :
@@ -94,8 +127,10 @@ Application de gestion de championnats de tennis de table avec 3 modes de foncti
 - `updatePlayerCount(dayNumber)` - Met à jour le compteur de joueurs
 - `closePlayerModal()` - Ferme la modale joueur
 
-### 6. ui.iife.js
-**Rôle** : Interface utilisateur générale
+### 7. ui.iife.js
+**Rôle** : Interface utilisateur générale, y compris le sélecteur de type de journée
+(Championship/Chrono/Multisport). La checkbox globale "Mode Chrono" a été **supprimée** :
+depuis l'introduction du mode Multisport, le type se choisit **par journée**.
 
 **Fonctions exposées** :
 - `switchTab(dayNumber)` - Change d'onglet de journée
@@ -116,7 +151,7 @@ Application de gestion de championnats de tennis de table avec 3 modes de foncti
 - `showBulkInput()` - Affiche la modale d'ajout bulk
 - `closeBulkModal()` - Ferme la modale bulk
 
-### 7. matches.iife.js (Mode Championship)
+### 8. matches.iife.js (Mode Championship)
 **Rôle** : Gestion des matchs par tours
 
 **Fonctions exposées** :
@@ -132,7 +167,7 @@ Application de gestion de championnats de tennis de table avec 3 modes de foncti
 - `deleteMatch(dayNumber, division, matchIndex)` - Supprime un match
 - `organizeMatchesInTours(matches)` - Organise les matchs en tours
 
-### 8. pools.iife.js (Mode POOL)
+### 9. pools.iife.js (Mode POOL)
 **Rôle** : Gestion des poules et phase finale
 
 **Fonctions exposées** :
@@ -144,36 +179,57 @@ Application de gestion de championnats de tennis de table avec 3 modes de foncti
 - `handlePoolMatchEnter(event, dayNumber, matchId)` - Gère la touche Entrée
 - `generateFinalPhase(dayNumber)` - Génère la phase finale
 
-### 9. chrono.iife.js (Mode CHRONO)
-**Rôle** : Gestion des courses avec chronométrage
+### 10. chrono.iife.js (Mode CHRONO)
+**Rôle** : Gestion des courses avec chronométrage (le plus gros module, plusieurs milliers de lignes)
 
 **Variables exposées** :
 - `raceData` - Données du mode chrono
 
-**Fonctions exposées** :
+**Fonctions exposées** (liste non exhaustive — voir le fichier pour le détail) :
 - `toggleChronoMode()` - Bascule entre mode Championship et Chrono
 - `loadChronoData()` - Charge les données chrono
-- `showParticipantsManager()` - Gère les participants
-- `showAddEventModal()` - Affiche la modale d'événement
-- `closeEventModal()` - Ferme la modale
-- `saveEvent()` - Sauvegarde un événement
-- `showAddSerieModal()` - Affiche la modale de série
-- `showAddSerieModalForEvent(eventId)` - Affiche la modale pour un événement
-- `closeSerieModal()` - Ferme la modale
-- `saveSerie()` - Sauvegarde une série
-- `startSerie(serieId)` - Démarre une série
-- `continueSerie(serieId)` - Reprend une série
-- `toggleRaceTimer()` - Démarre/pause le chrono
-- `recordLap(bib)` - Enregistre un tour
-- `endSerie()` - Termine une série
-- `backToSeriesList()` - Retour à la liste des séries
-- `showRaceRanking()` - Affiche le classement de la course
-- `showOverallChronoRanking()` - Affiche le classement général chrono
-- `exportChronoCompetition()` - Exporte les données chrono
-- `importChronoCompetition()` - Importe les données chrono
-- `printChronoCompetition()` - Imprime les données chrono
+- `showParticipantsManager()` - Gère les participants (nom, dossard, club éditables)
+- `showAddEventModal()` / `closeEventModal()` / `saveEvent()` - Épreuves (course, vélo, natation)
+- `showAddSerieModal()` / `showAddSerieModalForEvent(eventId)` / `saveSerie()` - Séries
+- `startSerie(serieId)` / `continueSerie(serieId)` / `endSerie()` - Cycle de vie d'une série
+- `toggleRaceTimer()` - Démarre/pause le chrono général
+- `recordLap(bib)` - Enregistre un tour / une arrivée (détection auto relais)
+- `displayRaceInterface()` - Interface de course en direct (exposée sur `window` pour les
+  appels cross-module, notamment depuis `multisport.iife.js`)
+- **Mode couloirs (natation)** : assignation manuelle de couloir par série, saisie/arrêt par
+  touche 1-9, édition nom/dossard/club directement depuis la modale couloirs
+- **Statuts participant** : `ready` (Prêt) / `running` (En course) / `finished` (Terminé) /
+  `DNS` (non-partant) / **`DISQ`** (disqualifié, ajouté en septembre 2026)
+- **Édition inline** : modification du nombre de tours / distance / temps pendant qu'une
+  course est en cours, sans la stopper ni la terminer par erreur
+- `showRaceRanking()` / `showOverallChronoRanking()` - Classements de série / général chrono
+- `exportChronoCompetition()` / `importChronoCompetition()` / `printChronoCompetition()`
+- **Imports** : import "Séries natation" tolérant (données manquantes, séparateur et mapping
+  de colonnes façon Excel)
 
-### 10. ranking.iife.js
+### 11. multisport.iife.js (Mode MULTISPORT)
+**Rôle** : Cohabitation Championship/Chrono au sein d'une même compétition et classement
+combiné inter-club. Documentation complète : [MULTISPORT.md](./MULTISPORT.md).
+
+**Points clés** :
+- Détection automatique du mode multisport (dès qu'une compétition mélange des journées de
+  types différents) ; l'onglet "🌐 Multisport" n'apparaît que dans ce cas
+- Classement général basé sur un **barème de position** (25/19/17…, configurable) plutôt que
+  sur des points bruts, pour pouvoir comparer des épreuves hétérogènes
+- Ajout en masse de participants cochés à une série, y compris au format `dossard + tabulation`
+- Bouton "Afficher" pour un second écran de classement/course mis à jour en temps réel
+- Dépend de `clubsModule` (voir ci-dessous) pour l'affichage/regroupement par club
+- Gestion de la suppression d'une épreuve en mode course (journée multisport)
+
+### 12. init.iife.js
+**Rôle** : Initialisation transverse — matchs BYE, modales génériques, câblage des event
+listeners globaux au chargement de la page
+
+**Fonctions exposées** (extrait) :
+- `addByeMatchForPlayer(...)` - Ajoute un match BYE, avec **choix du score** à la création
+- `setByeScorePreset(...)` / `closeByeScoreModal()`
+
+### 13. ranking.iife.js
 **Rôle** : Classements et statistiques
 
 **Fonctions exposées** :
@@ -182,19 +238,32 @@ Application de gestion de championnats de tennis de table avec 3 modes de foncti
 - `updateRankingsForDay(dayNumber)` - Met à jour les classements d'une journée
 - `showRankings(type)` - Affiche le classement par type
 - `showRankingsForDay(dayNumber)` - Affiche le classement d'une journée
-- `updateGeneralRanking()` - Met à jour le classement général
+- `updateGeneralRanking()` - Met à jour le classement général (gère aussi le cas 100% chrono
+  et le cas mixte multisport)
 - `showGeneralPlayerDetails(playerName)` - Affiche les détails d'un joueur
+- Détection de noms de joueurs similaires (score de similitude, transpositions, espaces
+  parasites) pour repérer les doublons avant classement
 
-### 11. export.iife.js
-**Rôle** : Export de données et impression
+### 14. export.iife.js
+**Rôle** : Orchestration export PDF/données restée depuis le refactoring de 2024. La plupart
+des exports concrets vivent désormais dans `export-json.iife.js` et `export-print.iife.js` —
+préférer y ajouter du code plutôt qu'ici.
 
-**Fonctions exposées** :
-- `exportChampionship()` - Exporte le championnat en JSON
-- `confirmExportChampionship()` - Confirme et exporte
-- `exportGeneralRankingToPDF()` - Exporte le classement en PDF
-- `showPrintOptionsModal(dayNumber)` - Affiche les options d'impression
-- `printMatchSheets()` - Imprime les feuilles de match
-- `printRecapSheets()` - Imprime les récapitulatifs
+### 15. export-json.iife.js
+**Rôle** : Export/Import JSON (championnat + compétition chrono/multisport)
+
+**Fonctions exposées** (extrait) :
+- `exportChampionship()` / `confirmExportChampionship()`
+- `showImportModal()` / `handleFileImport(...)` (exposée sur `window` depuis 2026-08)
+- Import de classements de pools + auto-configuration à partir du JSON importé
+
+### 16. export-print.iife.js
+**Rôle** : Impression des feuilles de match, récapitulatifs et export PDF des classements
+
+**Fonctions exposées** (extrait) :
+- `exportGeneralRankingToPDF()` - Export PDF du classement général (mise en page compacte,
+  évite les pages blanches)
+- `showPrintOptionsModal(dayNumber)` / `printMatchSheets()` / `printRecapSheets()`
 
 ## 🎨 Structure des données
 
@@ -284,12 +353,14 @@ Tous les modules utilisent le format **IIFE** (Immediately Invoked Function Expr
 ```
 
 ### Dépendances entre modules
-Les modules peuvent dépendre de fonctions exposées précédemment. Ordre de chargement important :
+Les modules peuvent dépendre de fonctions exposées précédemment. Ordre de chargement important
+(voir l'ordre des `<script>` dans `index.html`, qui fait foi en cas de doute) :
 1. config, utils, notifications
 2. state
-3. players
-4. ui, matches, pools, chrono
-5. ranking, export
+3. clubs
+4. players
+5. ui, init, matches, pools, chrono, multisport
+6. ranking, export, export-json, export-print
 
 ### Nommage
 - **Fonctions** : camelCase (`generateMatchesForDay`)
@@ -346,26 +417,41 @@ global.maNouvelleFonction = maNouvelleFonction;
 - Tester l'appel direct dans la console
 - Tester via l'interface (onclick)
 
-## 🔄 Migration depuis script.js
+## 🔄 Migration depuis script.js — TERMINÉE
 
-Pour migrer une fonction du fichier legacy vers un module :
+La migration du fichier legacy `script.js` vers les modules `src/*.iife.js` est **terminée**
+(le fichier ne fait plus que ~37 lignes). Ne pas réintroduire de logique dans `script.js` :
+toute nouvelle fonctionnalité va dans le module approprié (voir la liste ci-dessus), ou dans
+un nouveau module `src/xxx.iife.js` si aucun module existant ne convient.
 
-1. **Copier** la fonction dans le module approprié
-2. **Adapter** les dépendances (utiliser `global.` pour accéder aux fonctions d'autres modules)
-3. **L'exposer** sur `global`
-4. **Commenter** la fonction dans `script.js`
-5. **Tester** que tout fonctionne
-6. **Supprimer** la fonction de `script.js` quand c'est stable
+## 🗓️ Journal de développement & protocole de session
+
+**`DEVLOG.md`** (à la racine du repo) est le journal chronologique des sessions de dev — qui
+a fait quoi, quand, sur quels fichiers, avec quel commit. C'est la référence pour savoir
+"où en est le code" sans avoir à relire tout l'historique git.
+
+**Règle à appliquer par tout agent (Claude ou humain) en fin de session** — voir le détail
+complet et le gabarit dans `claude.md` § "Protocole de fin de session" :
+1. Ajouter une entrée dans `DEVLOG.md` (date, résumé, fichiers/modules touchés, commit).
+2. Mettre à jour `CHANGELOG.md` si le changement est visible pour l'utilisateur final.
+3. Mettre à jour **cette page (`AGENTS.md`)** si un module est ajouté/renommé/scindé, ou si
+   une fonction exposée sur `window` change de signature.
+4. Cocher/mettre à jour `TODO.md` si une tâche listée est terminée ou obsolète.
+
+Ne pas laisser la doc dériver à nouveau : c'est exactement ce qui s'est produit entre
+février 2024 et septembre 2026 (voir `DEVLOG.md` pour le constat détaillé).
 
 ## 📞 Contact et maintenance
 
-- **Dernière mise à jour** : 2024-02-02
-- **Version** : 2.0 (modulaire)
+- **Dernière mise à jour de ce fichier** : voir `DEVLOG.md` (entrée la plus récente) et
+  l'historique git de `AGENTS.md` — ne pas se fier à une date codée en dur ici, elle sera
+  aussi vite obsolète que la précédente.
+- **Version** : architecture modulaire (16 modules `src/*.iife.js`)
 - **Auteur** : Romain & Rachel
 
 ### À faire (TODO)
-- [ ] Migrer toutes les fonctions restantes de `script.js`
-- [ ] Ajouter des tests unitaires
+Voir `TODO.md` pour la liste vivante. Items structurels restants :
+- [ ] Ajouter des tests unitaires (aucun test automatisé à ce jour)
 - [ ] Documenter les fonctions avec JSDoc
 - [ ] Créer un système de build (Vite/Webpack) pour regrouper les modules
 - [ ] Ajouter TypeScript pour la type safety

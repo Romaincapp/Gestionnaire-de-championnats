@@ -6,7 +6,11 @@ Merci de contribuer à ce projet ! Voici les bonnes pratiques à suivre.
 
 ### Modules IIFE
 
-Tout le code doit être organisé en modules IIFE (Immediately Invoked Function Expression) dans le dossier `src/`.
+Tout le code doit être organisé en modules IIFE (Immediately Invoked Function Expression)
+dans le dossier `src/`. Le projet compte aujourd'hui 16 modules (config, utils,
+notifications, state, clubs, players, ui, init, matches, pools, chrono, multisport, ranking,
+export, export-json, export-print) — voir `AGENTS.md` pour le rôle de chacun. `script.js`
+n'est qu'un résidu legacy (~37 lignes), la migration est terminée : ne pas y écrire de code.
 
 ```javascript
 (function(global) {
@@ -120,10 +124,23 @@ maNouvelleFonction(); // Tester
 ```
 
 ### 5. Mettre à jour la documentation
-Modifier `AGENTS.md` si vous :
-- Ajoutez une fonction exposée
-- Modifiez la structure des données
-- Changez le comportement existant
+
+**Cette étape n'est pas optionnelle.** C'est justement son absence pendant ~2,5 ans qui a
+laissé toute la documentation du projet décrire un état du code qui n'existait plus (détail
+dans `DEVLOG.md`, entrée du 2026-09-11). Avant de considérer une modif terminée :
+
+1. Ajouter une entrée dans **`DEVLOG.md`** (date, résumé, fichiers touchés, commit) — voir
+   le gabarit en tête de ce fichier.
+2. Modifier `AGENTS.md` si vous :
+   - Ajoutez une fonction exposée
+   - Modifiez la structure des données
+   - Changez le comportement existant
+   - Ajoutez, renommez ou scindez un module dans `src/`
+3. Modifier `CHANGELOG.md` si le changement est visible pour l'utilisateur final.
+4. Cocher/mettre à jour `TODO.md` si une tâche listée est concernée.
+
+Voir aussi la section "Protocole de fin de session" dans `CLAUDE.md`, qui détaille ce
+protocole pour les sessions assistées par un agent.
 
 ## 🐛 Debug
 

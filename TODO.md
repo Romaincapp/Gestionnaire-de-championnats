@@ -1,16 +1,23 @@
 # ✅ TODO - Liste des tâches
 
+> ⚠️ Ce fichier était figé depuis 2024-02-02 alors que le code a beaucoup évolué depuis
+> (voir `DEVLOG.md`). Remis à jour en 2026-09 : les tâches déjà réalisées sont cochées ou
+> retirées, les tâches encore pertinentes sont conservées. **Cocher/retirer une tâche ici
+> fait partie du protocole de fin de session** décrit dans `claude.md`.
+
 ## 🔥 Prioritaire
 
 ### Refactoring
-- [ ] Analyser `script.js` et identifier les fonctions restantes à migrer
-- [ ] Migrer les fonctions orphelines vers les modules appropriés
-- [ ] Tester que toutes les fonctions `window.xxx` sont bien définies
-- [ ] Supprimer `script.js` quand tout est migré
+- [x] Migrer les fonctions restantes de `script.js` vers les modules (`script.js` ne fait
+      plus que ~37 lignes — migration terminée, voir `AGENTS.md`)
+- [ ] Vérifier ponctuellement que toutes les fonctions `window.xxx` utilisées par `index.html`
+      sont bien définies (pas de régression suite à un renommage de module)
+- [ ] Supprimer définitivement le résidu `script.js` une fois confirmé qu'il n'est plus
+      chargé/utile
 
 ### Corrections
 - [ ] Vérifier que tous les `onclick` HTML ont leur fonction correspondante
-- [ ] Tester l'export/import de données
+- [ ] Tester l'export/import de données (championnat + chrono/multisport)
 - [ ] Vérifier la sauvegarde automatique (localStorage)
 
 ## 🎯 Important
@@ -67,13 +74,13 @@
 - [x] Interface de course live avec chronométrage en direct
 - [x] Mode couloirs avec touches 1-9 (natation)
 - [x] Saisie rapide par dossard (avec détection auto relais)
-- [x] Gestion des statuts (Prêt/En course/Terminé/DNS)
-- [x] Édition manuelle des temps
+- [x] Gestion des statuts (Prêt/En course/Terminé/DNS/**DISQ**, ajouté 2026-09)
+- [x] Édition manuelle des temps, y compris **édition inline pendant une course en cours**
 - [x] Relance d'un participant
 - [x] Configuration des séries (sport, type, distance)
+- [x] Classement interclub avec barème de points (barème de position 25/19/17…, 2026-08)
 - [ ] Tester la saisie des résultats chrono
-- [ ] Classement interclub avec barème de points
-- [ ] Export PDF des résultats chrono
+- [x] Export PDF des résultats chrono (bouton export PDF du classement général)
 - [ ] Vérifier le calcul du classement combiné
 - [ ] Tester l'export/import avec données multisport
 - [ ] Vérifier la détection automatique du mode multisport
@@ -83,6 +90,16 @@
 - [x] Mettre à jour la documentation avec le nouveau système simplifié
 - [ ] Ajouter des captures d'écran
 - [ ] Faire un guide vidéo
+
+## 🏊 Mode Couloirs & imports natation (Nouveau, 2026-08)
+
+- [x] Assignation manuelle des couloirs par série
+- [x] Sélection des participants depuis les "Participants disponibles" de la journée
+- [x] Édition nom/dossard/club des nageurs (pool et modale couloirs)
+- [x] Arrêt automatique du chrono général quand le dernier couloir est stoppé
+- [x] Import "Séries natation" façon Excel (séparateur, mapping de colonnes)
+- [x] Tolérance aux données manquantes dans l'import
+- [ ] Ajouter un export dédié au mode couloirs (actuellement partagé avec l'export chrono général)
 
 ## 🚀 Améliorations techniques
 
@@ -155,23 +172,20 @@
 
 ## 📊 Statistiques du projet
 
-**Version actuelle** : 2.0.0 (modulaire)
+**Version actuelle** : 2.4.0 (modulaire) — voir `CHANGELOG.md`
 
-**Modules créés** : 11
-- Taille moyenne : ~11 KB
-- Plus gros module : chrono.iife.js (20 KB)
-- Plus petit module : notifications.iife.js (2 KB)
+**Modules créés** : 16 (`src/*.iife.js`) — voir `AGENTS.md` pour le détail de chacun.
+Ne pas figer de tailles précises ici (elles datent vite) : lancer `wc -l src/*.iife.js`
+pour l'état exact au moment où on en a besoin.
 
-**Documentation** : 4 fichiers
-- AGENTS.md (13 KB)
-- README.md (3 KB)
-- CONTRIBUTING.md (5 KB)
-- CHANGELOG.md (2 KB)
+**Documentation** : `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `TODO.md`
+(ce fichier), `CLAUDE.md`, `MULTISPORT.md`, `CLUBS.md`, `DEVLOG.md`.
 
 **Reste à faire** :
-- Lignes dans script.js legacy : ~21 000
-- Fonctions à migrer : ~50 estimé
+- Migration `script.js` → modules : **terminée** (résidu de ~37 lignes)
+- Voir les sections ci-dessus pour les tâches ouvertes par domaine
 
 ---
 
-*Dernière mise à jour : 2024-02-02*
+*Dernière mise à jour : voir `DEVLOG.md` (entrée la plus récente) — ne pas coder une date en
+dur ici, c'est justement ce qui a rendu ce fichier obsolète pendant 2,5 ans la dernière fois.*
