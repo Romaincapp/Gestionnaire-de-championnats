@@ -103,10 +103,12 @@ Stored in localStorage as `chronoRaceData`.
 
 **Championship and Chrono modes are completely independent.** Never mix data structures.
 
-When mode changes (`toggleChronoMode()`):
-- Championship UI elements are hidden (tabs, divisions, courts, apply button)
-- Chrono UI section is shown (events, series, timing interface)
-- Each mode has its own localStorage key
+Note (2026-09): the old global `toggleChronoMode()` / checkbox toggle described
+here has been removed — mode is now chosen per day via a type selector
+(`setDayType(dayNumber, type)` in `multisport.iife.js`), which shows/hides the
+`championship-section-N` / `chrono-section-N` blocks for that specific day.
+See issue #65 for the cleanup of the old global Chrono menu.
+- Each mode has its own localStorage key (or its own sub-object per day)
 - Each mode has its own save functions
 
 ### 2. Match Collection Pattern (CRITICAL)
@@ -341,9 +343,9 @@ Implemented in `handlePoolMatchEnter()` and `handleManualMatchEnter()`. Uses `se
 - `mergeSerieData(oldSerie, newData)` - Preserves timing when editing series
 
 ### Rankings
-- `showChronoRankingTypeModal()` - Analyzes completed events, shows relevant ranking types
-- `generateRankingBySport/ByDistance/ByCategory()` - Specialized ranking algorithms
+- `calculateMultisportRanking()` / `renderMultisportRanking()` (in `multisport.iife.js`) - Combined ranking across Championship + Chrono days
 - `showChronoPdfConfigModal()` - Customizable PDF export (title, columns)
+- Note: `showChronoRankingTypeModal()` and its `generateRankingBySport/ByDistance/ByCategory()` cluster (in `chrono.iife.js`) belonged to the removed global Chrono menu — see issue #65
 
 ### Persistence
 - `saveToLocalStorage()` - Championship → `tennisTableChampionship`

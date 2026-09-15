@@ -144,34 +144,29 @@ Application de gestion de championnats de tennis de table avec 3 modes de foncti
 - `handlePoolMatchEnter(event, dayNumber, matchId)` - Gère la touche Entrée
 - `generateFinalPhase(dayNumber)` - Génère la phase finale
 
-### 9. chrono.iife.js (Mode CHRONO)
-**Rôle** : Gestion des courses avec chronométrage
+### 9. chrono.iife.js (Moteur de course, utilisé par le mode CHRONO par journée)
+**Rôle** : Moteur de chronométrage live (timer, tours, saisie rapide) utilisé
+comme backend par le mode Chrono par journée du module `multisport.iife.js`.
+L'ancien menu global "tout-en-un" (`#chronoModeSection`, ses écrans de gestion
+d'épreuves/séries/classements et son export/import dédié) a été retiré en
+2026-09 car inatteignable depuis l'UI — voir issue #65. `raceData` sert
+toujours de format de pont interne entre le stockage par jour
+(`championship.days[n].chronoData`) et ce moteur.
 
 **Variables exposées** :
-- `raceData` - Données du mode chrono
+- `raceData` - Format de pont interne utilisé par le moteur de course live
 
-**Fonctions exposées** :
-- `toggleChronoMode()` - Bascule entre mode Championship et Chrono
-- `loadChronoData()` - Charge les données chrono
-- `showParticipantsManager()` - Gère les participants
-- `showAddEventModal()` - Affiche la modale d'événement
-- `closeEventModal()` - Ferme la modale
-- `saveEvent()` - Sauvegarde un événement
-- `showAddSerieModal()` - Affiche la modale de série
-- `showAddSerieModalForEvent(eventId)` - Affiche la modale pour un événement
-- `closeSerieModal()` - Ferme la modale
-- `saveSerie()` - Sauvegarde une série
+**Fonctions exposées (toujours utilisées)** :
 - `startSerie(serieId)` - Démarre une série
 - `continueSerie(serieId)` - Reprend une série
 - `toggleRaceTimer()` - Démarre/pause le chrono
 - `recordLap(bib)` - Enregistre un tour
 - `endSerie()` - Termine une série
-- `backToSeriesList()` - Retour à la liste des séries
 - `showRaceRanking()` - Affiche le classement de la course
-- `showOverallChronoRanking()` - Affiche le classement général chrono
-- `exportChronoCompetition()` - Exporte les données chrono
-- `importChronoCompetition()` - Importe les données chrono
-- `printChronoCompetition()` - Imprime les données chrono
+- `printChronoCompetition(dayNumber)` - Imprime les séries d'une journée
+  (appelée depuis `multisport.iife.js`)
+- `displayRaceInterface(serie)` - Affiche l'interface de course live (appelée
+  via `startChronoRaceForDay()` dans `ui.iife.js`)
 
 ### 10. ranking.iife.js
 **Rôle** : Classements et statistiques
