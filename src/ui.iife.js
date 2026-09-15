@@ -957,13 +957,19 @@
         
         // Préparer la structure pour l'ancien système
         // Créer un événement temporaire si nécessaire
-        let event = raceData.events.find(e => e.id === serie.eventId);
+        // IMPORTANT : les id d'événement/série sont des compteurs LOCAUX à chaque
+        // journée (remis à 1 par clearDayData). Sans le filtre dayNumber ici, un id
+        // réutilisé après un "vider la journée" retomberait sur une entrée déjà
+        // présente dans raceData/localStorage (cache jamais purgé) et reprendrait
+        // ses anciens temps/tours au lieu de repartir de zéro.
+        let event = raceData.events.find(e => e.id === serie.eventId && e.dayNumber === dayNumber);
         if (!event && serie.eventId) {
             // Chercher dans les événements du jour
             const dayEvent = chronoData.events.find(e => e.id === serie.eventId);
             if (dayEvent) {
                 event = {
                     id: dayEvent.id,
+                    dayNumber: dayNumber,
                     name: dayEvent.name,
                     date: dayEvent.date,
                     sportType: serie.sportType || 'running',
@@ -976,11 +982,12 @@
                 raceData.events.push(event);
             }
         }
-        
+
         // Si pas d'événement, créer un événement virtuel pour cette série
         if (!event) {
             event = {
                 id: raceData.nextEventId++,
+                dayNumber: dayNumber,
                 name: 'Jour ' + dayNumber + ' - ' + serie.name,
                 date: new Date().toISOString().split('T')[0],
                 sportType: serie.sportType || 'running',
@@ -993,13 +1000,15 @@
             raceData.events.push(event);
             serie.eventId = event.id;
         }
-        
-        // Vérifier si la série existe déjà dans raceData
-        let raceSerie = raceData.series.find(s => s.id === serieId && s.eventId === event.id);
+
+        // Vérifier si la série existe déjà dans raceData (même règle : filtrer par
+        // dayNumber pour ignorer toute entrée orpheline d'avant un vidage de journée)
+        let raceSerie = raceData.series.find(s => s.id === serieId && s.eventId === event.id && s.dayNumber === dayNumber);
         if (!raceSerie) {
             // Créer la série dans le format de l'ancien système
             raceSerie = {
                 id: serieId,
+                dayNumber: dayNumber,
                 name: serie.name,
                 eventId: event.id,
                 participants: serie.participants.map(p => ({
@@ -1328,6 +1337,21 @@
                     nextParticipantId: 1
                 } : undefined
             };
+
+            // Purger le cache du moteur de course live (raceData, persisté à part dans
+            // localStorage) pour cette journée : sans ça, les compteurs d'id remis à 1
+            // ci-dessus (nextEventId/nextSerieId) retombent sur d'anciennes entrées
+            // jamais nettoyées et en récupèrent les temps/tours au prochain "Démarrer".
+            if (typeof raceData !== 'undefined' && raceData) {
+                if (raceData.events) raceData.events = raceData.events.filter(e => e.dayNumber !== dayNumber);
+                if (raceData.series) raceData.series = raceData.series.filter(s => s.dayNumber !== dayNumber);
+                if (raceData.currentDayNumber === dayNumber) {
+                    raceData.currentSerie = null;
+                    raceData.currentDayNumber = null;
+                    raceData.currentSerieId = null;
+                }
+                if (typeof saveChronoToLocalStorage === 'function') saveChronoToLocalStorage();
+            }
 
             updatePlayersDisplay(dayNumber);
             updateMatchesDisplay(dayNumber);
