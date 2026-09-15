@@ -427,13 +427,9 @@
     function handleDayTypeChange(dayNumber, type) {
         // Sauvegarder le nouveau type
         if (!championship.days[dayNumber]) return;
-        
-        // S'assurer que la structure de données existe
-        if (!championship.days[dayNumber].dayType) {
-            championship.days[dayNumber].dayType = 'championship';
-        }
-        
-        // Initialiser les données chrono si elles n'existent pas
+
+        // Initialiser les données chrono si elles n'existent pas (sécurité :
+        // setDayType() ci-dessous ne le fait pas, seulement addNewDay())
         if (!championship.days[dayNumber].chronoData) {
             championship.days[dayNumber].chronoData = {
                 events: [],
@@ -444,14 +440,28 @@
                 nextParticipantId: 1
             };
         }
-        
-        championship.days[dayNumber].dayType = type;
-        saveToLocalStorage();
-        
-        // Mettre à jour l'interface visuelle du sélecteur
+
+        // Déléguer l'écriture des données + le toggle des sections
+        // championship-section-N/chrono-section-N + de la barre globale
+        // Divisions/Terrains (#championshipConfigBar) à setDayType()
+        // (multisport.iife.js), la source unique de vérité pour le
+        // changement de type de journée. Cette fonction dupliquait
+        // auparavant cette logique en local (utilisée par le sélecteur
+        // statique de la Journée 1) sans jamais toucher la barre globale,
+        // qui ne réapparaissait donc pas en repassant en mode Championship
+        // depuis la J1.
+        if (typeof setDayType === 'function') {
+            setDayType(dayNumber, type);
+        } else {
+            championship.days[dayNumber].dayType = type;
+            saveToLocalStorage();
+        }
+
+        // Mettre à jour l'interface visuelle spécifique au sélecteur
+        // statique de la Journée 1 (pastille de couleur + libellé)
         const selector = document.getElementById(`day-type-selector-${dayNumber}`);
         const label = document.getElementById(`day-type-label-${dayNumber}`);
-        
+
         if (selector) {
             if (type === 'chrono') {
                 selector.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
@@ -461,29 +471,11 @@
                 if (label) label.textContent = 'Championnat';
             }
         }
-        
-        // Afficher/masquer les sections appropriées
-        const chronoSection = document.getElementById(`chrono-section-${dayNumber}`);
-        const championshipSection = document.getElementById(`championship-section-${dayNumber}`);
-        
-        if (chronoSection) {
-            chronoSection.style.display = type === 'chrono' ? 'block' : 'none';
-        }
-        if (championshipSection) {
-            championshipSection.style.display = type === 'championship' ? 'block' : 'none';
-        }
-        
+
         // Rafraîchir l'affichage chrono si on passe en mode chrono
         if (type === 'chrono' && typeof refreshChronoDisplay === 'function') {
             refreshChronoDisplay(dayNumber);
         }
-        
-        // Mettre à jour la visibilité de l'onglet multisport
-        if (typeof updateMultisportTabVisibility === 'function') {
-            updateMultisportTabVisibility();
-        }
-        
-        showNotification(`Mode ${type === 'chrono' ? 'Courses' : 'Matchs'} activé`, 'success');
     }
     window.handleDayTypeChange = handleDayTypeChange;
     window.switchTab = switchTab;

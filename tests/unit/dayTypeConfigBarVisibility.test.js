@@ -78,6 +78,48 @@ test('changer d\'onglet (switchTab) met à jour la barre sans changer le type', 
     expect(document.getElementById('championshipConfigBar').style.display).toBe('block');
 });
 
+test('bascule Championship -> Chrono -> Championship deux fois de suite via setDayType (régression rapportée)', () => {
+    championship.currentDay = 1;
+    updateDayTypeUI(1);
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('block');
+
+    setDayType(1, 'chrono');
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('none');
+
+    setDayType(1, 'championship');
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('block');
+
+    setDayType(1, 'chrono');
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('none');
+
+    setDayType(1, 'championship');
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('block');
+});
+
+test('handleDayTypeChange (sélecteur statique de la Journée 1) bascule aussi la barre globale, deux fois de suite', () => {
+    // Régression précise rapportée par l'utilisateur : le sélecteur de type
+    // de la J1 (HTML statique, onchange="handleDayTypeChange(1, this.value)")
+    // passait par une implémentation dupliquée qui ne touchait jamais
+    // #championshipConfigBar — la barre restait masquée en repassant en
+    // Championship après un passage en Chrono depuis ce sélecteur précis.
+    document.body.innerHTML += '<div id="day-type-selector-1"></div><span id="day-type-label-1"></span>';
+    championship.currentDay = 1;
+    updateDayTypeUI(1);
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('block');
+
+    handleDayTypeChange(1, 'chrono');
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('none');
+
+    handleDayTypeChange(1, 'championship');
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('block');
+
+    handleDayTypeChange(1, 'chrono');
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('none');
+
+    handleDayTypeChange(1, 'championship');
+    expect(document.getElementById('championshipConfigBar').style.display).toBe('block');
+});
+
 test("ne modifie pas la barre pour une journée qui n'est pas celle actuellement affichée", () => {
     championship.currentDay = 1;
     updateDayTypeUI(1);
