@@ -1647,6 +1647,9 @@ function buildLiveRaceDisplayContentHTML() {
 
     const medals = ['🥇', '🥈', '🥉'];
 
+    if (typeof assignCategoryRanks === 'function') assignCategoryRanks(ranked);
+    const showCategory = !!ranked.hasMultipleCategories;
+
     const rows = ranked.map((p, index) => {
         const position = index + 1;
         const isDNS = isOutOfRaceStatus(p.status);
@@ -1657,12 +1660,16 @@ function buildLiveRaceDisplayContentHTML() {
             : p.status === 'disq'
             ? '<span style="color: #c39bd3; font-weight: bold;">⛔ DISQ</span>'
             : (isDNS ? '<span style="color: #e74c3c; font-weight: bold;">🚫 DNS</span>' : '<span style="color: #f39c12; font-weight: bold;">⏳ En cours</span>');
+        const categoryCell = showCategory
+            ? `<td style="padding: 12px; text-align: left;">${p.category || '-'}${p.category ? ` (${p.catRank}e/${p.catTotal})` : ''}</td>`
+            : '';
 
         return `
             <tr style="${rowBg} border-bottom: 1px solid rgba(255,255,255,0.1);">
                 <td style="padding: 12px; text-align: center; font-size: ${isDNS ? '14px' : '22px'}; font-weight: bold;">${medal}</td>
                 <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px; color: #3498db;">#${p.bib}</td>
                 <td style="padding: 12px; font-weight: bold;">${p.name}${p.club ? '<div style="font-size:11px; color:#94a3b8; font-weight:normal;">' + p.club + '</div>' : ''}</td>
+                ${categoryCell}
                 <td style="padding: 12px; text-align: center; font-weight: bold;">${p.laps.length}</td>
                 <td style="padding: 12px; text-align: center; font-weight: bold;">${(p.totalDistance / 1000).toFixed(2)} km</td>
                 <td style="padding: 12px; text-align: center; font-family: monospace; font-weight: bold;">${p.status === 'finished' ? formatTime(p.finishTime) : formatTime(p.totalTime)}</td>
@@ -1680,6 +1687,7 @@ function buildLiveRaceDisplayContentHTML() {
                     <th style="padding: 12px; text-align: center;">Pos.</th>
                     <th style="padding: 12px; text-align: center;">Dossard</th>
                     <th style="padding: 12px; text-align: left;">Participant</th>
+                    ${showCategory ? '<th style="padding: 12px; text-align: left;">Catégorie</th>' : ''}
                     <th style="padding: 12px; text-align: center;">Tours</th>
                     <th style="padding: 12px; text-align: center;">Distance</th>
                     <th style="padding: 12px; text-align: center;">Temps</th>
@@ -1691,6 +1699,7 @@ function buildLiveRaceDisplayContentHTML() {
 
     return { title: serie.name, body: body };
 }
+window.buildLiveRaceDisplayContentHTML = buildLiveRaceDisplayContentHTML;
 
 let liveRaceDisplayWindow = null;
 
