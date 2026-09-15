@@ -18,10 +18,19 @@ Application web de gestion de championnats de tennis de table.
 - Qualification des 2 premiers de chaque poule
 
 ### ⏱️ Mode CHRONO
-- Gestion d'événements de course
-- Chronométrage en temps réel
-- Gestion des tours et des arrivées
-- Classements par série
+- Le type d'une journée (Matchs ou Courses) se choisit indépendamment pour chaque journée
+- Gestion d'événements de course (course à pied, vélo, natation)
+- Chronométrage en temps réel, mode couloirs (touches 1-9) pour la natation
+- Gestion des tours, relais, arrivées, DNS/DISQ
+- Classements par série + export PDF
+
+### 🏅 Mode Multisport
+- Un onglet "Multisport" apparaît automatiquement dès qu'il y a au moins une journée Courses
+- Classement combiné entre journées Matchs et journées Courses (barème de points par position)
+
+### 🏢 Clubs
+- Affectation d'un club à chaque joueur/participant
+- Badges club dans les listes et classements
 
 ### 📊 Classements
 - Classement par journée
@@ -77,16 +86,23 @@ Voir [AGENTS.md](./AGENTS.md) pour la documentation technique complète.
 Le projet utilise une architecture modulaire avec des fichiers IIFE :
 ```
 src/
-├── config.iife.js      # Configuration
-├── utils.iife.js       # Utilitaires  
-├── state.iife.js       # État global
-├── players.iife.js     # Gestion joueurs
-├── matches.iife.js     # Mode Championship
-├── pools.iife.js       # Mode POOL
-├── chrono.iife.js      # Mode CHRONO
-├── ranking.iife.js     # Classements
-└── export.iife.js      # Export/Print
+├── config.iife.js       # Configuration
+├── utils.iife.js        # Utilitaires
+├── state.iife.js        # État global
+├── clubs.iife.js        # Gestion des clubs
+├── multisport.iife.js   # Sélecteur de type par journée, UI Chrono par journée, classement combiné
+├── players.iife.js      # Gestion joueurs
+├── ui.iife.js           # Onglets/journées
+├── matches.iife.js      # Mode Championship
+├── pools.iife.js        # Mode POOL
+├── ranking.iife.js      # Classements
+├── export-json.iife.js  # Export/Import JSON
+├── export-print.iife.js # Impression/PDF
+├── chrono.iife.js       # Moteur de chronométrage live
+└── init.iife.js         # Bootstrap
 ```
+Voir `AGENTS.md` pour le détail de chaque module et `claude.md` pour
+l'architecture de données.
 
 ## 📄 Licence
 

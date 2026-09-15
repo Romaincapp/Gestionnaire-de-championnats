@@ -336,8 +336,9 @@
             
             const remainingDays = Object.keys(championship.days).map(Number);
             switchTab(Math.min(...remainingDays));
-            
+
             updateDaySelectors();
+            if (typeof updateMultisportTabVisibility === 'function') updateMultisportTabVisibility();
             saveToLocalStorage();
             showNotification(`Journée ${dayNumber} supprimée`, 'warning');
         }
@@ -1270,46 +1271,75 @@
     function clearDayData(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
-        
+
         let totalPlayers = 0;
         let totalMatches = 0;
+        let totalPoolMatches = 0;
+        let totalChronoParticipants = 0;
 
         const numDivisions = championship.config?.numberOfDivisions || 3;
         for (let division = 1; division <= numDivisions; division++) {
             totalPlayers += dayData.players[division].length;
             totalMatches += dayData.matches[division].length;
         }
-        
-        if (totalPlayers === 0 && totalMatches === 0) {
+        if (dayData.pools && dayData.pools.divisions) {
+            Object.values(dayData.pools.divisions).forEach(function(poolDiv) {
+                totalPoolMatches += (poolDiv.matches || []).length;
+                totalPoolMatches += (poolDiv.finalPhase || []).length;
+            });
+        }
+        if (dayData.chronoData && dayData.chronoData.participants) {
+            totalChronoParticipants = dayData.chronoData.participants.length;
+        }
+
+        if (totalPlayers === 0 && totalMatches === 0 && totalPoolMatches === 0 && totalChronoParticipants === 0) {
             alert(`La Journée ${dayNumber} est déjà vide`);
             return;
         }
-        
-        const confirmMsg = `Vider complètement la Journée ${dayNumber} ?\n\n` +
+
+        let confirmMsg = `Vider complètement la Journée ${dayNumber} ?\n\n` +
                           `Cela supprimera :\n` +
                           `• ${totalPlayers} joueurs\n` +
-                          `• ${totalMatches} matchs\n` +
-                          `• Tous les scores\n\n` +
+                          `• ${totalMatches} matchs\n`;
+        if (totalPoolMatches > 0) confirmMsg += `• ${totalPoolMatches} match(s) de poule/phase finale\n`;
+        if (totalChronoParticipants > 0) confirmMsg += `• ${totalChronoParticipants} participant(s) chrono (courses)\n`;
+        confirmMsg += `• Tous les scores\n\n` +
+                          `Le type de journée (Championship/Chrono) est conservé.\n\n` +
                           `Cette action est irréversible !`;
-        
+
         if (confirm(confirmMsg)) {
             const players = {};
             const matches = {};
+            const poolDivisions = {};
             for (let div = 1; div <= numDivisions; div++) {
                 players[div] = [];
                 matches[div] = [];
+                poolDivisions[div] = { pools: [], matches: [] };
             }
             championship.days[dayNumber] = {
                 players: players,
-                matches: matches
+                matches: matches,
+                dayType: dayData.dayType,
+                pools: { enabled: false, divisions: poolDivisions },
+                chronoData: dayData.chronoData ? {
+                    events: [],
+                    series: [],
+                    participants: [],
+                    nextEventId: 1,
+                    nextSerieId: 1,
+                    nextParticipantId: 1
+                } : undefined
             };
-            
+
             updatePlayersDisplay(dayNumber);
             updateMatchesDisplay(dayNumber);
             updateStats(dayNumber);
             const rankingsEl = document.getElementById(`rankings-${dayNumber}`);
             if (rankingsEl) rankingsEl.style.display = 'none';
-            
+            if (typeof updatePoolsDisplay === 'function') updatePoolsDisplay(dayNumber);
+            if (typeof refreshChronoDisplay === 'function') refreshChronoDisplay(dayNumber);
+            if (typeof updateMultisportTabVisibility === 'function') updateMultisportTabVisibility();
+
             saveToLocalStorage();
             showNotification(`Journée ${dayNumber} vidée`, 'warning');
         }

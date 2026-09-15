@@ -77,63 +77,6 @@
                 </div>
             </div>
 
-            <!-- MODE CHRONO -->
-            <div id="chronoModeSection" style="display: none;">
-                <div class="section" style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                    <h2 style="color: white; text-align: center; margin-bottom: 20px;">⏱️ Gestion des Séries de Course</h2>
-
-                    <!-- Gestion des séries -->
-                    <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3 style="margin: 0; color: #2c3e50;">🏃 Épreuves et Séries</h3>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button class="btn" onclick="showParticipantsManager()" style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
-                                    👥 Ajouter des participants
-                                </button>
-                                <button class="btn" onclick="showAddEventModal()" style="background: linear-gradient(135deg, #e67e22, #d35400); color: white;">
-                                    🏅 Nouvelle Épreuve
-                                </button>
-                                <button class="btn btn-success" onclick="showAddSerieModal()">
-                                    ➕ Nouvelle Série
-                                </button>
-                                <button class="btn" onclick="showOverallChronoRanking()" style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
-                                    🏆 Classement Général
-                                </button>
-                                <button class="btn" onclick="exportChronoCompetition()" style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white;">
-                                    💾 Exporter Compétition
-                                </button>
-                                <button class="btn" onclick="importChronoCompetition()" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white;">
-                                    📥 Importer Compétition
-                                </button>
-                                <button class="btn" onclick="printChronoCompetition()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">
-                                    🖨️ Imprimer
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="eventsList" style="display: grid; gap: 20px;">
-                            <!-- Les épreuves et séries seront affichées ici -->
-                        </div>
-
-                        <div id="noEventsMessage" style="text-align: center; padding: 40px; color: #7f8c8d;">
-                            Aucune épreuve créée. Cliquez sur "🏅 Nouvelle Épreuve" pour commencer.
-                        </div>
-                    </div>
-
-                    <!-- Classement général chrono -->
-                    <div id="overallChronoRanking" style="display: none; margin-top: 20px;">
-                        <!-- Le classement général sera généré ici -->
-                    </div>
-
-                    <!-- NOTE: l'ancien div #raceInterface statique a été supprimé.
-                         L'interface de course est désormais injectée dynamiquement
-                         dans l'onglet de la journée (chrono-content-N) par
-                         startChronoRaceForDay(). Conserver un #raceInterface statique
-                         ici créait un doublon d'id qui captait displayRaceInterface()
-                         et laissait l'onglet du jour vide. -->
-                </div>
-            </div>
-
             <!-- CONTENU JOURNÉE -->
             <div class="tab-content day-content active" id="day-1">
                 <!-- Sélecteur de type de journée pour J1 (sera initialisé par JS) -->
@@ -435,136 +378,6 @@
             <div class="matches-history">
                 <h3 style="color: #2c3e50; margin-bottom: 15px;">📋 Historique des matchs</h3>
                 <div id="playerMatches"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Épreuve -->
-    <div id="eventModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <h3 id="eventModalTitle">🏅 Nouvelle Épreuve</h3>
-            <div style="display: grid; gap: 15px;">
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📝 Nom de l'épreuve:</label>
-                    <input type="text" id="eventName" placeholder="Ex: 400m Dames, 1500m Hommes, Relais 4x100..." style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                </div>
-
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🏃 Type de sport:</label>
-                    <select id="eventSportType" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                        <option value="running">Course à pied</option>
-                        <option value="cycling">Vélo</option>
-                        <option value="swimming">Natation</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📏 Distance (en mètres):</label>
-                    <input type="number" id="eventDistance" value="400" min="1" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                </div>
-
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🔄 Type de course:</label>
-                    <select id="eventRaceType" onchange="updateEventRelayOptions()" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                        <option value="individual">Individuelle</option>
-                        <option value="relay">Relais</option>
-                        <option value="interclub">Interclub</option>
-                    </select>
-                </div>
-
-                <div id="eventRelayDurationSection" style="display: none;">
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">⏰ Durée du relais (minutes):</label>
-                    <input type="number" id="eventRelayDuration" value="60" min="1" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                </div>
-
-                <div id="eventInterclubSection" style="display: none;">
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🏆 Barème de points:</label>
-                    <input type="text" id="eventInterclubPoints" value="10,8,6,5,4,3,2,1" placeholder="10,8,6,5,4,3,2,1" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #7f8c8d;">
-                        Points attribués par place (1er, 2ème, 3ème...). Séparez par des virgules.
-                    </p>
-                </div>
-
-                <div id="eventLaneModeSection" style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 15px; border-radius: 8px; margin-top: 5px;">
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: white;">
-                        <input type="checkbox" id="eventLaneMode" style="width: 20px; height: 20px; cursor: pointer;">
-                        <span style="font-weight: bold;">🏊 Mode Couloirs (1-9)</span>
-                    </label>
-                    <p style="margin: 8px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.9);">
-                        Saisie rapide : les touches 1-9 arrêtent le couloir correspondant (pas besoin d'appuyer sur Entrée). Compatible avec tous les types de course.
-                    </p>
-                </div>
-
-                <div style="background: #e8f4f8; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
-                    <p style="margin: 0; font-size: 14px; color: #2c3e50;">
-                        <strong>ℹ️ Info:</strong> Une épreuve peut contenir plusieurs séries. Par exemple, "400m Dames" peut avoir 3 séries de 8 coureuses chacune.
-                    </p>
-                </div>
-            </div>
-
-            <div class="modal-buttons">
-                <button class="btn btn-danger" onclick="closeEventModal()">Annuler</button>
-                <button class="btn btn-success" onclick="saveEvent()">Créer l'épreuve</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Série -->
-    <div id="serieModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
-            <h3 id="serieModalTitle">Nouvelle Série</h3>
-            <div style="display: grid; gap: 15px;">
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">🏅 Épreuve:</label>
-                    <select id="serieEventId" onchange="updateSerieFromEvent()" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; background: #e8f4f8; font-weight: bold;">
-                        <option value="">-- Sélectionnez une épreuve --</option>
-                        <!-- Les épreuves seront chargées ici -->
-                    </select>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #7f8c8d;">
-                        Sélectionnez l'épreuve à laquelle cette série appartient (ex: 400m Dames - Série 1)
-                    </p>
-                </div>
-
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">📝 Nom de la série:</label>
-                    <input type="text" id="serieName" placeholder="Ex: Série 1, Série A, Finale..." style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
-                </div>
-
-                <div>
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">👥 Participants:</label>
-                    <div style="max-height: 300px; overflow-y: auto; border: 2px solid #ddd; border-radius: 5px; padding: 15px; background: #f8f9fa;">
-                        <div id="participantsCheckboxList">
-                            <!-- Les checkboxes des participants seront générées ici -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Option Mode Couloirs -->
-                <div id="laneModeContainer" style="display: none; background: linear-gradient(135deg, #3498db, #2980b9); padding: 15px; border-radius: 8px;">
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: white;">
-                        <input type="checkbox" id="serieLaneMode" onchange="toggleLaneSelectors()" style="width: 20px; height: 20px; cursor: pointer;">
-                        <span style="font-weight: bold;">🏊 Mode Couloirs (1-9)</span>
-                    </label>
-                    <p style="margin: 8px 0 0 30px; font-size: 12px; color: #ecf0f1;">
-                        Activez ce mode pour les courses en couloirs (natation, athlétisme). Chaque touche 1-9 du clavier arrête instantanément le chrono du couloir correspondant.
-                    </p>
-                    <div id="laneAssignmentInfo" style="display: none; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.15); border-radius: 5px;">
-                        <p style="margin: 0; font-size: 12px; color: white;">
-                            Assignez un couloir (1-9) à chaque participant coché ci-dessus.
-                        </p>
-                    </div>
-                </div>
-
-                <div style="background: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #f39c12;">
-                    <p style="margin: 0; font-size: 13px; color: #856404;">
-                        <strong>💡 Astuce:</strong> Les paramètres (distance, type de sport) sont hérités de l'épreuve sélectionnée.
-                    </p>
-                </div>
-            </div>
-
-            <div class="modal-buttons">
-                <button class="btn btn-danger" onclick="closeSerieModal()">Annuler</button>
-                <button class="btn btn-success" onclick="saveSerie()">Enregistrer</button>
             </div>
         </div>
     </div>
@@ -1093,7 +906,6 @@
         <script src="src/ranking.iife.js"></script>
 
         <!-- 4. Export -->
-        <script src="src/export.iife.js"></script>
         <script src="src/export-json.iife.js"></script>
         <script src="src/export-print.iife.js"></script>
 
