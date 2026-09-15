@@ -60,9 +60,10 @@ Single global `championship` object, keyed by day:
             relayDuration,        // minutes, for relay races
             interclubPoints,      // points scale, for interclub races
             participants: [
-              { bib, name, club, status: 'ready'|'running'|'finished'|'DNS'|'DISQ',
+              { bib, name, club, category, status: 'ready'|'running'|'finished'|'DNS'|'DISQ',
                 time, laps: [], totalDistance, lastLapStartTime }
             ],
+            results: [{ bib, name, category, time, totalDistance }], // snapshot post-course, voir note ci-dessous
             status: 'pending'|'running'|'completed',
             startTime, currentTime, isRunning
           }
@@ -370,6 +371,7 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 7. **❌ Not preserving existing HTML IDs** - When modifying UI, maintain IDs for event handlers
 8. **❌ Assuming a function is dead (or alive) without grepping its exact name across all of `src/` and `index.html`** - this codebase has multiple generations of the same feature coexisting (global vs per-day); a plausible-sounding function name is not evidence either way
 9. **❌ Committing without running `npm test`** - see "Automated Tests" above; grep confirms reachability, `npm test` confirms behavior still works
+10. **❌ Adding a field to `serie.participants` without also adding it to `serie.results`** - `saveRaceResultsToDay()` (`ui.iife.js`) builds `serie.results` as a separate flattened snapshot consumed by `showSerieRanking`/`printChronoCompetition`/`getSerieRanking`; a field only on `participants` (e.g. `category`) silently disappears from the post-race ranking. This exact bug existed for `category` until it was fixed alongside the multi-category ranking feature (`assignCategoryRanks()` in `multisport.iife.js`) — check both places whenever you add a per-participant field.
 
 ## Automated Tests (run before every commit)
 

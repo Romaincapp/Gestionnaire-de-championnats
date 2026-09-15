@@ -1141,6 +1141,7 @@
             .map(p => ({
                 bib: p.bib,
                 name: p.name,
+                category: p.category || '',
                 time: p.finishTime || p.totalTime,
                 totalDistance: p.totalDistance || 0
             }));

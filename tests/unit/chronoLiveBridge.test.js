@@ -87,6 +87,23 @@ test('saveRaceResultsToDay recopie les résultats de raceData vers championship.
     expect(savedSerie.participants[0].totalTime).toBe(12345);
 });
 
+test('saveRaceResultsToDay propage category depuis raceData vers serie.results (feature catégories)', () => {
+    // Régression ciblée : serie.participants incluait déjà category, mais
+    // serie.results (consommé par showSerieRanking/printChronoCompetition)
+    // ne l'incluait pas — la catégorie était perdue entre la fin de course
+    // et l'affichage du classement.
+    startChronoRaceForDay(1, 42);
+    raceData.currentSerie.participants[0].category = 'Solo';
+    raceData.currentSerie.participants[0].status = 'finished';
+    raceData.currentSerie.participants[0].totalTime = 12345;
+
+    saveRaceResultsToDay();
+
+    const savedSerie = championship.days[1].chronoData.series[0];
+    expect(savedSerie.participants[0].category).toBe('Solo');
+    expect(savedSerie.results[0].category).toBe('Solo');
+});
+
 test('saveRaceResultsToDay reconstruit serie.results pour les participants avec un temps valide', () => {
     startChronoRaceForDay(1, 42);
     raceData.currentSerie.participants[0].status = 'finished';

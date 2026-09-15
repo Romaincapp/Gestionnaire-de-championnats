@@ -619,6 +619,23 @@
     /**
      * Affiche une modal pour ajouter en masse les participants cochés à une série.
      */
+    /**
+     * Construit un <datalist> HTML des catégories déjà utilisées dans le pool
+     * de participants de la journée, pour suggestion (pas de liste fermée).
+     */
+    function buildCategoryDatalist(dayNumber) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        var categories = {};
+        (chronoData && chronoData.participants || []).forEach(function(p) {
+            if (p && p.category) categories[p.category] = true;
+        });
+        var options = Object.keys(categories).sort().map(function(c) {
+            return '<option value="' + c.replace(/"/g, '&quot;') + '">';
+        }).join('');
+        return '<datalist id="categoryList-' + dayNumber + '">' + options + '</datalist>';
+    }
+    global.buildCategoryDatalist = buildCategoryDatalist;
+
     function showBulkAddToSerieModal(dayNumber) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
@@ -642,6 +659,11 @@
             'align-items: center; z-index: 10000;">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 420px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>➕ Ajouter ' + checks.length + ' participant(s) à une série</h3>' +
+            '<div style="margin-bottom: 15px;">' +
+            '<label style="font-size: 12px; color: #555; display: block; margin-bottom: 4px;">Catégorie (optionnel — remplace celle des participants pour cette série)</label>' +
+            '<input type="text" id="bulkAddToSerieCategory-' + dayNumber + '" list="categoryList-' + dayNumber + '" placeholder="ex: Solo, Équipe..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">' +
+            buildCategoryDatalist(dayNumber) +
+            '</div>' +
             '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
             '<div style="margin: 15px 0;">';
 
@@ -684,6 +706,9 @@
         var checks = document.querySelectorAll('.participant-check-' + dayNumber + ':checked');
         var ids = Array.prototype.map.call(checks, function(ch) { return parseInt(ch.value, 10); });
 
+        var categoryInput = document.getElementById('bulkAddToSerieCategory-' + dayNumber);
+        var categoryOverride = categoryInput ? categoryInput.value.trim() : '';
+
         var added = 0, skipped = 0;
         ids.forEach(function(id) {
             var participant = chronoData.participants.find(function(p) { return p.id === id; });
@@ -694,7 +719,8 @@
             });
             if (alreadyInSerie) { skipped++; return; }
 
-            if (addChronoParticipant(dayNumber, serieId, participant.name, null, { club: participant.club })) {
+            var category = categoryOverride || participant.category || '';
+            if (addChronoParticipant(dayNumber, serieId, participant.name, null, { club: participant.club, category: category })) {
                 added++;
             }
         });
@@ -722,11 +748,14 @@
 
         var safeName = (p.name || '').replace(/"/g, '&quot;');
         var safeClub = (p.club || '').replace(/"/g, '&quot;');
+        var safeCategory = (p.category || '').replace(/"/g, '&quot;');
         row.innerHTML =
             '<div style="display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap;">' +
             '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width: 55px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px; text-align: center;">' +
             '<input type="text" id="edit-pname-' + dayNumber + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="flex: 1; min-width: 120px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
             '<input type="text" id="edit-pclub-' + dayNumber + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 110px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
+            '<input type="text" id="edit-pcategory-' + dayNumber + '-' + participantId + '" list="categoryListRow-' + dayNumber + '-' + participantId + '" value="' + safeCategory + '" placeholder="Catégorie" style="width: 100px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
+            buildCategoryDatalist(dayNumber).replace('categoryList-' + dayNumber, 'categoryListRow-' + dayNumber + '-' + participantId) +
             '</div>' +
             '<div style="display: flex; gap: 4px; flex-shrink: 0;">' +
             '<button onclick="saveParticipantInfo(' + dayNumber + ', ' + participantId + ')" style="padding: 4px 8px; font-size: 11px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Enregistrer">💾</button>' +
@@ -763,9 +792,11 @@
         var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
         var clubEl = document.getElementById('edit-pclub-' + dayNumber + '-' + participantId);
         var newClub = clubEl ? clubEl.value.trim() : undefined;
+        var categoryEl = document.getElementById('edit-pcategory-' + dayNumber + '-' + participantId);
+        var newCategory = categoryEl ? categoryEl.value.trim() : undefined;
         var oldName = p.name;
 
-        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub);
+        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub, newCategory);
 
         saveToLocalStorage();
         refreshChronoDisplay(dayNumber);
@@ -777,7 +808,7 @@
      * Renomme / re-dossarde un participant partout : liste globale, séries,
      * résultats et séries imbriquées dans les événements. Match par id OU ancien nom.
      */
-    function applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub) {
+    function applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub, newCategory) {
         function applyTo(list) {
             (list || []).forEach(function(sp) {
                 if ((participantId != null && sp.id === participantId) ||
@@ -785,6 +816,7 @@
                     sp.name = newName;
                     if (newBib != null && !isNaN(newBib)) sp.bib = newBib;
                     if (newClub !== undefined) sp.club = newClub;
+                    if (newCategory !== undefined) sp.category = newCategory;
                 }
             });
         }
@@ -823,6 +855,11 @@
             '<div style="margin: 15px 0;">' +
             '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\n1\tGringos 1\n2\tGringos 2\n..."></textarea>' +
             '</div>' +
+            '<div style="margin-bottom: 15px;">' +
+            '<label style="font-size: 12px; color: #555; display: block; margin-bottom: 4px;">Catégorie (optionnel — appliquée à tous les participants ci-dessus)</label>' +
+            '<input type="text" id="bulk-participants-category-' + dayNumber + '" list="categoryList-' + dayNumber + '" placeholder="ex: Solo, Équipe..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">' +
+            buildCategoryDatalist(dayNumber) +
+            '</div>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeAddParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
             '<button onclick="saveBulkParticipantsForDay(' + dayNumber + ')" class="btn btn-primary">💾 Ajouter</button>' +
@@ -851,7 +888,10 @@
         
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
-        
+
+        var categoryInput = document.getElementById('bulk-participants-category-' + dayNumber);
+        var category = categoryInput ? categoryInput.value.trim() : '';
+
         var lines = textarea.value.trim().split('\n');
         var added = 0;
         var skipped = 0;
@@ -894,6 +934,7 @@
                     id: chronoData.nextParticipantId++,
                     name: name,
                     club: club,
+                    category: category,
                     bib: bib != null ? bib : chronoData.participants.length + 1,
                     totalTime: null,
                     laps: 0
@@ -1526,14 +1567,44 @@
     // DÉTAIL D'UN PARTICIPANT (épreuves / séries / journées)
     // ============================================
 
+    /**
+     * Ajoute catRank/catTotal à chaque entrée d'un classement déjà trié
+     * (ordre scratch), en numérotant chaque participant au sein de sa
+     * catégorie tout en conservant l'ordre scratch. Ajoute aussi
+     * hasMultipleCategories sur le tableau lui-même (>= 2 catégories non
+     * vides distinctes parmi les entrées). Fonction pure, ne modifie que
+     * les objets déjà présents dans arr (pas de tri, arr doit déjà être
+     * dans l'ordre scratch voulu).
+     */
+    function assignCategoryRanks(arr) {
+        var counters = {};
+        var distinctCategories = {};
+        arr.forEach(function(entry) {
+            var cat = entry.category || '';
+            if (cat) distinctCategories[cat] = true;
+            counters[cat] = (counters[cat] || 0) + 1;
+            entry.catRank = counters[cat];
+        });
+        var totals = counters; // même clé, le compteur final = le total par catégorie
+        arr.forEach(function(entry) {
+            entry.catTotal = totals[entry.category || ''];
+        });
+        arr.hasMultipleCategories = Object.keys(distinctCategories).length >= 2;
+        return arr;
+    }
+    global.assignCategoryRanks = assignCategoryRanks;
+
     // Classement d'une série : distance parcourue (desc) puis temps (asc),
     // cohérent avec le classement général. Renvoie la liste ordonnée des coureurs.
+    // Ajoute category/catRank/catTotal à chaque entrée (voir assignCategoryRanks) ;
+    // arr.hasMultipleCategories indique si une colonne Catégorie doit être affichée.
     function getSerieRanking(serie) {
         var byName = {};
         (serie.participants || []).forEach(function(p) {
             if (!p || !p.name) return;
             byName[p.name] = {
                 name: p.name,
+                category: p.category || '',
                 distance: p.totalDistance || 0,
                 time: (p.totalTime > 0 ? p.totalTime : (p.finishTime || 0)),
                 ran: (p.totalTime > 0 || p.totalDistance > 0 || p.finishTime != null)
@@ -1542,9 +1613,10 @@
         (serie.results || []).forEach(function(r) {
             if (!r || !r.name) return;
             if (!byName[r.name]) {
-                byName[r.name] = { name: r.name, distance: serie.distance || 0, time: r.time || 0, ran: true };
+                byName[r.name] = { name: r.name, category: r.category || '', distance: serie.distance || 0, time: r.time || 0, ran: true };
             } else {
                 byName[r.name].ran = true;
+                if (!byName[r.name].category) byName[r.name].category = r.category || '';
                 if (!byName[r.name].time) byName[r.name].time = r.time || 0;
             }
         });
@@ -1553,7 +1625,7 @@
             if (b.distance !== a.distance) return b.distance - a.distance;
             return a.time - b.time;
         });
-        return arr;
+        return assignCategoryRanks(arr);
     }
 
     // Rassemble toutes les participations chrono d'un joueur, journée par journée.
@@ -2260,13 +2332,16 @@
 
         var safeName = (p.name || '').replace(/"/g, '&quot;');
         var safeClub = (p.club || '').replace(/"/g, '&quot;');
+        var safeCategory = (p.category || '').replace(/"/g, '&quot;');
         row.innerHTML =
             '<td style="padding: 8px; text-align: center;">' +
             '<input type="number" id="edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" style="width: 60px; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; text-align: center;">' +
             '</td>' +
             '<td style="padding: 8px;">' +
             '<input type="text" id="edit-spname-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; margin-bottom: 4px;">' +
-            '<input type="text" id="edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px;">' +
+            '<input type="text" id="edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; margin-bottom: 4px;">' +
+            '<input type="text" id="edit-spcategory-' + dayNumber + '-' + serieId + '-' + participantId + '" list="categoryListRow-' + dayNumber + '-' + participantId + '" value="' + safeCategory + '" placeholder="Catégorie" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px;">' +
+            buildCategoryDatalist(dayNumber).replace('categoryList-' + dayNumber, 'categoryListRow-' + dayNumber + '-' + participantId) +
             '</td>' +
             '<td style="padding: 8px; text-align: center; white-space: nowrap;">' +
             '<button onclick="saveSerieParticipant(' + dayNumber + ', ' + serieId + ', ' + participantId + ')" class="btn btn-sm" style="background:#27ae60; color:white; margin-right:4px;" title="Enregistrer">💾</button>' +
@@ -2319,9 +2394,11 @@
         var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
         var clubEl = document.getElementById('edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId);
         var newClub = clubEl ? clubEl.value.trim() : undefined;
+        var categoryEl = document.getElementById('edit-spcategory-' + dayNumber + '-' + serieId + '-' + participantId);
+        var newCategory = categoryEl ? categoryEl.value.trim() : undefined;
         var oldName = p.name;
 
-        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub);
+        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub, newCategory);
 
         saveToLocalStorage();
         refreshSerieParticipantsList(dayNumber, serieId);
@@ -2822,21 +2899,28 @@
             var sorted = serie.results.slice().sort(function(a, b) {
                 return a.time - b.time;
             });
-            
+            assignCategoryRanks(sorted);
+            var showCategory = sorted.hasMultipleCategories;
+
             html += '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
-            html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 10px;">Pos</th><th style="padding: 10px;">Nom</th><th style="padding: 10px;">Temps</th><th style="padding: 10px;">Points</th></tr></thead><tbody>';
-            
+            html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 10px;">' + (showCategory ? 'Pos. Scratch' : 'Pos') + '</th><th style="padding: 10px;">Nom</th>' +
+                (showCategory ? '<th style="padding: 10px;">Catégorie</th>' : '') +
+                '<th style="padding: 10px;">Temps</th><th style="padding: 10px;">Points</th></tr></thead><tbody>';
+
             sorted.forEach(function(result, index) {
                 var points = calculateChronoPoints(index + 1, sorted.length);
                 var rankStyle = index < 3 ? 'font-weight: bold; color: ' + (index === 0 ? '#f1c40f' : index === 1 ? '#95a5a6' : '#cd7f32') + ';' : '';
                 html += '<tr style="border-bottom: 1px solid #ecf0f1;">';
                 html += '<td style="padding: 10px; text-align: center; ' + rankStyle + '">' + (index + 1) + '</td>';
                 html += '<td style="padding: 10px; ' + rankStyle + '">' + result.name + '</td>';
+                if (showCategory) {
+                    html += '<td style="padding: 10px;">' + (result.category || '-') + (result.category ? ' (' + result.catRank + 'e/' + result.catTotal + ')' : '') + '</td>';
+                }
                 html += '<td style="padding: 10px; font-family: monospace;">' + formatTime(result.time) + '</td>';
                 html += '<td style="padding: 10px; text-align: center; font-weight: bold; color: #27ae60;">+' + points + '</td>';
                 html += '</tr>';
             });
-            
+
             html += '</tbody></table>';
         }
         

@@ -475,7 +475,7 @@ function generateParticipantsRows(serie) {
                 </td>
                 <td style="padding: 12px;">
                     <div style="font-weight: bold;">${p.name}</div>
-                    <div style="font-size: 12px; color: #7f8c8d;">${p.category || 'Division ' + (p.division || '-')}</div>
+                    ${p.category ? `<div style="font-size: 12px; color: #7f8c8d;">${p.category}</div>` : ''}
                 </td>
                 <td style="padding: 12px;">
                     <div style="font-weight: bold; color: #16a085;">${p.club || '-'}</div>
@@ -1095,7 +1095,7 @@ function updateParticipantRow(participant) {
         </td>
         <td style="padding: 12px;">
             <div style="font-weight: bold;">${participant.name}</div>
-            <div style="font-size: 12px; color: #7f8c8d;">${participant.category || 'Division ' + (participant.division || '-')}</div>
+            ${participant.category ? `<div style="font-size: 12px; color: #7f8c8d;">${participant.category}</div>` : ''}
         </td>
         <td style="padding: 12px;">
             <div style="font-weight: bold; color: #16a085;">${participant.club || '-'}</div>
@@ -1329,6 +1329,8 @@ function generateRaceRanking() {
     });
 
     const medals = ['🥇', '🥈', '🥉'];
+    if (typeof assignCategoryRanks === 'function') assignCategoryRanks(ranked);
+    const showCategory = !!ranked.hasMultipleCategories;
 
     let html = `
         <div style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); padding: 20px; border-radius: 10px;">
@@ -1342,10 +1344,11 @@ function generateRaceRanking() {
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                            <th style="padding: 12px; text-align: center;">Pos.</th>
+                            <th style="padding: 12px; text-align: center;">${showCategory ? 'Pos. Scratch' : 'Pos.'}</th>
                             <th style="padding: 12px; text-align: center;">Dossard</th>
                             <th style="padding: 12px; text-align: left;">Participant</th>
                             <th style="padding: 12px; text-align: left;">Club</th>
+                            ${showCategory ? '<th style="padding: 12px; text-align: left;">Catégorie</th>' : ''}
                             <th style="padding: 12px; text-align: center;">Tours</th>
                             <th style="padding: 12px; text-align: center;">Distance Totale</th>
                             <th style="padding: 12px; text-align: center;">Temps Total</th>
@@ -1370,11 +1373,15 @@ function generateRaceRanking() {
                                     </td>
                                     <td style="padding: 12px;">
                                         <div style="font-weight: bold; font-size: 16px;">${p.name}</div>
-                                        <div style="font-size: 12px; color: #7f8c8d;">${p.category || 'Division ' + (p.division || '-')}</div>
+                                        ${p.category ? `<div style="font-size: 12px; color: #7f8c8d;">${p.category}</div>` : ''}
                                     </td>
                                     <td style="padding: 12px;">
                                         <div style="font-weight: bold; color: #16a085; font-size: 14px;">${p.club || '-'}</div>
                                     </td>
+                                    ${showCategory ? `
+                                    <td style="padding: 12px;">
+                                        ${p.category || '-'}${p.category ? ` (${p.catRank}e/${p.catTotal})` : ''}
+                                    </td>` : ''}
                                     <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
                                         ${p.laps.length}
                                     </td>
@@ -2146,15 +2153,18 @@ window.printChronoCompetition = function(dayNumber) {
                         if (a.totalDistance !== b.totalDistance) return b.totalDistance - a.totalDistance;
                         return (a.finishTime || a.totalTime) - (b.finishTime || b.totalTime);
                     });
+                    if (typeof assignCategoryRanks === 'function') assignCategoryRanks(sorted);
+                    const showCategory = !!sorted.hasMultipleCategories;
 
                     printContent += `
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 40px;">Pos.</th>
+                                    <th style="width: 40px;">${showCategory ? 'Pos. Scratch' : 'Pos.'}</th>
                                     <th style="width: 60px;">Dossard</th>
                                     <th>Nom</th>
                                     <th>Club</th>
+                                    ${showCategory ? '<th>Catégorie</th>' : ''}
                                     <th style="width: 60px;">Tours</th>
                                     <th style="width: 80px;">Temps</th>
                                     <th style="width: 70px;">Statut</th>
@@ -2171,6 +2181,9 @@ window.printChronoCompetition = function(dayNumber) {
                         // Récupérer le club du participant
                         const participantData = raceData.participants.find(rp => rp.id === p.id);
                         const club = participantData?.club || p.club || '-';
+                        const categoryCell = showCategory
+                            ? `<td>${p.category || '-'}${p.category ? ` (${p.catRank}e/${p.catTotal})` : ''}</td>`
+                            : '';
 
                         printContent += `
                             <tr class="${medalClass}">
@@ -2178,6 +2191,7 @@ window.printChronoCompetition = function(dayNumber) {
                                 <td>${p.bib}</td>
                                 <td>${p.name}</td>
                                 <td>${club}</td>
+                                ${categoryCell}
                                 <td style="text-align: center;">${p.laps ? p.laps.length : 0}</td>
                                 <td class="time">${p.status === 'finished' ? formatTime(p.finishTime || p.totalTime) : '-'}</td>
                                 <td class="${statusClass}">${p.status === 'finished' ? 'Terminé' : p.status === 'running' ? 'En cours' : 'Prêt'}</td>
