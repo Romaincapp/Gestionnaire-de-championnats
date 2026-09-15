@@ -230,10 +230,17 @@ function displayRaceInterface(serie) {
                 <button class="btn" onclick="openLiveRaceDisplayWindow()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); margin-right: 10px;">
                     🖥️ Afficher
                 </button>
+                <button class="btn" onclick="toggleActionHistoryPanel()" style="background: #34495e; margin-right: 10px; position: relative;">
+                    🕘 Historique
+                    <span id="raceHistoryBadge" style="background: #e74c3c; color: white; font-size: 11px; font-weight: bold; padding: 1px 6px; border-radius: 10px; margin-left: 6px;"></span>
+                </button>
                 <button class="btn btn-danger" onclick="endSerie()">
                     🏁 Terminer la Série
                 </button>
             </div>
+
+            <!-- Panneau latéral : historique des actions de course (lap/finish), annulables -->
+            <div id="raceActionHistoryPanel" style="display: none; position: fixed; top: 0; right: 0; width: 320px; max-width: 90vw; height: 100%; background: white; box-shadow: -4px 0 15px rgba(0,0,0,0.2); z-index: 9999; overflow-y: auto; padding: 15px;"></div>
 
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white;">
@@ -263,6 +270,9 @@ function displayRaceInterface(serie) {
     `;
 
     raceInterface.innerHTML = html;
+
+    // Initialiser le badge/contenu du panneau d'historique (fonction définie plus bas dans ce fichier)
+    if (typeof renderActionHistoryPanel === 'function') renderActionHistoryPanel();
 }
 // Exposer pour les autres modules (ex. startChronoRaceForDay dans ui.iife.js)
 window.displayRaceInterface = displayRaceInterface;
@@ -640,6 +650,148 @@ function updateParticipantsTimes() {
 }
 
 // Enregistrer un tour
+// ============================================
+// HISTORIQUE DES ACTIONS DE COURSE (LAP/FINISH) + ANNULATION
+// ============================================
+
+// Copie des champs d'un participant qui changent lors d'une action de
+// course (lap/finish), pour pouvoir les restaurer tels quels lors d'une
+// annulation.
+function snapshotParticipantRaceState(p) {
+    return {
+        status: p.status,
+        laps: (p.laps || []).map(l => ({ ...l })),
+        totalTime: p.totalTime,
+        totalDistance: p.totalDistance,
+        bestLap: p.bestLap,
+        lastLapStartTime: p.lastLapStartTime,
+        finishTime: p.finishTime
+    };
+}
+
+function restoreParticipantRaceState(p, snapshot) {
+    p.status = snapshot.status;
+    p.laps = snapshot.laps.map(l => ({ ...l }));
+    p.totalTime = snapshot.totalTime;
+    p.totalDistance = snapshot.totalDistance;
+    p.bestLap = snapshot.bestLap;
+    p.lastLapStartTime = snapshot.lastLapStartTime;
+    p.finishTime = snapshot.finishTime;
+}
+
+let nextRaceActionId = 1;
+
+// Petit bip sonore de confirmation à chaque LAP (feedback immédiat pour
+// l'utilisateur, en plus de la notification visuelle). Généré via Web Audio
+// (pas de fichier son à charger) ; échoue silencieusement si l'API n'est
+// pas disponible (navigateur, contexte non déclenché par un geste, etc.).
+let raceAudioCtx = null;
+function playLapBeep() {
+    try {
+        const AudioCtx = global.AudioContext || global.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!raceAudioCtx) raceAudioCtx = new AudioCtx();
+        if (raceAudioCtx.state === 'suspended') raceAudioCtx.resume();
+
+        const osc = raceAudioCtx.createOscillator();
+        const gain = raceAudioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.15, raceAudioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, raceAudioCtx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(raceAudioCtx.destination);
+        osc.start();
+        osc.stop(raceAudioCtx.currentTime + 0.15);
+    } catch (e) {
+        // Audio non disponible : pas bloquant pour l'enregistrement du tour
+    }
+}
+window.playLapBeep = playLapBeep;
+
+// Enregistre une action annulable dans l'historique de la série en cours.
+// `snapshotBefore` doit être capturé AVANT la mutation du participant.
+function logRaceAction(serie, participant, label, snapshotBefore) {
+    if (!serie.actionLog) serie.actionLog = [];
+    serie.actionLog.push({
+        id: nextRaceActionId++,
+        bib: participant.bib,
+        participantName: participant.name,
+        label: label,
+        snapshotBefore: snapshotBefore
+    });
+    renderActionHistoryPanel();
+}
+
+// Annule une action de l'historique. Si des actions plus récentes existent
+// (sur ce participant ou un autre), elles sont annulées aussi (dans l'ordre
+// inverse) pour revenir proprement à l'état d'avant l'action choisie.
+window.undoRaceAction = function(actionId) {
+    const serie = raceData.currentSerie;
+    if (!serie || !serie.actionLog) return;
+
+    const index = serie.actionLog.findIndex(a => a.id === actionId);
+    if (index === -1) return;
+
+    const undone = serie.actionLog.splice(index);
+    // Rejouer les annulations de la plus récente à la plus ancienne
+    for (let i = undone.length - 1; i >= 0; i--) {
+        const action = undone[i];
+        const participant = serie.participants.find(p => String(p.bib) === String(action.bib));
+        if (participant) {
+            restoreParticipantRaceState(participant, action.snapshotBefore);
+            updateParticipantRow(participant);
+        }
+    }
+
+    saveChronoToLocalStorage();
+    renderActionHistoryPanel();
+    showNotification('Action annulée', 'info');
+};
+
+// Affiche/masque le panneau latéral d'historique
+window.toggleActionHistoryPanel = function() {
+    const panel = document.getElementById('raceActionHistoryPanel');
+    if (!panel) return;
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if (panel.style.display === 'block') renderActionHistoryPanel();
+};
+
+// Reconstruit le contenu du panneau d'historique (et le badge de comptage)
+// à partir de raceData.currentSerie.actionLog. Ne fait rien si le panneau
+// n'est pas présent dans le DOM (course pas démarrée / interface fermée).
+function renderActionHistoryPanel() {
+    const serie = raceData.currentSerie;
+    const log = (serie && serie.actionLog) || [];
+
+    const badge = document.getElementById('raceHistoryBadge');
+    if (badge) badge.textContent = log.length > 0 ? String(log.length) : '';
+
+    const panel = document.getElementById('raceActionHistoryPanel');
+    if (!panel) return;
+
+    const listHtml = log.length === 0
+        ? '<p style="color: #95a5a6; text-align: center; margin-top: 20px;">Aucune action pour le moment</p>'
+        : log.slice().reverse().map(a => `
+            <div style="background: #f8f9fa; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div>
+                    <div style="font-weight: bold; font-size: 13px;">#${a.bib} ${a.participantName}</div>
+                    <div style="font-size: 12px; color: #7f8c8d;">${a.label}</div>
+                </div>
+                <button onclick="undoRaceAction(${a.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; white-space: nowrap;" title="Revenir à l'état d'avant cette action">↩️ Annuler</button>
+            </div>
+        `).join('');
+
+    panel.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4 style="margin: 0;">🕘 Historique</h4>
+            <button onclick="toggleActionHistoryPanel()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #7f8c8d;" title="Fermer">✖️</button>
+        </div>
+        ${listHtml}
+    `;
+}
+window.renderActionHistoryPanel = renderActionHistoryPanel;
+
 window.recordLap = function(bib) {
     const serie = raceData.currentSerie;
     if (!serie) return;
@@ -654,12 +806,14 @@ window.recordLap = function(bib) {
     if (!participant) return;
 
     const currentTime = serie.currentTime;
+    const snapshotBefore = snapshotParticipantRaceState(participant);
 
     if (participant.status === 'ready') {
         // Si le participant n'est pas encore démarré (cas rare), le démarrer
         participant.status = 'running';
         participant.lastLapStartTime = currentTime;
         showNotification(`${participant.name} démarré!`, 'info');
+        logRaceAction(serie, participant, 'Départ', snapshotBefore);
     } else if (participant.status === 'running') {
         // Enregistrer le tour : calculer le temps depuis le dernier LAP (ou depuis le départ)
         const lapTime = currentTime - participant.lastLapStartTime;
@@ -682,6 +836,8 @@ window.recordLap = function(bib) {
         participant.lastLapStartTime = currentTime;
 
         showNotification(`${participant.name} - Tour ${participant.laps.length}: ${formatTime(lapTime)}`, 'info');
+        logRaceAction(serie, participant, `Tour ${participant.laps.length} : ${formatTime(lapTime)}`, snapshotBefore);
+        playLapBeep();
     }
 
     // Rafraîchir l'affichage
@@ -709,6 +865,8 @@ window.finishParticipant = function(bib) {
     if (!participant.laps) participant.laps = [];
     if (participant.lastLapStartTime == null) participant.lastLapStartTime = 0;
 
+    const snapshotBefore = snapshotParticipantRaceState(participant);
+
     // Enregistrer le dernier tour si en cours
     if (participant.status === 'running') {
         const lapTime = serie.currentTime - participant.lastLapStartTime;
@@ -731,6 +889,7 @@ window.finishParticipant = function(bib) {
     participant.finishTime = serie.currentTime;
 
     showNotification(`${participant.name} a terminé! 🏁`, 'success');
+    logRaceAction(serie, participant, `Arrivée : ${formatTime(participant.finishTime)}`, snapshotBefore);
 
     // Rafraîchir l'affichage
     updateParticipantRow(participant);

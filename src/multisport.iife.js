@@ -1031,8 +1031,12 @@
         var participant = chronoData.participants.find(function(p) { return p.id === participantId; });
         if (!participant) return;
         
-        // Utiliser la fonction existante addChronoParticipant
-        var result = addChronoParticipant(dayNumber, serieId, participant.name, null);
+        // Utiliser la fonction existante addChronoParticipant (en conservant le
+        // club et la catégorie déjà renseignés sur ce participant du jour)
+        var result = addChronoParticipant(dayNumber, serieId, participant.name, null, {
+            club: participant.club,
+            category: participant.category
+        });
         
         if (result) {
             saveToLocalStorage();
@@ -2296,6 +2300,8 @@
             '<div style="display: flex; gap: 10px; margin-top: 5px;">' +
             '<input type="text" id="participantName-' + dayNumber + '-' + serieId + '" style="flex: 1; padding: 10px;" placeholder="Nom du participant">' +
             '<input type="number" id="participantBib-' + dayNumber + '-' + serieId + '" style="width: 80px; padding: 10px;" placeholder="Dossard">' +
+            '<input type="text" id="participantCategory-' + dayNumber + '-' + serieId + '" list="categoryListAddToSerie-' + dayNumber + '-' + serieId + '" style="width: 110px; padding: 10px;" placeholder="Catégorie">' +
+            buildCategoryDatalist(dayNumber).replace('categoryList-' + dayNumber, 'categoryListAddToSerie-' + dayNumber + '-' + serieId) +
             '<button onclick="addParticipantToSerie(' + dayNumber + ', ' + serieId + ')" class="btn btn-primary">+</button>' +
             '</div>' +
             '</div>' +
@@ -2322,6 +2328,7 @@
             html += '<td style="padding: 10px; text-align: center;">#' + p.bib + '</td>';
             html += '<td style="padding: 10px;">' + p.name +
                 (p.club ? '<span style="font-size:10px; background:#16a085; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.club + '</span>' : '') +
+                (p.category ? '<span style="font-size:10px; background:#8e44ad; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.category + '</span>' : '') +
                 '</td>';
             html += '<td style="padding: 10px; text-align: center; white-space: nowrap;">' +
                 '<button onclick="editSerieParticipant(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm" style="background:#f39c12; color:white; margin-right:4px;" title="Éditer nom / dossard">✏️</button>' +
@@ -2427,18 +2434,21 @@
     function addParticipantToSerie(dayNumber, serieId) {
         var nameInput = document.getElementById('participantName-' + dayNumber + '-' + serieId);
         var bibInput = document.getElementById('participantBib-' + dayNumber + '-' + serieId);
-        
+        var categoryInput = document.getElementById('participantCategory-' + dayNumber + '-' + serieId);
+
         if (!nameInput || !nameInput.value.trim()) {
             showNotification('Veuillez entrer un nom', 'warning');
             return;
         }
-        
+
         var bib = bibInput && bibInput.value ? parseInt(bibInput.value) : null;
-        var participant = addChronoParticipant(dayNumber, serieId, nameInput.value.trim(), bib);
-        
+        var category = categoryInput ? categoryInput.value.trim() : '';
+        var participant = addChronoParticipant(dayNumber, serieId, nameInput.value.trim(), bib, { category: category });
+
         if (participant) {
             nameInput.value = '';
             bibInput.value = '';
+            if (categoryInput) categoryInput.value = '';
             nameInput.focus();
             
             // Rafraîchir la liste
