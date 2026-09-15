@@ -267,6 +267,24 @@ function displayRaceInterface(serie) {
 // Exposer pour les autres modules (ex. startChronoRaceForDay dans ui.iife.js)
 window.displayRaceInterface = displayRaceInterface;
 
+// Retour à la liste des séries de la journée (bouton "Retour aux séries" pendant
+// une course, et appelée automatiquement par endSerie() une fois la série terminée).
+window.backToSeriesList = function() {
+    var dayNumber = raceData.currentDayNumber;
+
+    // Persister la progression en cours vers la journée, même si la série n'est
+    // pas terminée (ex: on quitte l'écran de course puis on y revient plus tard).
+    if (raceData.currentSerie && typeof saveRaceResultsToDay === 'function') {
+        saveRaceResultsToDay();
+    }
+
+    raceData.currentSerie = null;
+
+    if (dayNumber && typeof refreshChronoDisplay === 'function') {
+        refreshChronoDisplay(dayNumber);
+    }
+};
+
 // Retour à la liste des épreuves
 window.finishLane = function(laneNumber) {
     const serie = raceData.currentSerie;

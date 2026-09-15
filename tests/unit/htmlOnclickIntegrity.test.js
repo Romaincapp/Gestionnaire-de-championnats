@@ -63,7 +63,7 @@ test('les fonctions supprimées cette session (ancien menu Chrono global) ne son
     // Confirme que la suppression a bien eu lieu (pas de résidu accidentel)
     const removed = [
         'toggleChronoMode', 'showParticipantsManager', 'showAddEventModal',
-        'saveEvent', 'showAddSerieModal', 'saveSerie', 'backToSeriesList',
+        'saveEvent', 'showAddSerieModal', 'saveSerie',
         'showOverallChronoRanking', 'showChronoRankingTypeModal',
         'generateRankingByNationality', 'generateRankingByClub',
         'hideChronoRanking', 'displayEmptyRanking', 'displayRanking',
@@ -93,7 +93,7 @@ test('les fonctions du pont Chrono par-journée (vivantes) sont toujours exposé
     const alive = [
         'startChronoRaceForDay', 'saveRaceResultsToDay', // ui.iife.js
         'printChronoCompetition', 'displayRaceInterface', // chrono.iife.js
-        'toggleRaceTimer', 'recordLap', 'endSerie',
+        'toggleRaceTimer', 'recordLap', 'endSerie', 'backToSeriesList',
     ];
     alive.forEach((name) => {
         expect(typeof window[name]).toBe('function');

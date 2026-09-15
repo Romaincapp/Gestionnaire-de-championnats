@@ -131,3 +131,19 @@ test('saveRaceResultsToDay ignore un participant DNS (pas de résultat)', () => 
 test("ne fait rien si aucune course n'est en cours (pas de crash)", () => {
     expect(() => saveRaceResultsToDay()).not.toThrow();
 });
+
+test('backToSeriesList (bouton "Retour aux séries") existe, ne plante pas et restaure la liste des séries du jour', () => {
+    // Régression : après le nettoyage de l'ancien menu Chrono global, cette
+    // fonction avait été supprimée alors qu'elle est toujours appelée par le
+    // bouton "Retour aux séries" pendant une course, et par endSerie() en fin
+    // de série — le bouton était donc cassé (ReferenceError), bloquant
+    // l'utilisateur dans l'écran de course.
+    startChronoRaceForDay(1, 42);
+    expect(document.getElementById('raceInterface')).not.toBeNull();
+
+    expect(() => backToSeriesList()).not.toThrow();
+
+    // La série en cours est effacée et le conteneur du jour est régénéré
+    // (ré-affiche la liste des séries au lieu de l'écran de course figé)
+    expect(raceData.currentSerie).toBeNull();
+});
