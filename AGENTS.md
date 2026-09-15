@@ -40,7 +40,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 │   ├── ranking.iife.js     # Classements et statistiques Championship
 │   ├── export-json.iife.js # Export/Import JSON du championnat
 │   ├── export-print.iife.js # Impression / PDF (feuilles de match, récaps)
-│   ├── chrono.iife.js      # Moteur de chronométrage live (raceData, timer, tours) — backend du mode CHRONO par journée, voir section 9
+│   ├── chrono.iife.js      # Moteur de chronométrage live (raceData, timer, tours) — backend du mode CHRONO par journée, voir section 11
 │   └── init.iife.js        # Bootstrap de l'application, chargé en dernier
 └── json/                   # Données JSON d'exemple (si besoin)
 ```
@@ -100,7 +100,37 @@ export-print, chrono, init. Un script chargé plus tard peut écraser un
 - `loadFromLocalStorage()` - Charge depuis le localStorage
 - `toggleForfaitButtons()` - Bascule l'affichage des boutons forfait
 
-### 5. players.iife.js
+### 5. clubs.iife.js
+**Rôle** : Gestion des clubs. 6 assignations directes sur `window`, dont un
+objet `clubsModule` regroupant 15 méthodes (pas des fonctions séparées) :
+
+**Fonctions directes** :
+- `showClubManagementModal()`, `closeClubManagementModal()`, `addNewClubFromModal()`, `removeClubFromModal()`, `handleClubSelectChange(select, inputId)`
+
+**`window.clubsModule` (objet, méthodes)** :
+- `getClubsList`, `addClub`, `removeClub`, `generateClubOptions`, `generateClubInputHtml`, `migratePlayerData`, `createPlayerObject`, `getPlayerName`, `getPlayerClub`, `getPlayerFullDisplay`, `getPlayerDisplayName`, `findPlayerByName`, `playerExists`, `getClubsStats`, `getPlayerClubByName`
+- `clubsModule.migratePlayerData()` est appelée au démarrage par `init.iife.js` (section 14) pour migrer les anciennes données joueurs (string) vers le format `{name, club}`
+
+### 6. multisport.iife.js
+**Rôle** : Sélecteur de type par journée, UI Chrono par journée, classement
+combiné Multisport. **94 fonctions exposées** — le plus gros module
+fonctionnellement (~4000 lignes), et le plus critique : c'est lui qui décide
+quelle UI (Championship/Chrono) s'affiche pour chaque journée et qui pilote
+le pont vers `chrono.iife.js` via `ui.iife.js` (voir section 11). Une
+fonction (`updateDayTypeUI`) est exposée deux fois de suite sur `window`
+(même corps, pas un vrai conflit — juste redondant, contrairement aux
+doublons réels de `pools.iife.js`/`chrono.iife.js` mentionnés ailleurs).
+
+Un sous-ensemble représentatif :
+- `setDayType(dayNumber, type)`, `getDayType(dayNumber)`, `isMultisportMode()`, `hasChronoDays()`, `hasChampionshipDays()`, `updateMultisportTabVisibility()`
+- `showAddEventModalForDay(dayNumber)`, `saveEventForDay(dayNumber)`, `showAddSerieModalForDay(dayNumber)`, `saveSerieForDay(dayNumber)` - équivalents par-journée des fonctions globales supprimées de `chrono.iife.js` (voir issue #65)
+- `toggleRaceTimerForDay(dayNumber)`, `finishParticipant(dayNumber, bib)` - contrôles chrono par-journée
+- `calculateMultisportRanking()`, `renderMultisportRanking()`, `buildMultisportRankingDoc(autoPrint)`, `exportMultisportRankingToHTML()`, `getSerieRanking(serie)`, `showSerieRanking(dayNumber, serieId)`, `showLiveRanking(dayNumber)` - classement combiné (voir "Rankings" plus bas dans `claude.md`)
+- `exportChronoDataForDay(dayNumber)`, `importChronoDataForDay(dayNumber)` - export/import par-journée des données chrono
+- `showAddParticipantManualModal(dayNumber)`, `saveBulkParticipantsForDay(dayNumber)`, `showImportPlayersModal(dayNumber)`, `importPlayersFromDay(target, source)`
+- Pour la liste complète, `grep "^\s*(global|window)\.[a-zA-Z_]* =" src/multisport.iife.js`
+
+### 7. players.iife.js
 **Rôle** : Gestion des joueurs (journées Championship). ~19 fonctions exposées,
 dont notamment :
 - `addPlayer()`, `addPlayerToDay(dayNumber)`, `removePlayer(dayNumber, division, index)`, `editPlayer(dayNumber, division, index)`, `playerHasByeMatch(dayNumber, division, playerName)`, `addBulkPlayers()`
@@ -110,7 +140,7 @@ dont notamment :
 en réalité dans `ui.iife.js`, pas ici (attribution corrigée le 2026-09,
 vérifiée par grep). `closePlayerModal()` est en réalité dans `ranking.iife.js`.
 
-### 6. ui.iife.js
+### 8. ui.iife.js
 **Rôle** : Onglets/journées, pont Chrono↔raceData. ~23 fonctions exposées,
 dont notamment :
 - `addNewDay()`, `removeDay(dayNumber)`, `clearDayData(dayNumber)`, `switchTab(dayNumber)`, `switchToGeneralRanking()`, `updateDaySelectors()`, `updateTabsDisplay()`
@@ -127,7 +157,7 @@ exposées depuis ce fichier (elles ont bougé vers `players.iife.js`,
 `pools.iife.js` ou `export-json.iife.js` au fil du temps — vérifié par grep
 le 2026-09).
 
-### 7. matches.iife.js (Mode Championship)
+### 9. matches.iife.js (Mode Championship)
 **Rôle** : Gestion des matchs par tours
 
 **Fonctions exposées** :
@@ -143,7 +173,7 @@ le 2026-09).
 - `deleteMatch(dayNumber, division, matchIndex)` - Supprime un match
 - `organizeMatchesInTours(matches)` - Organise les matchs en tours
 
-### 8. pools.iife.js (Mode POOL)
+### 10. pools.iife.js (Mode POOL)
 **Rôle** : Gestion des poules et phase finale. ~62 fonctions exposées —
 de loin le plus gros module (~7200 lignes). **Attention** : 16 d'entre elles
 (ex. `generateFinalPhase`, `generatePools`, `updatePoolsDisplay`,
@@ -162,7 +192,7 @@ Un sous-ensemble représentatif :
 - Répartition/pré-remplissage : `preFillFromGeneralRanking`, `applyPreFillStrategy`, `applyPoolRedistribution`, `previewPoolRedistribution`
 - Pour la liste complète, `grep "^\s*(global|window)\.[a-zA-Z_]* =" src/pools.iife.js`
 
-### 9. chrono.iife.js (Moteur de course, utilisé par le mode CHRONO par journée)
+### 11. chrono.iife.js (Moteur de course, utilisé par le mode CHRONO par journée)
 **Rôle** : Moteur de chronométrage live (timer, tours, saisie rapide) utilisé
 comme backend par le mode Chrono par journée du module `multisport.iife.js`.
 L'ancien menu global "tout-en-un" (`#chronoModeSection`, ses écrans de gestion
@@ -186,28 +216,55 @@ toujours de format de pont interne entre le stockage par jour
 - `displayRaceInterface(serie)` - Affiche l'interface de course live (appelée
   via `startChronoRaceForDay()` dans `ui.iife.js`)
 
-### 10. ranking.iife.js
+### 12. ranking.iife.js
 **Rôle** : Classements et statistiques Championship
 
 **Fonctions exposées** :
 - `calculatePlayerStats(playerName, dayNumber, division)`, `updateRankings()`, `updateRankingsForDay(dayNumber)`, `showRankings(type)`, `showRankingsForDay(dayNumber)`, `updateGeneralRanking()`, `showGeneralPlayerDetails(playerName)`
-- `closePlayerModal()` - vit ici, pas dans `players.iife.js` (voir section 5)
+- `closePlayerModal()` - vit ici, pas dans `players.iife.js` (voir section 7)
 - `showPlayerDetails()`, `exportGeneralRanking()`, `exportGeneralRankingToPDF()`, `showNameCheckModal()`, `applyNameCheckMerge()`, `toggleDayMatches()`, `updateStats()`
 
-### 11. export-json.iife.js et export-print.iife.js
+### 13. export-json.iife.js et export-print.iife.js
 **Rôle** : Export/Import JSON et impression/PDF. `export.iife.js` (l'ancien
 fichier documenté ici) a été supprimé (issue #64 sur GitHub, 2026-09) : ses
 5 fonctions étaient entièrement écrasées par ces deux modules-ci, chargés
 après lui — c'était du code mort.
 
-**export-json.iife.js** (fonctions clés) :
+**export-json.iife.js** (14 fonctions/variables exposées, liste complète) :
 - `exportChampionship()`, `confirmExportChampionship()` - Export JSON (avec choix du nom de fichier)
-- `showImportModal()`, `processImport()`, `handleChampionshipImport(event)` - Import JSON (remplace tout le championnat)
+- `showImportModal()`, `closeImportModal()`, `showImportConfigModal()`, `closeImportConfigModal()`, `applyImportConfig()` - Import JSON, configuration divisions/terrains avant import
+- `handleChampionshipImport(event)`, `processImport()` - Traitement du fichier importé (remplace tout le championnat)
+- `importMultipleDayFiles()`, `showMultiDayImportModal()`, `closeMultiDayImportModal()` - Import multi-fichiers (un par journée)
 - `clearAllData()` - Efface tout (championnat + chrono + localStorage)
-- `showMultiDayImportModal()` - Import multi-fichiers (un par journée)
+- `importedChampionshipData` (variable, réassignée à 3 endroits différents du fichier - normal, pas un bug)
 
-**export-print.iife.js** (fonctions clés) :
+**export-print.iife.js** (22 fonctions exposées). `generateMatchSheetHTML` et
+`generateCompactMatchSheet` apparaissent deux fois dans les assignations
+`window.x =` mais n'ont qu'**une seule** définition chacune (juste exposées
+deux fois par redondance) — contrairement aux vrais doublons de
+`pools.iife.js`/`chrono.iife.js`, ce n'est pas un bug fonctionnel.
 - `showPrintOptionsModal(dayNumber)`, `printMatchSheets(dayNumber)`, `printRecapSheets(dayNumber)` - gère mode Pool vs Terrain
+- `printBocciaMatchSheets()`, `generateBocciaSheetHTML()`, `generateBocciaMatchCard()` - feuilles spécifiques au mode Boccia
+- `printSimpleScoreSheets()`, `generateSimpleScoreSheetHTML()` - feuilles de score simplifiées
+- `printRecapByCourt()`, `printRecapByPool()` - récapitulatifs
+
+### 14. init.iife.js
+**Rôle** : Deux choses distinctes dans ce fichier, malgré son nom :
+1. **Bootstrap réel** : un handler `DOMContentLoaded` qui orchestre le
+   démarrage — `loadFromLocalStorage()` → `initMultisport()` →
+   `clubsModule.migratePlayerData()` → `updateMultisportTabVisibility()` →
+   initialisation des sélecteurs/onglets → `setupChronoProtection()` →
+   `loadChronoFromLocalStorage()` + `restoreRunningTimers()` (restaure un
+   chrono en cours après un rechargement de page)
+2. **20 fonctions UI diverses** qui n'avaient pas de module dédié : gestion
+   des BYE (`addByeMatchForPlayer`, `showByeScoreModal`, `confirmByeScore`,
+   `showByeManagementModal`, `addByeToAll`...), modale de génération de
+   matchs (`showMatchGenerationModal`, `selectMatchGenerationType`),
+   fenêtres de classement (`openRankingInNewWindow`,
+   `showCompleteDayRanking`, `openCompleteRankingInNewWindow`,
+   `exportGeneralRankingToHTML`)
+
+Le nom "init" ne reflète donc que la moitié du contenu réel du fichier.
 
 ## 🎨 Structure des données
 
@@ -217,7 +274,7 @@ Résumé : un seul objet `championship`, chaque journée a un `dayType`
 (`'championship'` ou `'chrono'`), et les données Chrono d'une journée vivent
 dans `championship.days[n].chronoData` — pas dans un objet `raceData` séparé
 (celui-ci n'est qu'un pont interne utilisé pendant qu'une course tourne,
-voir section 9 ci-dessus). Dupliquer cette structure ici créait exactement
+voir section 11 ci-dessus). Dupliquer cette structure ici créait exactement
 le genre de divergence doc/code qui a causé de faux diagnostics cette
 session (issues #64, #65) — ne pas la reproduire ici, une seule source de
 vérité dans `claude.md`.
