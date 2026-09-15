@@ -165,19 +165,20 @@
             championshipSection.style.display = dayType === DAY_TYPES.CHAMPIONSHIP ? 'block' : 'none';
         }
 
-        // La barre globale "Divisions / Terrains" (en tête de page) ne concerne
-        // que le mode Championship — inutile de la montrer sur une journée
-        // Chrono. On ne la masque que si `dayNumber` est bien la journée
-        // actuellement affichée (currentDay) pour ne pas la cacher à tort
-        // depuis un appel déclenché par une autre journée en arrière-plan.
+        // La barre globale "Divisions / Terrains" (en tête de page, incluant
+        // son sous-titre d'attribution des terrains #courtAssignmentInfo) ne
+        // concerne que le mode Championship — inutile de la montrer sur une
+        // journée Chrono. On masque le conteneur entier (#championshipConfigBar)
+        // en un seul bloc plutôt que ses enfants un par un, pour ne rien
+        // oublier (le sous-titre #courtAssignmentInfo restait visible avant
+        // ce correctif car c'était un enfant non couvert par le toggle).
+        // On ne la masque que si `dayNumber` est bien la journée actuellement
+        // affichée (currentDay) pour ne pas la cacher à tort depuis un appel
+        // déclenché par une autre journée en arrière-plan.
         if (global.championship && dayNumber === global.championship.currentDay) {
             var isChampionshipDay = dayType === DAY_TYPES.CHAMPIONSHIP;
-            var divisionBar = document.getElementById('divisionConfigContainer');
-            var courtBar = document.getElementById('courtConfigContainer');
-            var applyBtn = document.getElementById('applyConfigBtn');
-            if (divisionBar) divisionBar.style.display = isChampionshipDay ? 'flex' : 'none';
-            if (courtBar) courtBar.style.display = isChampionshipDay ? 'flex' : 'none';
-            if (applyBtn) applyBtn.style.display = isChampionshipDay ? 'inline-block' : 'none';
+            var configBar = document.getElementById('championshipConfigBar');
+            if (configBar) configBar.style.display = isChampionshipDay ? 'block' : 'none';
         }
     }
     global.updateDayTypeUI = updateDayTypeUI;
