@@ -314,6 +314,17 @@ qu'une fonction "gagne".
 - **Variables globales** : exposées sur `window`
 - **Modules** : suffixe `.iife.js`
 
+## 🧪 Tests automatisés
+
+**`npm test` doit tourner (et être vert) avant de considérer une modification terminée** — correction de bug, suppression de code mort, refactoring, tout y passe. Ce n'est pas optionnel : plusieurs bugs de ce repo (`clearDayData` qui perdait `dayType`, le doublon `generateInterclubRanking` qui cassait silencieusement le classement interclub) n'ont été détectés que parce qu'un test existait ou a été écrit pour eux.
+
+```bash
+npm test                    # Suite Jest (tests/unit/), 55+ tests
+npm run check:duplicates    # Détection de doublons en CLI seule (déjà incluse dans npm test)
+```
+
+Quand tu corriges un bug, ajoute un test de non-régression dans `tests/unit/` (voir `clearDayData.test.js` ou `interclubRanking.test.js`). Quand tu supprimes du code que tu penses mort, lance `npm test` avant ET après — une suite verte avant qui reste verte après est la vraie preuve que la suppression est sûre, pas juste le grep qui l'a justifiée. Voir `CONTRIBUTING.md` et `tests/helpers/loadApp.js` pour le détail.
+
 ## 🐛 Debugging
 
 ### Détecter les fonctions redéfinies (doublons silencieux)
