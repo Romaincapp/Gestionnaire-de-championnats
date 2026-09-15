@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Gestionnaire de Championnats** - A single-page web application for managing sports competitions with two distinct modes:
-1. **Championship Mode** (Mode Championnat) - Multi-day tournament management for table tennis
-2. **Chrono Mode** (Mode Chrono) - Race timing system for running, cycling, swimming events
+**Gestionnaire de Championnats** - A single-page web application for managing sports competitions. Each **day** (Journée) of the championship independently runs one of two types:
+1. **Championship type** (Mode Championnat) - Match-based tournament day for table tennis (divisions, courts, pools/knockout)
+2. **Chrono type** (Mode Courses) - Race timing day for running, cycling, swimming events
 
-Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence.
+A third, read-only **Multisport tab** appears automatically whenever the championship contains at least one day of each type (or at least one Chrono day) — it shows a combined ranking across both day types. There is no longer a global mode toggle.
+
+Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in ~16 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
 
 ## Running the Application
 
@@ -16,29 +18,17 @@ Open `index.html` in a web browser. That's it. All functionality runs client-sid
 
 ## Architecture Overview
 
-### Dual-Mode System (Mutually Exclusive)
+### Per-Day Type System
 
-The application operates in one of two modes, toggled via the "Mode Chrono" checkbox:
+Each day's type is chosen independently via a selector in that day's UI, stored as `championship.days[dayNumber].dayType` (`'championship'` or `'chrono'`, default `'championship'` when absent). Changing it shows/hides that day's `championship-section-N` / `chrono-section-N` blocks. Managed by `setDayType(dayNumber, type)` in `multisport.iife.js`.
 
-**Championship Mode** (default):
-- Multi-day tournament structure (Journée 1, 2, 3...)
-- Division-based player organization (1-6 configurable divisions)
-- Court assignment system (1-10 courts)
-- Multiple match generation algorithms
-- Pool/qualification system with knockout phases
-- Rankings by points, wins, goal average
-
-**Chrono Mode**:
-- Event-based structure (course, vélo, natation, multisport)
-- Series (séries) within events
-- Participant management with bibs (dossards) and categories
-- Individual races or relay races (relais)
-- Live timing with lap recording
-- Intelligent ranking types (by sport, distance, category, multi-events)
+- **Championship-type day**: division-based player organization (1-6 configurable divisions), court assignment (1-10 courts), multiple match generation algorithms, pool/qualification system with knockout phases, rankings by points/wins/goal average.
+- **Chrono-type day**: events → series structure, participant management with bibs (dossards) and categories/clubs, individual/relay/interclub races, live timing with lap recording, per-day ranking + PDF export.
+- **Multisport tab**: appears automatically (`updateMultisportTabVisibility()`) once the championship mixes day types, or has any Chrono day. Shows a combined ranking (`calculateMultisportRanking()` / `renderMultisportRanking()` in `multisport.iife.js`) using a position-based point scale across both day types.
 
 ### Core Data Structures
 
-**Championship Mode** - Global `championship` object:
+Single global `championship` object, keyed by day:
 ```javascript
 {
   currentDay: 1,
@@ -48,8 +38,9 @@ The application operates in one of two modes, toggled via the "Mode Chrono" chec
   },
   days: {
     [dayNumber]: {
-      players: { [division]: [playerNames] },
-      matches: { [division]: [matchObjects] },
+      dayType: 'championship' | 'chrono',   // per-day type, see above
+      players: { [division]: [playerNames] },   // Championship-type day
+      matches: { [division]: [matchObjects] },  // Championship-type day
       pools: {                          // Optional, when pool mode enabled
         enabled: boolean,
         divisions: {
@@ -59,43 +50,33 @@ The application operates in one of two modes, toggled via the "Mode Chrono" chec
             finalPhase: [matchObjects]  // Knockout/consolation brackets
           }
         }
+      },
+      chronoData: {                     // Chrono-type day
+        events: [{ id, name, sportType: 'running'|'cycling'|'swimming', distance }],
+        series: [
+          {
+            id, name, eventId, sportType, distance,
+            raceType: 'individual'|'relay'|'interclub',
+            relayDuration,        // minutes, for relay races
+            interclubPoints,      // points scale, for interclub races
+            participants: [
+              { bib, name, club, status: 'ready'|'running'|'finished'|'DNS'|'DISQ',
+                time, laps: [], totalDistance, lastLapStartTime }
+            ],
+            status: 'pending'|'running'|'completed',
+            startTime, currentTime, isRunning
+          }
+        ],
+        participants: [{ id, name, bib, category, club }],
+        nextEventId, nextSerieId, nextParticipantId
       }
     }
   }
 }
 ```
-Stored in localStorage as `tennisTableChampionship`.
+Stored in localStorage as `tennisTableChampionship` (one key for everything — Championship and Chrono data both live inside `championship.days[n]`).
 
-**Chrono Mode** - Global `raceData` object:
-```javascript
-{
-  events: [
-    { id, name, sportType: 'running'|'cycling'|'swimming'|'multisport', distance }
-  ],
-  series: [
-    {
-      id, name, eventId,
-      sportType, distance, raceType: 'individual'|'relay',
-      relayDuration,  // in minutes for relay races
-      participants: [
-        {
-          bib, name, category,
-          status: 'ready'|'running'|'finished',
-          time,            // total time in ms
-          laps: [],        // lap history with timestamps
-          totalDistance,
-          lastLapStartTime
-        }
-      ],
-      status: 'pending'|'running'|'completed',
-      startTime, currentTime, isRunning, timerInterval
-    }
-  ],
-  participants: [{ id, name, bib, category }],
-  nextEventId, nextSerieId, nextParticipantId
-}
-```
-Stored in localStorage as `chronoRaceData`.
+**Internal bridge (do not confuse with the above):** when a Chrono-type day's race is actually running, `startChronoRaceForDay()` (`ui.iife.js`) copies that day's `chronoData` into a separate global `raceData` object (legacy shape, `chrono.iife.js`) so the live timing engine (`displayRaceInterface()`, timer, lap recording) can run against it; `saveRaceResultsToDay()` copies the results back into `championship.days[n].chronoData` when the race ends. `raceData` is saved separately as `chronoRaceData` in localStorage but is **not** the source of truth — treat it as scratch space for the running race only. A large legacy standalone Chrono menu that used to read/write `raceData` directly was removed (see issue #65 on GitHub) because it had become unreachable from the UI; only the live-race bridge functions and `printChronoCompetition()` still use `raceData`.
 
 ## Key Architecture Patterns
 
@@ -336,10 +317,10 @@ Implemented in `handlePoolMatchEnter()` and `handleManualMatchEnter()`. Uses `se
 - `generateFinalPhase(dayNumber, division)` - Creates knockout/consolation from qualified players
 
 ### Chrono/Timing
-- `toggleRaceTimer(serieId)` - Start/pause timer, MUST call `saveChronoToLocalStorage()`
-- `quickFinishInput()` - Processes bib entry, handles LAP/FINISH detection
-- `recordLap(serie, participant)` - Records intermediate lap time
-- `finishParticipant(serie, participant)` - Records final time
+- `startChronoRaceForDay(dayNumber, serieId)` (`ui.iife.js`) - Entry point: bridges `championship.days[n].chronoData` into `raceData`, then opens the live race UI
+- `toggleRaceTimerForDay(dayNumber)` / `finishParticipant(dayNumber, bib)` (`multisport.iife.js`) - Per-day timer controls rendered in the day's Chrono section
+- `toggleRaceTimer()` / `recordLap(bib)` / `finishParticipant(bib)` (`chrono.iife.js`, no dayNumber param) - Lower-level engine operating on `raceData.currentSerie`, MUST call `saveChronoToLocalStorage()`
+- `saveRaceResultsToDay()` (`ui.iife.js`) - Copies `raceData` results back into `championship.days[n].chronoData` when a race ends
 - `mergeSerieData(oldSerie, newData)` - Preserves timing when editing series
 
 ### Rankings
@@ -383,10 +364,11 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 1. **❌ Hardcoding division counts** - Always use `config.numberOfDivisions`
 2. **❌ Forgetting pool/final matches in rankings** - Use the Match Collection Pattern
 3. **❌ Overwriting timing data when editing series** - Use `mergeSerieData()`
-4. **❌ Mixing championship and chrono data** - Completely separate systems
-5. **❌ Forgetting to save** - Call `saveToLocalStorage()` or `saveChronoToLocalStorage()` after changes
+4. **❌ Dropping `dayType`/`pools`/`chronoData` when resetting a day** - Rebuilding `championship.days[n]` from scratch (e.g. a "clear day" action) must preserve `dayType` and reset `pools`/`chronoData` to empty structures, not omit them — omitting silently reverts the day to Championship type and destroys pool/chrono data without warning (was a real bug, fixed — see issue #58, `clearDayData()` in `ui.iife.js`)
+5. **❌ Forgetting to save** - Call `saveToLocalStorage()` (Championship, including `chronoData` nested in it) or `saveChronoToLocalStorage()` (the separate `raceData` bridge, live race only) after changes
 6. **❌ Excessive spacing** - Follow compact design (≤15px padding)
 7. **❌ Not preserving existing HTML IDs** - When modifying UI, maintain IDs for event handlers
+8. **❌ Assuming a function is dead (or alive) without grepping its exact name across all of `src/` and `index.html`** - this codebase has multiple generations of the same feature coexisting (global vs per-day); a plausible-sounding function name is not evidence either way
 
 ## Testing Scenarios
 
@@ -413,18 +395,35 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 ## File Structure
 
 ```
-├── index.html        # Complete UI (7000+ lines)
-├── script.js         # All logic (10000+ lines, no modules)
-├── styles.css        # Styling
-├── testpool.json     # Sample pool mode data (24 players, 3 divisions)
-└── CLAUDE.md         # This file
+├── index.html              # Complete UI (~1000 lines after dead-code cleanup)
+├── script.js               # Legacy bootstrap — dark mode only (37 lines), NOT the app logic
+├── styles.css               # Styling
+├── src/                     # All application logic (16 IIFE modules, ~30k lines total)
+│   ├── config.iife.js       # Global config (divisions, courts)
+│   ├── utils.iife.js        # Pure helper functions
+│   ├── notifications.iife.js # Toast notifications
+│   ├── state.iife.js        # championship object + localStorage persistence
+│   ├── clubs.iife.js        # Club management
+│   ├── multisport.iife.js   # Per-day type selector, Multisport combined ranking, per-day Chrono UI (the largest, most-load-bearing module — ~4000 lines)
+│   ├── players.iife.js      # Player management (Championship-type days)
+│   ├── ui.iife.js           # Tabs/days, addNewDay/removeDay/clearDayData, Chrono↔raceData bridge (startChronoRaceForDay, saveRaceResultsToDay)
+│   ├── matches.iife.js      # Match generation & scoring (Championship-type days)
+│   ├── pools.iife.js        # Pool system + knockout phases (largest file, ~7200 lines)
+│   ├── ranking.iife.js      # Championship rankings/statistics
+│   ├── export-json.iife.js  # Championship JSON export/import
+│   ├── export-print.iife.js # Print/PDF (match sheets, recaps)
+│   ├── chrono.iife.js       # Live race timing engine (raceData, displayRaceInterface, timer/laps) — used as backend by multisport.iife.js's per-day Chrono UI; its old standalone global menu was removed, see issue #65 on GitHub
+│   └── init.iife.js         # App bootstrap, loaded last
+└── claude.md                 # This file
 ```
+Load order in `index.html` matters (later scripts can override earlier `window.x =` assignments of the same name — this has bitten this codebase before, see the `export.iife.js` removal in issue #64 on GitHub). `multisport.iife.js` loads early (after `clubs.iife.js`) but many of its functions are only called from HTML generated later at runtime, so load order alone doesn't tell you what's reachable — check actual callers.
 
-No build process. ES5-compatible JavaScript for broad browser support.
+No build process. ES5/ES6-mixed vanilla JavaScript.
 
 ## Development Notes
 
-- **File size**: `script.js` is ~10,000 lines - be mindful of context when making changes
+- **Where the logic actually is**: `src/*.iife.js`, not `script.js` (see File Structure above)
+- **This file can drift from reality**: this codebase has repeatedly grown new per-day/Multisport functions alongside old global-mode equivalents without removing the old ones (see issues #64, #65 on GitHub). Before assuming a function is used or dead, grep its exact name across all of `src/` and `index.html` — don't trust a description here or in `AGENTS.md` without checking
 - **No transpilation**: Vanilla JavaScript, compatible with older browsers
 - **Manual JSON import/export**: Used for data portability between instances
 - **Notifications**: Use inline styles (not CSS classes) for guaranteed visibility via `showNotification(message, type)`
