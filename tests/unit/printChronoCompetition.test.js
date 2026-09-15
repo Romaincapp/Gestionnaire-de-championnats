@@ -14,7 +14,7 @@
 const { loadModules } = require('../helpers/loadApp');
 
 beforeAll(() => {
-    loadModules(['config', 'utils', 'notifications', 'state', 'clubs', 'chrono']);
+    loadModules(['config', 'utils', 'notifications', 'state', 'clubs', 'multisport', 'chrono']);
 });
 
 function makePrintWindowMock() {
@@ -82,6 +82,45 @@ test('inclut le classement interclub par club dans le contenu imprimé (calculat
     const printedHtml = mockWindow.document.write.mock.calls[0][0];
     expect(printedHtml).toContain('Alice');
     expect(printedHtml).toContain('Club A');
+});
+
+test('affiche une colonne Catégorie avec le rang par catégorie quand 2+ catégories sont présentes (feature catégories)', () => {
+    championship.days[1].chronoData.events[0].raceType = 'individual';
+    championship.days[1].chronoData.events[0].series[0].participants = [
+        { id: 1, name: 'Alice', club: 'Club A', category: 'Solo', status: 'finished', finishTime: 1000, totalDistance: 0, laps: [] },
+        { id: 2, name: 'Bob', club: 'Club B', category: 'Équipe', status: 'finished', finishTime: 1500, totalDistance: 0, laps: [] },
+        { id: 3, name: 'Carol', club: 'Club A', category: 'Solo', status: 'finished', finishTime: 2000, totalDistance: 0, laps: [] },
+    ];
+
+    const mockWindow = makePrintWindowMock();
+    window.open = jest.fn(() => mockWindow);
+
+    printChronoCompetition(1);
+
+    const printedHtml = mockWindow.document.write.mock.calls[0][0];
+    expect(printedHtml).toContain('Catégorie');
+    expect(printedHtml).toContain('Pos. Scratch');
+    // Alice : 1ère scratch, 1ère Solo (2 Solo au total)
+    expect(printedHtml).toContain('Solo (1e/2)');
+    // Carol : 3e scratch, 2e Solo
+    expect(printedHtml).toContain('Solo (2e/2)');
+});
+
+test("n'affiche pas de colonne Catégorie quand une seule catégorie est présente (non-régression)", () => {
+    championship.days[1].chronoData.events[0].raceType = 'individual';
+    championship.days[1].chronoData.events[0].series[0].participants = [
+        { id: 1, name: 'Alice', club: 'Club A', category: 'Solo', status: 'finished', finishTime: 1000, totalDistance: 0, laps: [] },
+        { id: 2, name: 'Bob', club: 'Club B', category: 'Solo', status: 'finished', finishTime: 1500, totalDistance: 0, laps: [] },
+    ];
+
+    const mockWindow = makePrintWindowMock();
+    window.open = jest.fn(() => mockWindow);
+
+    printChronoCompetition(1);
+
+    const printedHtml = mockWindow.document.write.mock.calls[0][0];
+    expect(printedHtml).not.toContain('>Catégorie<');
+    expect(printedHtml).not.toContain('Pos. Scratch');
 });
 
 test("avertit sans planter si aucune épreuve n'existe pour la journée", () => {
