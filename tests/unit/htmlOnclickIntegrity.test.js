@@ -69,6 +69,19 @@ test('les fonctions supprimées cette session (ancien menu Chrono global) ne son
         'hideChronoRanking', 'displayEmptyRanking', 'displayRanking',
         'displayRankingByTime', 'displayRankingByCategories',
         'displayRankingByEvents', 'exportChronoCompetition', 'importChronoCompetition',
+        // Issue #69 (audit PDF/classement chrono)
+        'exportChronoRankingToPDF', 'showChronoPdfConfigModal', 'closeChronoPdfConfigModal',
+        'confirmChronoPdfExport', 'generateChronoPDF', 'exportOverallChronoRanking',
+        'printOverallChronoRanking', 'confirmExportChronoCompetition', 'exportOverallChronoRankingToPDF',
+        // Cluster gestionnaire de participants (ancien système global événements/séries)
+        'closeParticipantsManager', 'addParticipantToChrono', 'editParticipant',
+        'closeEditParticipantModal', 'saveParticipantEdit', 'deleteParticipant',
+        'showBulkParticipantsModal', 'updateBulkImportFormat', 'closeBulkParticipantsModal',
+        'previewBulkParticipants', 'saveBulkParticipants', 'closeEventModal',
+        'updateEventRelayOptions', 'editEvent', 'deleteEvent', 'showAddSerieModalForEvent',
+        'updateSerieFromEvent', 'autoAssignLane', 'updateLaneModeVisibility',
+        'toggleLaneSelectors', 'updateSerieRelayOptions', 'closeSerieModal',
+        'editSerie', 'deleteSerie', 'viewSerieResults', 'updateRelayOptions',
     ];
     removed.forEach((name) => {
         expect(window[name]).toBeUndefined();
@@ -80,11 +93,23 @@ test('les fonctions du pont Chrono par-journée (vivantes) sont toujours exposé
     const alive = [
         'startChronoRaceForDay', 'saveRaceResultsToDay', // ui.iife.js
         'printChronoCompetition', 'displayRaceInterface', // chrono.iife.js
-        'toggleRaceTimer', 'recordLap', 'endSerie', 'startSerie', 'continueSerie',
+        'toggleRaceTimer', 'recordLap', 'endSerie',
     ];
     alive.forEach((name) => {
         expect(typeof window[name]).toBe('function');
     });
+});
+
+test("startSerie/continueSerie (ancien système global de séries) sont bien supprimées", () => {
+    // Correction : classées à tort comme "vivantes" lors du premier passage sur
+    // l'issue #65 (doc AGENTS.md non vérifiée à l'époque). Un grep exhaustif
+    // ultérieur (issue #69 / cluster gestionnaire de participants) a montré
+    // qu'elles n'avaient de callers que dans displaySeriesList/displayEventsList,
+    // elles-mêmes jamais appelées depuis l'extérieur — donc mortes. Le vrai
+    // point d'entrée live est startChronoRaceForDay(dayNumber, serieId) dans
+    // ui.iife.js, pas ces fonctions-ci.
+    expect(window.startSerie).toBeUndefined();
+    expect(window.continueSerie).toBeUndefined();
 });
 
 test('export.iife.js supprimé : ses fonctions sont exposées par export-json/export-print, pas de trou', () => {
