@@ -2325,7 +2325,7 @@
                 '</td>';
             html += '<td style="padding: 10px; text-align: center; white-space: nowrap;">' +
                 '<button onclick="editSerieParticipant(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm" style="background:#f39c12; color:white; margin-right:4px;" title="Éditer nom / dossard">✏️</button>' +
-                '<button onclick="removeParticipantFromSerie(' + serie.id + ', ' + p.id + ')" class="btn btn-sm btn-danger" title="Retirer">🗑️</button>' +
+                '<button onclick="removeParticipantFromSerie(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm btn-danger" title="Retirer">🗑️</button>' +
                 '</td>';
             html += '</tr>';
         });
@@ -2456,6 +2456,32 @@
     function closeParticipantsModal(dayNumber) {
         var modal = document.getElementById('participantsModal-' + dayNumber);
         if (modal) modal.remove();
+    }
+
+    // Retire un participant d'une série (bouton 🗑️ du modal "Gérer les participants")
+    function removeParticipantFromSerie(dayNumber, serieId, participantId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+
+        var participant = (serie.participants || []).find(function(p) { return p.id === participantId; });
+        if (!participant) return;
+
+        if (!confirm('Retirer "' + participant.name + '" de cette série ?')) return;
+
+        serie.participants = serie.participants.filter(function(p) { return p.id !== participantId; });
+
+        saveToLocalStorage();
+
+        var listContainer = document.getElementById('participantsList-' + dayNumber + '-' + serieId);
+        if (listContainer) {
+            listContainer.innerHTML = renderParticipantsList(serie, dayNumber);
+        }
+
+        refreshChronoDisplay(dayNumber);
+        showNotification('Participant retiré', 'success');
     }
 
     // ============================================
@@ -3604,410 +3630,6 @@
     }
 
     // ============================================
-    // INTERFACE DE COURSE EN DIRECT (CHRONOMÉTRAGE LIVE)
-    // ============================================
-
-    // Stockage des courses en cours par journée
-    var activeRaces = {};
-
-    /**
-     * Démarre une course avec interface de chronométrage live
-     */
-    function startRaceForSerie(dayNumber, serieId) {
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        
-        var serie = findSerieInChronoData(chronoData, serieId);
-        if (!serie) return;
-        
-        if (!serie.participants || serie.participants.length === 0) {
-            showNotification('Ajoutez des participants avant de démarrer', 'warning');
-            return;
-        }
-        
-        // Vérifier si une course est déjà en cours sur cette journée
-        if (activeRaces[dayNumber] && activeRaces[dayNumber].isRunning) {
-            if (!confirm('Une course est déjà en cours. La remplacer ?')) {
-                return;
-            }
-            // Arrêter l'ancienne course
-            if (activeRaces[dayNumber].timerInterval) {
-                clearInterval(activeRaces[dayNumber].timerInterval);
-            }
-        }
-        
-        // Initialiser la course
-        activeRaces[dayNumber] = {
-            serie: serie,
-            isRunning: false,
-            startTime: null,
-            currentTime: 0,
-            timerInterval: null,
-            dayNumber: dayNumber
-        };
-        
-        // Afficher l'interface de course
-        showLiveRaceInterface(dayNumber);
-        
-        showNotification('Course prête ! Cliquez sur ▶️ pour démarrer', 'success');
-    }
-
-    /**
-     * Affiche l'interface de course en direct
-     */
-    function showLiveRaceInterface(dayNumber) {
-        var race = activeRaces[dayNumber];
-        if (!race) return;
-        
-        var serie = race.serie;
-        var container = document.getElementById('chrono-content-' + dayNumber);
-        if (!container) return;
-        
-        var html = '<div class="live-race-interface" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px; padding: 20px; color: white;">';
-        
-        // En-tête avec nom de la série
-        html += '<div style="text-align: center; margin-bottom: 20px;">';
-        html += '<h2 style="margin: 0 0 5px 0; color: #fff; font-size: 20px;">🏁 ' + serie.name + '</h2>';
-        html += '<span style="color: #94a3b8; font-size: 12px;">Journée ' + dayNumber + '</span>';
-        html += '</div>';
-        
-        // Affichage du chrono principal
-        var chronoClass = race.isRunning ? 'running' : '';
-        var chronoColor = race.isRunning ? '#00ff88' : '#fff';
-        html += '<div id="race-chrono-display-' + dayNumber + '" style="text-align: center; font-size: 56px; font-family: "Courier New", monospace; font-weight: bold; color: ' + chronoColor + '; text-shadow: 0 0 20px rgba(0,255,136,0.3); margin: 20px 0; letter-spacing: 4px;">';
-        html += formatTime(race.currentTime || 0);
-        html += '</div>';
-        
-        // Indicateur de statut
-        var statusText = race.isRunning ? '● EN COURS' : '⏸ EN PAUSE';
-        var statusColor = race.isRunning ? '#00ff88' : '#f59e0b';
-        html += '<div id="race-status-' + dayNumber + '" style="text-align: center; font-size: 14px; font-weight: bold; color: ' + statusColor + '; margin-bottom: 20px;">' + statusText + '</div>';
-        
-        // Contrôles principaux
-        html += '<div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; flex-wrap: wrap;">';
-        var startBtnText = race.isRunning ? '⏸ Pause' : '▶️ Démarrer';
-        var startBtnColor = race.isRunning ? '#f59e0b' : '#22c55e';
-        html += '<button onclick="toggleRaceTimerForDay(' + dayNumber + ')" style="padding: 14px 28px; font-size: 16px; font-weight: bold; background: ' + startBtnColor + '; color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">' + startBtnText + '</button>';
-        html += '<button onclick="endRaceForDay(' + dayNumber + ')" style="padding: 14px 28px; font-size: 16px; font-weight: bold; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">🏁 Fin</button>';
-        html += '<button onclick="backToChronoList(' + dayNumber + ')" style="padding: 14px 28px; font-size: 16px; font-weight: bold; background: #64748b; color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;">↩️ Retour</button>';
-        html += '</div>';
-        
-        // Liste des participants avec boutons de tour
-        html += '<div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px;">';
-        html += '<h3 style="margin: 0 0 15px 0; font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Participants</h3>';
-        html += '<div style="display: grid; gap: 8px;">';
-        
-        serie.participants.forEach(function(p) {
-            var pTime = p.totalTime || 0;
-            var pLaps = p.laps || 0;
-            var isFinished = p.isFinished || false;
-            
-            html += '<div id="participant-row-' + dayNumber + '-' + p.bib + '" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: ' + (isFinished ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.08)') + '; border-radius: 8px; border: 1px solid ' + (isFinished ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)') + ';">';
-            
-            // Dossard
-            html += '<div style="width: 40px; height: 40px; background: ' + (isFinished ? '#22c55e' : '#3b82f6') + '; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">#' + p.bib + '</div>';
-            
-            // Nom
-            html += '<div style="flex: 1; min-width: 0;">';
-            html += '<div style="font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + p.name + '</div>';
-            html += '<div style="font-size: 11px; color: #94a3b8;">' + pLaps + ' tour(s)</div>';
-            html += '</div>';
-            
-            // Temps
-            html += '<div id="participant-time-' + dayNumber + '-' + p.bib + '" style="font-family: "Courier New", monospace; font-size: 16px; font-weight: bold; color: #00ff88; min-width: 90px; text-align: right;">' + formatTime(pTime) + '</div>';
-            
-            // Bouton Tour / Terminé
-            if (isFinished) {
-                html += '<div style="padding: 8px 12px; background: #22c55e; color: white; border-radius: 6px; font-size: 12px; font-weight: bold;">✓ Arrivé</div>';
-            } else {
-                html += '<button onclick="recordRaceLap(' + dayNumber + ', ' + p.bib + ')" style="padding: 10px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;">🏁 Tour</button>';
-            }
-            
-            html += '</div>';
-        });
-        
-        html += '</div>';
-        html += '</div>';
-        
-        // Classement en temps réel
-        html += '<div style="margin-top: 15px; text-align: center;">';
-        html += '<button onclick="showLiveRanking(' + dayNumber + ')" style="padding: 10px 20px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer; font-size: 13px;">📊 Voir le classement</button>';
-        html += '</div>';
-        
-        html += '</div>';
-        
-        container.innerHTML = html;
-    }
-
-    /**
-     * Démarre ou met en pause le chronométrage
-     */
-    function toggleRaceTimerForDay(dayNumber) {
-        var race = activeRaces[dayNumber];
-        if (!race) return;
-        
-        var chronoDisplay = document.getElementById('race-chrono-display-' + dayNumber);
-        var statusDisplay = document.getElementById('race-status-' + dayNumber);
-        
-        if (race.isRunning) {
-            // Pause
-            race.isRunning = false;
-            race.currentTime = Date.now() - race.startTime;
-            if (race.timerInterval) {
-                clearInterval(race.timerInterval);
-                race.timerInterval = null;
-            }
-            
-            if (chronoDisplay) {
-                chronoDisplay.style.color = '#fff';
-                chronoDisplay.textContent = formatTime(race.currentTime);
-            }
-            if (statusDisplay) {
-                statusDisplay.textContent = '⏸ EN PAUSE';
-                statusDisplay.style.color = '#f59e0b';
-            }
-            
-            showNotification('Chrono en pause', 'info');
-        } else {
-            // Démarrer/Reprendre
-            race.isRunning = true;
-            race.startTime = Date.now() - race.currentTime;
-            
-            race.timerInterval = setInterval(function() {
-                if (!race.isRunning) return;
-                var elapsed = Date.now() - race.startTime;
-                var display = document.getElementById('race-chrono-display-' + dayNumber);
-                if (display) {
-                    display.textContent = formatTime(elapsed);
-                }
-            }, 50); // Mise à jour toutes les 50ms pour une meilleure fluidité
-            
-            if (chronoDisplay) {
-                chronoDisplay.style.color = '#00ff88';
-            }
-            if (statusDisplay) {
-                statusDisplay.textContent = '● EN COURS';
-                statusDisplay.style.color = '#00ff88';
-            }
-            
-            showNotification(race.currentTime > 0 ? 'Chrono repris !' : 'Course démarrée !', 'success');
-        }
-    }
-
-    /**
-     * Enregistre un tour pour un participant
-     */
-    function recordRaceLap(dayNumber, bib) {
-        var race = activeRaces[dayNumber];
-        if (!race || !race.isRunning) {
-            showNotification('Démarrez d\'abord la course !', 'warning');
-            return;
-        }
-        
-        var serie = race.serie;
-        var participant = serie.participants.find(function(p) { return p.bib === bib; });
-        if (!participant) return;
-        
-        // Calculer le temps du tour
-        var now = Date.now();
-        var lapTime = now - race.startTime - (participant.totalTime || 0);
-        participant.totalTime = (participant.totalTime || 0) + lapTime;
-        participant.laps = (participant.laps || 0) + 1;
-        
-        // Mettre à jour l'affichage du temps du participant
-        var timeDisplay = document.getElementById('participant-time-' + dayNumber + '-' + bib);
-        if (timeDisplay) {
-            timeDisplay.textContent = formatTime(participant.totalTime);
-        }
-        
-        // Mettre à jour le compteur de tours
-        var row = document.getElementById('participant-row-' + dayNumber + '-' + bib);
-        if (row) {
-            var lapsInfo = row.querySelector('div:nth-child(2) div:nth-child(2)');
-            if (lapsInfo) {
-                lapsInfo.textContent = participant.laps + ' tour(s)';
-            }
-        }
-        
-        // Sauvegarder dans les résultats
-        recordChronoResult(dayNumber, serie.id, bib, participant.totalTime);
-        
-        showNotification(participant.name + ' - Tour ' + participant.laps + ' : ' + formatTime(participant.totalTime), 'success');
-    }
-
-    /**
-     * Marque un participant comme arrivé (temps final)
-     */
-    function finishParticipant(dayNumber, bib) {
-        var race = activeRaces[dayNumber];
-        if (!race) return;
-        
-        var serie = race.serie;
-        var participant = serie.participants.find(function(p) { return p.bib === bib; });
-        if (!participant) return;
-        
-        if (!race.isRunning) {
-            showNotification('La course n\'est pas en cours !', 'warning');
-            return;
-        }
-        
-        // Calculer le temps final
-        var finishTime = Date.now() - race.startTime;
-        participant.totalTime = finishTime;
-        participant.isFinished = true;
-        
-        // Mettre à jour l'affichage
-        var row = document.getElementById('participant-row-' + dayNumber + '-' + bib);
-        if (row) {
-            row.style.background = 'rgba(34,197,94,0.15)';
-            row.style.borderColor = 'rgba(34,197,94,0.3)';
-            
-            // Remplacer le bouton Tour par "Arrivé"
-            var buttonCell = row.querySelector('button, div:last-child');
-            if (buttonCell && buttonCell.tagName === 'BUTTON') {
-                buttonCell.outerHTML = '<div style="padding: 8px 12px; background: #22c55e; color: white; border-radius: 6px; font-size: 12px; font-weight: bold;">✓ Arrivé</div>';
-            }
-            
-            // Mettre à jour le dossard en vert
-            var bibElement = row.querySelector('div:first-child');
-            if (bibElement) {
-                bibElement.style.background = '#22c55e';
-            }
-        }
-        
-        // Mettre à jour le temps
-        var timeDisplay = document.getElementById('participant-time-' + dayNumber + '-' + bib);
-        if (timeDisplay) {
-            timeDisplay.textContent = formatTime(participant.totalTime);
-        }
-        
-        // Sauvegarder
-        recordChronoResult(dayNumber, serie.id, bib, participant.totalTime);
-        
-        showNotification('🏁 ' + participant.name + ' a terminé en ' + formatTime(participant.totalTime), 'success');
-    }
-
-    /**
-     * Termine la course
-     */
-    function endRaceForDay(dayNumber) {
-        var race = activeRaces[dayNumber];
-        if (!race) return;
-        
-        if (!confirm('Terminer cette course ? Les temps actuels seront sauvegardés.')) {
-            return;
-        }
-        
-        // Arrêter le timer
-        race.isRunning = false;
-        if (race.timerInterval) {
-            clearInterval(race.timerInterval);
-            race.timerInterval = null;
-        }
-        
-        var serie = race.serie;
-        serie.isRunning = false;
-        serie.endTime = new Date().toISOString();
-        
-        // Marquer tous les participants avec un temps comme terminés
-        serie.participants.forEach(function(p) {
-            if (p.totalTime && !p.isFinished) {
-                p.isFinished = true;
-                recordChronoResult(dayNumber, serie.id, p.bib, p.totalTime);
-            }
-        });
-        
-        // Sauvegarder
-        saveToLocalStorage();
-        
-        // Nettoyer
-        delete activeRaces[dayNumber];
-        
-        // Retour à la liste
-        refreshChronoDisplay(dayNumber);
-        
-        showNotification('Course terminée ! Résultats sauvegardés.', 'success');
-    }
-
-    /**
-     * Retourne à la liste des séries
-     */
-    function backToChronoList(dayNumber) {
-        var race = activeRaces[dayNumber];
-        if (race && race.isRunning) {
-            if (!confirm('La course est en cours. Quitter quand même ?')) {
-                return;
-            }
-            // Arrêter le timer
-            if (race.timerInterval) {
-                clearInterval(race.timerInterval);
-            }
-        }
-        
-        delete activeRaces[dayNumber];
-        refreshChronoDisplay(dayNumber);
-    }
-
-    /**
-     * Affiche le classement en temps réel
-     */
-    function showLiveRanking(dayNumber) {
-        var race = activeRaces[dayNumber];
-        if (!race) return;
-        
-        var serie = race.serie;
-        
-        // Trier les participants par temps
-        var sorted = serie.participants.slice().sort(function(a, b) {
-            if (!a.totalTime && !b.totalTime) return 0;
-            if (!a.totalTime) return 1;
-            if (!b.totalTime) return -1;
-            return a.totalTime - b.totalTime;
-        });
-        
-        var html = '<div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 20px; margin-top: 15px;">';
-        html += '<h3 style="margin: 0 0 15px 0; font-size: 16px; text-align: center;">🏆 Classement ' + serie.name + '</h3>';
-        
-        if (sorted.length === 0 || (!sorted[0].totalTime && !sorted[1] && !sorted[2])) {
-            html += '<p style="text-align: center; color: #94a3b8;">Aucun temps enregistré</p>';
-        } else {
-            html += '<div style="display: grid; gap: 8px;">';
-            sorted.forEach(function(p, index) {
-                if (!p.totalTime) return;
-                
-                var rankColors = ['#fbbf24', '#9ca3af', '#b45309']; // Or, Argent, Bronze
-                var bgColor = index < 3 ? 'background: ' + rankColors[index] + '; color: #000;' : 'background: rgba(255,255,255,0.1);';
-                var trophy = index < 3 ? ['🥇', '🥈', '🥉'][index] : (index + 1) + '.';
-                
-                html += '<div style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 6px; ' + bgColor + '">';
-                html += '<span style="font-size: 16px; width: 30px; text-align: center;">' + trophy + '</span>';
-                html += '<span style="flex: 1; font-weight: ' + (index < 3 ? 'bold' : 'normal') + ';">#' + p.bib + ' ' + p.name + '</span>';
-                html += '<span style="font-family: monospace; font-weight: bold;">' + formatTime(p.totalTime) + '</span>';
-                html += '</div>';
-            });
-            html += '</div>';
-        }
-        
-        html += '<div style="text-align: center; margin-top: 15px;">';
-        html += '<button onclick="this.parentElement.parentElement.remove()" style="padding: 8px 16px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 6px; cursor: pointer;">Fermer</button>';
-        html += '</div>';
-        html += '</div>';
-        
-        // Insérer après l'interface
-        var container = document.getElementById('chrono-content-' + dayNumber);
-        if (container) {
-            // Vérifier si un classement existe déjà
-            var existing = container.querySelector('.live-ranking');
-            if (existing) existing.remove();
-            
-            var rankingDiv = document.createElement('div');
-            rankingDiv.className = 'live-ranking';
-            rankingDiv.innerHTML = html;
-            container.appendChild(rankingDiv);
-        }
-    }
-
-    // ============================================
     // EXPOSITION SUR WINDOW
     // ============================================
 
@@ -4059,6 +3681,7 @@
     global.manageSerieParticipants = manageSerieParticipants;
     global.addParticipantToSerie = addParticipantToSerie;
     global.closeParticipantsModal = closeParticipantsModal;
+    global.removeParticipantFromSerie = removeParticipantFromSerie;
     global.renderParticipantsSection = renderParticipantsSection;
     global.quickAddParticipantToDay = quickAddParticipantToDay;
     global.showAddParticipantManualModal = showAddParticipantManualModal;
