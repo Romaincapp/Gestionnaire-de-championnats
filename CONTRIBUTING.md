@@ -98,10 +98,10 @@ showNotification('Succès !', 'success');
 
 ## 🔄 Workflow de développement
 
-### 1. Créer une backup
-```bash
-cp script.js script.js.backup.$(date +%Y%m%d)
-```
+### 1. Travailler sur une branche
+`script.js` ne contient plus que le dark mode (37 lignes) — toute la
+logique est dans `src/*.iife.js`, versionnée avec git. Pas besoin de backup
+manuel par fichier : `git status`/`git diff` avant de committer suffit.
 
 ### 2. Modifier dans le bon module
 Identifier le module concerné et y ajouter la fonctionnalité.
@@ -157,7 +157,7 @@ location.reload();
 - ✅ Tester sur plusieurs navigateurs
 
 ### ❌ Ne pas faire
-- ❌ Modifier directement `script.js` (utiliser les modules)
+- ❌ Ajouter de la logique métier dans `script.js` (il ne contient que le dark mode ; utiliser les modules `src/`)
 - ❌ Ajouter de nouvelles dépendances externes
 - ❌ Utiliser ES6+ (arrow functions, classes, etc.)
 - ❌ Oublier d'exposer les fonctions sur window
@@ -171,20 +171,10 @@ location.reload();
 
 ## 💡 Idées de contribution
 
-### Priorité haute
-- [ ] Migrer les fonctions restantes de `script.js` vers les modules
-- [ ] Ajouter des validations de formulaires
-- [ ] Améliorer l'accessibilité (ARIA labels)
-
-### Priorité moyenne
-- [ ] Ajouter des animations de transition
-- [ ] Optimiser les performances (gros classements)
-- [ ] Internationalisation (i18n)
-
-### Priorité basse
-- [ ] Tests unitaires avec Jest
-- [ ] Migration vers TypeScript
-- [ ] PWA (Progressive Web App)
+Le suivi des tâches et idées se fait via les
+[GitHub Issues](https://github.com/Romaincapp/Gestionnaire-de-championnats/issues)
+du repo plutôt que dans ce fichier (une liste statique ici dérive vite —
+voir l'historique de `TODO.md`).
 
 ## 📞 Contact
 
