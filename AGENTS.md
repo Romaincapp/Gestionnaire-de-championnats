@@ -220,7 +220,7 @@ toujours de format de pont interne entre le stockage par jour
 **Rôle** : Classements et statistiques Championship
 
 **Fonctions exposées** :
-- `calculatePlayerStats(playerName, dayNumber, division)`, `updateRankings()`, `updateRankingsForDay(dayNumber)`, `showRankings(type)`, `showRankingsForDay(dayNumber)`, `updateGeneralRanking()`, `showGeneralPlayerDetails(playerName)`
+- `calculatePlayerStats(dayNumber, division, playerName)`, `updateRankings()`, `updateRankingsForDay(dayNumber)`, `showRankings(type)`, `showRankingsForDay(dayNumber)`, `updateGeneralRanking()`, `showGeneralPlayerDetails(playerName)`
 - `closePlayerModal()` - vit ici, pas dans `players.iife.js` (voir section 7)
 - `showPlayerDetails()`, `exportGeneralRanking()`, `exportGeneralRankingToPDF()`, `showNameCheckModal()`, `applyNameCheckMerge()`, `toggleDayMatches()`, `updateStats()`
 

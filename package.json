@@ -4,6 +4,11 @@
   "private": true,
   "description": "Application de gestion de championnats (vanilla JS, pas de build).",
   "scripts": {
-    "check:duplicates": "node scripts/check-duplicate-functions.js"
+    "check:duplicates": "node scripts/check-duplicate-functions.js",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^30.5.1",
+    "jest-environment-jsdom": "^30.5.1"
   }
 }

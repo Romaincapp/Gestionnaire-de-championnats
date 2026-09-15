@@ -82,11 +82,23 @@ showNotification('Succès !', 'success');
 ## 🧪 Tests
 
 ### Avant de commit
-1. `npm run check:duplicates` - détecte les fonctions redéfinies deux fois dans un même fichier `src/*.iife.js` (la seconde définition écrase silencieusement la première en JS ; c'est arrivé plusieurs fois dans ce projet, voir issues #65, #66)
+1. `npm test` - lance la suite Jest (`tests/unit/`), inclut la détection des fonctions redéfinies silencieusement (voir issues #65, #66)
 2. Tester dans Chrome et Firefox
 3. Tester sur mobile (responsive)
 4. Vérifier la console (F12) : aucune erreur
 5. Tester l'export/import des données
+
+### Tests automatisés (Jest)
+Le projet a une suite Jest minimale dans `tests/` (environnement jsdom, les
+modules `src/*.iife.js` sont chargés tels quels — pas de modules ES/CommonJS
+dans ce projet, voir `tests/helpers/loadApp.js`). `npm test` pour tout lancer.
+
+Priorité pour ajouter des tests : les patterns critiques de `claude.md`
+("Common Pitfalls") et tout bug réel corrigé — chaque bug corrigé devrait
+laisser un test de non-régression derrière lui (voir
+`tests/unit/clearDayData.test.js` et `tests/unit/matchCollectionPattern.test.js`
+comme exemples). Ce n'est pas une suite exhaustive : la couverture est
+volontairement ciblée sur ce qui a déjà cassé une fois.
 
 ### Fonctionnalités à tester
 - [ ] Ajout/suppression de joueurs
