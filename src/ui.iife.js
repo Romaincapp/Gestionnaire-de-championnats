@@ -369,6 +369,11 @@
             targetContent.classList.add('active');
             targetContent.style.display = 'block';
         }
+
+        // Rafraîchir la visibilité de la barre globale Divisions/Terrains
+        // (pertinente en Championship, sans objet en Chrono) pour la journée
+        // qu'on vient d'afficher.
+        if (typeof updateDayTypeUI === 'function') updateDayTypeUI(dayNumber);
     }
     
     // Fonction pour changer le type de journée sans recharger la page
