@@ -369,8 +369,42 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 6. **❌ Excessive spacing** - Follow compact design (≤15px padding)
 7. **❌ Not preserving existing HTML IDs** - When modifying UI, maintain IDs for event handlers
 8. **❌ Assuming a function is dead (or alive) without grepping its exact name across all of `src/` and `index.html`** - this codebase has multiple generations of the same feature coexisting (global vs per-day); a plausible-sounding function name is not evidence either way
+9. **❌ Committing without running `npm test`** - see "Automated Tests" above; grep confirms reachability, `npm test` confirms behavior still works
 
-## Testing Scenarios
+## Automated Tests (run before every commit)
+
+```bash
+npm test                    # Jest suite (tests/unit/), jsdom environment
+npm run check:duplicates    # standalone duplicate-function-definition check
+```
+
+`npm test` already includes the duplicate-function check (`noDuplicateFunctions.test.js`), so running `npm test` alone is enough day to day — `check:duplicates` is only useful for its more readable standalone CLI output when triaging a specific file.
+
+**Any code change — bug fix, dead-code removal, refactor — must end with a
+green `npm test` before it's considered done.** This is not optional: several
+bugs found in this codebase (`clearDayData` losing `dayType`, the
+`generateInterclubRanking` duplicate silently breaking the live interclub
+ranking) were only caught because a test was written for them, and a
+duplicate-function bug has recurred at least four times in this codebase
+(`pools.iife.js`, `chrono.iife.js` ×2, `multisport.iife.js`) — `npm test`
+catches new occurrences automatically instead of relying on someone noticing.
+
+When you fix a bug, add a regression test for it in `tests/unit/` (see
+`clearDayData.test.js` or `interclubRanking.test.js` for the pattern: load
+only the modules you need via `tests/helpers/loadApp.js`, reproduce the
+broken state, assert the fix). When you delete code you believe is dead,
+verify with `npm test` (in particular `htmlOnclickIntegrity.test.js`, which
+checks every `onclick="..."` in `index.html` still resolves to a real
+function) before and after — a passing suite before deletion that still
+passes after is the actual evidence the deletion was safe, not just the grep
+that justified it.
+
+See `CONTRIBUTING.md` for how to add new tests and `tests/helpers/loadApp.js`
+for how modules are loaded (no ES modules/bundler in this project — the test
+harness runs the same `src/*.iife.js` files index.html loads, in the same
+order).
+
+## Testing Scenarios (manual, no automation for these yet)
 
 **Championship Mode:**
 1. Configure 4 divisions, add players across divisions
@@ -428,3 +462,4 @@ No build process. ES5/ES6-mixed vanilla JavaScript.
 - **Manual JSON import/export**: Used for data portability between instances
 - **Notifications**: Use inline styles (not CSS classes) for guaranteed visibility via `showNotification(message, type)`
 - **Console logging**: Extensive console.log for debugging - check browser console
+- **Run `npm test` before considering any change done** — see "Automated Tests" above. A change without a green test run is not finished, regardless of how confident the grep/manual check felt.

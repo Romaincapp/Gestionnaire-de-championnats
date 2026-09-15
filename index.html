@@ -763,45 +763,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal Configuration Export PDF Chrono -->
-    <div id="chronoPdfConfigModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <h3 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">📄 Configuration Export PDF</h3>
-
-            <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-                <p style="margin: 0; font-size: 14px;">Personnalisez votre export PDF</p>
-            </div>
-
-            <!-- Champ personnalisation du titre -->
-            <div style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #ddd; margin-bottom: 15px;">
-                <h4 style="color: #2c3e50; margin-bottom: 10px;">📝 Titre du document :</h4>
-                <input type="text"
-                       id="pdfCustomTitle"
-                       placeholder="Entrez un titre personnalisé (optionnel)"
-                       style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; font-family: Arial, sans-serif;">
-                <p style="margin: 8px 0 0 0; font-size: 12px; color: #7f8c8d;">
-                    💡 Laissez vide pour utiliser le titre par défaut : <span id="pdfDefaultTitle" style="font-weight: bold; color: #2c3e50;"></span>
-                </p>
-            </div>
-
-            <!-- Sélection des colonnes -->
-            <div style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #ddd;">
-                <h4 style="color: #2c3e50; margin-bottom: 15px;">📊 Colonnes à inclure :</h4>
-                <div id="pdfColumnsCheckboxes" style="display: grid; gap: 12px;">
-                    <!-- Les checkboxes seront générées dynamiquement ici -->
-                </div>
-            </div>
-
-            <div class="modal-buttons" style="margin-top: 20px;">
-                <button class="btn btn-danger" onclick="closeChronoPdfConfigModal()">Annuler</button>
-                <button class="btn btn-success" onclick="confirmChronoPdfExport()">
-                    ✅ Générer le PDF
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Génération de Matchs -->
     <div id="matchGenerationModal" class="modal">
         <div class="modal-content" style="max-width: 300px; padding: 15px;">
