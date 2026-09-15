@@ -32,7 +32,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 │   ├── notifications.iife.js # Système de notifications
 │   ├── state.iife.js       # État global (championship) et localStorage
 │   ├── clubs.iife.js       # Gestion des clubs
-│   ├── multisport.iife.js  # Sélecteur de type par journée, UI Chrono par journée, classement combiné (le plus gros module fonctionnellement, ~4000 lignes)
+│   ├── multisport.iife.js  # Sélecteur de type par journée, UI Chrono par journée, classement combiné (le plus gros module fonctionnellement, ~3700 lignes)
 │   ├── players.iife.js     # Gestion des joueurs (journées Championship)
 │   ├── ui.iife.js          # Onglets/journées, addNewDay/removeDay/clearDayData, pont Chrono↔raceData
 │   ├── matches.iife.js     # Mode CHAMPIONSHIP (matchs par tours)
@@ -113,19 +113,25 @@ objet `clubsModule` regroupant 15 méthodes (pas des fonctions séparées) :
 
 ### 6. multisport.iife.js
 **Rôle** : Sélecteur de type par journée, UI Chrono par journée, classement
-combiné Multisport. **94 fonctions exposées** — le plus gros module
-fonctionnellement (~4000 lignes), et le plus critique : c'est lui qui décide
+combiné Multisport. **97 fonctions exposées** — le plus gros module
+fonctionnellement (~3700 lignes), et le plus critique : c'est lui qui décide
 quelle UI (Championship/Chrono) s'affiche pour chaque journée et qui pilote
 le pont vers `chrono.iife.js` via `ui.iife.js` (voir section 11). Une
 fonction (`updateDayTypeUI`) est exposée deux fois de suite sur `window`
 (même corps, pas un vrai conflit — juste redondant, contrairement aux
 doublons réels de `pools.iife.js`/`chrono.iife.js` mentionnés ailleurs).
+Une seconde interface de course live complète (`activeRaces`,
+`startRaceForSerie`, `toggleRaceTimerForDay`, `showLiveRanking`...) a été
+retirée (jamais atteignable depuis l'UI, son point d'entrée n'était appelé
+nulle part) — ne pas chercher `toggleRaceTimerForDay`/`showLiveRanking` ici,
+la vraie interface de course vit dans `chrono.iife.js` (section 11).
 
 Un sous-ensemble représentatif :
 - `setDayType(dayNumber, type)`, `getDayType(dayNumber)`, `isMultisportMode()`, `hasChronoDays()`, `hasChampionshipDays()`, `updateMultisportTabVisibility()`
 - `showAddEventModalForDay(dayNumber)`, `saveEventForDay(dayNumber)`, `showAddSerieModalForDay(dayNumber)`, `saveSerieForDay(dayNumber)` - équivalents par-journée des fonctions globales supprimées de `chrono.iife.js` (voir issue #65)
-- `toggleRaceTimerForDay(dayNumber)`, `finishParticipant(dayNumber, bib)` - contrôles chrono par-journée
-- `calculateMultisportRanking()`, `renderMultisportRanking()`, `buildMultisportRankingDoc(autoPrint)`, `exportMultisportRankingToHTML()`, `getSerieRanking(serie)`, `showSerieRanking(dayNumber, serieId)`, `showLiveRanking(dayNumber)` - classement combiné (voir "Rankings" plus bas dans `claude.md`)
+- `manageSerieParticipants(dayNumber, serieId)`, `addParticipantToSerie(dayNumber, serieId)`, `addExistingParticipantToSerie(dayNumber, participantId, serieId)`, `removeParticipantFromSerie(dayNumber, serieId, participantId)` - gestion des participants d'une série (modal "👥 Gérer les participants") ; tous propagent désormais `category` (voir feature Catégories ci-dessous)
+- `assignCategoryRanks(arr)`, `buildCategoryDatalist(dayNumber)`, `getSerieRanking(serie)` - feature "catégories multiples" (ex: Solo/Équipe) : `assignCategoryRanks` ajoute `catRank`/`catTotal`/`hasMultipleCategories` à un classement déjà trié ; utilisée par les 3 vues de classement chrono (`generateRaceRanking` et `buildLiveRaceDisplayContentHTML` dans `chrono.iife.js`, `showSerieRanking` ici)
+- `calculateMultisportRanking()`, `renderMultisportRanking()`, `buildMultisportRankingDoc(autoPrint)`, `exportMultisportRankingToHTML()`, `showSerieRanking(dayNumber, serieId)` - classement combiné (voir "Rankings" plus bas dans `claude.md`)
 - `exportChronoDataForDay(dayNumber)`, `importChronoDataForDay(dayNumber)` - export/import par-journée des données chrono
 - `showAddParticipantManualModal(dayNumber)`, `saveBulkParticipantsForDay(dayNumber)`, `showImportPlayersModal(dayNumber)`, `importPlayersFromDay(target, source)`
 - Pour la liste complète, `grep "^\s*(global|window)\.[a-zA-Z_]* =" src/multisport.iife.js`
@@ -193,24 +199,51 @@ Un sous-ensemble représentatif :
 - Pour la liste complète, `grep "^\s*(global|window)\.[a-zA-Z_]* =" src/pools.iife.js`
 
 ### 11. chrono.iife.js (Moteur de course, utilisé par le mode CHRONO par journée)
-**Rôle** : Moteur de chronométrage live (timer, tours, saisie rapide) utilisé
-comme backend par le mode Chrono par journée du module `multisport.iife.js`.
-L'ancien menu global "tout-en-un" (`#chronoModeSection`, ses écrans de gestion
-d'épreuves/séries/classements et son export/import dédié) a été retiré en
-2026-09 car inatteignable depuis l'UI — voir issue #65. `raceData` sert
-toujours de format de pont interne entre le stockage par jour
-(`championship.days[n].chronoData`) et ce moteur.
+**Rôle** : Moteur de chronométrage live (timer, tours, saisie rapide, historique
+d'actions annulable, bip sonore) utilisé comme backend par le mode Chrono par
+journée du module `multisport.iife.js`. L'ancien menu global "tout-en-un"
+(`#chronoModeSection`, ses écrans de gestion d'épreuves/séries/classements et
+son export/import dédié) a été retiré en 2026-09 car inatteignable depuis
+l'UI — voir issue #65. `raceData` sert toujours de format de pont interne
+entre le stockage par jour (`championship.days[n].chronoData`) et ce moteur ;
+`startSerie()`/`continueSerie()` évoqués dans une ancienne version de cette
+doc n'existent plus (confirmé par grep, aucune trace nulle part) — retirés
+lors du même nettoyage.
 
 **Variables exposées** :
-- `raceData` - Format de pont interne utilisé par le moteur de course live
+- `raceData` - Format de pont interne utilisé par le moteur de course live.
+  Chaque event/série qui y est créé porte un champ `dayNumber` (depuis le
+  correctif du cache non purgé par "Vider la journée") : les recherches par
+  id doivent toujours filtrer aussi sur `dayNumber`, sinon un id réutilisé
+  après un vidage de journée retombe sur une ancienne entrée du cache.
 
-**Fonctions exposées (toujours utilisées)** :
-- `startSerie(serieId)` - Démarre une série
-- `continueSerie(serieId)` - Reprend une série
+**Fonctions exposées** :
 - `toggleRaceTimer()` - Démarre/pause le chrono
-- `recordLap(bib)` - Enregistre un tour
+- `recordLap(bib)` / `finishParticipant(bib)` - Enregistrent un tour / une
+  arrivée ; alimentent aussi l'historique d'actions annulable
+  (`serie.actionLog`) via `logRaceAction()` (non exposée) et déclenchent
+  `playLapBeep()` sur un LAP réel
+- `undoRaceAction(actionId)` - Annule une action de l'historique (et, en
+  cascade, toutes celles enregistrées après elle) via un système de
+  snapshots avant/après par participant
+- `toggleActionHistoryPanel()` / `renderActionHistoryPanel()` - Panneau
+  latéral "🕘 Historique" de l'écran de course
+- `playLapBeep()` - Bip sonore (Web Audio, pas de fichier) à chaque LAP
+- `restartParticipant(bib)`, `markAsDNS(bib)`, `markAsDISQ(bib)`,
+  `cancelDNS(bib)`, `cancelDISQ(bib)` - Corrections de statut pendant/après
+  la course
+- `backToSeriesList()` - Retour à la liste des séries du jour (bouton
+  "⬅️ Retour aux séries" et fin de `endSerie()`) ; persiste la progression
+  en cours puis régénère la liste via `refreshChronoDisplay()`
+  (`multisport.iife.js`)
 - `endSerie()` - Termine une série
-- `showRaceRanking()` - Affiche le classement de la course
+- `showRaceRanking()` - Affiche/masque le classement de la course en cours
+  (dans l'écran de course lui-même)
+- `openLiveRaceDisplayWindow()` / `buildLiveRaceDisplayContentHTML()` -
+  Fenêtre "🖥️ Afficher" (classement live destiné à être projeté), avec
+  auto-refresh par `postMessage` toutes les 3s ; inclut la colonne
+  Catégorie quand 2+ catégories sont présentes (même logique que
+  `generateRaceRanking()` et `showSerieRanking()`)
 - `printChronoCompetition(dayNumber)` - Imprime les séries d'une journée
   (appelée depuis `multisport.iife.js`)
 - `displayRaceInterface(serie)` - Affiche l'interface de course live (appelée
