@@ -1,0 +1,9 @@
+{
+  "name": "gestionnaire-de-championnats",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Application de gestion de championnats (vanilla JS, pas de build).",
+  "scripts": {
+    "check:duplicates": "node scripts/check-duplicate-functions.js"
+  }
+}

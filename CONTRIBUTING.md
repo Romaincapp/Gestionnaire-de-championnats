@@ -82,10 +82,11 @@ showNotification('Succès !', 'success');
 ## 🧪 Tests
 
 ### Avant de commit
-1. Tester dans Chrome et Firefox
-2. Tester sur mobile (responsive)
-3. Vérifier la console (F12) : aucune erreur
-4. Tester l'export/import des données
+1. `npm run check:duplicates` - détecte les fonctions redéfinies deux fois dans un même fichier `src/*.iife.js` (la seconde définition écrase silencieusement la première en JS ; c'est arrivé plusieurs fois dans ce projet, voir issues #65, #66)
+2. Tester dans Chrome et Firefox
+3. Tester sur mobile (responsive)
+4. Vérifier la console (F12) : aucune erreur
+5. Tester l'export/import des données
 
 ### Fonctionnalités à tester
 - [ ] Ajout/suppression de joueurs

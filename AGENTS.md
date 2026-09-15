@@ -316,6 +316,19 @@ qu'une fonction "gagne".
 
 ## 🐛 Debugging
 
+### Détecter les fonctions redéfinies (doublons silencieux)
+```bash
+npm run check:duplicates
+# ou directement : node scripts/check-duplicate-functions.js
+```
+Repère les `function nom() {}` ou `window.nom = function() {}` déclarés deux
+fois dans le même fichier `src/*.iife.js` — la seconde définition écrase la
+première sans erreur ni avertissement. Distingue les vrais bugs (écrasement
+silencieux, ex. `generateInterclubRanking` dans `chrono.iife.js`, issue #65)
+des wrappers intentionnels qui capturent et appellent l'original (pattern
+`originalX = window.x; window.x = function() { originalX(...); ... }`,
+utilisé volontairement dans `pools.iife.js`).
+
 ### Vérifier que les modules sont chargés
 ```javascript
 // Dans la console du navigateur
