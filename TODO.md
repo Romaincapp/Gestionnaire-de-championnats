@@ -1,15 +1,25 @@
 # ✅ TODO - Liste des tâches
 
+> Mise à jour le 2026-09-15 : `script.js` legacy est passé de ~10-21k lignes à 37 lignes
+> (dark mode uniquement) — la migration vers `src/*.iife.js` est terminée. `src/` compte
+> maintenant 16 modules (~32 000 lignes), dont plusieurs absents d'AGENTS.md :
+> `init.iife.js`, `export-json.iife.js`, `export-print.iife.js`, `multisport.iife.js`,
+> `clubs.iife.js`. Les 73 handlers `onclick` de `index.html` pointent tous vers des
+> fonctions bien exposées sur `window` (audit fait, aucun manquant).
+
 ## 🔥 Prioritaire
 
 ### Refactoring
-- [ ] Analyser `script.js` et identifier les fonctions restantes à migrer
-- [ ] Migrer les fonctions orphelines vers les modules appropriés
-- [ ] Tester que toutes les fonctions `window.xxx` sont bien définies
-- [ ] Supprimer `script.js` quand tout est migré
+- [x] Analyser `script.js` et identifier les fonctions restantes à migrer
+- [x] Migrer les fonctions orphelines vers les modules appropriés
+- [x] Tester que toutes les fonctions `window.xxx` sont bien définies
+- [ ] Déplacer le dark mode restant de `script.js` vers `ui.iife.js` (ou un nouveau
+      `theme.iife.js`), puis supprimer `script.js`
+- [ ] Mettre à jour `AGENTS.md` pour documenter les modules manquants (`init`,
+      `export-json`, `export-print`, `multisport`, `clubs`)
 
 ### Corrections
-- [ ] Vérifier que tous les `onclick` HTML ont leur fonction correspondante
+- [x] Vérifier que tous les `onclick` HTML ont leur fonction correspondante
 - [ ] Tester l'export/import de données
 - [ ] Vérifier la sauvegarde automatique (localStorage)
 
@@ -155,23 +165,26 @@
 
 ## 📊 Statistiques du projet
 
-**Version actuelle** : 2.0.0 (modulaire)
+**Version actuelle** : 2.0.0+ (modulaire, migration terminée)
 
-**Modules créés** : 11
-- Taille moyenne : ~11 KB
-- Plus gros module : chrono.iife.js (20 KB)
-- Plus petit module : notifications.iife.js (2 KB)
+**Modules créés** : 16 dans `src/` (~32 000 lignes au total)
+- Plus gros module : pools.iife.js (~7200 lignes / 310 KB)
+- Plus petit module : notifications.iife.js (~60 lignes / 2 KB)
+- Modules non documentés dans AGENTS.md : init, export-json, export-print,
+  multisport, clubs
 
-**Documentation** : 4 fichiers
-- AGENTS.md (13 KB)
+**Documentation** : 6 fichiers
+- claude.md (guide technique, 15 KB)
+- AGENTS.md (13 KB, partiellement obsolète — liste de modules incomplète)
 - README.md (3 KB)
 - CONTRIBUTING.md (5 KB)
 - CHANGELOG.md (2 KB)
+- MULTISPORT.md, CLUBS.md (docs de features)
 
 **Reste à faire** :
-- Lignes dans script.js legacy : ~21 000
-- Fonctions à migrer : ~50 estimé
+- Lignes dans script.js legacy : 37 (dark mode uniquement)
+- Fonctions à migrer : 0 (migration terminée)
 
 ---
 
-*Dernière mise à jour : 2024-02-02*
+*Dernière mise à jour : 2026-09-15*
