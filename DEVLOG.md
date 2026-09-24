@@ -33,6 +33,35 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-24 (suite 2) — Échec de sauvegarde visible + tests en CI
+
+- **Contexte** : les deux points prioritaires du bilan « il reste quoi ? » (liés aux issues
+  #50 et #55), validés par l'utilisateur avant la prochaine compétition.
+- **Fait** :
+  1. `src/notifications.iife.js` : `reportSaveFailure(store, error)` /
+     `reportSaveSuccess(store)`. En cas d'échec, un seul bandeau rouge persistant en bas de
+     l'écran (pas un toast : la sauvegarde a lieu à chaque modification, un toast se
+     répéterait sans cesse et disparaîtrait en 3 s), avec la cause (stockage plein ou
+     indisponible) et un bouton « 💾 Exporter maintenant » (`exportChampionship`).
+     Retiré automatiquement quand toutes les sauvegardes en échec réussissent de nouveau.
+     En bas pour ne pas masquer les notifications de course en haut à droite.
+  2. `saveToLocalStorage()` (`state.iife.js`) et `saveChronoToLocalStorage()`
+     (`chrono.iife.js`) les appellent (avant : `console.warn` seul, invisible).
+  3. `.github/workflows/tests.yml` : `npm ci` + `npm test` (Node 22) sur chaque PR et
+     chaque push vers `main`. Étapes rejouées dans une copie propre du repo : 156/156.
+- **Tests** : `tests/unit/saveFailureWarning.test.js` (7 ; 6 en échec avant le correctif).
+  `npm test` : 156/156. Vérifié dans Chromium avec un VRAI dépassement de quota (stockage
+  rempli jusqu'au `QuotaExceededError`) : bandeau visible, puis retiré après libération.
+- **Fichiers touchés** : `src/notifications.iife.js`, `src/state.iife.js`,
+  `src/chrono.iife.js`, le test, le workflow, `claude.md`, `AGENTS.md`, `CHANGELOG.md`,
+  ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #48 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · claude.md ✅ · tests ✅
+- **Suite possible** : d'autres `localStorage.setItem` non critiques (liste des clubs,
+  état replié des sections) gardent un `console.warn` seul. Restent aussi ouverts :
+  l'annulation DNS/DISQ qui ne relance pas le chrono, et la relecture manuelle du
+  localStorage dans `showImportPlayersModal` (`multisport.iife.js`, issue #58).
+
 ### 2026-09-24 (suite) — Arrivées en mode couloirs annulables
 
 - **Contexte** : point resté ouvert dans l'entrée précédente, demandé par l'utilisateur :

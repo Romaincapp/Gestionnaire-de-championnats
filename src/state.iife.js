@@ -30,8 +30,11 @@
         try {
             // Toujours utiliser global.championship pour être sûr d'avoir la bonne référence
             localStorage.setItem('tennisTableChampionship', JSON.stringify(global.championship));
+            if (global.reportSaveSuccess) global.reportSaveSuccess('championship');
         } catch (error) {
             console.warn("Erreur sauvegarde:", error);
+            // Sans ça, l'échec est invisible : l'utilisateur croit ses données enregistrées
+            if (global.reportSaveFailure) global.reportSaveFailure('championship', error);
         }
     }
 

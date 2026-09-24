@@ -13,6 +13,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🛡️ Fiabilité
+- **Échec de sauvegarde signalé** : si le navigateur ne peut plus enregistrer (stockage
+  plein, navigation privée), un bandeau rouge persistant l'annonce avec un bouton
+  « 💾 Exporter maintenant ». Il disparaît dès que la sauvegarde refonctionne. Avant, l'échec
+  n'était visible que dans la console : on croyait ses données enregistrées.
+- **Tests automatiques sur GitHub** : la suite de tests (`npm test`) tourne sur chaque PR et
+  chaque push vers `main` (`.github/workflows/tests.yml`).
+
 ### 🎉 Ajouts
 - **Mode couloirs** : les arrivées (clic sur un couloir ou touches 1-9 / 0) apparaissent
   dans l'historique 🕘 et peuvent être annulées, comme en mode normal. Le couloir redevient

@@ -36,8 +36,11 @@ window.raceData = raceData;
 function saveChronoToLocalStorage() {
     try {
         localStorage.setItem('chronoRaceData', JSON.stringify(raceData));
+        if (window.reportSaveSuccess) window.reportSaveSuccess('chrono');
     } catch (error) {
         console.warn("Erreur sauvegarde chrono:", error);
+        // Sans ça, l'échec est invisible : la course en cours n'est plus sauvegardée
+        if (window.reportSaveFailure) window.reportSaveFailure('chrono', error);
     }
 }
 window.saveChronoToLocalStorage = saveChronoToLocalStorage;

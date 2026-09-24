@@ -340,6 +340,7 @@ Implemented in `handlePoolMatchEnter()` and `handleManualMatchEnter()`. Uses `se
 - `saveToLocalStorage()` - Championship → `tennisTableChampionship`
 - `saveChronoToLocalStorage()` - Chrono → `chronoRaceData`
 - Auto-called after every data modification
+- A failed save (quota exceeded, private browsing) must never be silent: both save functions call `reportSaveFailure(store, error)` / `reportSaveSuccess(store)` (`notifications.iife.js`), which show a single persistent red banner with an emergency "Exporter maintenant" button, removed automatically once every store saves again. Any new `localStorage.setItem` holding user data should do the same — a `console.warn` alone is invisible during a competition
 
 ## UI/UX Design Principles
 
@@ -389,7 +390,7 @@ npm test                    # Jest suite (tests/unit/), jsdom environment
 npm run check:duplicates    # standalone duplicate-function-definition check
 ```
 
-`npm test` already includes the duplicate-function check (`noDuplicateFunctions.test.js`), so running `npm test` alone is enough day to day — `check:duplicates` is only useful for its more readable standalone CLI output when triaging a specific file.
+CI (`.github/workflows/tests.yml`) runs `npm ci` + `npm test` on every PR and every push to `main` — a red check there is a real regression, not something to merge around. `npm test` already includes the duplicate-function check (`noDuplicateFunctions.test.js`), so running `npm test` alone is enough day to day — `check:duplicates` is only useful for its more readable standalone CLI output when triaging a specific file.
 
 **Any code change — bug fix, dead-code removal, refactor — must end with a
 green `npm test` before it's considered done.** This is not optional: several
