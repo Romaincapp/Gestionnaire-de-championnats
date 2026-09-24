@@ -79,7 +79,7 @@ function startRace(serieId) {
 function laneButtons() {
     const out = {};
     document.querySelectorAll('[id^="lane-"]').forEach(el => {
-        out[el.id.replace('lane-', '')] = el.children[1].textContent.trim();
+        out[el.id.replace('lane-', '')] = el.querySelector('.lane-name').textContent.trim();
     });
     return out;
 }

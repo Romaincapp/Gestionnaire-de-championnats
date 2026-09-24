@@ -1044,10 +1044,9 @@
         }
 
         // Séries en mode couloirs créées avant l'attribution automatique : compléter
-        if (serie.laneMode && typeof nextFreeLane === 'function') {
-            serie.participants.forEach(p => {
-                if (!p.laneNumber) p.laneNumber = nextFreeLane(serie);
-            });
+        // (même fonction qu'à l'impression → mêmes couloirs sur la feuille et les boutons)
+        if (typeof ensureSerieLanes === 'function' && ensureSerieLanes(serie)) {
+            saveToLocalStorage();
         }
 
         // Préparer la structure pour l'ancien système

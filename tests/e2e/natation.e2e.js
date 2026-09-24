@@ -150,9 +150,24 @@ async function openFresh(browser) {
     check(JSON.stringify(r.ps.map(p => p.lane + ':' + p.name).sort()) === JSON.stringify(sA.participants.map(p => p.laneNumber + ':' + p.name).sort()),
         'la course reprend exactement les nageurs et couloirs de la série');
     check((await page.locator('#raceInterface').innerText()).includes('Distance: 50m'), 'écran de course : « Distance: 50m »');
+    // Avant le départ : le tableau montre le COULOIR (pas le dossard), dans l'ordre du bassin
+    const firstCol = await page.locator('#participantsTableBody tr').evaluateAll(trs => trs.map(tr => tr.cells[0].textContent.trim()));
+    const header0 = (await page.locator('#raceInterface thead th').first().textContent()).trim();
+    check(header0 === 'Couloir' && JSON.stringify(firstCol) === JSON.stringify(sA.participants.map(p => String(p.laneNumber)).sort()),
+        'avant le départ : colonne « Couloir » triée dans l\'ordre du bassin (' + firstCol.join(', ') + ')');
     await page.click('#startStopBtn');
     await page.waitForTimeout(1200);
     check((await page.locator('[id^="lane-"]').count()) === sA.participants.length, 'un bouton par couloir');
+    // Gros boutons : « COULOIR » + numéro + nom, pas de dossard pris pour un couloir
+    const buttonsOk = await page.locator('[id^="lane-"]').evaluateAll((els, parts) => els.every(el => {
+        const lane = el.id.replace('lane-', '');
+        const p = parts.find(x => String(x.laneNumber) === lane);
+        const divs = [...el.querySelectorAll('div')].map(d => d.textContent.trim());
+        return /couloir/i.test(el.textContent) && divs.includes(lane) && divs.includes(p.name)
+            && (String(p.bib) === lane || !divs.includes(String(p.bib)));
+    }), sA.participants);
+    check(buttonsOk, 'gros boutons : légende « Couloir », bon numéro et bon nageur, sans dossard ambigu');
+    await snap(page, 'boutons-couloirs');
     const order = sA.participants.map(p => p.laneNumber);
     await laneBox(order[0]).click(); await page.waitForTimeout(400);
     await laneBox(order[1]).click(); await page.waitForTimeout(400);
@@ -299,7 +314,30 @@ async function openFresh(browser) {
     step('11. 🖨️ Imprimer séries');
     const [printPopup] = await Promise.all([context.waitForEvent('page', { timeout: 5000 }).catch(() => null), btn(page, '🖨️ Imprimer séries')]);
     check(!!printPopup, 'fenêtre d\'impression des séries ouverte');
-    if (printPopup) await printPopup.close();
+    if (printPopup) {
+        await printPopup.waitForTimeout(500);
+        const sheet = await printPopup.locator('body').innerText();
+        check(sheet.includes('Couloir') && !sheet.includes('undefined'), 'feuille imprimée : colonne Couloir, aucun « undefined »');
+        // Mêmes couloirs que les boutons d'arrêt (qui lisent la série de la journée, cf. étape 6)
+        const dayLanes = await page.evaluate(() => {
+            const cd = championship.days[1].chronoData;
+            return cd.events.flatMap(e => getEventSeries(cd, e))
+                .map(s => ({ name: s.name, laneMode: !!s.laneMode, lanes: s.participants.map(p => p.laneNumber + ':' + p.name).sort() }));
+        });
+        const printedLanes = await printPopup.locator('.serie').evaluateAll(blocks => blocks.map(b => {
+            const heads = [...b.querySelectorAll('th')].map(th => th.textContent.trim());
+            const lc = heads.indexOf('Couloir'), nc = heads.indexOf('Nom');
+            return { name: b.querySelector('h3').textContent, lanes: [...b.querySelectorAll('tbody tr')].map(tr => tr.cells[lc].textContent.trim() + ':' + tr.cells[nc].textContent.trim()).sort() };
+        }));
+        // Comparaison série par série, dans l'ordre (plusieurs épreuves ont une « Série 1 »)
+        const laneSeries = dayLanes.filter(s => s.laneMode);
+        const mismatches = dayLanes.map((s, i) => ({ s, printed: printedLanes[i] })).filter(({ s, printed }) => s.laneMode
+            && (!printed || !printed.name.startsWith(s.name + ' - ') || JSON.stringify(printed.lanes) !== JSON.stringify(s.lanes)));
+        check(printedLanes.length === dayLanes.length && laneSeries.length > 0 && mismatches.length === 0,
+            `feuille imprimée : couloirs identiques à ceux des boutons d'arrêt (${laneSeries.length} séries)`
+            + (mismatches.length ? ' — écarts : ' + mismatches.slice(0, 3).map(m => m.s.name + ' ' + JSON.stringify(m.s.lanes) + ' ≠ ' + JSON.stringify(m.printed && m.printed.lanes)).join(' ; ') : ''));
+        await printPopup.close();
+    }
 
     // ---------------------------------------------------------------
     step('Bilan');

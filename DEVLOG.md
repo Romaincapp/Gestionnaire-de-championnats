@@ -33,6 +33,57 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-24 (suite 5) — Couloirs sans ambiguïté (écran de course, boutons, feuille imprimée)
+
+- **Contexte** : signalé par l'utilisateur. « Les boutons du mode couloir affichent le numéro
+  du couloir en petit ; le grand chiffre au-dessus n'est pas juste : le bouton 1 pour le
+  nageur qui est au couloir 5, et 5 sur ce même bouton. » Puis, après échange : « je ne
+  comprends pas d'où vient le grand chiffre, le but est qu'il soit le couloir, mais il n'est
+  pas cohérent avec l'attribution du bouton "Séries natation" et les éditions effectuées. Je
+  veux que les données couloir soient ajoutées à la feuille PDF et soient les mêmes que les
+  boutons d'arrêt des couloirs pour éviter la mauvaise manip. »
+- **Diagnostic** : le grand chiffre EST le couloir enregistré (celui qui pilote le
+  chronométrage) ; le petit est le **dossard**. À la génération natation, les dossards suivent
+  l'ordre des temps (1..5) et les couloirs « le plus rapide au centre » (3, 4, 2, 5, 1) : le
+  5e a le dossard 5 au couloir 1. Le tableau affiché avant le départ ne montrait que le dossard
+  (« #5 ») sans couloir, donc « 5 » était pris pour le couloir. Risque réel : un nageur placé
+  au couloir 5 alors que l'app l'attend au couloir 1 → temps attribués au mauvais nageur.
+- **Fait** (`src/chrono.iife.js`) :
+  1. `laneButtonInnerHTML()` (rendu initial + après arrivée) : légende « Couloir », grand
+     numéro, nom (`.lane-name`), sans dossard.
+  2. Tableau de course en mode couloirs : 1re colonne « Couloir » au lieu de « Dossard »
+     (`raceIdCellContent`, même nombre de cellules, car l'édition inline cible `cells[3..8]`),
+     lignes triées par couloir.
+  3. Second écran 🖥️ Afficher (course) : Couloir au lieu du dossard.
+  4. « 🖨️ Imprimer séries » : colonne Couloir ; feuille de départ triée par couloir, Pos. « - »
+     et pas de couleurs de médaille tant que personne n'est arrivé ; en-tête d'épreuve sans
+     « Distance: undefinedm | Type: undefined » (distance lue sur les séries).
+  5. **Feuille = boutons** : `ensureSerieLanes(serie)` (`multisport.iife.js`, à côté de
+     `nextFreeLane`) complète les couloirs manquants (séries antérieures à l'attribution
+     automatique) et est appelée **au départ de la course** (`startChronoRaceForDay`,
+     `ui.iife.js`, remplace le bloc inline) **et à l'impression** ; l'attribution est
+     enregistrée dans la journée. Avant, une telle série sortait sans couloir sur la feuille et
+     recevait ses couloirs seulement au départ.
+  6. La feuille imprimait uniquement les séries imbriquées (`event.series`, génération
+     natation) : une série créée via ➕ Série (rangée « à plat » dans `chronoData.series`)
+     sortait « Aucune série ». Elle lit désormais `getEventSeries()` (exposée sur `window`).
+     Club : celui de la série d'abord (le cache `raceData` peut porter le même id pour un
+     nageur d'une autre journée).
+- **Tests** : `laneNumbersUnambiguous.test.js` (11, avec le cas exact de l'utilisateur :
+  dossard 5 / couloir 1 ; série ancienne sans couloir → feuille = boutons ; série ➕ imprimée ;
+  les 2 derniers échouent sans le correctif). `swimmingLanesAtRaceStart.test.js` lit le nom via
+  `.lane-name` au lieu d'une position d'élément. `npm test` : 192/192. `npm run test:e2e`
+  étendu (colonne Couloir avant départ, boutons, feuille imprimée dont couloirs identiques aux
+  données des boutons pour les 33 séries) : 0 problème.
+- **Fichiers touchés** : `src/chrono.iife.js`, `src/multisport.iife.js`, `src/ui.iife.js`,
+  2 tests unitaires, `tests/e2e/natation.e2e.js`, `claude.md`, `AGENTS.md`, `CHANGELOG.md`,
+  ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (PR #84).
+- **Doc à jour ?** : CHANGELOG ✅ · claude.md ✅ · AGENTS.md ✅ (`ensureSerieLanes`,
+  `getEventSeries`) · tests ✅
+- **Suite possible** : les dossards natation restent attribués dans l'ordre des temps ; ils ne
+  sont plus affichés en mode couloirs, mais restent la clé interne des actions (DNS, ✏️…).
+
 ### 2026-09-24 (suite 4) — Classement par épreuve (natation), centièmes, test e2e dans le repo
 
 - **Contexte** : demandes de l'utilisateur après le test de bout en bout. Pour la natation,

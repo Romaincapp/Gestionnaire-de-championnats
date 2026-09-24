@@ -322,6 +322,22 @@
     }
     global.nextFreeLane = nextFreeLane;
 
+    // Complète les couloirs manquants d'une série en mode couloirs (séries créées
+    // avant l'attribution automatique). Appelée au départ de la course ET à
+    // l'impression des séries : la feuille imprimée montre ainsi exactement les
+    // couloirs des boutons d'arrêt. Retourne true si un couloir a été attribué.
+    function ensureSerieLanes(serie) {
+        if (!serie || !serie.laneMode) return false;
+        var changed = false;
+        (serie.participants || []).forEach(function(p) {
+            if (p.laneNumber) return;
+            var lane = nextFreeLane(serie);
+            if (lane) { p.laneNumber = lane; changed = true; }
+        });
+        return changed;
+    }
+    global.ensureSerieLanes = ensureSerieLanes;
+
     function addChronoParticipant(dayNumber, serieId, name, bib, options) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return null;
@@ -1465,6 +1481,7 @@
             return s.eventId === evt.id && (evt.series || []).indexOf(s) === -1;
         }));
     }
+    global.getEventSeries = getEventSeries;
 
     // Vrai pour une compétition uniquement composée de journées Courses dont
     // toutes les séries (avec participants) sont de la natation.
