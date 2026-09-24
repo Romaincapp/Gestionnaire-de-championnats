@@ -323,6 +323,8 @@ window.finishLane = function(laneNumber) {
 
     // Arrêter le chrono pour ce participant
     const currentTime = serie.currentTime;
+    // État d'avant l'arrivée, pour pouvoir l'annuler depuis l'historique 🕘
+    const snapshotBefore = snapshotParticipantRaceState(participant);
 
     // Si le participant était en attente, le démarrer d'abord
     if (participant.status === 'ready') {
@@ -362,10 +364,11 @@ window.finishLane = function(laneNumber) {
     updateParticipantRow(participant);
 
     showNotification(`Couloir ${laneNumber} - ${participant.name}: ${formatTime(currentTime)}`, 'success');
+    const action = logRaceAction(serie, participant, `Arrivée couloir ${laneNumber} : ${formatTime(currentTime)}`, snapshotBefore);
     saveChronoToLocalStorage();
 
     // Dernier couloir arrivé : arrêter aussi le chrono général de la série
-    stopRaceIfAllDone(serie);
+    stopRaceIfAllDone(serie, action);
 };
 
 // Vrai quand plus personne n'est dans la course : chacun a franchi l'arrivée
@@ -378,9 +381,12 @@ function allParticipantsDone(serie) {
 
 // Arrête le chrono général (temps figé sur la dernière arrivée) quand le dernier
 // participant encore en course a terminé — mode couloirs comme mode normal.
-// À appeler après chaque arrivée et après chaque DNS/DISQ.
-function stopRaceIfAllDone(serie) {
+// À appeler après chaque arrivée et après chaque DNS/DISQ. `triggeringAction`
+// (entrée de l'historique qui a provoqué l'arrêt) est marquée pour que son
+// annulation relance le chrono (voir undoRaceAction).
+function stopRaceIfAllDone(serie, triggeringAction) {
     if (!serie || !serie.isRunning || !allParticipantsDone(serie)) return false;
+    if (triggeringAction) triggeringAction.stoppedRace = true;
     toggleRaceTimer();
     saveChronoToLocalStorage();
     showNotification(serie.laneMode ? 'Tous les couloirs ont terminé! 🎉' : 'Tous les participants ont terminé! 🎉', 'success');
@@ -556,6 +562,29 @@ function generateParticipantsRows(serie) {
     }).join('');
 }
 
+// Fait tourner le chrono général : currentTime = maintenant - serie.startTime
+// (startTime = instant de départ effectif, qu'une pause ne modifie pas).
+function runRaceClock(serie) {
+    serie.isRunning = true;
+    if (serie.timerInterval) clearInterval(serie.timerInterval);
+    serie.timerInterval = setInterval(() => {
+        serie.currentTime = Date.now() - serie.startTime;
+        updateMainChronoDisplay();
+        updateParticipantsTimes();
+    }, 100);
+}
+
+// Relance le chrono arrêté automatiquement à la dernière arrivée (stopRaceIfAllDone)
+// quand cette arrivée est annulée : on repart de l'instant de départ d'origine, comme
+// si le chrono ne s'était jamais arrêté — le nageur, lui, n'a pas cessé de nager.
+// (« ▶️ Reprendre » fait l'inverse : il repart du temps figé, pour une vraie pause.)
+function resumeRaceClockAfterUndo(serie) {
+    if (!serie.startTime) serie.startTime = Date.now() - (serie.currentTime || 0);
+    serie.currentTime = Date.now() - serie.startTime;
+    runRaceClock(serie);
+    if (serie.laneMode) addLaneModeKeyListener();
+}
+
 // Démarrer/Arrêter le chrono
 window.toggleRaceTimer = function() {
     const serie = raceData.currentSerie;
@@ -577,14 +606,12 @@ window.toggleRaceTimer = function() {
             }
         });
 
-        serie.timerInterval = setInterval(() => {
-            serie.currentTime = Date.now() - serie.startTime;
-            updateMainChronoDisplay();
-            updateParticipantsTimes();
-        }, 100);
+        runRaceClock(serie);
 
-        btn.textContent = '⏸️ Pause';
-        btn.className = 'btn btn-warning';
+        if (btn) {
+            btn.textContent = '⏸️ Pause';
+            btn.className = 'btn btn-warning';
+        }
         showNotification('Course démarrée! Tous les participants sont lancés!', 'success');
 
         // Rafraîchir l'affichage de tous les participants
@@ -613,8 +640,10 @@ window.toggleRaceTimer = function() {
             removeLaneModeKeyListener();
         }
 
-        btn.textContent = '▶️ Reprendre';
-        btn.className = 'btn btn-success';
+        if (btn) {
+            btn.textContent = '▶️ Reprendre';
+            btn.className = 'btn btn-success';
+        }
         showNotification('Course en pause', 'warning');
 
         // Rafraîchir l'affichage (pour cacher les couloirs pendant la pause)
@@ -717,16 +746,29 @@ window.playLapBeep = playLapBeep;
 
 // Enregistre une action annulable dans l'historique de la série en cours.
 // `snapshotBefore` doit être capturé AVANT la mutation du participant.
+// Retourne l'entrée créée.
 function logRaceAction(serie, participant, label, snapshotBefore) {
     if (!serie.actionLog) serie.actionLog = [];
-    serie.actionLog.push({
+    const action = {
         id: nextRaceActionId++,
         bib: participant.bib,
         participantName: participant.name,
         label: label,
         snapshotBefore: snapshotBefore
-    });
+    };
+    serie.actionLog.push(action);
     renderActionHistoryPanel();
+    return action;
+}
+
+// Redessine l'interface de course (gros boutons de couloir compris) sans
+// refermer le panneau d'historique s'il était ouvert.
+function refreshRaceInterfaceKeepingHistory(serie) {
+    const panel = document.getElementById('raceActionHistoryPanel');
+    const panelWasOpen = !!panel && panel.style.display === 'block';
+    displayRaceInterface(serie);
+    const newPanel = document.getElementById('raceActionHistoryPanel');
+    if (panelWasOpen && newPanel) newPanel.style.display = 'block';
 }
 
 // Annule une action de l'historique. Si des actions plus récentes existent
@@ -740,6 +782,10 @@ window.undoRaceAction = function(actionId) {
     if (index === -1) return;
 
     const undone = serie.actionLog.splice(index);
+    // L'arrivée annulée avait arrêté le chrono général (dernier arrivé) : il faut
+    // le relancer, sauf si la série a été terminée entre-temps.
+    const resumeClock = undone.some(a => a.stoppedRace) && !serie.isRunning && serie.status !== 'completed';
+
     // Rejouer les annulations de la plus récente à la plus ancienne
     for (let i = undone.length - 1; i >= 0; i--) {
         const action = undone[i];
@@ -750,9 +796,14 @@ window.undoRaceAction = function(actionId) {
         }
     }
 
+    if (resumeClock) resumeRaceClockAfterUndo(serie);
+    // En mode couloirs, les gros boutons reflètent le statut des nageurs : les
+    // redessiner (et ils réapparaissent si le chrono repart)
+    if (serie.laneMode || resumeClock) refreshRaceInterfaceKeepingHistory(serie);
+
     saveChronoToLocalStorage();
     renderActionHistoryPanel();
-    showNotification('Action annulée', 'info');
+    showNotification(resumeClock ? 'Action annulée — chrono relancé' : 'Action annulée', 'info');
 };
 
 // Affiche/masque le panneau latéral d'historique
@@ -895,14 +946,17 @@ window.finishParticipant = function(bib) {
     participant.finishTime = serie.currentTime;
 
     showNotification(`${participant.name} a terminé! 🏁`, 'success');
-    logRaceAction(serie, participant, `Arrivée : ${formatTime(participant.finishTime)}`, snapshotBefore);
+    const action = logRaceAction(serie, participant, `Arrivée : ${formatTime(participant.finishTime)}`, snapshotBefore);
 
-    // Rafraîchir l'affichage
+    // Rafraîchir l'affichage (et le gros bouton du couloir en mode couloirs)
     updateParticipantRow(participant);
+    if (serie.laneMode && participant.laneNumber) {
+        updateLaneDisplay(participant.laneNumber, participant, participant.finishTime);
+    }
     saveChronoToLocalStorage();
 
     // Dernier arrivé : arrêter le chrono général
-    stopRaceIfAllDone(serie);
+    stopRaceIfAllDone(serie, action);
 };
 
 // Relancer un participant (annuler son finish)

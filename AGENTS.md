@@ -219,13 +219,15 @@ lors du même nettoyage.
 
 **Fonctions exposées** :
 - `toggleRaceTimer()` - Démarre/pause le chrono
-- `recordLap(bib)` / `finishParticipant(bib)` - Enregistrent un tour / une
-  arrivée ; alimentent aussi l'historique d'actions annulable
-  (`serie.actionLog`) via `logRaceAction()` (non exposée) et déclenchent
-  `playLapBeep()` sur un LAP réel
+- `recordLap(bib)` / `finishParticipant(bib)` / `finishLane(laneNumber)` -
+  Enregistrent un tour / une arrivée (mode normal / mode couloirs) ; alimentent
+  aussi l'historique d'actions annulable (`serie.actionLog`) via
+  `logRaceAction()` (non exposée) et déclenchent `playLapBeep()` sur un LAP réel
 - `undoRaceAction(actionId)` - Annule une action de l'historique (et, en
   cascade, toutes celles enregistrées après elle) via un système de
-  snapshots avant/après par participant
+  snapshots avant/après par participant. Si l'arrivée annulée avait arrêté
+  automatiquement le chrono général (dernier arrivé), le chrono repart depuis
+  l'instant de départ d'origine : le temps écoulé pendant l'arrêt est rattrapé
 - `toggleActionHistoryPanel()` / `renderActionHistoryPanel()` - Panneau
   latéral "🕘 Historique" de l'écran de course
 - `playLapBeep()` - Bip sonore (Web Audio, pas de fichier) à chaque LAP

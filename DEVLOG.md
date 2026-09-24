@@ -33,6 +33,36 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-24 (suite) — Arrivées en mode couloirs annulables
+
+- **Contexte** : point resté ouvert dans l'entrée précédente, demandé par l'utilisateur :
+  une arrivée par clic sur un couloir (ou touche) ne pouvait pas être annulée depuis
+  l'historique 🕘, contrairement au mode normal (#77).
+- **Fait** (`src/chrono.iife.js`) :
+  1. `finishLane` prend un instantané du nageur avant l'arrivée et l'inscrit dans
+     l'historique (`logRaceAction`, qui renvoie désormais l'entrée créée).
+  2. L'arrivée qui provoque l'arrêt automatique du chrono est marquée `stoppedRace`
+     (`stopRaceIfAllDone(serie, action)`). Son annulation relance le chrono depuis le
+     `startTime` d'origine (`resumeRaceClockAfterUndo`) : le temps de l'arrêt est rattrapé.
+     Sans ça, un mauvais clic sur le dernier couloir faisait perdre au nageur tout le temps
+     écoulé jusqu'à la correction (« ▶️ Reprendre » repart du temps figé). Le cas existait
+     aussi en mode normal : même correctif. Pas de relance si la série a été terminée.
+  3. En mode couloirs, l'annulation redessine l'écran de course (boutons de couloir) en
+     gardant le panneau d'historique ouvert (`refreshRaceInterfaceKeepingHistory`).
+  4. Le tick du chrono est extrait dans `runRaceClock` (partagé par `toggleRaceTimer` et la
+     relance). `toggleRaceTimer` ne plante plus si le bouton ▶️ est absent du DOM.
+  5. Bouton FIN du tableau en mode couloirs : le couloir passe aussi au vert.
+- **Tests** : `tests/unit/laneFinishUndo.test.js` (9, tous en échec avant le correctif).
+  `npm test` : 149/149. Vérifié aussi dans Chromium (Playwright, hors repo) : mauvais clic
+  sur le dernier couloir à 2,2 s, annulation 4 s plus tard → chrono à 6,2 s, couloir de
+  nouveau actif, vraie arrivée à 7,39 s, aucune erreur JS.
+- **Fichiers touchés** : `src/chrono.iife.js`, le test, `claude.md`, `AGENTS.md`,
+  `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (PR #48).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · claude.md ✅ · tests ✅
+- **Suite possible** : annuler un DNS/DISQ (↩️ dans le tableau) qui avait arrêté le chrono
+  ne le relance pas. Ces statuts ne passent pas par l'historique 🕘 ; cas rare, non traité.
+
 ### 2026-09-24 — Couloirs faux au lancement d'une course + arrêt auto du chrono (DNS/DISQ)
 
 - **Contexte** : bug signalé — après « 🏊 Séries natation », les séries sont correctes mais

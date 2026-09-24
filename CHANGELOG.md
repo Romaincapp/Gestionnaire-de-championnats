@@ -13,7 +13,15 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎉 Ajouts
+- **Mode couloirs** : les arrivées (clic sur un couloir ou touches 1-9 / 0) apparaissent
+  dans l'historique 🕘 et peuvent être annulées, comme en mode normal. Le couloir redevient
+  rouge et cliquable, et le nageur repart en course.
+- Annuler l'arrivée qui avait arrêté le chrono général (dernier arrivé, ex. mauvais clic)
+  **relance le chrono sans perdre le temps écoulé** entre-temps, dans les deux modes.
+
 ### 🐛 Corrections
+- Mode couloirs : le bouton FIN du tableau met aussi à jour le gros bouton du couloir.
 - **Mode couloirs** : au lancement d'une course (▶️ Course), les nageurs pouvaient ne plus
   être dans les couloirs attribués — si la série avait déjà été ouverte une fois puis
   modifiée (modale 🏊, 👥, nouvelle génération « Séries natation »), ou si la journée
