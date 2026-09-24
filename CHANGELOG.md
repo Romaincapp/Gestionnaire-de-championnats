@@ -13,6 +13,19 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🐛 Corrections (test de bout en bout d'une journée natation)
+- **Onglet 🏅 Multisport** : il disparaissait définitivement après un rechargement de la page,
+  l'ajout d'une journée (+) ou un import JSON. Le classement combiné n'était alors plus
+  accessible.
+- **Nageur disqualifié après son arrivée** (✏️ → Disqualifier) : il gardait son temps dans les
+  résultats et restait classé, même 1er, dans le classement de série et le Multisport. Il en
+  est désormais exclu, comme un DNS.
+- **Distance des séries natation** : une épreuve créée via 🎯 (ex. « 50m brasse ») donnait
+  des séries à 0 m, affichées « 1000m » et « 1,00 km » par nageur. La distance est maintenant
+  lue dans le nom de l'épreuve.
+- **Club dans le classement Multisport** : la colonne Club affichait « - » pour tous les
+  nageurs d'une journée Courses. Le club des séries est maintenant repris.
+
 ### 🛡️ Fiabilité
 - **Échec de sauvegarde signalé** : si le navigateur ne peut plus enregistrer (stockage
   plein, navigation privée), un bandeau rouge persistant l'annonce avec un bouton

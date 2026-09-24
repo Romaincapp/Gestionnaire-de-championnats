@@ -714,17 +714,13 @@
         const tabsContainer = document.getElementById('tabs');
         if (!tabsContainer) return;
         
-        const existingTabs = tabsContainer.querySelectorAll('.tab:not(.general-ranking)');
-        
-        existingTabs.forEach(tab => {
-            if (!tab.classList.contains('add-day-btn')) {
-                tab.remove();
-            }
-        });
-        
+        // Ne retirer que les onglets de journée (data-day) : les onglets fixes
+        // « 🏆 Classement » et « 🏅 Multisport » (index.html) doivent survivre,
+        // sinon le Multisport disparaissait au rechargement, après « + » ou un import.
+        tabsContainer.querySelectorAll('.tab[data-day]').forEach(tab => tab.remove());
+
         const addButton = tabsContainer.querySelector('.add-day-btn');
-        const generalTab = tabsContainer.querySelector('.general-ranking');
-        
+
         Object.keys(championship.days).sort((a, b) => Number(a) - Number(b)).forEach(dayNumber => {
             const tab = document.createElement('button');
             tab.className = 'tab';
@@ -1207,14 +1203,17 @@
         }));
 
         // Reconstruire serie.results (lu par la carte de série, le classement par
-        // journée et le calcul de points multisport). Tout participant non-DNS
-        // ayant un temps valide (> 0) compte comme résultat, quel que soit son
-        // status (saisie manuelle inline incluse).
+        // journée et le calcul de points multisport). Tout participant non-DNS et
+        // non-DISQ ayant un temps valide (> 0) compte comme résultat, quel que soit
+        // son status (saisie manuelle inline incluse).
+        // Un DISQ (disqualifié) garde souvent son temps d'arrivée (disqualification
+        // constatée après coup) : il doit être exclu comme un DNS, sinon il est classé.
         serie.results = raceSerie.participants
-            .filter(p => p.status !== 'dns' && (p.finishTime || p.totalTime) > 0)
+            .filter(p => p.status !== 'dns' && p.status !== 'disq' && (p.finishTime || p.totalTime) > 0)
             .map(p => ({
                 bib: p.bib,
                 name: p.name,
+                club: p.club || '',
                 category: p.category || '',
                 time: p.finishTime || p.totalTime,
                 totalDistance: p.totalDistance || 0

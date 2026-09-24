@@ -2988,6 +2988,11 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         // Activer le mode couloir sur l'épreuve et réinitialiser les séries
         evt.laneMode = true;
         evt.series = [];
+        // Une épreuve créée via « 🎯 Épreuve » n'a qu'un nom (« 50m brasse ») :
+        // en déduire la distance, sinon la série vaut 0 m et la course retombe
+        // sur un repli à 1000 m (« 1,00 km » par nageur sur un 50 m).
+        var evtInfo = deriveSwimmingEventInfo(evt);
+        var serieDistance = evt.distance || (evtInfo && evtInfo.distance) || 0;
 
         // Créer les séries
         for (var i = 0; i < sorted.length; i += lanesPerSerie) {
@@ -3037,7 +3042,7 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
                 name: 'Série ' + serieNum,
                 eventId: evt.id,
                 sportType: evt.sportType || 'swimming',
-                distance: evt.distance || 0,
+                distance: serieDistance,
                 raceType: evt.raceType || 'individual',
                 relayDuration: null,
                 participants: participants,
