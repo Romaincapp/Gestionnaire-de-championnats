@@ -933,6 +933,77 @@
     window.copyPlayersFromPreviousDay = copyPlayersFromPreviousDay;
 
     /**
+     * Purge le cache du moteur de course live (raceData, persisté à part dans
+     * localStorage sous 'chronoRaceData') pour une journée. À appeler partout où
+     * les compteurs d'id chrono de la journée (nextEventId/nextSerieId) sont remis
+     * à 1 : sinon une épreuve/série recréée retombe sur une ancienne entrée du cache
+     * et en récupère les nageurs, couloirs et temps au prochain "▶️ Course".
+     */
+    function purgeRaceCacheForDay(dayNumber) {
+        if (typeof raceData === 'undefined' || !raceData) return;
+        if (raceData.events) raceData.events = raceData.events.filter(e => e.dayNumber !== dayNumber);
+        if (raceData.series) raceData.series = raceData.series.filter(s => s.dayNumber !== dayNumber);
+        if (raceData.currentDayNumber === dayNumber) {
+            raceData.currentSerie = null;
+            raceData.currentDayNumber = null;
+            raceData.currentSerieId = null;
+        }
+        if (typeof saveChronoToLocalStorage === 'function') saveChronoToLocalStorage();
+    }
+    window.purgeRaceCacheForDay = purgeRaceCacheForDay;
+
+    // Copie d'un participant de série (format jour) vers le format "course" de raceData
+    function toRaceParticipant(p) {
+        return {
+            id: p.id,
+            name: p.name,
+            bib: p.bib,
+            club: p.club || '',
+            category: p.category || '',
+            division: p.division,
+            laneNumber: p.laneNumber,
+            status: p.status || 'ready',
+            totalTime: p.totalTime || 0,
+            finishTime: p.finishTime || null,
+            laps: p.laps || [],
+            totalDistance: p.totalDistance || 0,
+            bestLap: p.bestLap || null,
+            lastLapStartTime: p.lastLapStartTime || 0
+        };
+    }
+
+    /**
+     * Reconstruit la liste des participants d'une série en cache (raceData) à partir
+     * de la série de la journée, qui fait foi pour la composition et les couloirs.
+     * Un participant du cache n'est conservé (avec sa progression : statut, temps,
+     * tours) que s'il désigne le même nageur : même id ET même nom — un renommage
+     * met aussi le cache à jour (applyParticipantRename) —, ou même nom en secours.
+     * Un même id porté par un autre nom (id réutilisé) repart de zéro.
+     * Retourne { participants, kept } où kept = nombre de participants repris du cache.
+     */
+    function reconcileRaceParticipants(cached, source) {
+        const sameName = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+        const used = [];
+        let kept = 0;
+        const participants = source.map(sp => {
+            const free = cached.filter(c => used.indexOf(c) === -1);
+            const rp = free.find(c => sp.id != null && c.id === sp.id && sameName(c.name, sp.name)) ||
+                free.find(c => (sp.name || '').trim() !== '' && sameName(c.name, sp.name));
+            if (!rp) return toRaceParticipant(sp);
+            used.push(rp);
+            kept++;
+            rp.id = sp.id;
+            rp.name = sp.name;
+            if (sp.bib != null) rp.bib = sp.bib;
+            if (sp.club) rp.club = sp.club;
+            if (sp.category) rp.category = sp.category;
+            rp.laneNumber = sp.laneNumber != null ? sp.laneNumber : null;
+            return rp;
+        });
+        return { participants: participants, kept: kept };
+    }
+
+    /**
      * Démarre une course pour une série d'une journée spécifique (Mode Chrono par jour)
      * Adapte les données du format jour vers le format global de l'ancien système
      */
@@ -1011,6 +1082,24 @@
         // Vérifier si la série existe déjà dans raceData (même règle : filtrer par
         // dayNumber pour ignorer toute entrée orpheline d'avant un vidage de journée)
         let raceSerie = raceData.series.find(s => s.id === serieId && s.eventId === event.id && s.dayNumber === dayNumber);
+        if (raceSerie) {
+            // La série de la journée fait foi pour la COMPOSITION (qui court, dans quel
+            // couloir) : elle a pu changer depuis la mise en cache (modale 🏊, 👥,
+            // nouvelle génération "Séries natation"), ou l'entrée du cache peut porter
+            // un id de série réutilisé (championnat réimporté...). Le cache ne sert
+            // qu'à conserver la progression des nageurs toujours présents.
+            const reconciled = reconcileRaceParticipants(raceSerie.participants || [], serie.participants);
+            if (reconciled.kept === 0) {
+                // Aucun nageur en commun : entrée orpheline, on repart de zéro
+                if (raceSerie.timerInterval) clearInterval(raceSerie.timerInterval);
+                raceData.series = raceData.series.filter(s => s !== raceSerie);
+                event.series = (event.series || []).filter(s => s.id !== serieId);
+                raceSerie = null;
+            } else {
+                raceSerie.participants = reconciled.participants;
+                raceSerie.laneMode = serie.laneMode || false;
+            }
+        }
         if (!raceSerie) {
             // Créer la série dans le format de l'ancien système
             raceSerie = {
@@ -1018,22 +1107,7 @@
                 dayNumber: dayNumber,
                 name: serie.name,
                 eventId: event.id,
-                participants: serie.participants.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    bib: p.bib,
-                    club: p.club || '',
-                    category: p.category || '',
-                    division: p.division,
-                    laneNumber: p.laneNumber,
-                    status: p.status || 'ready',
-                    totalTime: p.totalTime || 0,
-                    finishTime: p.finishTime || null,
-                    laps: p.laps || [],
-                    totalDistance: p.totalDistance || 0,
-                    bestLap: p.bestLap || null,
-                    lastLapStartTime: p.lastLapStartTime || 0
-                })),
+                participants: serie.participants.map(toRaceParticipant),
                 // Hériter des caractéristiques de l'épreuve parente (sinon "undefined" dans l'interface)
                 sportType: serie.sportType || event.sportType || 'running',
                 distance: serie.distance || event.distance || 0,
@@ -1054,20 +1128,6 @@
         if (raceSerie.sportType == null) raceSerie.sportType = serie.sportType || event.sportType || 'running';
         if (raceSerie.distance == null) raceSerie.distance = serie.distance || event.distance || 0;
         if (raceSerie.raceType == null) raceSerie.raceType = serie.raceType || event.raceType || 'individual';
-
-        // Resynchroniser nom / dossard / club depuis la série source (cas d'une série
-        // déjà lancée avant une édition) — match par id (fiable car la copie conserve
-        // l'id) puis par nom en secours.
-        raceSerie.participants.forEach(rp => {
-            const src = serie.participants.find(sp => sp.id === rp.id) ||
-                serie.participants.find(sp => (sp.name || '').toLowerCase() === (rp.name || '').toLowerCase());
-            if (src) {
-                rp.name = src.name;
-                if (src.bib != null) rp.bib = src.bib;
-                if (src.club) rp.club = src.club;
-                if (src.laneNumber != null) rp.laneNumber = src.laneNumber;
-            }
-        });
 
         // Stocker la référence au jour et série pour la sauvegarde ultérieure
         raceData.currentDayNumber = dayNumber;
@@ -1346,20 +1406,8 @@
                 } : undefined
             };
 
-            // Purger le cache du moteur de course live (raceData, persisté à part dans
-            // localStorage) pour cette journée : sans ça, les compteurs d'id remis à 1
-            // ci-dessus (nextEventId/nextSerieId) retombent sur d'anciennes entrées
-            // jamais nettoyées et en récupèrent les temps/tours au prochain "Démarrer".
-            if (typeof raceData !== 'undefined' && raceData) {
-                if (raceData.events) raceData.events = raceData.events.filter(e => e.dayNumber !== dayNumber);
-                if (raceData.series) raceData.series = raceData.series.filter(s => s.dayNumber !== dayNumber);
-                if (raceData.currentDayNumber === dayNumber) {
-                    raceData.currentSerie = null;
-                    raceData.currentDayNumber = null;
-                    raceData.currentSerieId = null;
-                }
-                if (typeof saveChronoToLocalStorage === 'function') saveChronoToLocalStorage();
-            }
+            // Compteurs d'id remis à 1 ci-dessus : purger le cache de course live
+            purgeRaceCacheForDay(dayNumber);
 
             updatePlayersDisplay(dayNumber);
             updateMatchesDisplay(dayNumber);

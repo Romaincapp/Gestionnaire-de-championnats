@@ -6,16 +6,47 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 > ⚠️ Ce fichier est resté figé à la version 2.0.0 (2024-02-02) pendant environ deux ans et
 > demi alors que le développement continuait activement. Les sections ci-dessous entre
-> 2.1.0 et 2.4.0 ont été reconstituées en 2026-09 à partir de l'historique git pour combler
+> 2.1.0 et 2.5.0 ont été reconstituées en 2026-09 à partir de l'historique git pour combler
 > le trou — voir `DEVLOG.md` pour le détail de cette remise à niveau et le protocole qui
 > évite que ça se reproduise (mettre à jour ce fichier à chaque session qui change un
 > comportement visible pour l'utilisateur).
 
 ## [Unreleased]
 
-_Rien en attente pour l'instant — ajouter ici toute modification utilisateur pas encore
-regroupée sous un numéro de version, puis migrer vers une nouvelle section lors du prochain
-point de version._
+### 🐛 Corrections
+- **Mode couloirs** : au lancement d'une course (▶️ Course), les nageurs pouvaient ne plus
+  être dans les couloirs attribués — si la série avait déjà été ouverte une fois puis
+  modifiée (modale 🏊, 👥, nouvelle génération « Séries natation »), ou si la journée
+  Courses avait été vidée (🗑️ Vider) puis remplie à nouveau, la course reprenait l'ancienne
+  composition en cache, avec parfois des nageurs « fantômes » et d'anciens temps. La série
+  de la journée fait désormais foi pour qui court et dans quel couloir.
+- Le bouton 🗑️ Vider d'une journée Courses purge aussi le cache de course live (comme
+  « Vider la journée » depuis la 2.5.0).
+- **Arrêt automatique du chrono général** : un participant DNS ou DISQ n'empêche plus
+  l'arrêt du chrono à l'arrivée du dernier participant encore en course (mode couloirs et
+  mode normal). Marquer DNS/DISQ le dernier participant en course arrête aussi le chrono.
+
+## [2.5.0] - 2026-09-15 → 2026-09-24 (fiabilisation Chrono, tests automatisés)
+
+### 🎉 Ajouts
+- Historique des actions de course (LAP/FINISH) annulable, avec bip sonore
+- Catégories multiples au sein d'une même course Chrono (Solo/Équipe…), colonne Catégorie
+  dans la fenêtre « Afficher »
+- Tests automatisés Jest (`npm test`) et contrôle des fonctions redéfinies
+  (`npm run check:duplicates`)
+
+### 🐛 Corrections
+- Import natation, mode couloirs et ajout de joueurs
+- Cache de course live (raceData) non purgé par « Vider la journée »
+- Bouton « Retour aux séries » cassé pendant une course Chrono
+- Barre Divisions/Terrains qui ne réapparaissait pas (J1, double bascule) ; barre globale
+  et sous-titre des terrains masqués sur une journée Chrono
+- Classement interclub en live
+
+### 🔧 Changements techniques
+- Suppression de l'ancien système global événements/séries et du module mort
+  `export.iife.js` (15 modules dans `src/`)
+- Documentation `claude.md`/`AGENTS.md` réalignée sur le code
 
 ## [2.4.0] - 2026-09 (statuts course & saisie en masse)
 

@@ -364,16 +364,28 @@ window.finishLane = function(laneNumber) {
     showNotification(`Couloir ${laneNumber} - ${participant.name}: ${formatTime(currentTime)}`, 'success');
     saveChronoToLocalStorage();
 
-    // Si tous les couloirs ont terminé, arrêter aussi le chrono général de la série
-    const allFinished = serie.participants.every(p => p.status === 'finished');
-    if (allFinished) {
-        if (serie.isRunning) {
-            toggleRaceTimer(); // arrête le chrono général (fige le temps affiché)
-        }
-        saveChronoToLocalStorage();
-        showNotification('Tous les couloirs ont terminé! 🎉', 'success');
-    }
+    // Dernier couloir arrivé : arrêter aussi le chrono général de la série
+    stopRaceIfAllDone(serie);
 };
+
+// Vrai quand plus personne n'est dans la course : chacun a franchi l'arrivée
+// ou en est sorti (DNS/DISQ) — avec au moins une arrivée, sinon rien à clôturer.
+function allParticipantsDone(serie) {
+    const participants = serie.participants || [];
+    return participants.some(p => p.status === 'finished') &&
+        participants.every(p => p.status === 'finished' || isOutOfRaceStatus(p.status));
+}
+
+// Arrête le chrono général (temps figé sur la dernière arrivée) quand le dernier
+// participant encore en course a terminé — mode couloirs comme mode normal.
+// À appeler après chaque arrivée et après chaque DNS/DISQ.
+function stopRaceIfAllDone(serie) {
+    if (!serie || !serie.isRunning || !allParticipantsDone(serie)) return false;
+    toggleRaceTimer();
+    saveChronoToLocalStorage();
+    showNotification(serie.laneMode ? 'Tous les couloirs ont terminé! 🎉' : 'Tous les participants ont terminé! 🎉', 'success');
+    return true;
+}
 
 // Mettre à jour l'affichage d'un couloir après finish
 function updateLaneDisplay(laneNumber, participant, finishTime) {
@@ -392,17 +404,6 @@ function updateLaneDisplay(laneNumber, participant, finishTime) {
         <div style="font-size: 18px; margin-top: 5px;">✅</div>
         <div style="font-size: 11px; font-family: monospace; margin-top: 3px;">${formatTime(finishTime)}</div>
     `;
-}
-
-// Vérifier si tous les participants ont terminé
-function checkAllFinished() {
-    const serie = raceData.currentSerie;
-    if (!serie) return;
-
-    const allFinished = serie.participants.every(p => p.status === 'finished');
-    if (allFinished) {
-        showNotification('Tous les participants ont terminé!', 'success');
-    }
 }
 
 var laneModeKeyHandler = null;
@@ -900,13 +901,8 @@ window.finishParticipant = function(bib) {
     updateParticipantRow(participant);
     saveChronoToLocalStorage();
 
-    // Vérifier si tous ont terminé
-    const allFinished = serie.participants.every(p => p.status === 'finished');
-    if (allFinished) {
-        toggleRaceTimer(); // Arrêter le chrono
-        saveChronoToLocalStorage();
-        showNotification('Tous les participants ont terminé! 🎉', 'success');
-    }
+    // Dernier arrivé : arrêter le chrono général
+    stopRaceIfAllDone(serie);
 };
 
 // Relancer un participant (annuler son finish)
@@ -946,6 +942,8 @@ window.markAsDNS = function(bib) {
     saveChronoToLocalStorage();
     updateParticipantRow(participant);
     showNotification(`${participant.name} marqué DNS (non partant)`, 'info');
+    // S'il était le dernier encore en course, la série est terminée
+    stopRaceIfAllDone(serie);
 };
 
 // Annuler le DNS d'un participant
@@ -983,6 +981,8 @@ window.markAsDISQ = function(bib) {
     if (typeof saveRaceResultsToDay === 'function') saveRaceResultsToDay();
     updateParticipantRow(participant);
     showNotification(`${participant.name} disqualifié`, 'warning');
+    // S'il était le dernier encore en course, la série est terminée
+    stopRaceIfAllDone(serie);
 };
 
 // Annuler la disqualification d'un participant

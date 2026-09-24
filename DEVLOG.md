@@ -33,6 +33,50 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-24 — Couloirs faux au lancement d'une course + arrêt auto du chrono (DNS/DISQ)
+
+- **Contexte** : bug signalé — après « 🏊 Séries natation », les séries sont correctes mais
+  au lancement (▶️ Course) les nageurs ne sont plus dans les bons couloirs. Puis demande :
+  en mode couloirs, le chrono général doit s'arrêter à l'arrivée du dernier, comme en mode
+  normal.
+- **Diagnostic couloirs** : la génération et l'affichage de course sont corrects (le
+  parcours « à neuf » passe). Le bug vient du cache de course live `raceData` (persisté à
+  part dans localStorage) : `startChronoRaceForDay` réutilisait la **liste de nageurs du
+  cache** dès qu'une entrée existait pour (id série, id épreuve, journée), et ne
+  resynchronisait que les nageurs qu'il y retrouvait. Deux façons d'y tomber :
+  (1) série déjà ouverte une fois puis modifiée (modale 🏊, 👥, régénération) → l'ancien
+  occupant garde son couloir, le nouveau n'apparaît pas ; (2) id de série réutilisé —
+  surtout via le bouton **🗑️ Vider** d'une journée Courses (`clearChronoDataForDay`), qui
+  remet les compteurs à 1 **sans purger le cache** (seul « Vider la journée » le faisait
+  depuis #78) → nageurs fantômes et anciens temps.
+- **Fait** :
+  1. `ui.iife.js` : `reconcileRaceParticipants` — la série du jour fait foi pour la
+     composition et les couloirs ; le cache ne garde la progression que des nageurs de même
+     id **et** même nom ; entrée sans aucun nageur commun = jetée. Purge du cache
+     factorisée dans `purgeRaceCacheForDay` (utilisée par `clearDayData`).
+  2. `multisport.iife.js` : `clearChronoDataForDay` appelle `purgeRaceCacheForDay`.
+  3. `chrono.iife.js` : règle d'arrêt unique `stopRaceIfAllDone` (arrivées + DNS/DISQ,
+     au moins une arrivée), appelée par `finishLane`, `finishParticipant`, `markAsDNS`,
+     `markAsDISQ`. Avant, un seul DNS/DISQ empêchait l'arrêt, dans les deux modes.
+     Suppression de `checkAllFinished` (code mort).
+  4. Tests : `swimmingLanesAtRaceStart.test.js` (10) et `raceAutoStopWhenAllDone.test.js`
+     (5). Contre-épreuve faite : les cas du bug échouent sur le code de `main`.
+     `npm test` : 140/140.
+  5. Fusion de `main` (#49→#81) dans la branche de doc (PR #48) : conflits de doc résolus
+     en gardant les versions de #80 (plus à jour) + ajout du journal/protocole ;
+     correction « 16 → 15 modules » (`export.iife.js` supprimé sur main).
+- **Fichiers/modules touchés** : `src/ui.iife.js`, `src/multisport.iife.js`,
+  `src/chrono.iife.js`, 2 tests, `claude.md` (piège #12 + protocole), `AGENTS.md`,
+  `CHANGELOG.md`, `README.md`, `CONTRIBUTING.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (PR #48).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · claude.md ✅ · tests ✅
+- **Suite possible** :
+  - Les arrivées en mode couloirs (`finishLane`) ne sont pas inscrites dans l'historique
+    annulable (#77), contrairement à `finishParticipant` : un clic sur le mauvais couloir
+    ne peut être annulé que via 🔄 Relancer.
+  - Les changements #49→#81 (2026-09-15 → 24) n'ont pas d'entrée ici ; ils sont résumés
+    dans `CHANGELOG.md` (2.5.0) et détaillés dans `git log`.
+
 ### 2026-09-11 — Remise à niveau de la documentation (constat + réécriture)
 
 - **Contexte** : l'utilisateur soupçonnait que la doc n'était plus tenue à jour depuis
