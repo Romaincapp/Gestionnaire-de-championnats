@@ -159,7 +159,7 @@ function displayRaceInterface(serie) {
                 <div style="background: linear-gradient(135deg, #2980b9, #3498db); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
                     <div style="text-align: center; margin-bottom: 15px;">
                         <h4 style="color: white; margin: 0 0 8px 0; font-size: 18px;">🏊 MODE COULOIRS ACTIF</h4>
-                        <p style="color: #ecf0f1; margin: 0; font-size: 13px;">Appuyez sur les touches <strong>1-9</strong> du clavier pour arrêter les chronos instantanément</p>
+                        <p style="color: #ecf0f1; margin: 0; font-size: 13px;">Appuyez sur les touches <strong>1-9</strong> du clavier (<strong>0</strong> = couloir 10) pour arrêter les chronos instantanément</p>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
                         ${serie.participants
@@ -271,6 +271,9 @@ function displayRaceInterface(serie) {
 
     raceInterface.innerHTML = html;
 
+    // Idempotent ; couvre aussi une course restaurée après rechargement de la page
+    if (serie.laneMode) addLaneModeKeyListener();
+
     // Initialiser le badge/contenu du panneau d'historique (fonction définie plus bas dans ce fichier)
     if (typeof renderActionHistoryPanel === 'function') renderActionHistoryPanel();
 }
@@ -300,8 +303,8 @@ window.finishLane = function(laneNumber) {
     const serie = raceData.currentSerie;
     if (!serie || !serie.laneMode || !serie.isRunning) return;
 
-    // Vérifier que le numéro de couloir est valide (1-9)
-    if (laneNumber < 1 || laneNumber > 9) {
+    // Couloirs 1 à 10 (l'import natation propose jusqu'à 10 couloirs)
+    if (laneNumber < 1 || laneNumber > 10) {
         return;
     }
 
@@ -402,6 +405,8 @@ function checkAllFinished() {
     }
 }
 
+var laneModeKeyHandler = null;
+
 // Ajouter l'écouteur clavier pour le mode couloirs
 function addLaneModeKeyListener() {
     if (laneModeKeyHandler) return; // Déjà actif
@@ -413,10 +418,10 @@ function addLaneModeKeyListener() {
         // Ignorer si on est dans un champ de saisie
         if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
 
-        // Vérifier si c'est une touche 1-9
+        // Touches 1-9, et 0 pour le couloir 10
         const key = event.key;
-        if (key >= '1' && key <= '9') {
-            const laneNumber = parseInt(key);
+        if (key.length === 1 && key >= '0' && key <= '9') {
+            const laneNumber = key === '0' ? 10 : parseInt(key);
             // Vérifier si un participant est assigné à ce couloir
             const hasParticipant = serie.participants.some(p => p.laneNumber === laneNumber);
             if (hasParticipant) {
@@ -2550,6 +2555,11 @@ var SWIMMING_STROKE_ALIASES = {
     'dos': ['dos', 'backstroke']
 };
 
+// "5" → 500 ms (dixièmes), "50" → 500 ms (centièmes)
+function swimFracToMs(frac) {
+    return frac.length === 1 ? +frac * 100 : +frac * 10;
+}
+
 // Parse un temps de natation depuis divers formats → millisecondes
 function parseSwimmingTime(text) {
     if (!text) return { timeMs: 0, timeStr: '' };
@@ -2587,6 +2597,22 @@ function parseSwimmingTime(text) {
         // 1,24,11 (M,SS,cc)
         { r: /(\d{1,2}),(\d{2}),(\d{2})/, fn: function(m) {
             return (+m[1]) * 60000 + (+m[2]) * 1000 + (+m[3]) * 10;
+        }},
+        // 1'05"30 ou 1'05''30 (M'SS"cc, notation manuscrite)
+        { r: /(\d{1,2})['’](\d{2})(?:"|''|’’|″)(\d{1,2})/, fn: function(m) {
+            return (+m[1]) * 60000 + (+m[2]) * 1000 + swimFracToMs(m[3]);
+        }},
+        // 32"50 ou 32''50 (SS"cc)
+        { r: /(\d{1,2})(?:"|''|’’|″)(\d{1,2})/, fn: function(m) {
+            return (+m[1]) * 1000 + swimFracToMs(m[2]);
+        }},
+        // 0:45 ou 1:05 (M:SS sans centièmes)
+        { r: /(?<![\d:])(\d{1,2}):(\d{2})(?![\d:.,])/, fn: function(m) {
+            return (+m[1]) * 60000 + (+m[2]) * 1000;
+        }},
+        // 32.50, 32,50 ou 32.5 (SS.cc sans minutes, courant sur 25/50m)
+        { r: /(?<![\d:.,'’"])(\d{1,2})[,.](\d{1,2})(?![\d:.,'’"])/, fn: function(m) {
+            return (+m[1]) * 1000 + swimFracToMs(m[2]);
         }}
     ];
 
@@ -2597,6 +2623,31 @@ function parseSwimmingTime(text) {
         }
     }
     return { timeMs: 0, timeStr: '' };
+}
+
+// Occurrences de nages en mots entiers ({start, end, text}) ; à défaut, en
+// sous-chaînes (tolérance historique pour les saisies collées)
+var SWIMMING_STROKE_WORD_REGEX_G = new RegExp(
+    '(^|[^A-Za-zÀ-ÿ])(' + SWIMMING_STROKE_PATTERN + ')(?=$|[^A-Za-zÀ-ÿ])', 'gi');
+function findSwimmingStrokeSpans(text) {
+    var spans = [], m;
+    SWIMMING_STROKE_WORD_REGEX_G.lastIndex = 0;
+    while ((m = SWIMMING_STROKE_WORD_REGEX_G.exec(text)) !== null) {
+        var start = m.index + m[1].length;
+        spans.push({ start: start, end: start + m[2].length, text: m[2] });
+    }
+    if (spans.length > 0) return spans;
+    SWIMMING_STROKE_REGEX_G.lastIndex = 0;
+    while ((m = SWIMMING_STROKE_REGEX_G.exec(text)) !== null) {
+        spans.push({ start: m.index, end: m.index + m[0].length, text: m[0] });
+    }
+    return spans;
+}
+
+function swimSpanGap(a, b) {
+    if (a.end <= b.start) return b.start - a.end;
+    if (b.end <= a.start) return a.start - b.end;
+    return 0;
 }
 
 // Parse une entrée brute de natation → objet structuré
@@ -2618,32 +2669,50 @@ function parseSwimmingEntry(rawName) {
         text = text.replace(/\(bord\)/i, 'Assisté');
     }
 
-    // Extraire la nage (sans \b car accents mal gérés)
-    var strokeMatch = text.match(SWIMMING_STROKE_REGEX);
-    if (!strokeMatch) return null;
-
-    var stroke = normalizeSwimmingStroke(strokeMatch[1]);
-
     // Extraire la distance (n'importe quelle distance en mètres : 25, 50, 100, 200...)
     var distRegex = /\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i;
-    var distMatch = text.match(distRegex);
+    var distMatch = distRegex.exec(text);
     if (!distMatch) return null;
 
     var distance = parseInt(distMatch[1]);
     if (!distance || distance <= 0) return null;
+    var distSpan = { start: distMatch.index, end: distMatch.index + distMatch[0].length };
+
+    // Nage : la plus proche de la distance, pour qu'un nom comme « Dos Santos »
+    // ou « Brassens » ne soit pas pris pour la nage
+    var strokeSpans = findSwimmingStrokeSpans(text);
+    if (strokeSpans.length === 0) return null;
+    var chosen = strokeSpans.reduce(function(best, s) {
+        return swimSpanGap(s, distSpan) < swimSpanGap(best, distSpan) ? s : best;
+    });
+    var stroke = normalizeSwimmingStroke(chosen.text);
 
     // Extraire le temps
     var timeResult = parseSwimmingTime(text);
 
-    // Retirer les parties épreuve/temps pour isoler club + nom
+    // Retirer la zone épreuve (distance + nage + répétitions collées comme
+    // « 50m brasse brasse ») sans toucher aux mots du nom
+    var removeSpans = [distSpan, chosen];
+    var grew = true;
+    while (grew) {
+        grew = false;
+        strokeSpans.forEach(function(s) {
+            if (removeSpans.indexOf(s) !== -1) return;
+            var touches = removeSpans.some(function(r) {
+                var between = s.end <= r.start ? text.slice(s.end, r.start)
+                    : (r.end <= s.start ? text.slice(r.end, s.start) : '');
+                return /^[\s\-–—,;:|\/()]*$/.test(between);
+            });
+            if (touches) { removeSpans.push(s); grew = true; }
+        });
+    }
     var remaining = text;
+    removeSpans.slice().sort(function(a, b) { return b.start - a.start; }).forEach(function(s) {
+        remaining = remaining.slice(0, s.start) + ' ' + remaining.slice(s.end);
+    });
     if (timeResult.timeStr) {
         remaining = remaining.replace(timeResult.timeStr, ' ');
     }
-    // Retirer TOUTES les occurrences de la nage (parfois dupliquée) + variantes
-    remaining = remaining.replace(new RegExp(strokeMatch[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-    remaining = remaining.replace(SWIMMING_STROKE_REGEX_G, ' ');
-    remaining = remaining.replace(distRegex, ' ');
     remaining = remaining.replace(/\(bord\)/gi, ' ');
     remaining = remaining.replace(/\bLent\b/i, ' ');
     // Retirer résidus numériques orphelins (temps partiellement nettoyés)
@@ -2651,6 +2720,8 @@ function parseSwimmingEntry(rawName) {
     remaining = remaining.replace(/\b\d{1,2}[:.]\d{2}[:.]\d{2}\b/g, ' ');
     remaining = remaining.replace(/\b\d{1,2}:\d{2}\b/g, ' ');
     remaining = remaining.replace(/[.,]+\s*/g, ' ');
+    // Séparateurs isolés (« Dupont Jean - 50m Libre - 0:32.50 »), pas les traits d'union
+    remaining = remaining.replace(/(^|\s)[-–—|;\/:"'’″]+(?=\s|$)/g, ' ');
     remaining = remaining.replace(/\s+/g, ' ').trim();
 
     // Extraire le club depuis la liste connue
@@ -2671,13 +2742,8 @@ function parseSwimmingEntry(rawName) {
     // Nettoyer le nom du nageur
     swimmerName = swimmerName.replace(/^\s*[.,]\s*/, '').replace(/\s*[.,]\s*$/, '').trim();
 
-    // Capitaliser proprement
-    if (swimmerName) {
-        swimmerName = swimmerName.split(' ').map(function(w) {
-            if (!w) return '';
-            return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-        }).join(' ');
-    }
+    // Capitaliser proprement (gère Marie-Claire, D'Alembert)
+    if (swimmerName) swimmerName = formatProperName(swimmerName);
 
     return {
         club: club,
@@ -2697,7 +2763,20 @@ function matchEntryToEvent(entry, events) {
             if (events[f].id === entry._eventId) return events[f];
         }
     }
+    // Distance + nage lues dans le nom de l'épreuve (« 50m Nage Libre »,
+    // « 50 NL », « Nage libre 50 »...)
+    var legacyOnly = [];
+    for (var k = 0; k < events.length; k++) {
+        var info = deriveSwimmingEventInfo(events[k]);
+        if (info && info.distance && info.stroke) {
+            if (info.distance === entry.distance && info.stroke === entry.stroke) return events[k];
+        } else {
+            legacyOnly.push(events[k]);
+        }
+    }
+    // Repli historique (recherche de sous-chaînes) pour les noms non déchiffrables
     var aliases = SWIMMING_STROKE_ALIASES[entry.stroke] || [entry.stroke];
+    events = legacyOnly;
     for (var i = 0; i < events.length; i++) {
         var evtName = events[i].name.toLowerCase().replace(/\s+/g, ' ');
         var hasDistance = evtName.indexOf(entry.distance + 'm') !== -1 || evtName.indexOf(entry.distance + ' m') !== -1;
@@ -2726,7 +2805,7 @@ function formatSwimmingTimePreview(ms) {
 
 // Fonction principale : générer les séries natation depuis les joueurs d'une journée source.
 // preParsed (optionnel) : tableau d'entrées déjà parsées (mode colonnes via la modale).
-window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSerie, preParsed) {
+window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSerie, preParsed, preErrors) {
     lanesPerSerie = lanesPerSerie || 5;
 
     var dayData = championship.days[dayNumber];
@@ -2744,26 +2823,17 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
 
     // Parser toutes les entrées (ou réutiliser celles déjà parsées par la modale)
     var parsed = [];
-    var errors = [];
+    var errors = Array.isArray(preErrors) ? preErrors : [];
     if (Array.isArray(preParsed)) {
         parsed = preParsed;
     } else {
-        var sourcePlayers = [];
-        var numDiv = championship.config && championship.config.numberOfDivisions ? championship.config.numberOfDivisions : 3;
-        for (var div = 1; div <= numDiv; div++) {
-            if (srcDay.players && srcDay.players[div]) {
-                sourcePlayers = sourcePlayers.concat(srcDay.players[div]);
-            }
-        }
-
-        if (sourcePlayers.length === 0) {
-            showNotification('Aucun joueur dans la journée ' + sourceDayNumber, 'error');
+        var sourceLines = getSwimmingSourceLines(sourceDayNumber);
+        if (sourceLines.length === 0) {
+            showNotification('Aucun nageur dans la journée ' + sourceDayNumber, 'error');
             return null;
         }
 
-        sourcePlayers.forEach(function(p) {
-            var name = typeof p === 'string' ? p : p.name;
-            if (!name) return;
+        sourceLines.forEach(function(name) {
             var entry = parseSwimmingEntry(name);
             if (entry) {
                 parsed.push(entry);
@@ -2793,6 +2863,30 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         }
     });
 
+    // Rien ne correspond à aucune épreuve : ne rien toucher (les séries et
+    // participants existants seraient sinon effacés pour rien)
+    if (unmatched.length === parsed.length) {
+        showNotification('Aucun nageur ne correspond à une épreuve de la journée ' + dayNumber, 'error');
+        return { parsed: parsed, errors: errors, unmatched: unmatched, totalSeries: 0 };
+    }
+
+    // Participants à remplacer : ceux d'un import précédent (présents dans les
+    // séries d'épreuves qu'on régénère) et les lignes brutes qu'on vient de parser
+    // (quand la source est la journée Courses elle-même).
+    var replacedIds = {};
+    events.forEach(function(evt) {
+        (evt.series || []).forEach(function(s) {
+            (s.participants || []).forEach(function(p) { replacedIds[p.id] = true; });
+        });
+    });
+    var parsedRaw = {};
+    parsed.forEach(function(e) {
+        if (e.rawName && unmatched.indexOf(e) === -1) parsedRaw[e.rawName] = true;
+    });
+    var keptParticipants = (dayData.chronoData.participants || []).filter(function(p) {
+        return p && !p.swimImport && !replacedIds[p.id] && !parsedRaw[p.name];
+    });
+
     // Ordres de couloirs (le plus rapide au milieu) — constante partagée
     var laneOrder = getSwimmingLaneOrder(lanesPerSerie);
 
@@ -2805,11 +2899,9 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
     // Compteur de dossards continu : repartir du plus grand dossard déjà attribué
     // pour éviter les collisions entre épreuves/journées lors des régénérations.
     var bibCounter = 1;
-    if (dayData.chronoData.participants && dayData.chronoData.participants.length > 0) {
-        dayData.chronoData.participants.forEach(function(p) {
-            if (p && typeof p.bib === 'number' && p.bib >= bibCounter) bibCounter = p.bib + 1;
-        });
-    }
+    keptParticipants.forEach(function(p) {
+        if (typeof p.bib === 'number' && p.bib >= bibCounter) bibCounter = p.bib + 1;
+    });
 
     events.forEach(function(evt) {
         var entries = eventGroups[evt.id];
@@ -2851,7 +2943,9 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
                     club: entry.club,
                     category: '',
                     totalTime: null,
-                    laps: 0
+                    laps: 0,
+                    swimImport: true,
+                    swimRaw: entry.rawName || ''
                 });
 
                 return {
@@ -2891,16 +2985,16 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         }
     });
 
-    dayData.chronoData.participants = allParticipants;
+    dayData.chronoData.participants = keptParticipants.concat(allParticipants);
     dayData.chronoData.nextSerieId = nextSerieId;
     dayData.chronoData.nextParticipantId = nextParticipantId;
 
     saveToLocalStorage();
 
-    var msg = '🏊 Import natation: ' + parsed.length + ' nageurs → ' + totalSeries + ' séries';
+    var msg = '🏊 Import natation: ' + (parsed.length - unmatched.length) + ' nageurs → ' + totalSeries + ' séries';
     if (errors.length > 0) msg += ' (' + errors.length + ' non parsés)';
     if (unmatched.length > 0) msg += ' (' + unmatched.length + ' sans épreuve)';
-    showNotification(msg, 'success');
+    showNotification(msg, errors.length || unmatched.length ? 'warning' : 'success');
 
     console.log('Import natation terminé:', {
         parsed: parsed.length,
@@ -2914,30 +3008,40 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
 
 // Modale d'import natation avec aperçu
 window.showSwimmingImportModal = function(dayNumber) {
-    // Trouver les journées sources disponibles (non-chrono avec des joueurs)
+    // Sources : lignes brutes (nom + épreuve + temps) d'une journée Matchs
+    // (joueurs) ou d'une journée Courses (participants disponibles)
     var sourceDays = [];
-    // Trouver les journées chrono de destination (avec des épreuves)
+    // Destinations : journées chrono avec des épreuves
     var chronoDays = [];
     for (var d in championship.days) {
         if (championship.days.hasOwnProperty(d)) {
             var dd = championship.days[d];
-            if (dd.dayType !== 'chrono') {
-                var count = 0;
-                var numDiv = championship.config && championship.config.numberOfDivisions ? championship.config.numberOfDivisions : 3;
-                for (var div = 1; div <= numDiv; div++) {
-                    if (dd.players && dd.players[div]) count += dd.players[div].length;
-                }
-                if (count > 0) {
-                    sourceDays.push({ day: d, count: count });
-                }
-            } else if (dd.chronoData && dd.chronoData.events && dd.chronoData.events.length > 0) {
+            var srcLines = getSwimmingSourceLines(d);
+            if (srcLines.length > 0) {
+                sourceDays.push({
+                    day: d, count: srcLines.length, chrono: dd.dayType === 'chrono',
+                    readable: srcLines.filter(function(l) { return parseSwimmingEntry(l); }).length
+                });
+            }
+            if (dd.dayType === 'chrono' && dd.chronoData && dd.chronoData.events && dd.chronoData.events.length > 0) {
                 chronoDays.push({ day: d, events: dd.chronoData.events });
             }
         }
     }
 
+    // Ces deux cas bloquent l'ouverture de la modale : alert() plutôt qu'un
+    // toast éphémère, sinon le clic semble ne rien faire
+    if (chronoDays.length === 0) {
+        alert('🏊 Séries natation\n\nCréez d\'abord une épreuve avec le bouton « 🎯 Épreuve » '
+            + '(ex : « 50m Nage Libre », « 100m Dos »).');
+        return;
+    }
     if (sourceDays.length === 0) {
-        showNotification('Aucune journée source avec des joueurs trouvée', 'warning');
+        alert('🏊 Séries natation\n\nAucune liste de nageurs trouvée.\n\n'
+            + 'Ajoutez les nageurs dans « Participants disponibles », une ligne par nageur '
+            + 'avec son épreuve et son temps, par ex :\n'
+            + '   Jean Dupont 50m libre 0:32.50\n\n'
+            + '(Une journée « Matchs » contenant la liste fonctionne aussi.)');
         return;
     }
 
@@ -2946,13 +3050,13 @@ window.showSwimmingImportModal = function(dayNumber) {
     var targetDay = dayNumber;
     var currentDay = championship.days[dayNumber];
     if (!currentDay || currentDay.dayType !== 'chrono' || !currentDay.chronoData || !currentDay.chronoData.events || currentDay.chronoData.events.length === 0) {
-        if (chronoDays.length > 0) {
-            targetDay = parseInt(chronoDays[0].day);
-        } else {
-            showNotification('Aucune journée chrono avec des épreuves configurées trouvée', 'warning');
-            return;
-        }
+        targetDay = parseInt(chronoDays[0].day);
     }
+    // Proposer d'abord la source la plus lisible, puis la journée courante
+    sourceDays.sort(function(a, b) {
+        return (b.readable - a.readable)
+            || ((String(b.day) === String(dayNumber)) - (String(a.day) === String(dayNumber)));
+    });
 
     var events = championship.days[targetDay].chronoData.events;
     // Stocker le targetDay pour l'utiliser dans les callbacks
@@ -2963,7 +3067,7 @@ window.showSwimmingImportModal = function(dayNumber) {
     modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;';
 
     var sourceDayOptions = sourceDays.map(function(sd) {
-        return '<option value="' + sd.day + '">Journée ' + sd.day + ' (' + sd.count + ' entrées)</option>';
+        return '<option value="' + sd.day + '">Journée ' + sd.day + (sd.chrono ? ' – participants' : '') + ' (' + sd.count + ' entrées)</option>';
     }).join('');
 
     var chronoDayOptions = chronoDays.map(function(cd) {
@@ -3104,6 +3208,17 @@ function getSwimmingSourceLines(sourceDayNumber) {
     var lines = [];
     var srcDay = championship.days[sourceDayNumber];
     if (!srcDay) return lines;
+    if (srcDay.dayType === 'chrono') {
+        // Journée Courses : les lignes brutes sont les "Participants disponibles" ;
+        // un nageur issu d'un import précédent garde sa ligne d'origine (réimport)
+        var parts = (srcDay.chronoData && srcDay.chronoData.participants) || [];
+        var seen = {};
+        parts.forEach(function(p) {
+            var line = p && (p.swimImport ? p.swimRaw : p.name);
+            if (line && !seen[line]) { seen[line] = true; lines.push(line); }
+        });
+        return lines;
+    }
     var numDiv = championship.config && championship.config.numberOfDivisions ? championship.config.numberOfDivisions : 3;
     for (var div = 1; div <= numDiv; div++) {
         if (srcDay.players && srcDay.players[div]) {
@@ -3253,10 +3368,11 @@ function deriveSwimmingEventInfo(evt) {
     var name = evt.name || '';
     var dm = name.match(/\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i) || name.match(/(\d{2,4})/);
     var sm = name.match(SWIMMING_STROKE_REGEX);
+    var stroke = sm ? normalizeSwimmingStroke(sm[1]) : (/\bNL\b/i.test(name) ? 'libre' : '');
     return {
         event: evt,
         distance: dm ? parseInt(dm[1]) : (evt.distance || 0),
-        stroke: sm ? normalizeSwimmingStroke(sm[1]) : ''
+        stroke: stroke
     };
 }
 
@@ -3309,11 +3425,7 @@ function buildSwimmingEntryFromColumns(cols, map, raw, def) {
     var timeMs = 0;
     if (map.time != null) timeMs = parseSwimmingTime(col(map.time)).timeMs;
 
-    if (name) {
-        name = name.split(/\s+/).map(function(w) {
-            return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
-        }).join(' ');
-    }
+    if (name) name = formatProperName(name);
 
     return applySwimmingDefaultEvent(
         { club: club, swimmerName: name, distance: distance, stroke: stroke, timeMs: timeMs },
@@ -3338,12 +3450,10 @@ function buildSwimmingFallbackEntry(line, def) {
 
     // Nettoyer les résidus (séparateurs, chiffres de temps orphelins)
     rest = rest.replace(/\b\d{1,2}[:.,]\d{1,2}([:.,]\d{1,3})?\b/g, ' ')
-               .replace(/[.,;|]+/g, ' ').replace(/\s+/g, ' ').trim();
-    if (rest) {
-        rest = rest.split(/\s+/).map(function(w) {
-            return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
-        }).join(' ');
-    }
+               .replace(/[.,;|]+/g, ' ')
+               .replace(/(^|\s)[-–—\/:"'’″]+(?=\s|$)/g, ' ')
+               .replace(/\s+/g, ' ').trim();
+    if (rest) rest = formatProperName(rest);
 
     return applySwimmingDefaultEvent(
         { club: club, swimmerName: rest, distance: 0, stroke: '', timeMs: t.timeMs },
@@ -3486,7 +3596,19 @@ window.confirmSwimmingImport = function(dayNumber) {
         return;
     }
 
-    var result = window.generateSwimmingSeries(targetDayNumber, sourceDayNumber, lanesPerSerie, collected.parsed);
+    var result = window.generateSwimmingSeries(targetDayNumber, sourceDayNumber, lanesPerSerie, collected.parsed, collected.errors);
+    if (result && result.totalSeries === 0) {
+        var evNames = championship.days[targetDayNumber].chronoData.events.map(function(e) { return '« ' + e.name + ' »'; }).join(', ');
+        var sample = result.unmatched.slice(0, 3).map(function(e) {
+            return '   ' + e.distance + 'm ' + e.stroke + ' – ' + (e.swimmerName || e.rawName);
+        }).join('\n');
+        alert('🏊 Aucune série créée : aucun nageur ne correspond à une épreuve.\n\n'
+            + 'Épreuves de la journée : ' + evNames + '\n'
+            + 'Épreuves lues dans la liste, par ex :\n' + sample + '\n\n'
+            + 'Le nom de l\'épreuve doit contenir la distance et la nage (ex : « 50m Nage Libre »), '
+            + 'ou choisissez une « Épreuve par défaut ».');
+        return;
+    }
     if (result) {
         document.getElementById('swimmingImportModal').remove();
         // Rafraîchir l'affichage chrono

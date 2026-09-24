@@ -203,7 +203,8 @@
     }
 
     function playerExists(dayNumber, division, playerName) {
-        return findPlayerByName(dayNumber, division, playerName) !== null;
+        // find() renvoie undefined (pas null) quand aucun joueur ne correspond
+        return !!findPlayerByName(dayNumber, division, playerName);
     }
 
     // ============================================
