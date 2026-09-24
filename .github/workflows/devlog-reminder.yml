@@ -1,0 +1,99 @@
+name: DEVLOG reminder
+
+# Garde-fou NON BLOQUANT : si une PR modifie le code applicatif (src/*.iife.js,
+# index.html, script.js) sans toucher DEVLOG.md, on poste/actualise un commentaire
+# de rappel sur la PR. Ce workflow ne fait jamais échouer le check — il ne fait que
+# rappeler le protocole décrit dans claude.md ("Protocole de fin de session").
+#
+# Contexte : voir DEVLOG.md (entrée 2026-09-11) — la documentation de ce projet est
+# restée figée pendant ~2,5 ans faute d'un tel rappel.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  check-devlog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Détecter les fichiers modifiés
+        id: diff
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+          echo "$CHANGED"
+
+          CODE_CHANGED="false"
+          if echo "$CHANGED" | grep -Eq '^(src/.*\.iife\.js|index\.html|script\.js)$'; then
+            CODE_CHANGED="true"
+          fi
+
+          DEVLOG_CHANGED="false"
+          if echo "$CHANGED" | grep -q '^DEVLOG\.md$'; then
+            DEVLOG_CHANGED="true"
+          fi
+
+          echo "code_changed=$CODE_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "devlog_changed=$DEVLOG_CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Rappeler/actualiser le commentaire DEVLOG
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const codeChanged = '${{ steps.diff.outputs.code_changed }}' === 'true';
+            const devlogChanged = '${{ steps.diff.outputs.devlog_changed }}' === 'true';
+            const marker = '<!-- devlog-reminder -->';
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+
+            if (codeChanged && !devlogChanged) {
+              const body = `${marker}
+            ⚠️ **Rappel non bloquant** : cette PR modifie du code applicatif (\`src/\`, \`index.html\` ou \`script.js\`) mais ne touche pas \`DEVLOG.md\`.
+
+            Avant de merger, pense au protocole de fin de session décrit dans \`claude.md\` :
+            1. Ajouter une entrée dans \`DEVLOG.md\` (date, résumé, fichiers touchés, commit).
+            2. Mettre à jour \`CHANGELOG.md\` si le changement est visible pour l'utilisateur final.
+            3. Mettre à jour \`AGENTS.md\` si un module est ajouté/renommé/scindé.
+            4. Cocher/mettre à jour \`TODO.md\` si une tâche est concernée.
+
+            Si ce changement ne le justifie pas (typo, CI, refactor interne trivial), ignore ce message — il ne bloque rien.`;
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } else if (existing) {
+              // DEVLOG.md a été ajouté depuis (ou plus de code applicatif changé) : on désamorce le rappel.
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: `${marker}\n✅ \`DEVLOG.md\` a été mis à jour (ou plus aucun fichier applicatif n'est modifié) — rappel résolu.`,
+              });
+            }

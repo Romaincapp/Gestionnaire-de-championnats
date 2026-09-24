@@ -3420,6 +3420,9 @@
             nextSerieId: 1,
             nextParticipantId: 1
         };
+        // Compteurs d'id remis à 1 : purger aussi le cache de course live, sinon les
+        // prochaines séries reprennent les nageurs/couloirs/temps des anciennes
+        if (typeof global.purgeRaceCacheForDay === 'function') global.purgeRaceCacheForDay(dayNumber);
 
         global.saveToLocalStorage();
         refreshChronoDisplay(dayNumber);

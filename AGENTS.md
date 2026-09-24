@@ -26,7 +26,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 ├── script.js               # Legacy — dark mode uniquement (37 lignes), PAS la logique de l'app
 ├── AGENTS.md               # Cette documentation
 ├── claude.md                # Guide d'architecture pour agents IA (structure de données, patterns critiques)
-├── src/                    # Toute la logique applicative (16 modules IIFE, ~30k lignes)
+├── src/                    # Toute la logique applicative (15 modules IIFE, ~30k lignes)
 │   ├── config.iife.js      # Configuration (divisions, terrains)
 │   ├── utils.iife.js       # Fonctions utilitaires
 │   ├── notifications.iife.js # Système de notifications
@@ -219,13 +219,15 @@ lors du même nettoyage.
 
 **Fonctions exposées** :
 - `toggleRaceTimer()` - Démarre/pause le chrono
-- `recordLap(bib)` / `finishParticipant(bib)` - Enregistrent un tour / une
-  arrivée ; alimentent aussi l'historique d'actions annulable
-  (`serie.actionLog`) via `logRaceAction()` (non exposée) et déclenchent
-  `playLapBeep()` sur un LAP réel
+- `recordLap(bib)` / `finishParticipant(bib)` / `finishLane(laneNumber)` -
+  Enregistrent un tour / une arrivée (mode normal / mode couloirs) ; alimentent
+  aussi l'historique d'actions annulable (`serie.actionLog`) via
+  `logRaceAction()` (non exposée) et déclenchent `playLapBeep()` sur un LAP réel
 - `undoRaceAction(actionId)` - Annule une action de l'historique (et, en
   cascade, toutes celles enregistrées après elle) via un système de
-  snapshots avant/après par participant
+  snapshots avant/après par participant. Si l'arrivée annulée avait arrêté
+  automatiquement le chrono général (dernier arrivé), le chrono repart depuis
+  l'instant de départ d'origine : le temps écoulé pendant l'arrêt est rattrapé
 - `toggleActionHistoryPanel()` / `renderActionHistoryPanel()` - Panneau
   latéral "🕘 Historique" de l'écran de course
 - `playLapBeep()` - Bip sonore (Web Audio, pas de fichier) à chaque LAP
@@ -434,9 +436,27 @@ Pour migrer une fonction du fichier legacy vers un module :
 5. **Tester** que tout fonctionne
 6. **Supprimer** la fonction de `script.js` quand c'est stable
 
+## 🗓️ Journal de développement & protocole de session
+
+**`DEVLOG.md`** (racine du repo) est le journal chronologique des sessions de dev — qui a
+fait quoi, quand, sur quels fichiers, avec quel commit. C'est la référence pour savoir
+"où en est le code" sans relire tout l'historique git.
+
+**En fin de session** (Claude ou humain), dans le même commit que le code — détail complet
+dans `claude.md` § "Protocole de fin de session" :
+1. Ajouter une entrée dans `DEVLOG.md` (date, résumé, fichiers touchés, commit).
+2. Mettre à jour `CHANGELOG.md` si le changement est visible pour l'utilisateur final.
+3. Mettre à jour **cette page** si un module est ajouté/renommé/scindé, ou si une fonction
+   exposée sur `window` change.
+4. `npm test` vert (voir "🧪 Tests automatisés").
+
+Un workflow CI non bloquant (`.github/workflows/devlog-reminder.yml`) commente toute PR qui
+modifie `src/`, `index.html` ou `script.js` sans toucher `DEVLOG.md`.
+
 ## 📞 Contact et maintenance
 
-- **Dernière mise à jour** : 2026-09-15 (audit complet contre le code réel)
+- **Dernière mise à jour** : 2026-09-15 (audit complet contre le code réel) — pour les
+  évolutions suivantes, voir `DEVLOG.md`
 - **Version** : 2.0+ (modulaire, migration de script.js terminée)
 - **Auteur** : Romain & Rachel
 

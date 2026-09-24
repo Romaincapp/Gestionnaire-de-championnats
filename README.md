@@ -80,7 +80,9 @@ Application web de gestion de championnats de tennis de table.
 
 ## 🛠️ Développement
 
-Voir [AGENTS.md](./AGENTS.md) pour la documentation technique complète.
+Voir [AGENTS.md](./AGENTS.md) pour la documentation technique complète, et
+[DEVLOG.md](./DEVLOG.md) pour le journal des sessions de développement (quoi, quand,
+sur quels fichiers — utile pour reprendre le projet après une pause).
 
 ### Architecture
 Le projet utilise une architecture modulaire avec des fichiers IIFE :

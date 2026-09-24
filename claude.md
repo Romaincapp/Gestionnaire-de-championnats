@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Read `DEVLOG.md` first** (most recent entries): it tells you what the last sessions
+> changed, on which files, and what was left open. **Before ending a session**, follow the
+> "Protocole de fin de session" at the bottom of this file.
+
 ## Project Overview
 
 **Gestionnaire de Championnats** - A single-page web application for managing sports competitions. Each **day** (Journée) of the championship independently runs one of two types:
@@ -10,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A third, read-only **Multisport tab** appears automatically whenever the championship contains at least one day of each type (or at least one Chrono day) — it shows a combined ranking across both day types. There is no longer a global mode toggle.
 
-Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in ~16 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
+Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in 15 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
 
 ## Running the Application
 
@@ -319,9 +323,9 @@ Implemented in `handlePoolMatchEnter()` and `handleManualMatchEnter()`. Uses `se
 
 ### Chrono/Timing
 - `startChronoRaceForDay(dayNumber, serieId)` (`ui.iife.js`) - Entry point: bridges `championship.days[n].chronoData` into `raceData`, then opens the live race UI. Every event/serie it creates in `raceData` is tagged `dayNumber`, and lookups filter on it too — required so an id reused after "Vider la journée" doesn't resurrect a stale cached entry (see Common Pitfall #11)
-- `toggleRaceTimer()` / `recordLap(bib)` / `finishParticipant(bib)` (`chrono.iife.js`, no dayNumber param) - Lower-level engine operating on `raceData.currentSerie`, MUST call `saveChronoToLocalStorage()`. `recordLap`/`finishParticipant` also log an undoable entry to `serie.actionLog` (see below) and `recordLap` plays a confirmation beep (`playLapBeep()`, Web Audio, degrades silently if unavailable)
+- `toggleRaceTimer()` / `recordLap(bib)` / `finishParticipant(bib)` (`chrono.iife.js`, no dayNumber param) - Lower-level engine operating on `raceData.currentSerie`, MUST call `saveChronoToLocalStorage()`. `recordLap`/`finishParticipant`/`finishLane` (lane-mode arrival: lane click or keys 1-9/0) also log an undoable entry to `serie.actionLog` (see below) and `recordLap` plays a confirmation beep (`playLapBeep()`, Web Audio, degrades silently if unavailable)
 - `backToSeriesList()` (`chrono.iife.js`) - "⬅️ Retour aux séries" button and end of `endSerie()`: persists progress then repaints the day's series list via `refreshChronoDisplay()`
-- `undoRaceAction(actionId)` / `toggleActionHistoryPanel()` / `renderActionHistoryPanel()` (`chrono.iife.js`) - Action history side panel ("🕘 Historique") on the live race screen. Each LAP/FINISH captures a per-participant snapshot *before* the mutation; undoing an older entry cascades (undoes it and everything logged after it, replayed newest-first) so totals stay consistent regardless of interleaving between participants
+- `undoRaceAction(actionId)` / `toggleActionHistoryPanel()` / `renderActionHistoryPanel()` (`chrono.iife.js`) - Action history side panel ("🕘 Historique") on the live race screen. Each LAP/FINISH captures a per-participant snapshot *before* the mutation; undoing an older entry cascades (undoes it and everything logged after it, replayed newest-first) so totals stay consistent regardless of interleaving between participants. The arrival that auto-stopped the general chrono (`stopRaceIfAllDone`, last one still racing) is flagged `stoppedRace`; undoing it restarts the chrono from the ORIGINAL `serie.startTime` (`resumeRaceClockAfterUndo`), so the time elapsed during the stop is caught up — unlike "▶️ Reprendre", which resumes from the frozen time (a real pause). Not restarted if the serie was ended (`status === 'completed'`). In lane mode the undo repaints the race screen (lane buttons) while keeping the history panel open
 - `openLiveRaceDisplayWindow()` / `buildLiveRaceDisplayContentHTML()` (`chrono.iife.js`) - "🖥️ Afficher" popup (spectator display), auto-refreshed via `postMessage` round-trip every 3s; also the "Classement Multisport" popup (`openMultisportRankingInNewWindow()` in `ui.iife.js`, 5s) uses the identical pattern
 - `saveRaceResultsToDay()` (`ui.iife.js`) - Copies `raceData` results back into `championship.days[n].chronoData` when a race ends
 - `mergeSerieData(oldSerie, newData)` - Preserves timing when editing series
@@ -376,7 +380,7 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 9. **❌ Committing without running `npm test`** - see "Automated Tests" above; grep confirms reachability, `npm test` confirms behavior still works
 10. **❌ Adding a field to `serie.participants` without also adding it to `serie.results`** - `saveRaceResultsToDay()` (`ui.iife.js`) builds `serie.results` as a separate flattened snapshot consumed by `showSerieRanking`/`printChronoCompetition`/`getSerieRanking`; a field only on `participants` (e.g. `category`) silently disappears from the post-race ranking. This exact bug existed for `category` until it was fixed alongside the multi-category ranking feature (`assignCategoryRanks()` in `multisport.iife.js`) — check both places whenever you add a per-participant field.
 11. **❌ Removing an onclick's target function based only on grepping `index.html`** - `tests/unit/htmlOnclickIntegrity.test.js` only scans the *static* HTML in `index.html`. A huge amount of this app's UI is HTML generated as JS template strings inside `src/*.iife.js` (modals, race screens, series cards...) and never appears in `index.html` at all. Deleting a function because it "looks unreachable from index.html" can still break a live `onclick=""` embedded in a template string elsewhere — this happened twice for real (`backToSeriesList()`, `removeParticipantFromSerie()`). `tests/unit/dynamicOnclickIntegrity.test.js` covers this second surface — always let it run (it's part of `npm test`), and when adding a new dynamically-generated `onclick`, don't rely on memory that the target function exists.
-12. **❌ Assuming `raceData` (the live-race bridge, `chrono.iife.js`) entries are safe to look up by id alone** - `raceData.events`/`raceData.series` persist for the whole session (and across page reloads via `chronoRaceData` in localStorage), but the ids they're keyed by (`chronoData.nextEventId`/`nextSerieId`) are local to each day and get reset to 1 by `clearDayData()` ("Vider la journée"). Every entry created in `raceData` must be tagged `dayNumber`, and every lookup must filter on it too — otherwise a freshly created event/serie can resurrect an old cached entry's stale progress (real bug, fixed in `startChronoRaceForDay`/`clearDayData`, `ui.iife.js`). Same caution applies to any other bridge/cache object that outlives a single day's data.
+12. **❌ Assuming `raceData` (the live-race bridge, `chrono.iife.js`) entries are safe to look up by id alone** - `raceData.events`/`raceData.series` persist for the whole session (and across page reloads via `chronoRaceData` in localStorage), but the ids they're keyed by (`chronoData.nextEventId`/`nextSerieId`) are local to each day and get reset to 1 by `clearDayData()` ("Vider la journée") and by `clearChronoDataForDay()` (the "🗑️ Vider" button of a Courses day, `multisport.iife.js`). Every entry created in `raceData` must be tagged `dayNumber`, and every lookup must filter on it too — otherwise a freshly created event/serie can resurrect an old cached entry's stale progress (real bug, fixed in `startChronoRaceForDay`/`clearDayData`, `ui.iife.js`). **Any code that resets those counters must call `purgeRaceCacheForDay(dayNumber)`** (`ui.iife.js`). Also, when `startChronoRaceForDay` finds a cached serie, the day's serie is authoritative for **who races and in which lane** (`reconcileRaceParticipants`): the cache only contributes race progress for participants with the same id AND name — before this, swimmers swapped via the 🏊 lane modal (or ghosts from a reused id) kept their old lanes in the live race (real bug, 2026-09, see `DEVLOG.md`). Same caution applies to any other bridge/cache object that outlives a single day's data.
 
 ## Automated Tests (run before every commit)
 
@@ -439,7 +443,7 @@ order).
 ├── index.html              # Complete UI (~1000 lines after dead-code cleanup)
 ├── script.js               # Legacy bootstrap — dark mode only (37 lines), NOT the app logic
 ├── styles.css               # Styling
-├── src/                     # All application logic (16 IIFE modules, ~30k lines total)
+├── src/                     # All application logic (15 IIFE modules, ~30k lines total)
 │   ├── config.iife.js       # Global config (divisions, courts)
 │   ├── utils.iife.js        # Pure helper functions
 │   ├── notifications.iife.js # Toast notifications
@@ -470,3 +474,26 @@ No build process. ES5/ES6-mixed vanilla JavaScript.
 - **Notifications**: Use inline styles (not CSS classes) for guaranteed visibility via `showNotification(message, type)`
 - **Console logging**: Extensive console.log for debugging - check browser console
 - **Run `npm test` before considering any change done** — see "Automated Tests" above. A change without a green test run is not finished, regardless of how confident the grep/manual check felt.
+
+## Protocole de fin de session (obligatoire pour tout agent, Claude ou humain)
+
+Ce projet avance par sessions espacées, souvent menées par des agents différents. Sans ce
+protocole, la doc dérive silencieusement du code — c'est ce qui s'est passé entre 2024-02 et
+2026-09 (détail dans `DEVLOG.md`).
+
+**Avant de considérer une session terminée** (feature, correctif, debug — dès qu'un commit
+est fait), et **dans le même commit que le code** :
+
+1. **`npm test` vert** (voir "Automated Tests"), avec un test de régression pour tout bug corrigé.
+2. **Ajouter une entrée en haut du Journal de `DEVLOG.md`** (gabarit en tête du fichier) :
+   date, contexte, ce qui a été fait/débogué, fichiers touchés, commit, ce qui reste ouvert.
+   C'est la trace que le prochain dev/agent lit en premier.
+3. **Mettre à jour `CHANGELOG.md`** (section `[Unreleased]`) si le changement est visible
+   pour l'utilisateur final.
+4. **Mettre à jour `AGENTS.md`** si un module est ajouté/renommé/scindé ou si une fonction
+   exposée sur `window` change.
+5. **Mettre à jour ce fichier** si le changement touche un pattern ou un piège décrit ici.
+
+Garde-fou : `.github/workflows/devlog-reminder.yml` commente (sans bloquer) toute PR qui
+modifie `src/`, `index.html` ou `script.js` sans toucher `DEVLOG.md`. Ce n'est qu'un rappel —
+le protocole ci-dessus reste la règle.
