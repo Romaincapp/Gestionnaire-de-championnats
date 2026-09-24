@@ -954,7 +954,14 @@
             showNotification('Ajoutez des participants avant de démarrer', 'warning');
             return;
         }
-        
+
+        // Séries en mode couloirs créées avant l'attribution automatique : compléter
+        if (serie.laneMode && typeof nextFreeLane === 'function') {
+            serie.participants.forEach(p => {
+                if (!p.laneNumber) p.laneNumber = nextFreeLane(serie);
+            });
+        }
+
         // Préparer la structure pour l'ancien système
         // Créer un événement temporaire si nécessaire
         // IMPORTANT : les id d'événement/série sont des compteurs LOCAUX à chaque
@@ -1058,6 +1065,7 @@
                 rp.name = src.name;
                 if (src.bib != null) rp.bib = src.bib;
                 if (src.club) rp.club = src.club;
+                if (src.laneNumber != null) rp.laneNumber = src.laneNumber;
             }
         });
 

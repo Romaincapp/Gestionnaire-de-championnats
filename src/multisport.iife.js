@@ -312,6 +312,16 @@
     }
     global.toTitleCase = toTitleCase;
 
+    // Premier couloir libre (1 à 10) d'une série en mode couloirs, ou null si tous pris
+    function nextFreeLane(serie) {
+        var used = (serie.participants || []).map(function(p) { return p.laneNumber; });
+        for (var lane = 1; lane <= 10; lane++) {
+            if (used.indexOf(lane) === -1) return lane;
+        }
+        return null;
+    }
+    global.nextFreeLane = nextFreeLane;
+
     function addChronoParticipant(dayNumber, serieId, name, bib, options) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return null;
@@ -320,7 +330,10 @@
         if (!serie) return null;
         
         options = options || {};
-        
+
+        var laneNumber = options.laneNumber || null;
+        if (!laneNumber && serie.laneMode) laneNumber = nextFreeLane(serie);
+
         var participant = {
             id: chronoData.nextParticipantId++,
             name: toTitleCase(name),
@@ -328,7 +341,7 @@
             club: options.club || '',
             category: options.category || '',
             division: options.division || null,
-            laneNumber: options.laneNumber || null,
+            laneNumber: laneNumber,
             // État de la course
             status: 'ready', // ready, running, finished, dns
             totalTime: 0,
@@ -928,7 +941,17 @@
             while (parts.length > 1 && !parts[parts.length - 1]) parts.pop();
 
             var bib = null, name, club = '';
-            if (parts.length >= 2 && /^\d+$/.test(parts[0])) {
+            if (/\b\d{2,4}\s*(?:m[eè]tres?|m)\b/i.test(line)) {
+                // Ligne de natation (nom + distance + temps) : garder la ligne entière
+                // pour l'import « Séries natation », sans couper « 32,50 » ni les
+                // colonnes d'un collage Excel. Un dossard en tête est mis de côté.
+                name = line.replace(/\t+/g, ' ').replace(/\s+/g, ' ').trim();
+                var lead = name.match(/^(\d+)\s+(?!m\b|m[eè]tres?\b)(?=\D)/i);
+                if (lead) {
+                    bib = parseInt(lead[1], 10);
+                    name = name.slice(lead[0].length);
+                }
+            } else if (parts.length >= 2 && /^\d+$/.test(parts[0])) {
                 // Dossard, Nom, [Club/Catégorie ignorée]
                 bib = parseInt(parts[0], 10);
                 name = parts[1];
@@ -2326,7 +2349,9 @@
         serie.participants.forEach(function(p) {
             html += '<tr id="serie-prow-' + dayNumber + '-' + serie.id + '-' + p.id + '" style="border-bottom: 1px solid #ecf0f1;">';
             html += '<td style="padding: 10px; text-align: center;">#' + p.bib + '</td>';
-            html += '<td style="padding: 10px;">' + p.name +
+            html += '<td style="padding: 10px;">' +
+                (serie.laneMode && p.laneNumber ? '<span style="font-size:10px; background:#2980b9; color:white; padding:2px 6px; border-radius:3px; margin-right:6px;">Couloir ' + p.laneNumber + '</span>' : '') +
+                p.name +
                 (p.club ? '<span style="font-size:10px; background:#16a085; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.club + '</span>' : '') +
                 (p.category ? '<span style="font-size:10px; background:#8e44ad; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.category + '</span>' : '') +
                 '</td>';
