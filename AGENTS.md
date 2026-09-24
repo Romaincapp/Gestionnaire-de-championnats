@@ -85,7 +85,11 @@ export-print, chrono, init. Un script chargé plus tard peut écraser un
 **Fonctions exposées** :
 - `showNotification(message, type)` - Affiche une notification
   - `type` : 'info' | 'success' | 'warning' | 'error'
-- (seule fonction réellement exposée sur `window` dans ce module actuellement)
+- `reportSaveFailure(store, error)` / `reportSaveSuccess(store)` - Échec de
+  sauvegarde localStorage (quota plein, navigation privée) : un seul bandeau
+  rouge persistant avec bouton « Exporter maintenant », retiré automatiquement
+  quand toutes les sauvegardes (`'championship'`, `'chrono'`) réussissent de
+  nouveau. Appelées par `saveToLocalStorage()` et `saveChronoToLocalStorage()`
 
 ### 4. state.iife.js
 **Rôle** : Gestion de l'état global et persistance
@@ -354,9 +358,12 @@ qu'une fonction "gagne".
 **`npm test` doit tourner (et être vert) avant de considérer une modification terminée** — correction de bug, suppression de code mort, refactoring, tout y passe. Ce n'est pas optionnel : plusieurs bugs de ce repo (`clearDayData` qui perdait `dayType`, le doublon `generateInterclubRanking` qui cassait silencieusement le classement interclub) n'ont été détectés que parce qu'un test existait ou a été écrit pour eux.
 
 ```bash
-npm test                    # Suite Jest (tests/unit/), 55+ tests
+npm test                    # Suite Jest (tests/unit/), 150+ tests
 npm run check:duplicates    # Détection de doublons en CLI seule (déjà incluse dans npm test)
 ```
+
+La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR et
+chaque push vers `main` : un check rouge est une vraie régression.
 
 Quand tu corriges un bug, ajoute un test de non-régression dans `tests/unit/` (voir `clearDayData.test.js` ou `interclubRanking.test.js`). Quand tu supprimes du code que tu penses mort, lance `npm test` avant ET après — une suite verte avant qui reste verte après est la vraie preuve que la suppression est sûre, pas juste le grep qui l'a justifiée. Voir `CONTRIBUTING.md` et `tests/helpers/loadApp.js` pour le détail.
 

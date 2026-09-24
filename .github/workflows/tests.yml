@@ -1,0 +1,31 @@
+name: Tests
+
+# Lance la suite Jest (`npm test`, qui inclut aussi le contrôle des fonctions
+# redéfinies — tests/unit/noDuplicateFunctions.test.js) sur chaque PR et sur
+# chaque push vers main. Jusqu'ici les tests ne tournaient qu'en local : une
+# régression pouvait arriver sur main sans que personne ne la voie.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  jest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lancer les tests
+        run: npm test
