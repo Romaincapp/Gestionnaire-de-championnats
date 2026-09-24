@@ -172,16 +172,11 @@ function displayRaceInterface(serie) {
                             const laneNumber = p.laneNumber;
                             const isFinished = p.status === 'finished';
                             const bgColor = isFinished ? '#27ae60' : '#e74c3c';
-                            const statusIcon = isFinished ? '✅' : '🏃';
                             return `
                                 <div id="lane-${laneNumber}"
                                      onclick="finishLane(${laneNumber})"
                                      style="background: ${bgColor}; color: white; padding: 15px 20px; border-radius: 10px; cursor: ${isFinished ? 'default' : 'pointer'}; min-width: 120px; text-align: center; transition: transform 0.1s, background 0.2s; ${!isFinished ? 'box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);' : ''}">
-                                    <div style="font-size: 36px; font-weight: bold; line-height: 1;">${laneNumber}</div>
-                                    <div style="font-size: 12px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">${p.name}</div>
-                                    <div style="font-size: 11px; opacity: 0.9;">${p.bib}</div>
-                                    <div style="font-size: 18px; margin-top: 5px;">${statusIcon}</div>
-                                    ${isFinished ? `<div style="font-size: 11px; font-family: monospace; margin-top: 3px;">${formatTime(p.finishTime || p.totalTime)}</div>` : ''}
+                                    ${laneButtonInnerHTML(laneNumber, p, p.finishTime || p.totalTime)}
                                 </div>
                             `;
                         }).join('')}
@@ -249,7 +244,7 @@ function displayRaceInterface(serie) {
                 <table style="width: 100%; border-collapse: collapse; background: white;">
                     <thead>
                         <tr style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
-                            <th style="padding: 12px; text-align: center;">Dossard</th>
+                            <th style="padding: 12px; text-align: center;">${serie.laneMode ? 'Couloir' : 'Dossard'}</th>
                             <th style="padding: 12px; text-align: left;">Participant</th>
                             <th style="padding: 12px; text-align: left;">Club</th>
                             <th style="padding: 12px; text-align: center;">Tours</th>
@@ -406,12 +401,21 @@ function updateLaneDisplay(laneNumber, participant, finishTime) {
     laneElement.style.boxShadow = 'none';
 
     // Mettre à jour le contenu
-    laneElement.innerHTML = `
+    laneElement.innerHTML = laneButtonInnerHTML(laneNumber, participant, finishTime);
+}
+
+// Contenu d'un gros bouton de couloir : légende « Couloir », grand numéro, nom.
+// Pas de dossard : attribué automatiquement dans l'ordre des temps (1..5) alors
+// que les couloirs suivent « le plus rapide au centre » (3, 4, 2, 5, 1), il se
+// lisait comme un 2e numéro de couloir (« le bouton 1 affiche 5 »).
+function laneButtonInnerHTML(laneNumber, participant, finishTime) {
+    const isFinished = participant.status === 'finished';
+    return `
+        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85;">Couloir</div>
         <div style="font-size: 36px; font-weight: bold; line-height: 1;">${laneNumber}</div>
-        <div style="font-size: 12px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">${participant.name}</div>
-        <div style="font-size: 11px; opacity: 0.9;">${participant.bib}</div>
-        <div style="font-size: 18px; margin-top: 5px;">✅</div>
-        <div style="font-size: 11px; font-family: monospace; margin-top: 3px;">${formatTime(finishTime)}</div>
+        <div class="lane-name" style="font-size: 12px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">${participant.name}</div>
+        <div style="font-size: 18px; margin-top: 5px;">${isFinished ? '✅' : '🏃'}</div>
+        ${isFinished ? `<div style="font-size: 11px; font-family: monospace; margin-top: 3px;">${formatTime(finishTime)}</div>` : ''}
     `;
 }
 
@@ -489,12 +493,26 @@ function outOfRaceLabel(status) {
     return status === 'disq' ? 'DISQ' : 'DNS';
 }
 
+// 1re colonne du tableau de course : en mode couloirs, le COULOIR (le dossard,
+// attribué automatiquement, se lisait comme un numéro de couloir) ; sinon le
+// dossard, utilisé pour la saisie rapide. Même nombre de cellules dans les deux
+// cas : l'édition en ligne cible les cellules par position (cells[3..8]).
+function raceIdCellContent(p, serie) {
+    if (serie && serie.laneMode) return p.laneNumber != null ? String(p.laneNumber) : '-';
+    return '#' + p.bib;
+}
+
 // Générer les lignes de participants
 function generateParticipantsRows(serie) {
     if (!serie) serie = raceData.currentSerie;
     if (!serie) return '';
 
-    return serie.participants.map(p => {
+    // Mode couloirs : lignes dans l'ordre des couloirs (celui du bassin)
+    const list = serie.laneMode
+        ? [...serie.participants].sort((a, b) => (a.laneNumber || 99) - (b.laneNumber || 99))
+        : serie.participants;
+
+    return list.map(p => {
         const statusColor = {
             ready: '#95a5a6',
             running: '#3498db',
@@ -514,7 +532,7 @@ function generateParticipantsRows(serie) {
         return `
             <tr id="participant-${p.bib}" style="border-bottom: 1px solid #ecf0f1;">
                 <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: ${statusColor[p.status]};">
-                    #${p.bib}
+                    ${raceIdCellContent(p, serie)}
                 </td>
                 <td style="padding: 12px;">
                     <div style="font-weight: bold;">${p.name}</div>
@@ -1330,7 +1348,7 @@ function updateParticipantRow(participant) {
     // Reconstruire la ligne complète du participant
     row.innerHTML = `
         <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: ${statusColor[participant.status]};">
-            #${participant.bib}
+            ${raceIdCellContent(participant, serie)}
         </td>
         <td style="padding: 12px;">
             <div style="font-weight: bold;">${participant.name}</div>
@@ -1729,7 +1747,7 @@ function buildLiveRaceDisplayContentHTML() {
         return `
             <tr style="${rowBg} border-bottom: 1px solid rgba(255,255,255,0.1);">
                 <td style="padding: 12px; text-align: center; font-size: ${isDNS ? '14px' : '22px'}; font-weight: bold;">${medal}</td>
-                <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px; color: #3498db;">#${p.bib}</td>
+                <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px; color: #3498db;">${serie.laneMode ? (p.laneNumber != null ? p.laneNumber : '-') : '#' + p.bib}</td>
                 <td style="padding: 12px; font-weight: bold;">${p.name}${p.club ? '<div style="font-size:11px; color:#94a3b8; font-weight:normal;">' + p.club + '</div>' : ''}</td>
                 ${categoryCell}
                 <td style="padding: 12px; text-align: center; font-weight: bold;">${p.laps.length}</td>
@@ -1747,7 +1765,7 @@ function buildLiveRaceDisplayContentHTML() {
             <thead>
                 <tr style="background: rgba(255,255,255,0.08);">
                     <th style="padding: 12px; text-align: center;">Pos.</th>
-                    <th style="padding: 12px; text-align: center;">Dossard</th>
+                    <th style="padding: 12px; text-align: center;">${serie.laneMode ? 'Couloir' : 'Dossard'}</th>
                     <th style="padding: 12px; text-align: left;">Participant</th>
                     ${showCategory ? '<th style="padding: 12px; text-align: left;">Catégorie</th>' : ''}
                     <th style="padding: 12px; text-align: center;">Tours</th>
@@ -2291,8 +2309,22 @@ window.printChronoCompetition = function(dayNumber) {
                 var dd = days[d];
                 if (dd.dayType === 'chrono' && dd.chronoData && dd.chronoData.events && dd.chronoData.events.length > 0) {
                     if (!dayNumber || parseInt(d) === dayNumber) {
-                        printEvents = dd.chronoData.events;
-                        printParticipants = dd.chronoData.participants || [];
+                        const dayChrono = dd.chronoData;
+                        // Séries imbriquées (génération natation) ET « à plat » créées via
+                        // ➕ Série : sans ces dernières, la feuille affichait « Aucune série ».
+                        printEvents = dayChrono.events.map(evt => Object.assign({}, evt, {
+                            series: typeof getEventSeries === 'function' ? getEventSeries(dayChrono, evt) : (evt.series || [])
+                        }));
+                        // Couloirs complétés par la même fonction qu'au départ de la course :
+                        // la feuille montre exactement les couloirs des boutons d'arrêt.
+                        let lanesAdded = false;
+                        if (typeof ensureSerieLanes === 'function') {
+                            printEvents.forEach(evt => evt.series.forEach(serie => {
+                                if (ensureSerieLanes(serie)) lanesAdded = true;
+                            }));
+                        }
+                        if (lanesAdded) saveToLocalStorage();
+                        printParticipants = dayChrono.participants || [];
                         break;
                     }
                 }
@@ -2368,11 +2400,18 @@ window.printChronoCompetition = function(dayNumber) {
 
     // Parcourir les épreuves
     printEvents.forEach(event => {
+        // Une épreuve créée via « 🎯 Épreuve » n'a qu'un nom : distance lue sur ses
+        // séries (générées depuis le nom), type seulement s'il est connu — sinon la
+        // feuille affichait « Distance: undefinedm | Type: undefined ».
+        const eventDistance = event.distance || ((event.series || []).find(s => s.distance) || {}).distance;
+        const eventType = raceTypeLabels[event.raceType] || event.raceType;
+        const eventInfo = [eventDistance ? `Distance: ${eventDistance}m` : '', eventType ? `Type: ${eventType}` : '']
+            .filter(Boolean).join(' | ');
         printContent += `
             <div class="event">
                 <h2>${sportEmoji[event.sportType] || '🏅'} ${event.name}</h2>
                 <div class="info">
-                    Distance: ${event.distance}m | Type: ${raceTypeLabels[event.raceType] || event.raceType}
+                    ${eventInfo}
                     ${event.raceType === 'relay' ? ` | Durée: ${event.relayDuration} min` : ''}
                     ${event.raceType === 'interclub' ? ` | Barème: ${(event.interclubPoints || [10,8,6,5,4,3,2,1]).join(', ')}` : ''}
                 </div>
@@ -2394,8 +2433,14 @@ window.printChronoCompetition = function(dayNumber) {
                 if (serie.participants.length === 0) {
                     printContent += `<p style="color: #999;">Aucun participant</p>`;
                 } else {
-                    // Trier les participants par résultat
-                    const sorted = [...serie.participants].sort((a, b) => {
+                    // Mode couloirs sans arrivée : feuille de départ, dans l'ordre des couloirs
+                    // (la position et le dossard, sans couloir, faisaient placer les nageurs
+                    // au mauvais couloir). Sinon : tri par résultat.
+                    const laneMode = !!serie.laneMode;
+                    const startList = laneMode && !serie.participants.some(p => p.status === 'finished');
+                    const sorted = startList
+                        ? [...serie.participants].sort((a, b) => (a.laneNumber || 99) - (b.laneNumber || 99))
+                        : [...serie.participants].sort((a, b) => {
                         if (a.status === 'finished' && b.status !== 'finished') return -1;
                         if (b.status === 'finished' && a.status !== 'finished') return 1;
                         if (a.totalDistance !== b.totalDistance) return b.totalDistance - a.totalDistance;
@@ -2409,7 +2454,7 @@ window.printChronoCompetition = function(dayNumber) {
                             <thead>
                                 <tr>
                                     <th style="width: 40px;">${showCategory ? 'Pos. Scratch' : 'Pos.'}</th>
-                                    <th style="width: 60px;">Dossard</th>
+                                    <th style="width: 60px;">${laneMode ? 'Couloir' : 'Dossard'}</th>
                                     <th>Nom</th>
                                     <th>Club</th>
                                     ${showCategory ? '<th>Catégorie</th>' : ''}
@@ -2423,20 +2468,22 @@ window.printChronoCompetition = function(dayNumber) {
 
                     sorted.forEach((p, index) => {
                         const position = index + 1;
-                        const medalClass = position === 1 ? 'medal-1' : position === 2 ? 'medal-2' : position === 3 ? 'medal-3' : '';
+                        // Pas de couleur de médaille sur une feuille de départ (personne n'a nagé)
+                        const medalClass = startList ? '' : position === 1 ? 'medal-1' : position === 2 ? 'medal-2' : position === 3 ? 'medal-3' : '';
                         const statusClass = p.status === 'finished' ? 'finished' : p.status === 'running' ? 'running' : 'ready';
 
-                        // Récupérer le club du participant
+                        // Club de la série d'abord : les id de participants sont propres à chaque
+                        // journée, le cache raceData peut contenir le même id pour un autre nageur.
                         const participantData = raceData.participants.find(rp => rp.id === p.id);
-                        const club = participantData?.club || p.club || '-';
+                        const club = p.club || participantData?.club || '-';
                         const categoryCell = showCategory
                             ? `<td>${p.category || '-'}${p.category ? ` (${p.catRank}e/${p.catTotal})` : ''}</td>`
                             : '';
 
                         printContent += `
                             <tr class="${medalClass}">
-                                <td class="rank">${position}</td>
-                                <td>${p.bib}</td>
+                                <td class="rank">${laneMode && p.status !== 'finished' ? '-' : position}</td>
+                                <td>${laneMode ? (p.laneNumber != null ? p.laneNumber : '-') : p.bib}</td>
                                 <td>${p.name}</td>
                                 <td>${club}</td>
                                 ${categoryCell}

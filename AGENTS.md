@@ -132,10 +132,13 @@ la vraie interface de course vit dans `chrono.iife.js` (section 11).
 
 Un sous-ensemble représentatif :
 - `setDayType(dayNumber, type)`, `getDayType(dayNumber)`, `isMultisportMode()`, `hasChronoDays()`, `hasChampionshipDays()`, `updateMultisportTabVisibility()`
+- `nextFreeLane(serie)`, `ensureSerieLanes(serie)` - couloirs : `ensureSerieLanes` complète les couloirs manquants d'une série en mode couloirs ; appelée au départ de la course (`startChronoRaceForDay`) ET à l'impression (`printChronoCompetition`) pour que la feuille montre les couloirs des boutons d'arrêt
+- `getEventSeries(chronoData, evt)` - séries d'une épreuve, imbriquées (`evt.series`, génération natation) + « à plat » (`chronoData.series`, créées via ➕ Série) ; à utiliser plutôt que `evt.series` seul
 - `showAddEventModalForDay(dayNumber)`, `saveEventForDay(dayNumber)`, `showAddSerieModalForDay(dayNumber)`, `saveSerieForDay(dayNumber)` - équivalents par-journée des fonctions globales supprimées de `chrono.iife.js` (voir issue #65)
 - `manageSerieParticipants(dayNumber, serieId)`, `addParticipantToSerie(dayNumber, serieId)`, `addExistingParticipantToSerie(dayNumber, participantId, serieId)`, `removeParticipantFromSerie(dayNumber, serieId, participantId)` - gestion des participants d'une série (modal "👥 Gérer les participants") ; tous propagent désormais `category` (voir feature Catégories ci-dessous)
 - `assignCategoryRanks(arr)`, `buildCategoryDatalist(dayNumber)`, `getSerieRanking(serie)` - feature "catégories multiples" (ex: Solo/Équipe) : `assignCategoryRanks` ajoute `catRank`/`catTotal`/`hasMultipleCategories` à un classement déjà trié ; utilisée par les 3 vues de classement chrono (`generateRaceRanking` et `buildLiveRaceDisplayContentHTML` dans `chrono.iife.js`, `showSerieRanking` ici)
 - `calculateMultisportRanking()`, `renderMultisportRanking()`, `buildMultisportRankingDoc(autoPrint)`, `exportMultisportRankingToHTML()`, `showSerieRanking(dayNumber, serieId)` - classement combiné (voir "Rankings" plus bas dans `claude.md`)
+- `isSwimmingOnlyCompetition()`, `calculateEventRankings()`, `buildEventRankingsHTML()` - **natation** : pas de classement général ; toutes les séries d'une même épreuve regroupées et classées au temps (centièmes, ex æquo au centième, DNS/DISQ listés sans rang). Utilisé par l'onglet, l'impression/export HTML, le second écran « 📺 Afficher » (`buildMultisportRankingContentHTML`, `ui.iife.js`) et l'export JSON
 - `exportChronoDataForDay(dayNumber)`, `importChronoDataForDay(dayNumber)` - export/import par-journée des données chrono
 - `showAddParticipantManualModal(dayNumber)`, `saveBulkParticipantsForDay(dayNumber)`, `showImportPlayersModal(dayNumber)`, `importPlayersFromDay(target, source)`
 - Pour la liste complète, `grep "^\s*(global|window)\.[a-zA-Z_]* =" src/multisport.iife.js`
@@ -358,12 +361,19 @@ qu'une fonction "gagne".
 **`npm test` doit tourner (et être vert) avant de considérer une modification terminée** — correction de bug, suppression de code mort, refactoring, tout y passe. Ce n'est pas optionnel : plusieurs bugs de ce repo (`clearDayData` qui perdait `dayType`, le doublon `generateInterclubRanking` qui cassait silencieusement le classement interclub) n'ont été détectés que parce qu'un test existait ou a été écrit pour eux.
 
 ```bash
-npm test                    # Suite Jest (tests/unit/), 150+ tests
+npm test                    # Suite Jest (tests/unit/), 180+ tests
 npm run check:duplicates    # Détection de doublons en CLI seule (déjà incluse dans npm test)
+npm run test:e2e            # Journée natation complète dans un vrai navigateur (HEADED=1 pour regarder)
 ```
 
 La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR et
 chaque push vers `main` : un check rouge est une vraie régression.
+
+`npm run test:e2e` (`tests/e2e/natation.e2e.js`) rejoue par de vrais clics une journée
+natation complète avec les 150 lignes réelles de `jsondetest/natation test 2.json`. Il n'est
+pas lancé en CI (il faut un navigateur) : à lancer avant chaque compétition et après toute
+modification du flux Courses/natation/classements. Captures et rapport dans
+`tests/e2e/output/`.
 
 Quand tu corriges un bug, ajoute un test de non-régression dans `tests/unit/` (voir `clearDayData.test.js` ou `interclubRanking.test.js`). Quand tu supprimes du code que tu penses mort, lance `npm test` avant ET après — une suite verte avant qui reste verte après est la vraie preuve que la suppression est sûre, pas juste le grep qui l'a justifiée. Voir `CONTRIBUTING.md` et `tests/helpers/loadApp.js` pour le détail.
 

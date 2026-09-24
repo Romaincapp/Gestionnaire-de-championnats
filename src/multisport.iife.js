@@ -322,6 +322,22 @@
     }
     global.nextFreeLane = nextFreeLane;
 
+    // Complète les couloirs manquants d'une série en mode couloirs (séries créées
+    // avant l'attribution automatique). Appelée au départ de la course ET à
+    // l'impression des séries : la feuille imprimée montre ainsi exactement les
+    // couloirs des boutons d'arrêt. Retourne true si un couloir a été attribué.
+    function ensureSerieLanes(serie) {
+        if (!serie || !serie.laneMode) return false;
+        var changed = false;
+        (serie.participants || []).forEach(function(p) {
+            if (p.laneNumber) return;
+            var lane = nextFreeLane(serie);
+            if (lane) { p.laneNumber = lane; changed = true; }
+        });
+        return changed;
+    }
+    global.ensureSerieLanes = ensureSerieLanes;
+
     function addChronoParticipant(dayNumber, serieId, name, bib, options) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return null;
@@ -1428,20 +1444,175 @@
     }
 
     // Formate une durée (ms) de façon lisible : "1h23m45s", "23m45s" ou "45s"
+    // Durée lisible AVEC centièmes (« 4,20s », « 1m02,35s », « 1h02m03,45s ») :
+    // en natation, ce sont les centièmes qui départagent. Calcul sur les centièmes
+    // totaux pour qu'un arrondi fasse bien passer la seconde/minute (59,999 s → 1m00,00s).
     function formatDurationHMS(ms) {
-        ms = ms || 0;
-        var totalSec = Math.round(ms / 1000);
+        var totalCs = Math.round((ms || 0) / 10);
+        var cs = totalCs % 100;
+        var totalSec = Math.floor(totalCs / 100);
         var h = Math.floor(totalSec / 3600);
         var m = Math.floor((totalSec % 3600) / 60);
         var s = totalSec % 60;
         var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
-        if (h > 0) return h + 'h' + pad(m) + 'm' + pad(s) + 's';
-        if (m > 0) return m + 'm' + pad(s) + 's';
-        return s + 's';
+        var secPart = ',' + pad(cs) + 's';
+        if (h > 0) return h + 'h' + pad(m) + 'm' + pad(s) + secPart;
+        if (m > 0) return m + 'm' + pad(s) + secPart;
+        return s + secPart;
     }
     global.formatDurationHMS = formatDurationHMS;
 
+    // ============================================
+    // CLASSEMENT PAR ÉPREUVE (natation)
+    // ============================================
+    // En natation, on ne compare que ce qui est comparable : toutes les séries
+    // d'une même épreuve (ex. les 7 séries du 50m brasse) sont regroupées et
+    // classées au temps. Pas de classement général « distance & temps » (pensé
+    // pour la course à pied) entre des épreuves différentes.
+
+    function isSwimmingSerie(serie) {
+        return !!serie && (serie.sportType === 'swimming' || !!serie.laneMode);
+    }
+
+    // Séries d'une épreuve : imbriquées (evt.series, génération natation) et
+    // « à plat » (chronoData.series) rattachées par eventId.
+    function getEventSeries(chronoData, evt) {
+        return (evt.series || []).concat((chronoData.series || []).filter(function(s) {
+            return s.eventId === evt.id && (evt.series || []).indexOf(s) === -1;
+        }));
+    }
+    global.getEventSeries = getEventSeries;
+
+    // Vrai pour une compétition uniquement composée de journées Courses dont
+    // toutes les séries (avec participants) sont de la natation.
+    function isSwimmingOnlyCompetition() {
+        if (!hasChronoDays() || hasChampionshipDays()) return false;
+        var found = false, allSwim = true;
+        Object.keys(global.championship.days).forEach(function(dayKey) {
+            var day = global.championship.days[dayKey];
+            if (!day || day.dayType !== DAY_TYPES.CHRONO || !day.chronoData) return;
+            var cd = day.chronoData;
+            var series = (cd.series || []).slice();
+            (cd.events || []).forEach(function(evt) { series = series.concat(evt.series || []); });
+            series.forEach(function(s) {
+                if (!s || !(s.participants || []).length) return;
+                found = true;
+                if (!isSwimmingSerie(s)) allSwim = false;
+            });
+        });
+        return found && allSwim;
+    }
+    global.isSwimmingOnlyCompetition = isSwimmingOnlyCompetition;
+
+    // [{ dayNumber, eventId, eventName, entries: [{rank, name, club, category,
+    //    serieName, time}], outOfRace: [{name, club, serieName, status}] }]
+    // entries triées au temps ; ex æquo au centième → même rang (1, 2, 2, 4).
+    // DNS/DISQ : jamais classés (même si un ancien résultat les contient encore).
+    function calculateEventRankings() {
+        var out = [];
+        Object.keys(global.championship.days)
+            .sort(function(a, b) { return Number(a) - Number(b); })
+            .forEach(function(dayKey) {
+                var day = global.championship.days[dayKey];
+                if (!day || day.dayType !== DAY_TYPES.CHRONO || !day.chronoData) return;
+                var cd = day.chronoData;
+                (cd.events || []).forEach(function(evt) {
+                    var entries = [], outOfRace = [];
+                    getEventSeries(cd, evt).forEach(function(s) {
+                        var partByName = {};
+                        (s.participants || []).forEach(function(p) {
+                            if (p && p.name) partByName[p.name.toLowerCase()] = p;
+                            if (p && (p.status === 'dns' || p.status === 'disq')) {
+                                outOfRace.push({ name: p.name, club: p.club || '', serieName: s.name, status: p.status });
+                            }
+                        });
+                        (s.results || []).forEach(function(r) {
+                            if (!(r.time > 0)) return;
+                            var p = partByName[(r.name || '').toLowerCase()] || {};
+                            if (p.status === 'dns' || p.status === 'disq') return;
+                            entries.push({
+                                name: r.name, club: r.club || p.club || '', category: r.category || p.category || '',
+                                serieName: s.name, time: r.time
+                            });
+                        });
+                    });
+                    if (entries.length === 0 && outOfRace.length === 0) return;
+                    entries.sort(function(a, b) { return a.time - b.time; });
+                    var prevCs = null, prevRank = 0;
+                    entries.forEach(function(e, i) {
+                        var cs = Math.round(e.time / 10);
+                        e.rank = cs === prevCs ? prevRank : i + 1;
+                        prevCs = cs;
+                        prevRank = e.rank;
+                    });
+                    out.push({ dayNumber: Number(dayKey), eventId: evt.id, eventName: evt.name, entries: entries, outOfRace: outOfRace });
+                });
+            });
+        return out;
+    }
+    global.calculateEventRankings = calculateEventRankings;
+
+    // Tableaux HTML du classement par épreuve (un par épreuve), utilisés par
+    // l'onglet, l'impression / export HTML et le second écran « Afficher ».
+    function buildEventRankingsHTML() {
+        var events = calculateEventRankings();
+        if (events.length === 0) {
+            return '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Aucun résultat pour le moment</p>';
+        }
+        var multiDay = events.some(function(e) { return e.dayNumber !== events[0].dayNumber; });
+        var medals = ['🥇', '🥈', '🥉'];
+        var html = '';
+        events.forEach(function(evt) {
+            html += '<div class="event-ranking" style="margin: 0 0 22px 0; page-break-inside: avoid;">';
+            html += '<h3 style="margin: 0 0 8px 0; color: #16a085;">🏊 ' + escapeLaneHtml(evt.eventName) +
+                (multiDay ? ' — Journée ' + evt.dayNumber : '') +
+                ' <span style="font-size: 12px; color: #7f8c8d; font-weight: normal;">(' + evt.entries.length + ' classé' + (evt.entries.length > 1 ? 's' : '') + ')</span></h3>';
+            html += '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr><th style="padding: 8px; text-align: center;">Rang</th><th style="padding: 8px; text-align: left;">Nageur</th>' +
+                '<th style="padding: 8px; text-align: center;">Club</th><th style="padding: 8px; text-align: center;">Série</th>' +
+                '<th style="padding: 8px; text-align: center;">Temps</th></tr></thead><tbody>';
+            evt.entries.forEach(function(e) {
+                html += '<tr style="border-bottom: 1px solid #ecf0f1;">' +
+                    '<td style="padding: 8px; text-align: center; font-weight: bold;">' + (e.rank <= 3 ? medals[e.rank - 1] + ' ' : '') + e.rank + '</td>' +
+                    '<td style="padding: 8px; font-weight: bold;">' + escapeLaneHtml(e.name) + '</td>' +
+                    '<td style="padding: 8px; text-align: center;">' + (e.club ? escapeLaneHtml(e.club) : '-') + '</td>' +
+                    '<td style="padding: 8px; text-align: center;">' + escapeLaneHtml(e.serieName) + '</td>' +
+                    '<td style="padding: 8px; text-align: center; font-family: monospace;">' + formatDurationHMS(e.time) + '</td></tr>';
+            });
+            evt.outOfRace.forEach(function(o) {
+                html += '<tr style="border-bottom: 1px solid #ecf0f1; color: #7f8c8d;">' +
+                    '<td style="padding: 8px; text-align: center; font-weight: bold;">' + (o.status === 'disq' ? 'DISQ' : 'DNS') + '</td>' +
+                    '<td style="padding: 8px;">' + escapeLaneHtml(o.name) + '</td>' +
+                    '<td style="padding: 8px; text-align: center;">' + (o.club ? escapeLaneHtml(o.club) : '-') + '</td>' +
+                    '<td style="padding: 8px; text-align: center;">' + escapeLaneHtml(o.serieName) + '</td>' +
+                    '<td style="padding: 8px; text-align: center;">-</td></tr>';
+            });
+            html += '</tbody></table></div>';
+        });
+        return html;
+    }
+    global.buildEventRankingsHTML = buildEventRankingsHTML;
+
+    // Onglet Multisport d'une compétition 100 % natation
+    function renderEventRankingsPanel() {
+        var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
+        html += '<div style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; padding: 20px;">';
+        html += '<h2 style="margin: 0; text-align: center;">🏊 Classement par épreuve</h2>';
+        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">Toutes les séries d\'une même épreuve regroupées, classées au temps</p>';
+        html += '</div>';
+        html += '<div style="padding: 12px 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #ecf0f1; background: #fbfbfd;">';
+        html += '<button onclick="showNameHarmonizationModal()" style="padding: 8px 14px; font-size: 13px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔤 Harmoniser les noms</button>';
+        html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #16a085; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
+        html += '<button onclick="printGeneralRanking()" style="padding: 8px 14px; font-size: 13px; background: #34495e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🖨️ Imprimer</button>';
+        html += '</div>';
+        html += '<div style="padding: 15px;">' + buildEventRankingsHTML() + '</div>';
+        html += '</div>';
+        return html;
+    }
+
     function renderMultisportRanking() {
+        if (isSwimmingOnlyCompetition()) return renderEventRankingsPanel();
+
         var ranking = calculateMultisportRanking();
 
         // Mode d'affichage : chrono seul OU mixte (championnat + courses)
@@ -1533,7 +1704,8 @@
     // autoPrint=true ajoute le déclenchement de l'impression (pour la fenêtre
     // d'impression / export PDF) ; false produit un fichier HTML à télécharger.
     function buildMultisportRankingDoc(autoPrint) {
-        var ranking = calculateMultisportRanking();
+        var swimmingOnly = isSwimmingOnlyCompetition();
+        var ranking = swimmingOnly ? {} : calculateMultisportRanking();
         var mixed = hasChampionshipDays() && hasChronoDays();
 
         var sorted = Object.values(ranking).sort(function(a, b) {
@@ -1542,7 +1714,8 @@
             return a.chronoTime - b.chronoTime;
         });
 
-        var title = mixed ? 'Classement Général Multisport' : 'Classement Général des Courses';
+        var title = swimmingOnly ? 'Résultats par épreuve'
+            : (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses');
         var champName = (global.championship && global.championship.name) ? global.championship.name : '';
         var dateStr = new Date().toLocaleDateString('fr-FR');
         var bareme = mixed ? 'Barème par journée : 25 / 19 / 17 / 15 / 12 / 10 / 8 / 6 / 4 / 2 (0 au-delà), par division pour les matchs.' : '';
@@ -1577,7 +1750,10 @@
             '<h1>🏆 ' + title + '</h1>' +
             '<div class="sub">' + (champName ? champName + ' — ' : '') + 'Édité le ' + dateStr + '</div>' +
             (bareme ? '<div class="bareme">🏅 ' + bareme + '</div>' : '') +
-            '<table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>' +
+            (swimmingOnly
+                // Natation : un tableau par épreuve (séries regroupées), pas de général
+                ? '<style>h3{font-size:16px;margin:18px 0 6px;}</style>' + buildEventRankingsHTML()
+                : '<table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>') +
             (autoPrint ? '<script>window.onload=function(){window.print();};<\/script>' : '') +
             '</body></html>';
     }

@@ -5,10 +5,12 @@
   "description": "Application de gestion de championnats (vanilla JS, pas de build).",
   "scripts": {
     "check:duplicates": "node scripts/check-duplicate-functions.js",
-    "test": "jest"
+    "test": "jest",
+    "test:e2e": "node tests/e2e/natation.e2e.js"
   },
   "devDependencies": {
     "jest": "^30.5.1",
-    "jest-environment-jsdom": "^30.5.1"
+    "jest-environment-jsdom": "^30.5.1",
+    "playwright-core": "^1.63.0"
   }
 }

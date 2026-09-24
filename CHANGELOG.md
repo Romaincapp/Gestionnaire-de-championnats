@@ -13,6 +13,31 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏊 Natation : classement par épreuve
+- Pour une compétition de natation, le classement général (distance & temps, pensé pour la
+  course à pied) est remplacé par un **classement par épreuve** : toutes les séries d'une même
+  épreuve (ex. les 7 séries du 50m brasse) regroupées et classées au temps, avec club et série,
+  ex æquo au centième, DNS/DISQ listés sans rang. Disponible dans les onglets 🏅 Multisport et
+  🏆 Classement, à l'impression (« Résultats par épreuve »), sur le second écran 📺 Afficher et
+  dans l'export JSON. Les compétitions de course à pied et mixtes sont inchangées.
+- Temps affichés **au centième** dans les classements des courses (« 4,20s » au lieu de « 4s »).
+- **Couloirs sans ambiguïté** : le gros bouton de couloir affichait le vrai couloir en grand
+  ET le dossard en petit, et le tableau de course montrait le dossard (« #5 ») sans couloir.
+  Le dossard se lisait comme un couloir (« le bouton 1 pour le nageur du couloir 5 »). En mode
+  couloirs, le couloir est désormais écrit partout : bouton « COULOIR 1 » + nom (sans
+  dossard), colonne **Couloir** dans le tableau de course (trié dans l'ordre du bassin), sur le
+  second écran 🖥️ Afficher et sur la feuille « 🖨️ Imprimer séries » (feuille de départ triée
+  par couloir, sans couleurs de médaille ni « Distance: undefinedm »).
+- **Feuille imprimée = boutons d'arrêt** : les couloirs de la feuille « 🖨️ Imprimer séries »
+  sont exactement ceux des gros boutons (attribution « Séries natation » + modifications 🏊/👥).
+  Une ancienne série sans couloir reçoit ses couloirs dès l'impression, et ce sont ceux que la
+  course utilisera. Les séries créées via ➕ Série apparaissent aussi sur la feuille (avant :
+  « Aucune série »).
+
+### 🧪 Outillage
+- `npm run test:e2e` : test de bout en bout d'une journée natation dans un vrai navigateur, à
+  relancer avant chaque compétition (`HEADED=1` pour le regarder se dérouler).
+
 ### 🐛 Corrections (test de bout en bout d'une journée natation)
 - **Onglet 🏅 Multisport** : il disparaissait définitivement après un rechargement de la page,
   l'ajout d'une journée (+) ou un import JSON. Le classement combiné n'était alors plus

@@ -23,6 +23,8 @@ Application web de gestion de championnats de tennis de table.
 - Chronométrage en temps réel, mode couloirs (touches 1-9) pour la natation
 - Gestion des tours, relais, arrivées, DNS/DISQ
 - Classements par série + export PDF
+- Natation : classement **par épreuve** (toutes les séries d'une même épreuve regroupées,
+  classées au temps au centième), à l'écran, à l'impression et sur le second écran
 
 ### 🏅 Mode Multisport
 - Un onglet "Multisport" apparaît automatiquement dès qu'il y a au moins une journée Courses
