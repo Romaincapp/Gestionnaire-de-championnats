@@ -336,8 +336,9 @@
             
             const remainingDays = Object.keys(championship.days).map(Number);
             switchTab(Math.min(...remainingDays));
-            
+
             updateDaySelectors();
+            if (typeof updateMultisportTabVisibility === 'function') updateMultisportTabVisibility();
             saveToLocalStorage();
             showNotification(`Journée ${dayNumber} supprimée`, 'warning');
         }
@@ -368,6 +369,11 @@
             targetContent.classList.add('active');
             targetContent.style.display = 'block';
         }
+
+        // Rafraîchir la visibilité de la barre globale Divisions/Terrains
+        // (pertinente en Championship, sans objet en Chrono) pour la journée
+        // qu'on vient d'afficher.
+        if (typeof updateDayTypeUI === 'function') updateDayTypeUI(dayNumber);
     }
     
     // Fonction pour changer le type de journée sans recharger la page
@@ -421,13 +427,9 @@
     function handleDayTypeChange(dayNumber, type) {
         // Sauvegarder le nouveau type
         if (!championship.days[dayNumber]) return;
-        
-        // S'assurer que la structure de données existe
-        if (!championship.days[dayNumber].dayType) {
-            championship.days[dayNumber].dayType = 'championship';
-        }
-        
-        // Initialiser les données chrono si elles n'existent pas
+
+        // Initialiser les données chrono si elles n'existent pas (sécurité :
+        // setDayType() ci-dessous ne le fait pas, seulement addNewDay())
         if (!championship.days[dayNumber].chronoData) {
             championship.days[dayNumber].chronoData = {
                 events: [],
@@ -438,14 +440,28 @@
                 nextParticipantId: 1
             };
         }
-        
-        championship.days[dayNumber].dayType = type;
-        saveToLocalStorage();
-        
-        // Mettre à jour l'interface visuelle du sélecteur
+
+        // Déléguer l'écriture des données + le toggle des sections
+        // championship-section-N/chrono-section-N + de la barre globale
+        // Divisions/Terrains (#championshipConfigBar) à setDayType()
+        // (multisport.iife.js), la source unique de vérité pour le
+        // changement de type de journée. Cette fonction dupliquait
+        // auparavant cette logique en local (utilisée par le sélecteur
+        // statique de la Journée 1) sans jamais toucher la barre globale,
+        // qui ne réapparaissait donc pas en repassant en mode Championship
+        // depuis la J1.
+        if (typeof setDayType === 'function') {
+            setDayType(dayNumber, type);
+        } else {
+            championship.days[dayNumber].dayType = type;
+            saveToLocalStorage();
+        }
+
+        // Mettre à jour l'interface visuelle spécifique au sélecteur
+        // statique de la Journée 1 (pastille de couleur + libellé)
         const selector = document.getElementById(`day-type-selector-${dayNumber}`);
         const label = document.getElementById(`day-type-label-${dayNumber}`);
-        
+
         if (selector) {
             if (type === 'chrono') {
                 selector.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
@@ -455,29 +471,11 @@
                 if (label) label.textContent = 'Championnat';
             }
         }
-        
-        // Afficher/masquer les sections appropriées
-        const chronoSection = document.getElementById(`chrono-section-${dayNumber}`);
-        const championshipSection = document.getElementById(`championship-section-${dayNumber}`);
-        
-        if (chronoSection) {
-            chronoSection.style.display = type === 'chrono' ? 'block' : 'none';
-        }
-        if (championshipSection) {
-            championshipSection.style.display = type === 'championship' ? 'block' : 'none';
-        }
-        
+
         // Rafraîchir l'affichage chrono si on passe en mode chrono
         if (type === 'chrono' && typeof refreshChronoDisplay === 'function') {
             refreshChronoDisplay(dayNumber);
         }
-        
-        // Mettre à jour la visibilité de l'onglet multisport
-        if (typeof updateMultisportTabVisibility === 'function') {
-            updateMultisportTabVisibility();
-        }
-        
-        showNotification(`Mode ${type === 'chrono' ? 'Courses' : 'Matchs'} activé`, 'success');
     }
     window.handleDayTypeChange = handleDayTypeChange;
     window.switchTab = switchTab;
@@ -956,16 +954,29 @@
             showNotification('Ajoutez des participants avant de démarrer', 'warning');
             return;
         }
-        
+
+        // Séries en mode couloirs créées avant l'attribution automatique : compléter
+        if (serie.laneMode && typeof nextFreeLane === 'function') {
+            serie.participants.forEach(p => {
+                if (!p.laneNumber) p.laneNumber = nextFreeLane(serie);
+            });
+        }
+
         // Préparer la structure pour l'ancien système
         // Créer un événement temporaire si nécessaire
-        let event = raceData.events.find(e => e.id === serie.eventId);
+        // IMPORTANT : les id d'événement/série sont des compteurs LOCAUX à chaque
+        // journée (remis à 1 par clearDayData). Sans le filtre dayNumber ici, un id
+        // réutilisé après un "vider la journée" retomberait sur une entrée déjà
+        // présente dans raceData/localStorage (cache jamais purgé) et reprendrait
+        // ses anciens temps/tours au lieu de repartir de zéro.
+        let event = raceData.events.find(e => e.id === serie.eventId && e.dayNumber === dayNumber);
         if (!event && serie.eventId) {
             // Chercher dans les événements du jour
             const dayEvent = chronoData.events.find(e => e.id === serie.eventId);
             if (dayEvent) {
                 event = {
                     id: dayEvent.id,
+                    dayNumber: dayNumber,
                     name: dayEvent.name,
                     date: dayEvent.date,
                     sportType: serie.sportType || 'running',
@@ -978,11 +989,12 @@
                 raceData.events.push(event);
             }
         }
-        
+
         // Si pas d'événement, créer un événement virtuel pour cette série
         if (!event) {
             event = {
                 id: raceData.nextEventId++,
+                dayNumber: dayNumber,
                 name: 'Jour ' + dayNumber + ' - ' + serie.name,
                 date: new Date().toISOString().split('T')[0],
                 sportType: serie.sportType || 'running',
@@ -995,13 +1007,15 @@
             raceData.events.push(event);
             serie.eventId = event.id;
         }
-        
-        // Vérifier si la série existe déjà dans raceData
-        let raceSerie = raceData.series.find(s => s.id === serieId && s.eventId === event.id);
+
+        // Vérifier si la série existe déjà dans raceData (même règle : filtrer par
+        // dayNumber pour ignorer toute entrée orpheline d'avant un vidage de journée)
+        let raceSerie = raceData.series.find(s => s.id === serieId && s.eventId === event.id && s.dayNumber === dayNumber);
         if (!raceSerie) {
             // Créer la série dans le format de l'ancien système
             raceSerie = {
                 id: serieId,
+                dayNumber: dayNumber,
                 name: serie.name,
                 eventId: event.id,
                 participants: serie.participants.map(p => ({
@@ -1051,6 +1065,7 @@
                 rp.name = src.name;
                 if (src.bib != null) rp.bib = src.bib;
                 if (src.club) rp.club = src.club;
+                if (src.laneNumber != null) rp.laneNumber = src.laneNumber;
             }
         });
 
@@ -1140,6 +1155,7 @@
             .map(p => ({
                 bib: p.bib,
                 name: p.name,
+                category: p.category || '',
                 time: p.finishTime || p.totalTime,
                 totalDistance: p.totalDistance || 0
             }));
@@ -1270,46 +1286,90 @@
     function clearDayData(dayNumber) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
-        
+
         let totalPlayers = 0;
         let totalMatches = 0;
+        let totalPoolMatches = 0;
+        let totalChronoParticipants = 0;
 
         const numDivisions = championship.config?.numberOfDivisions || 3;
         for (let division = 1; division <= numDivisions; division++) {
             totalPlayers += dayData.players[division].length;
             totalMatches += dayData.matches[division].length;
         }
-        
-        if (totalPlayers === 0 && totalMatches === 0) {
+        if (dayData.pools && dayData.pools.divisions) {
+            Object.values(dayData.pools.divisions).forEach(function(poolDiv) {
+                totalPoolMatches += (poolDiv.matches || []).length;
+                totalPoolMatches += (poolDiv.finalPhase || []).length;
+            });
+        }
+        if (dayData.chronoData && dayData.chronoData.participants) {
+            totalChronoParticipants = dayData.chronoData.participants.length;
+        }
+
+        if (totalPlayers === 0 && totalMatches === 0 && totalPoolMatches === 0 && totalChronoParticipants === 0) {
             alert(`La Journée ${dayNumber} est déjà vide`);
             return;
         }
-        
-        const confirmMsg = `Vider complètement la Journée ${dayNumber} ?\n\n` +
+
+        let confirmMsg = `Vider complètement la Journée ${dayNumber} ?\n\n` +
                           `Cela supprimera :\n` +
                           `• ${totalPlayers} joueurs\n` +
-                          `• ${totalMatches} matchs\n` +
-                          `• Tous les scores\n\n` +
+                          `• ${totalMatches} matchs\n`;
+        if (totalPoolMatches > 0) confirmMsg += `• ${totalPoolMatches} match(s) de poule/phase finale\n`;
+        if (totalChronoParticipants > 0) confirmMsg += `• ${totalChronoParticipants} participant(s) chrono (courses)\n`;
+        confirmMsg += `• Tous les scores\n\n` +
+                          `Le type de journée (Championship/Chrono) est conservé.\n\n` +
                           `Cette action est irréversible !`;
-        
+
         if (confirm(confirmMsg)) {
             const players = {};
             const matches = {};
+            const poolDivisions = {};
             for (let div = 1; div <= numDivisions; div++) {
                 players[div] = [];
                 matches[div] = [];
+                poolDivisions[div] = { pools: [], matches: [] };
             }
             championship.days[dayNumber] = {
                 players: players,
-                matches: matches
+                matches: matches,
+                dayType: dayData.dayType,
+                pools: { enabled: false, divisions: poolDivisions },
+                chronoData: dayData.chronoData ? {
+                    events: [],
+                    series: [],
+                    participants: [],
+                    nextEventId: 1,
+                    nextSerieId: 1,
+                    nextParticipantId: 1
+                } : undefined
             };
-            
+
+            // Purger le cache du moteur de course live (raceData, persisté à part dans
+            // localStorage) pour cette journée : sans ça, les compteurs d'id remis à 1
+            // ci-dessus (nextEventId/nextSerieId) retombent sur d'anciennes entrées
+            // jamais nettoyées et en récupèrent les temps/tours au prochain "Démarrer".
+            if (typeof raceData !== 'undefined' && raceData) {
+                if (raceData.events) raceData.events = raceData.events.filter(e => e.dayNumber !== dayNumber);
+                if (raceData.series) raceData.series = raceData.series.filter(s => s.dayNumber !== dayNumber);
+                if (raceData.currentDayNumber === dayNumber) {
+                    raceData.currentSerie = null;
+                    raceData.currentDayNumber = null;
+                    raceData.currentSerieId = null;
+                }
+                if (typeof saveChronoToLocalStorage === 'function') saveChronoToLocalStorage();
+            }
+
             updatePlayersDisplay(dayNumber);
             updateMatchesDisplay(dayNumber);
             updateStats(dayNumber);
             const rankingsEl = document.getElementById(`rankings-${dayNumber}`);
             if (rankingsEl) rankingsEl.style.display = 'none';
-            
+            if (typeof updatePoolsDisplay === 'function') updatePoolsDisplay(dayNumber);
+            if (typeof refreshChronoDisplay === 'function') refreshChronoDisplay(dayNumber);
+            if (typeof updateMultisportTabVisibility === 'function') updateMultisportTabVisibility();
+
             saveToLocalStorage();
             showNotification(`Journée ${dayNumber} vidée`, 'warning');
         }

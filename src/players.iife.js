@@ -651,7 +651,7 @@
             '<h3>✏️ Modifier le joueur</h3>' +
             '<div style="margin: 15px 0;">' +
             '<label>Nom :</label>' +
-            '<input type="text" id="editPlayerNameInput" value="' + currentName + '" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ddd;">' +
+            '<input type="text" id="editPlayerNameInput" value="' + escapeHtmlAttr(currentName) + '" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ddd;">' +
             '</div>' +
             '<div style="margin: 15px 0;">' +
             '<label>Club :</label>' +
@@ -662,7 +662,7 @@
             '</div>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeEditPlayerModal()" class="btn btn-secondary">Annuler</button>' +
-            '<button onclick="saveEditedPlayer(' + dayNumber + ', ' + division + ', ' + playerIndex + ', \'' + currentName.replace(/'/g, "\\'") + '\')" class="btn btn-primary">Sauvegarder</button>' +
+            '<button onclick="saveEditedPlayer(' + dayNumber + ', ' + division + ', ' + playerIndex + ')" class="btn btn-primary">Sauvegarder</button>' +
             '</div></div></div>';
         
         document.body.appendChild(modal);
@@ -683,13 +683,19 @@
         }
     }
     
+    function escapeHtmlAttr(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
     function generateClubOptionsForEdit(selectedClub) {
         var clubs = (typeof clubsModule !== 'undefined' && clubsModule.getClubsList) ? 
             clubsModule.getClubsList() : ['Club A', 'Club B', 'Club C'];
         var html = '<option value="">-- Aucun club --</option>';
         clubs.forEach(function(club) {
             var selected = club === selectedClub ? ' selected' : '';
-            html += '<option value="' + club.replace(/"/g, '&quot;') + '"' + selected + '>' + club + '</option>';
+            html += '<option value="' + escapeHtmlAttr(club) + '"' + selected + '>' + escapeHtmlAttr(club) + '</option>';
         });
         html += '<option value="__custom__">+ Ajouter un nouveau club...</option>';
         return html;
@@ -706,7 +712,12 @@
         var clubCustom = document.getElementById('editPlayerClubCustom');
         
         if (!nameInput) return;
-        
+
+        if (oldPlayerName === undefined) {
+            var current = championship.days[dayNumber].players[division][playerIndex];
+            oldPlayerName = typeof current === 'object' ? current.name : current;
+        }
+
         var newName = formatProperName(nameInput.value);
         if (!newName) {
             showNotification('Veuillez entrer un nom', 'warning');

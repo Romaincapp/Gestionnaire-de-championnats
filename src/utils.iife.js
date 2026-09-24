@@ -16,9 +16,9 @@
         if (typeof name !== 'string') return '';
         return name.trim()
             .toLowerCase()
-            .split(/(\s+|-)/)
+            .split(/(\s+|-|'|’)/)
             .map(part => {
-                if (part.match(/^[\s-]+$/)) return part;
+                if (part.match(/^[\s\-'’]+$/)) return part;
                 return part.charAt(0).toUpperCase() + part.slice(1);
             })
             .join('');

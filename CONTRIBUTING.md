@@ -7,10 +7,10 @@ Merci de contribuer à ce projet ! Voici les bonnes pratiques à suivre.
 ### Modules IIFE
 
 Tout le code doit être organisé en modules IIFE (Immediately Invoked Function Expression)
-dans le dossier `src/`. Le projet compte aujourd'hui 16 modules (config, utils,
+dans le dossier `src/`. Le projet compte aujourd'hui 15 modules (config, utils,
 notifications, state, clubs, players, ui, init, matches, pools, chrono, multisport, ranking,
-export, export-json, export-print) — voir `AGENTS.md` pour le rôle de chacun. `script.js`
-n'est qu'un résidu legacy (~37 lignes), la migration est terminée : ne pas y écrire de code.
+export-json, export-print) — voir `AGENTS.md` pour le rôle de chacun. `script.js`
+ne gère plus que le mode sombre (~37 lignes), la migration est terminée : ne pas y écrire de code.
 
 ```javascript
 (function(global) {
@@ -86,10 +86,23 @@ showNotification('Succès !', 'success');
 ## 🧪 Tests
 
 ### Avant de commit
-1. Tester dans Chrome et Firefox
-2. Tester sur mobile (responsive)
-3. Vérifier la console (F12) : aucune erreur
-4. Tester l'export/import des données
+1. `npm test` - lance la suite Jest (`tests/unit/`), inclut la détection des fonctions redéfinies silencieusement (voir issues #65, #66)
+2. Tester dans Chrome et Firefox
+3. Tester sur mobile (responsive)
+4. Vérifier la console (F12) : aucune erreur
+5. Tester l'export/import des données
+
+### Tests automatisés (Jest)
+Le projet a une suite Jest minimale dans `tests/` (environnement jsdom, les
+modules `src/*.iife.js` sont chargés tels quels — pas de modules ES/CommonJS
+dans ce projet, voir `tests/helpers/loadApp.js`). `npm test` pour tout lancer.
+
+Priorité pour ajouter des tests : les patterns critiques de `claude.md`
+("Common Pitfalls") et tout bug réel corrigé — chaque bug corrigé devrait
+laisser un test de non-régression derrière lui (voir
+`tests/unit/clearDayData.test.js` et `tests/unit/matchCollectionPattern.test.js`
+comme exemples). Ce n'est pas une suite exhaustive : la couverture est
+volontairement ciblée sur ce qui a déjà cassé une fois.
 
 ### Fonctionnalités à tester
 - [ ] Ajout/suppression de joueurs
@@ -102,10 +115,10 @@ showNotification('Succès !', 'success');
 
 ## 🔄 Workflow de développement
 
-### 1. Créer une backup
-```bash
-cp script.js script.js.backup.$(date +%Y%m%d)
-```
+### 1. Travailler sur une branche
+`script.js` ne contient plus que le dark mode (37 lignes) — toute la
+logique est dans `src/*.iife.js`, versionnée avec git. Pas besoin de backup
+manuel par fichier : `git status`/`git diff` avant de committer suffit.
 
 ### 2. Modifier dans le bon module
 Identifier le module concerné et y ajouter la fonctionnalité.
@@ -174,7 +187,7 @@ location.reload();
 - ✅ Tester sur plusieurs navigateurs
 
 ### ❌ Ne pas faire
-- ❌ Modifier directement `script.js` (utiliser les modules)
+- ❌ Ajouter de la logique métier dans `script.js` (il ne contient que le dark mode ; utiliser les modules `src/`)
 - ❌ Ajouter de nouvelles dépendances externes
 - ❌ Utiliser ES6+ (arrow functions, classes, etc.)
 - ❌ Oublier d'exposer les fonctions sur window
@@ -188,20 +201,10 @@ location.reload();
 
 ## 💡 Idées de contribution
 
-### Priorité haute
-- [ ] Migrer les fonctions restantes de `script.js` vers les modules
-- [ ] Ajouter des validations de formulaires
-- [ ] Améliorer l'accessibilité (ARIA labels)
-
-### Priorité moyenne
-- [ ] Ajouter des animations de transition
-- [ ] Optimiser les performances (gros classements)
-- [ ] Internationalisation (i18n)
-
-### Priorité basse
-- [ ] Tests unitaires avec Jest
-- [ ] Migration vers TypeScript
-- [ ] PWA (Progressive Web App)
+Le suivi des tâches et idées se fait via les
+[GitHub Issues](https://github.com/Romaincapp/Gestionnaire-de-championnats/issues)
+du repo plutôt que dans ce fichier (une liste statique ici dérive vite —
+voir l'historique de `TODO.md`).
 
 ## 📞 Contact
 

@@ -1,50 +1,40 @@
 # 🏆 Gestionnaire de Championnats
 
-Application web de gestion de championnats sportifs (tennis de table à l'origine, désormais
-multisport : course à pied, cyclisme, natation...).
-
-> 📌 En développement actif — voir [DEVLOG.md](./DEVLOG.md) pour l'historique des sessions
-> et l'état le plus récent du code.
+Application web de gestion de championnats de tennis de table.
 
 ## ✨ Fonctionnalités
 
 ### 🎾 Mode Championship
 - Gestion des joueurs par division
-- Génération automatique de matchs (round-robin, système suisse)
+- Génération automatique de matchs (round-robin)
 - Système de tours
-- Saisie des scores en temps réel (navigation clavier Tab/Entrée)
+- Saisie des scores en temps réel
+- Système suisse pour les classements
 
 ### 🏆 Mode POOL  
 - Création de poules de 4 joueurs
 - Matchs de poule avec classement
-- Phase finale automatique (demi-finales, finale, tour de barrage si besoin)
+- Phase finale automatique (demi-finales, finale)
 - Qualification des 2 premiers de chaque poule
-- Import de classements de pools avec auto-configuration
 
 ### ⏱️ Mode CHRONO
-- Gestion d'événements de course (course à pied, cyclisme, natation)
-- Chronométrage en temps réel, courses individuelles ou relais (détection auto lap/arrivée)
-- **Mode couloirs** (natation) : assignation par série, saisie/arrêt par touche 1-9
-- Statuts de participant : Prêt / En course / Terminé / DNS / **DISQ**
-- Édition inline (tours, distance, temps) même pendant une course en cours
-- Import "Séries natation" façon Excel (séparateur, mapping de colonnes)
-- Ajout en masse de participants (y compris format `dossard` + tabulation)
-- Bouton "Afficher" : second écran de suivi en temps réel
-- Classements par série
+- Le type d'une journée (Matchs ou Courses) se choisit indépendamment pour chaque journée
+- Gestion d'événements de course (course à pied, vélo, natation)
+- Chronométrage en temps réel, mode couloirs (touches 1-9) pour la natation
+- Gestion des tours, relais, arrivées, DNS/DISQ
+- Classements par série + export PDF
 
-### 🌐 Mode Multisport
-- Apparaît automatiquement dès qu'une compétition mélange journées Championship et Chrono
-- Classement combiné basé sur un barème de position (25/19/17…)
-- Détail complet dans [MULTISPORT.md](./MULTISPORT.md)
+### 🏅 Mode Multisport
+- Un onglet "Multisport" apparaît automatiquement dès qu'il y a au moins une journée Courses
+- Classement combiné entre journées Matchs et journées Courses (barème de points par position)
 
 ### 🏢 Clubs
-- Club associable à chaque participant, dans tous les modes
-- Détail complet dans [CLUBS.md](./CLUBS.md)
+- Affectation d'un club à chaque joueur/participant
+- Badges club dans les listes et classements
 
 ### 📊 Classements
 - Classement par journée
-- Classement général sur toutes les journées (adapté Championship / Chrono / Multisport)
-- Détection des noms de joueurs similaires (doublons probables)
+- Classement général sur toutes les journées
 - Export PDF
 - Impression des feuilles de match
 
@@ -95,14 +85,26 @@ Voir [AGENTS.md](./AGENTS.md) pour la documentation technique complète, et
 sur quels fichiers — utile pour reprendre le projet après une pause).
 
 ### Architecture
-Le projet utilise une architecture modulaire avec 16 fichiers IIFE dans `src/` (config,
-utils, notifications, state, clubs, players, ui, init, matches, pools, chrono, multisport,
-ranking, export, export-json, export-print). Le détail complet — rôle et fonctions exposées
-de chaque module — est dans [AGENTS.md](./AGENTS.md), pour éviter d'avoir deux listes qui
-divergent.
-
-`script.js` n'est plus qu'un résidu legacy (~37 lignes) : la migration vers `src/` est
-terminée, ne pas y ajouter de code.
+Le projet utilise une architecture modulaire avec des fichiers IIFE :
+```
+src/
+├── config.iife.js       # Configuration
+├── utils.iife.js        # Utilitaires
+├── state.iife.js        # État global
+├── clubs.iife.js        # Gestion des clubs
+├── multisport.iife.js   # Sélecteur de type par journée, UI Chrono par journée, classement combiné
+├── players.iife.js      # Gestion joueurs
+├── ui.iife.js           # Onglets/journées
+├── matches.iife.js      # Mode Championship
+├── pools.iife.js        # Mode POOL
+├── ranking.iife.js      # Classements
+├── export-json.iife.js  # Export/Import JSON
+├── export-print.iife.js # Impression/PDF
+├── chrono.iife.js       # Moteur de chronométrage live
+└── init.iife.js         # Bootstrap
+```
+Voir `AGENTS.md` pour le détail de chaque module et `claude.md` pour
+l'architecture de données.
 
 ## 📄 Licence
 
