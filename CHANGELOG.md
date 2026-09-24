@@ -13,6 +13,19 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏊 Natation : classement par épreuve
+- Pour une compétition de natation, le classement général (distance & temps, pensé pour la
+  course à pied) est remplacé par un **classement par épreuve** : toutes les séries d'une même
+  épreuve (ex. les 7 séries du 50m brasse) regroupées et classées au temps, avec club et série,
+  ex æquo au centième, DNS/DISQ listés sans rang. Disponible dans les onglets 🏅 Multisport et
+  🏆 Classement, à l'impression (« Résultats par épreuve »), sur le second écran 📺 Afficher et
+  dans l'export JSON. Les compétitions de course à pied et mixtes sont inchangées.
+- Temps affichés **au centième** dans les classements des courses (« 4,20s » au lieu de « 4s »).
+
+### 🧪 Outillage
+- `npm run test:e2e` : test de bout en bout d'une journée natation dans un vrai navigateur, à
+  relancer avant chaque compétition (`HEADED=1` pour le regarder se dérouler).
+
 ### 🐛 Corrections (test de bout en bout d'une journée natation)
 - **Onglet 🏅 Multisport** : il disparaissait définitivement après un rechargement de la page,
   l'ajout d'une journée (+) ou un import JSON. Le classement combiné n'était alors plus

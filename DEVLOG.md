@@ -33,6 +33,41 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-24 (suite 4) — Classement par épreuve (natation), centièmes, test e2e dans le repo
+
+- **Contexte** : demandes de l'utilisateur après le test de bout en bout. Pour la natation,
+  « un classement par épreuve, un général n'est pas nécessaire, il faut regrouper les mêmes
+  épreuves pour comparer ce qui est comparable ». Plus les centièmes et le test e2e à garder.
+- **Fait** :
+  1. `multisport.iife.js` : `isSwimmingOnlyCompetition()` (uniquement des journées Courses
+     dont toutes les séries avec participants sont `swimming` ou `laneMode`),
+     `calculateEventRankings()` (séries imbriquées ET « à plat » par `eventId` regroupées par
+     épreuve, tri au temps, ex æquo au centième = même rang 1-2-2-4, DNS/DISQ listés sans
+     rang ; un ancien résultat d'un DISQ reste exclu), `buildEventRankingsHTML()` et
+     `renderEventRankingsPanel()`. Branchés dans `renderMultisportRanking()` (les deux onglets)
+     et `buildMultisportRankingDoc()` (impression + export HTML).
+  2. `ui.iife.js` : second écran « 📺 Afficher » (`buildMultisportRankingContentHTML`, désormais
+     exposé) et son titre, export JSON (`{ type: 'classement-par-epreuve', events }`), en-tête
+     statique de l'onglet (titre adapté, encadré « barème Matchs + Courses » masqué) ;
+     `index.html` : id `multisport-hub-title`.
+  3. `formatDurationHMS` : centièmes (« 4,20s », « 1m02,35s »), calculés sur les centièmes
+     totaux (59,999 s → « 1m00,00s »).
+  4. `tests/e2e/natation.e2e.js` + `npm run test:e2e` (`playwright-core` en devDependency) :
+     le scénario de la session précédente, étendu au classement par épreuve (regroupement
+     séries 1 + 2, ordre au temps, DISQ non classé, centièmes, clubs, second écran,
+     impression). Non lancé en CI (il faut un navigateur).
+- **Tests** : `eventRanking.test.js` (10), `durationHundredths.test.js` (7). `npm test` :
+  181/181. `npm run test:e2e` : 0 problème.
+- **Décision de conception** : seules les compétitions 100 % natation changent. Course à pied
+  et compétitions mixtes (matchs + courses) gardent leur classement général.
+- **Fichiers touchés** : `src/multisport.iife.js`, `src/ui.iife.js`, `index.html`, 2 tests
+  unitaires, `tests/e2e/natation.e2e.js`, `package.json`, `package-lock.json`, `.gitignore`,
+  `claude.md`, `AGENTS.md`, `README.md`, `CHANGELOG.md`, ce fichier.
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · claude.md ✅ · README ✅ · tests ✅
+- **Suite possible** : lancer le test e2e en CI (les runners GitHub ont Google Chrome) si l'on
+  veut une vérification systématique. Reste ouvert : annuler un DNS/DISQ qui avait arrêté le
+  chrono ne le relance pas.
+
 ### 2026-09-24 (suite 3) — Test de bout en bout d'une journée natation + 4 correctifs
 
 - **Contexte** : avant la prochaine compétition, l'utilisateur a demandé un test complet

@@ -28,7 +28,7 @@ Each day's type is chosen independently via a selector in that day's UI, stored 
 
 - **Championship-type day**: division-based player organization (1-6 configurable divisions), court assignment (1-10 courts), multiple match generation algorithms, pool/qualification system with knockout phases, rankings by points/wins/goal average.
 - **Chrono-type day**: events → series structure, participant management with bibs (dossards) and categories/clubs, individual/relay/interclub races, live timing with lap recording, per-day ranking + PDF export.
-- **Multisport tab**: appears automatically (`updateMultisportTabVisibility()`) once the championship mixes day types, or has any Chrono day. Shows a combined ranking (`calculateMultisportRanking()` / `renderMultisportRanking()` in `multisport.iife.js`) using a position-based point scale across both day types. The tab button is static in `index.html` (`#multisportTab`); `updateTabsDisplay()` (`ui.iife.js`, run at startup, after "+" and after a JSON import) must only remove/rebuild **day** tabs (`.tab[data-day]`) — it used to remove every `.tab` except "🏆 Classement", which deleted the Multisport tab for good after any page reload.
+- **Multisport tab**: appears automatically (`updateMultisportTabVisibility()`) once the championship mixes day types, or has any Chrono day. Shows a combined ranking (`calculateMultisportRanking()` / `renderMultisportRanking()` in `multisport.iife.js`) using a position-based point scale across both day types. **Exception — swimming-only competitions** (`isSwimmingOnlyCompetition()`: only Chrono days, every serie with participants is `sportType === 'swimming'` or `laneMode`): there is NO general ranking; the tab, its print/HTML export, the "📺 Afficher" second screen and the JSON export show a **per-event ranking** instead (`calculateEventRankings()` / `buildEventRankingsHTML()` in `multisport.iife.js`): all series of the same event merged and ranked by time (hundredths, ties share a rank), DNS/DISQ listed unranked. Decision by the user (2026-09): "only compare what is comparable". Running/mixed competitions are unchanged. The tab button is static in `index.html` (`#multisportTab`); `updateTabsDisplay()` (`ui.iife.js`, run at startup, after "+" and after a JSON import) must only remove/rebuild **day** tabs (`.tab[data-day]`) — it used to remove every `.tab` except "🏆 Classement", which deleted the Multisport tab for good after any page reload.
 
 ### Core Data Structures
 
@@ -388,7 +388,10 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 ```bash
 npm test                    # Jest suite (tests/unit/), jsdom environment
 npm run check:duplicates    # standalone duplicate-function-definition check
+npm run test:e2e            # end-to-end swimming day in a real browser (HEADED=1 to watch)
 ```
+
+`npm run test:e2e` (`tests/e2e/natation.e2e.js`, Playwright) replays a full swimming day through the real UI with the 150 real lines of `jsondetest/natation test 2.json`: add swimmers, create events, generate series, races (clicks, keyboard, undo, DNS, DISQ after finish, page reload mid-race), per-event ranking, second screens, export → re-import in a fresh browser, print. Not run in CI (needs a browser); run it after any change to the Chrono/swimming/ranking flow — its first run found 4 real bugs that 150+ unit tests had missed. Browser: `CHROME_PATH`, else `/opt/pw-browsers/chromium` (Claude Code sessions), else installed Google Chrome. Screenshots + report in `tests/e2e/output/` (gitignored).
 
 CI (`.github/workflows/tests.yml`) runs `npm ci` + `npm test` on every PR and every push to `main` — a red check there is a real regression, not something to merge around. `npm test` already includes the duplicate-function check (`noDuplicateFunctions.test.js`), so running `npm test` alone is enough day to day — `check:duplicates` is only useful for its more readable standalone CLI output when triaging a specific file.
 

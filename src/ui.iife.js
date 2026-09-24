@@ -547,7 +547,15 @@
     function updateMultisportRanking() {
         const container = document.getElementById('multisportRankingContent');
         if (!container) return;
-        
+
+        // Natation : l'en-tête statique (« Matchs + Courses », barème de points)
+        // ne s'applique pas — classement par épreuve, au temps.
+        const swimmingOnly = typeof isSwimmingOnlyCompetition === 'function' && isSwimmingOnlyCompetition();
+        const title = document.getElementById('multisport-hub-title');
+        if (title) title.textContent = swimmingOnly ? '🏊 Résultats natation par épreuve' : '🏅 Classement Multisport (Matchs + Courses)';
+        const info = document.querySelector('#multisport-ranking .multisport-info');
+        if (info) info.style.display = swimmingOnly ? 'none' : '';
+
         if (typeof renderMultisportRanking === 'function') {
             container.innerHTML = renderMultisportRanking();
         } else {
@@ -576,6 +584,11 @@
     let multisportRankingWindow = null;
 
     function buildMultisportRankingContentHTML() {
+        // Natation : classement par épreuve (séries regroupées), pas de points
+        if (typeof isSwimmingOnlyCompetition === 'function' && isSwimmingOnlyCompetition()
+            && typeof buildEventRankingsHTML === 'function') {
+            return buildEventRankingsHTML();
+        }
         const ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
         const sorted = Object.values(ranking).sort((a, b) => b.totalPoints - a.totalPoints);
 
@@ -597,11 +610,15 @@
         <tbody>${rows}</tbody></table>`;
     }
 
+    window.buildMultisportRankingContentHTML = buildMultisportRankingContentHTML;
+
     function openMultisportRankingInNewWindow() {
         const content = buildMultisportRankingContentHTML();
+        const swimmingOnly = typeof isSwimmingOnlyCompetition === 'function' && isSwimmingOnlyCompetition();
+        const windowTitle = swimmingOnly ? '🏊 Résultats natation par épreuve' : '🏅 Classement Multisport';
 
         const html = `<!DOCTYPE html>
-        <html><head><meta charset="UTF-8"><title>🏅 Classement Multisport</title>
+        <html><head><meta charset="UTF-8"><title>${windowTitle}</title>
         <style>
             * { box-sizing: border-box; }
             body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
@@ -631,7 +648,7 @@
             @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         </style></head><body>
         <div class="container">
-            <h1>🏅 Classement Multisport</h1>
+            <h1>${windowTitle}</h1>
             <div class="update-time" id="updateTime">Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}</div>
             <div id="rankingContent">${content}</div>
         </div>
@@ -695,7 +712,11 @@
     });
 
     function exportMultisportRanking() {
-        const ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
+        // Natation : exporter le classement par épreuve (les points n'y ont pas de sens)
+        const swimmingOnly = typeof isSwimmingOnlyCompetition === 'function' && isSwimmingOnlyCompetition();
+        const ranking = swimmingOnly && typeof calculateEventRankings === 'function'
+            ? { type: 'classement-par-epreuve', events: calculateEventRankings() }
+            : (typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {});
         const dataStr = JSON.stringify(ranking, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
