@@ -129,6 +129,67 @@ describe('association aux épreuves', () => {
     });
 });
 
+describe('lignes sans nage (nom prénom distance chrono)', () => {
+    test('placées par la distance quand une seule épreuve l\'a', () => {
+        setupDays(['Dupont Jean 50m 32,50', 'Martin Paul 100m 1:10.20', 'Roy Eva 50m 30.90'],
+            ['50m Nage Libre', '100m Nage Libre']);
+        const r = importFrom(2);
+        expect(r.totalSeries).toBe(2);
+        expect(names(0)).toEqual(['Roy Eva', 'Dupont Jean']);
+        expect(names(1)).toEqual(['Martin Paul']);
+    });
+
+    test('ambiguë (50m libre et 50m dos) : non placée', () => {
+        setupDays(['Dupont Jean 50m 32.50'], ['50m Nage Libre', '50m Dos']);
+        const r = importFrom(2);
+        expect(r.totalSeries).toBe(0);
+        expect(r.unmatched).toHaveLength(1);
+    });
+
+    test('grande liste : séries de 5 couloirs, les plus rapides en série 1', () => {
+        const lines = Array.from({ length: 23 }, (_, i) =>
+            `Nom${String.fromCharCode(65 + i)} Prenom 50m ${40 - i},00`);
+        setupDays(lines, ['50m Nage Libre']);
+        const r = importFrom(2, 5);
+
+        const series = championship.days[1].chronoData.events[0].series;
+        expect(r.totalSeries).toBe(5);
+        expect(series.map(s => s.participants.length)).toEqual([5, 5, 5, 5, 3]);
+        // Série 1 = les 5 plus rapides (18,00 → 22,00), le plus rapide au couloir 3
+        expect(series[0].participants.find(p => p.laneNumber === 3).name).toBe('Nomw Prenom');
+        const bibs = series.flatMap(s => s.participants.map(p => p.bib));
+        expect(new Set(bibs).size).toBe(23);
+    });
+});
+
+describe('ajout en masse de participants (journée Courses)', () => {
+    function bulkAdd(text) {
+        document.body.innerHTML = '<div id="chrono-content-1"></div>';
+        window.showAddParticipantManualModal(1);
+        document.getElementById('bulk-participants-1').value = text;
+        window.saveBulkParticipantsForDay(1);
+        return championship.days[1].chronoData.participants;
+    }
+
+    test('ligne de natation gardée entière : virgule du temps et collage Excel', () => {
+        setupDays([], ['50m Nage Libre']);
+        const parts = bulkAdd('Dupont Jean 50m 32,50\n12\tMartin\tPaul\t50m\t31,20');
+        expect(parts.map(p => [p.name, p.club, p.bib])).toEqual([
+            ['Dupont Jean 50m 32,50', '', 1],
+            ['Martin Paul 50m 31,20', '', 12],
+        ]);
+    });
+
+    test('lignes classiques inchangées (« Nom, Club » et dossard)', () => {
+        setupDays([], ['50m Nage Libre']);
+        const parts = bulkAdd('Dupont Jean, Club ABC\n7\tMartin Paul');
+        expect(parts.map(p => [p.name, p.club, p.bib])).toEqual([
+            ['Dupont Jean', 'Club ABC', 1],
+            ['Martin Paul', '', 7],
+        ]);
+    });
+});
+
 describe('participants de la journée', () => {
     test('les participants existants sont conservés et les dossards continuent', () => {
         setupDays(['Jean Dupont 50m libre 32.50'], ['50m Nage Libre'],

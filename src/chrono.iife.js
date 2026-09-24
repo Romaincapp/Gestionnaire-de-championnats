@@ -2679,20 +2679,20 @@ function parseSwimmingEntry(rawName) {
     var distSpan = { start: distMatch.index, end: distMatch.index + distMatch[0].length };
 
     // Nage : la plus proche de la distance, pour qu'un nom comme « Dos Santos »
-    // ou « Brassens » ne soit pas pris pour la nage
+    // ou « Brassens » ne soit pas pris pour la nage. Facultative : sans nage,
+    // l'épreuve est retrouvée par la distance seule (voir matchEntryToEvent).
     var strokeSpans = findSwimmingStrokeSpans(text);
-    if (strokeSpans.length === 0) return null;
-    var chosen = strokeSpans.reduce(function(best, s) {
+    var chosen = strokeSpans.length === 0 ? null : strokeSpans.reduce(function(best, s) {
         return swimSpanGap(s, distSpan) < swimSpanGap(best, distSpan) ? s : best;
     });
-    var stroke = normalizeSwimmingStroke(chosen.text);
+    var stroke = chosen ? normalizeSwimmingStroke(chosen.text) : '';
 
     // Extraire le temps
     var timeResult = parseSwimmingTime(text);
 
     // Retirer la zone épreuve (distance + nage + répétitions collées comme
     // « 50m brasse brasse ») sans toucher aux mots du nom
-    var removeSpans = [distSpan, chosen];
+    var removeSpans = chosen ? [distSpan, chosen] : [distSpan];
     var grew = true;
     while (grew) {
         grew = false;
@@ -2763,6 +2763,16 @@ function matchEntryToEvent(entry, events) {
             if (events[f].id === entry._eventId) return events[f];
         }
     }
+    // Ligne sans nage : la distance seule suffit si une seule épreuve l'a
+    // (sinon ambigu, ex. 50m libre et 50m dos : on ne devine pas)
+    if (!entry.stroke) {
+        var sameDistance = events.filter(function(evt) {
+            var inf = deriveSwimmingEventInfo(evt);
+            return inf && inf.distance === entry.distance;
+        });
+        return sameDistance.length === 1 ? sameDistance[0] : null;
+    }
+
     // Distance + nage lues dans le nom de l'épreuve (« 50m Nage Libre »,
     // « 50 NL », « Nage libre 50 »...)
     var legacyOnly = [];
@@ -3380,13 +3390,16 @@ function deriveSwimmingEventInfo(evt) {
 // Renvoie l'entrée complétée, ou null si toujours inexploitable.
 function applySwimmingDefaultEvent(entry, def, raw) {
     var stroke = entry.stroke, distance = entry.distance, forcedEventId = null;
-    if (def && (!stroke || !distance)) {
+    // Une distance lue qui diffère de l'épreuve par défaut l'emporte : la ligne
+    // sera placée par sa distance (matchEntryToEvent)
+    var otherDistance = !stroke && distance && def && def.distance && distance !== def.distance;
+    if (def && (!stroke || !distance) && !otherDistance) {
         if (!distance) distance = def.distance || 0;
         if (!stroke) stroke = def.stroke || '';
         forcedEventId = def.event.id;
     }
-    // Sans épreuve forcée, il faut nage + distance pour matcher
-    if (!forcedEventId && (!stroke || !distance)) return null;
+    // Sans épreuve forcée, il faut au moins la distance pour matcher
+    if (!forcedEventId && !distance) return null;
     var out = {
         club: entry.club || '',
         swimmerName: entry.swimmerName || '',
@@ -3600,13 +3613,14 @@ window.confirmSwimmingImport = function(dayNumber) {
     if (result && result.totalSeries === 0) {
         var evNames = championship.days[targetDayNumber].chronoData.events.map(function(e) { return '« ' + e.name + ' »'; }).join(', ');
         var sample = result.unmatched.slice(0, 3).map(function(e) {
-            return '   ' + e.distance + 'm ' + e.stroke + ' – ' + (e.swimmerName || e.rawName);
+            return '   ' + e.distance + 'm ' + (e.stroke || '(nage non précisée)') + ' – ' + (e.swimmerName || e.rawName);
         }).join('\n');
         alert('🏊 Aucune série créée : aucun nageur ne correspond à une épreuve.\n\n'
             + 'Épreuves de la journée : ' + evNames + '\n'
             + 'Épreuves lues dans la liste, par ex :\n' + sample + '\n\n'
             + 'Le nom de l\'épreuve doit contenir la distance et la nage (ex : « 50m Nage Libre »), '
-            + 'ou choisissez une « Épreuve par défaut ».');
+            + 'ou choisissez une « Épreuve par défaut ».\n'
+            + 'Une ligne sans nage n\'est placée que si une seule épreuve a cette distance.');
         return;
     }
     if (result) {
