@@ -1235,6 +1235,7 @@
             if (!results[name]) {
                 results[name] = {
                     player: name,
+                    club: '',
                     series: [],
                     totalPoints: 0,
                     bestTime: null,
@@ -1266,6 +1267,7 @@
                 var playerName = result.name;
                 var entry = ensurePlayer(playerName);
                 var p = partByName[playerName] || {};
+                if (!entry.club) entry.club = p.club || result.club || '';
 
                 // Distance et temps TOTAUX issus de la série (participant en
                 // priorité, repli sur le résultat / la distance de série).
@@ -1373,7 +1375,7 @@
                 if (multisport) {
                     // BARÈME MULTISPORT : position dans la course → points
                     getChronoDayOrder(dayNum).forEach(function(res, index) {
-                        var entry = ensureStats(res.player, '');
+                        var entry = ensureStats(res.player, res.club);
                         entry.chronoPoints += calculateMultisportPositionPoints(index + 1);
                         entry.chronoSeries += res.series.length;
                         entry.chronoDistance += res.totalDistance || 0;
@@ -1383,7 +1385,7 @@
                     // MODE CHRONO PUR : comportement d'origine (barème CHRONO_POINTS)
                     var chronoResults = getChronoResultsForDay(dayNum);
                     Object.keys(chronoResults).forEach(function(playerName) {
-                        var entry = ensureStats(playerName, '');
+                        var entry = ensureStats(playerName, chronoResults[playerName].club);
                         entry.chronoPoints += chronoResults[playerName].totalPoints;
                         entry.chronoSeries += chronoResults[playerName].series.length;
                         entry.chronoDistance += chronoResults[playerName].totalDistance || 0;

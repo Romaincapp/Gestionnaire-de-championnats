@@ -33,6 +33,45 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-24 (suite 3) — Test de bout en bout d'une journée natation + 4 correctifs
+
+- **Contexte** : avant la prochaine compétition, l'utilisateur a demandé un test complet
+  d'une journée natation dans un vrai navigateur.
+- **Test** (Playwright + Chromium, script hors repo, piloté par de VRAIS clics) : les 150
+  lignes réelles de `jsondetest/natation test 2.json` (« Club Nom Prénom 25 M Brasse
+  0:00:35 »). Parcours : J1 → Courses, ➕ Ajouter (collage des 150 lignes), 8 épreuves via
+  🎯, 🏊 Séries natation (aperçu + génération, 5 couloirs → 33 séries), 👥 couloirs, course 1
+  au clic (mauvais clic annulé via 🕘, DNS, arrêt auto), course 2 au clavier avec
+  **rechargement de la page en pleine course**, 🖥️ Afficher, classement de série, onglets
+  🏆 Classement et 🏅 Multisport, 💾 Exporter puis 📥 Importer dans un navigateur vierge
+  (données identiques), 🖨️ Imprimer. Contre-épreuve : le même scénario échoue sur `main`.
+- **Bugs trouvés et corrigés** :
+  1. Onglet 🏅 Multisport supprimé définitivement par `updateTabsDisplay()` (`ui.iife.js`),
+     qui retirait tous les `.tab` sauf « Classement ». Ça arrivait au chargement de la page
+     avec des données, après « + » et après un import. Ne retire plus que les onglets de
+     journée (`.tab[data-day]`).
+  2. DISQ après arrivée gardé dans `serie.results` (seul DNS était exclu) → classé, même 1er,
+     dans le classement de série et le Multisport. Exclu dans `saveRaceResultsToDay`.
+  3. Distance des séries natation : 0 pour une épreuve créée via 🎯 (nom seul), puis repli
+     à 1000 m au lancement. Déduite du nom (`deriveSwimmingEventInfo`) à la génération.
+  4. Club absent du classement Multisport (Courses) : `serie.results` ne portait pas le club
+     et `calculateMultisportRanking` passait `''`. Le club est repris des participants de
+     série.
+- **Tests** : `tabsRebuildKeepsFixedTabs.test.js` (3) et `swimmingResultsIntegrity.test.js`
+  (5), en échec avant les correctifs. `npm test` : 164/164. Scénario de bout en bout : 0
+  problème, aucune erreur JS.
+- **Fichiers touchés** : `src/ui.iife.js`, `src/chrono.iife.js`, `src/multisport.iife.js`,
+  2 tests, `claude.md`, `CHANGELOG.md`, ce fichier.
+- **Doc à jour ?** : CHANGELOG ✅ · claude.md ✅ · AGENTS.md (pas de changement d'API) · tests ✅
+- **Observations non corrigées** :
+  - La ligne `Cordée Sport Ifa Bouge. Dormal Guillaume. Libre. 01:02` des données n'a pas de
+    distance : elle n'est pas placée, ce qui est normal (l'aperçu la signale, l'option
+    « Épreuve par défaut » permet de la placer).
+  - Le classement général des Courses (onglet Multisport) affiche le temps total à la seconde
+    (« 4s »), sans centièmes, alors qu'ils départagent en natation.
+  - Ce classement général trie par distance puis temps, toutes séries confondues : pensé pour
+    la course à pied, peu parlant pour des épreuves de natation différentes.
+
 ### 2026-09-24 (suite 2) — Échec de sauvegarde visible + tests en CI
 
 - **Contexte** : les deux points prioritaires du bilan « il reste quoi ? » (liés aux issues
