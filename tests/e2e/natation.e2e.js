@@ -98,14 +98,12 @@ async function openFresh(browser) {
     const nPart = await state(page, () => championship.days[1].chronoData.participants.length);
     check(nPart === LINES.length, `participants disponibles : ${nPart}/${LINES.length}`);
 
-    step('3. Créer les 8 épreuves (🎯 Épreuve)');
-    for (const name of EVENTS) {
-        await btn(page, '🎯 Épreuve');
-        await page.fill('#eventName-1', name);
-        await btn(page, 'Sauvegarder');
-    }
+    step('3. Créer les 8 épreuves d\'un coup (🎯 Épreuve, une par ligne)');
+    await btn(page, '🎯 Épreuve');
+    await page.fill('#eventName-1', EVENTS.join('\n'));
+    await btn(page, 'Sauvegarder');
     const evNames = await state(page, () => championship.days[1].chronoData.events.map(e => e.name));
-    check(JSON.stringify(evNames) === JSON.stringify(EVENTS), 'épreuves créées : ' + evNames.join(', '));
+    check(JSON.stringify(evNames) === JSON.stringify(EVENTS), 'épreuves créées en un seul collage : ' + evNames.join(', '));
 
     step('4. 🏊 Séries natation : aperçu puis génération (5 couloirs)');
     await btn(page, '🏊 Séries natation');

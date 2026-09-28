@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎯 Épreuves en masse
+- La fenêtre **« 🎯 Épreuve »** accepte **une épreuve par ligne** : collez la liste des
+  épreuves (« 50m brasse », « 50m dos »…) pour toutes les créer d'un coup, avec la même date.
+  Lignes vides et puces ignorées ; une épreuve qui existe déjà n'est pas recréée (le message
+  le dit). Ctrl+Entrée pour valider.
+
 ### 🏊 « + » des Participants disponibles vers les séries « Séries natation »
 - Le **« + »** d'un participant et le bouton **« ➕ Ajouter à une série »** (cochés) proposent
   désormais **toutes les séries**, y compris celles générées par « 🏊 Séries natation »

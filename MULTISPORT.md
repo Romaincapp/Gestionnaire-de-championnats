@@ -35,8 +35,10 @@ Ce mode fonctionne comme le système classique :
 En mode courses, vous pouvez :
 
 #### Créer des épreuves
-- Cliquez sur "🎯 Nouvelle Épreuve"
-- Donnez un nom (ex: "50m nage libre", "10km")
+- Cliquez sur "🎯 Épreuve"
+- Donnez un nom (ex: "50m nage libre", "10km") — ou **plusieurs, une par ligne** : collez la
+  liste des épreuves pour toutes les créer d'un coup (une épreuve déjà existante n'est pas
+  recréée)
 - Ajoutez une date optionnelle
 
 #### Créer des séries configurables

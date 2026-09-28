@@ -2382,10 +2382,13 @@
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeEventModalForDay(' + dayNumber + ')">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">' +
-            '<h3>🎯 Nouvelle Épreuve - Journée ' + dayNumber + '</h3>' +
+            '<h3>🎯 Nouvelle(s) épreuve(s) - Journée ' + dayNumber + '</h3>' +
             '<div style="margin: 15px 0;">' +
-            '<label>Nom :</label>' +
-            '<input type="text" id="eventName-' + dayNumber + '" style="width: 100%; padding: 10px; margin-top: 5px;" placeholder="ex: Course de natation 50m">' +
+            '<label>Nom(s) : <span style="font-weight: normal; color: #7f8c8d; font-size: 12px;">une épreuve par ligne</span></label>' +
+            '<textarea id="eventName-' + dayNumber + '" rows="5" style="width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; font-family: inherit; resize: vertical;" ' +
+            'placeholder="ex :&#10;50m brasse&#10;50m dos&#10;100m nage libre" ' +
+            'onkeydown="if (event.key === \'Enter\' && (event.ctrlKey || event.metaKey)) saveEventForDay(' + dayNumber + ')"></textarea>' +
+            '<div style="font-size: 11px; color: #95a5a6; margin-top: 4px;">Collez une liste pour tout créer d\'un coup (Ctrl+Entrée pour valider).</div>' +
             '</div>' +
             '<div style="margin: 15px 0;">' +
             '<label>Date :</label>' +
@@ -2404,20 +2407,42 @@
         if (modal) modal.remove();
     }
 
+    // Une épreuve par ligne : lignes vides et puces (« - », « • », « * ») ignorées, et une
+    // épreuve déjà présente (dans la liste ou dans la journée) n'est pas recréée.
     function saveEventForDay(dayNumber) {
         var nameInput = document.getElementById('eventName-' + dayNumber);
         var dateInput = document.getElementById('eventDate-' + dayNumber);
-        
-        if (!nameInput || !nameInput.value.trim()) {
+
+        var names = (nameInput ? nameInput.value : '').split(/\r?\n/).map(function(line) {
+            return line.replace(/^[\s\-•*]+/, '').trim();
+        }).filter(Boolean);
+        if (names.length === 0) {
             showNotification('Veuillez entrer un nom', 'warning');
             return;
         }
-        
-        var event = addChronoEvent(dayNumber, nameInput.value.trim(), dateInput ? dateInput.value : null);
-        if (event) {
-            closeEventModalForDay(dayNumber);
-            refreshChronoDisplay(dayNumber);
+
+        var chronoData = getChronoDataForDay(dayNumber);
+        var seen = {};
+        ((chronoData && chronoData.events) || []).forEach(function(e) { seen[String(e.name).toLowerCase()] = true; });
+        var created = 0, skipped = 0;
+        names.forEach(function(name) {
+            var key = name.toLowerCase();
+            if (seen[key]) { skipped++; return; }
+            seen[key] = true;
+            if (addChronoEvent(dayNumber, name, dateInput ? dateInput.value : null)) created++;
+        });
+
+        if (created === 0) {
+            showNotification(names.length === 1 ? '« ' + names[0] + ' » existe déjà' : 'Ces épreuves existent déjà', 'warning');
+            return;
+        }
+        closeEventModalForDay(dayNumber);
+        refreshChronoDisplay(dayNumber);
+        if (created === 1 && skipped === 0) {
             showNotification('Épreuve créée !', 'success');
+        } else {
+            showNotification(created + ' épreuve' + (created > 1 ? 's créées' : ' créée')
+                + (skipped > 0 ? ' (' + skipped + ' déjà existante' + (skipped > 1 ? 's' : '') + ', ignorée' + (skipped > 1 ? 's' : '') + ')' : ''), 'success');
         }
     }
 

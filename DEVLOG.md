@@ -33,6 +33,27 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 2) — Épreuves en masse (une par ligne)
+
+- **Contexte** : demande utilisateur : « ça serait bien de pouvoir ajouter des épreuves en
+  masse également, une épreuve par ligne au lieu d'une épreuve à la fois. Insère ça dans le
+  modal existant. »
+- **Fait** (`src/multisport.iife.js`) : dans `showAddEventModalForDay`, le champ
+  `#eventName-N` devient un `<textarea>` (même id, « une épreuve par ligne », Ctrl+Entrée
+  valide) ; `saveEventForDay` crée une épreuve par ligne via `addChronoEvent` (même date),
+  ignore lignes vides et puces (`-`, `•`, `*`) et ne recrée pas une épreuve déjà présente
+  (dans la liste ou la journée, sans tenir compte des majuscules). Messages : « Épreuve
+  créée ! » (une seule, comme avant), « 3 épreuves créées (2 déjà existantes, ignorées) »,
+  « … existe déjà » (rien de créé, fenêtre laissée ouverte).
+- **Tests** : `bulkEvents.test.js` (6 ; 4 échouaient avant, les 2 autres gardent le
+  comportement à une ligne / champ vide). `npm test` : 231/231. `npm run test:e2e` : l'étape 3
+  crée désormais les 8 épreuves en un seul collage : 0 problème.
+- **Fichiers touchés** : `src/multisport.iife.js`, `tests/unit/bulkEvents.test.js`,
+  `tests/e2e/natation.e2e.js`, `AGENTS.md`, `MULTISPORT.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (ajouté à la PR #86, pas encore
+  mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · MULTISPORT.md ✅ · tests ✅
+
 ### 2026-09-28 (suite) — « + » des Participants disponibles vers les séries générées
 
 - **Contexte** : signalé par l'utilisateur : « le bouton "+" sur la ligne du participant dans
