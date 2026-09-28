@@ -33,6 +33,40 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 8) — Points par épreuve et classement des clubs
+
+- **Contexte** : « il serait possible d'ajouter une colonne "point" dans le général ? cela
+  pour générer un classement par club toutes épreuves. Un club marque une seule fois des
+  points par épreuve (le meilleur positionné du club) ». Choix de l'utilisateur : barème
+  25-19-17-15-12-10-8-6-4-2 ; les meilleurs de chaque club sont **reclassés entre clubs**
+  (« le club B est deuxième meilleur classé par club donc il reçoit 19 ») ; un **tableau
+  supplémentaire** Club · une colonne par épreuve · Total.
+- **Fait** (`src/multisport.iife.js`) :
+  - `calculateEventRankings()` ajoute à chaque classé `clubRank` / `clubPoints`
+    (`assignEventClubPoints`) : premier classé de chaque club = son meilleur, rang parmi les
+    clubs (ex æquo au centième → même rang), points `calculateMultisportPositionPoints`
+    (0 au-delà du 10e club) ; les autres nageurs du club et les sans-club → `null`. Clubs
+    regroupés sans tenir compte des majuscules/espaces.
+  - `calculateClubEventRanking(events)` (exposée) : par club, points de chaque épreuve
+    (`null` si absent), total ; tri total ↓, puis nombre de 25 points, puis nom ; même rang
+    si total et nombre de 25 égaux.
+  - `buildEventRankingsHTML()` : tableau « 🏆 Classement des clubs (toutes épreuves) » en
+    tête (Rang · Club · une colonne par épreuve, « (Jn) » si plusieurs journées · Total) +
+    colonne **Points** dans chaque tableau d'épreuve (« – » pour un nageur déjà compté ou
+    sans club). Vaut pour l'onglet, l'impression/export HTML et le second écran 📺.
+  - `src/ui.iife.js` : l'export JSON par épreuve joint `clubs`.
+- **Tests** : nouveau `clubRanking.test.js` (8 tests : cas de l'utilisateur, sans club,
+  ex æquo, 11e club, casse/espaces, tableau des clubs, départage, HTML, export JSON) ;
+  `eventRanking.test.js` compte désormais 2 tableaux d'épreuve + 1 tableau des clubs ; e2e
+  natation : le tableau des clubs s'affiche, chaque total = somme de ses colonnes, tri par
+  total, un club marque au plus une fois par épreuve.
+- **Fichiers touchés** : `src/multisport.iife.js`, `src/ui.iife.js`,
+  `tests/unit/clubRanking.test.js`, `tests/unit/eventRanking.test.js`,
+  `tests/e2e/natation.e2e.js`, `CHANGELOG.md`, `MULTISPORT.md`, `AGENTS.md`, `claude.md`,
+  ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #89 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · MULTISPORT.md ✅ · AGENTS.md ✅ · tests ✅
+
 ### 2026-09-28 (suite 7) — Série terminée avec des DNS / DISQ
 
 - **Contexte** : retour de l'utilisateur après la PR #88 : « si je mets un DNS ou un DISQ cela

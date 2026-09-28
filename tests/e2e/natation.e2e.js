@@ -268,6 +268,26 @@ async function openFresh(browser) {
             check(/\d,\d\ds/.test(rows.join(' ')), 'temps affichés au centième');
             check(/Marthe Et Marie|Boulaie|Carpe Mosane|Apris/.test(rows.join(' ')), 'clubs affichés');
             check(!txt.includes('barème commun'), 'encadré « barème Matchs + Courses » masqué');
+            // Classement des clubs : une colonne par épreuve, total = somme des colonnes,
+            // et chaque club ne marque qu'une fois par épreuve
+            const clubCheck = await page.locator('.club-ranking').filter({ visible: true }).first().evaluate(el => {
+                const heads = [...el.querySelectorAll('thead th')].map(th => th.textContent.trim());
+                const rows = [...el.querySelectorAll('tbody tr')].map(tr => [...tr.cells].map(td => td.textContent.trim()));
+                const sumsOk = rows.every(r => r.slice(2, -1).reduce((t, v) => t + (v === '–' ? 0 : +v), 0) === +r[r.length - 1]);
+                const sorted = rows.every((r, i) => i === 0 || +rows[i - 1][rows[i - 1].length - 1] >= +r[r.length - 1]);
+                return { heads, n: rows.length, sumsOk, sorted, top: rows[0] && rows[0][1] + ' ' + rows[0][rows[0].length - 1] };
+            });
+            const brasseCard = page.locator('.event-ranking', { hasText: '50m brasse' }).filter({ visible: true }).first();
+            const onePerClub = await brasseCard.evaluate(el => {
+                const heads = [...el.querySelectorAll('thead th')].map(th => th.textContent.trim());
+                const ci = heads.indexOf('Club'), pi = heads.indexOf('Points');
+                const scored = [...el.querySelectorAll('tbody tr')].map(tr => [...tr.cells]).filter(c => c[pi] && /^\d+$/.test(c[pi].textContent.trim()));
+                const clubs = scored.map(c => c[ci].textContent.trim().toLowerCase());
+                return pi !== -1 && clubs.length > 0 && new Set(clubs).size === clubs.length && scored[0][pi].textContent.trim() === '25';
+            });
+            check(clubCheck.heads[0] === 'Rang' && clubCheck.heads[1] === 'Club' && clubCheck.heads.includes('50m brasse')
+                && clubCheck.heads[clubCheck.heads.length - 1] === 'Total' && clubCheck.sumsOk && clubCheck.sorted && onePerClub,
+                `classement des clubs : ${clubCheck.n} clubs, une colonne par épreuve, total = somme, 1 club = 1 fois par épreuve (1er : ${clubCheck.top})`);
             await snap(page, 'classement-par-epreuve');
 
             const [live] = await Promise.all([context.waitForEvent('page'), btn(page, '📺 Afficher')]);

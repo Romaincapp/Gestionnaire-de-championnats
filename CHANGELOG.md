@@ -13,6 +13,18 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏆 Points par épreuve et classement des clubs
+- Le classement par épreuve (natation, athlétisme en couloirs) a une colonne **Points** :
+  barème 25-19-17-15-12-10-8-6-4-2. Un club ne marque **qu'une fois par épreuve**, avec son
+  meilleur classé, et les clubs sont reclassés entre eux : si les deux premiers sont du club
+  A et le 3e du club B, A marque 25 et B 19. Les autres nageurs du club affichent « – ».
+  Nageurs sans club : classés, sans points. Ex æquo au centième → mêmes points.
+- Nouveau tableau **« 🏆 Classement des clubs (toutes épreuves) »** en tête : Rang · Club ·
+  une colonne par épreuve (points gagnés, « – » si le club n'y avait personne) · Total.
+  À total égal, le club qui a le plus de victoires (25 points) passe devant.
+- Présent dans l'onglet, l'impression / export HTML, le second écran 📺 et l'export JSON
+  (`clubs`, et `clubPoints` sur chaque classé).
+
 ### ⏱️ Saisie manuelle des résultats fiabilisée
 - **Ordre des couloirs** : en mode couloirs, la fenêtre ⏱️ affiche une colonne **Couloir** et
   les lignes dans l'ordre du bassin, comme la feuille imprimée (avant : ordre des temps
