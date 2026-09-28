@@ -2859,6 +2859,29 @@ function parseSwimmingEntry(rawName) {
     };
 }
 
+// Mots d'une épreuve en plus de sa distance : « 100m haies » → ['haies'],
+// « 100m Benjamins » → ['benjamins'], « 100m » → [] (minuscules, sans accents)
+var EVENT_NAME_STOPWORDS = ['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'm', 'metre', 'metres'];
+function normalizeEventWord(w) {
+    return String(w || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function splitEventWords(text) {
+    return String(text || '').split(/[\s,;:()\/.\-–—]+/).map(normalizeEventWord).filter(Boolean);
+}
+function eventQualifierWords(evt) {
+    return splitEventWords(evt.name).filter(function(w) {
+        return !/^\d/.test(w) && EVENT_NAME_STOPWORDS.indexOf(w) === -1;
+    });
+}
+// Retirer du nom du participant les mots de l'épreuve (« Emma Roux Haies » → « Emma Roux »)
+function stripEventWordsFromName(entry, evt) {
+    var q = eventQualifierWords(evt);
+    if (!entry.swimmerName || q.length === 0) return;
+    entry.swimmerName = entry.swimmerName.split(/\s+/).filter(function(w) {
+        return q.indexOf(normalizeEventWord(w)) === -1;
+    }).join(' ').trim();
+}
+
 // Matcher une entrée parsée à une épreuve
 function matchEntryToEvent(entry, events) {
     // Épreuve forcée (via "Épreuve par défaut" quand la donnée manque)
@@ -2868,13 +2891,29 @@ function matchEntryToEvent(entry, events) {
         }
     }
     // Ligne sans nage : la distance seule suffit si une seule épreuve l'a
-    // (sinon ambigu, ex. 50m libre et 50m dos : on ne devine pas)
     if (!entry.stroke) {
         var sameDistance = events.filter(function(evt) {
             var inf = deriveSwimmingEventInfo(evt);
             return inf && inf.distance === entry.distance;
         });
-        return sameDistance.length === 1 ? sameDistance[0] : null;
+        if (sameDistance.length <= 1) return sameDistance[0] || null;
+        // Plusieurs épreuves à cette distance (athlétisme : « 100m » et « 100m haies »,
+        // « 100m Benjamins » et « 100m Minimes ») : l'épreuve dont tous les mots sont
+        // dans la ligne (la plus précise l'emporte), sinon la seule épreuve sans
+        // précision. Natation : « 50m » sans nage entre 50m libre et 50m dos reste
+        // ambigu (on ne devine pas).
+        var words = splitEventWords(entry.rawName);
+        var qualified = sameDistance.filter(function(evt) {
+            var q = eventQualifierWords(evt);
+            return q.length > 0 && q.every(function(w) { return words.indexOf(w) !== -1; });
+        }).sort(function(a, b) { return eventQualifierWords(b).length - eventQualifierWords(a).length; });
+        if (qualified.length > 0) {
+            if (qualified.length > 1 && eventQualifierWords(qualified[0]).length === eventQualifierWords(qualified[1]).length) return null;
+            stripEventWordsFromName(entry, qualified[0]);
+            return qualified[0];
+        }
+        var plain = sameDistance.filter(function(evt) { return eventQualifierWords(evt).length === 0; });
+        return plain.length === 1 ? plain[0] : null;
     }
 
     // Distance + nage lues dans le nom de l'épreuve (« 50m Nage Libre »,
@@ -3043,6 +3082,10 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         // sur un repli à 1000 m (« 1,00 km » par nageur sur un 50 m).
         var evtInfo = deriveSwimmingEventInfo(evt);
         var serieDistance = evt.distance || (evtInfo && evtInfo.distance) || 0;
+        // Natation si l'épreuve ou ses lignes donnent une nage ; sinon course
+        // (athlétisme : « 200m », « 100m haies »), toujours en mode couloirs
+        var serieSport = evt.sportType || ((evtInfo && evtInfo.stroke) || entries.some(function(e) { return e.stroke; })
+            ? 'swimming' : 'running');
 
         // Créer les séries
         for (var i = 0; i < sorted.length; i += lanesPerSerie) {
@@ -3091,7 +3134,7 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
                 id: nextSerieId++,
                 name: 'Série ' + serieNum,
                 eventId: evt.id,
-                sportType: evt.sportType || 'swimming',
+                sportType: serieSport,
                 distance: serieDistance,
                 raceType: evt.raceType || 'individual',
                 relayDuration: null,
@@ -3113,12 +3156,12 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
 
     saveToLocalStorage();
 
-    var msg = '🏊 Import natation: ' + (parsed.length - unmatched.length) + ' nageurs → ' + totalSeries + ' séries';
+    var msg = '🏁 Séries automatiques : ' + (parsed.length - unmatched.length) + ' participants → ' + totalSeries + ' séries';
     if (errors.length > 0) msg += ' (' + errors.length + ' non parsés)';
     if (unmatched.length > 0) msg += ' (' + unmatched.length + ' sans épreuve)';
     showNotification(msg, errors.length || unmatched.length ? 'warning' : 'success');
 
-    console.log('Import natation terminé:', {
+    console.log('Séries automatiques terminées:', {
         parsed: parsed.length,
         errors: errors,
         unmatched: unmatched,
@@ -3154,15 +3197,16 @@ window.showSwimmingImportModal = function(dayNumber) {
     // Ces deux cas bloquent l'ouverture de la modale : alert() plutôt qu'un
     // toast éphémère, sinon le clic semble ne rien faire
     if (chronoDays.length === 0) {
-        alert('🏊 Séries natation\n\nCréez d\'abord une épreuve avec le bouton « 🎯 Épreuve » '
-            + '(ex : « 50m Nage Libre », « 100m Dos »).');
+        alert('🏁 Séries automatiques\n\nCréez d\'abord une épreuve avec le bouton « 🎯 Épreuve » '
+            + '(ex : « 50m Nage Libre », « 100m Dos », « 200m »).');
         return;
     }
     if (sourceDays.length === 0) {
-        alert('🏊 Séries natation\n\nAucune liste de nageurs trouvée.\n\n'
-            + 'Ajoutez les nageurs dans « Participants disponibles », une ligne par nageur '
+        alert('🏁 Séries automatiques\n\nAucune liste de participants trouvée.\n\n'
+            + 'Ajoutez les participants dans « Participants disponibles », une ligne par personne '
             + 'avec son épreuve et son temps, par ex :\n'
-            + '   Jean Dupont 50m libre 0:32.50\n\n'
+            + '   Jean Dupont 50m libre 0:32.50\n'
+            + '   Marie Leroy 200m 25.40\n\n'
             + '(Une journée « Matchs » contenant la liste fonctionne aussi.)');
         return;
     }
@@ -3206,7 +3250,7 @@ window.showSwimmingImportModal = function(dayNumber) {
 
     modal.innerHTML = '\
         <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 95%; max-height: 85vh; overflow-y: auto;">\
-            <h3 style="margin: 0 0 15px 0; color: #16a085; font-size: 16px;">🏊 Import natation → Séries par couloirs</h3>\
+            <h3 style="margin: 0 0 15px 0; color: #16a085; font-size: 16px;">🏁 Séries automatiques → par couloirs, au temps d\'engagement</h3>\
             <div id="swimExistingWarning" style="display: none; margin-bottom: 12px; padding: 10px; background: #fff3cd; border: 1px solid #ffe08a; border-radius: 6px; font-size: 13px; color: #7a5b00;"></div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée source (avec noms bruts) :</label>\
@@ -3217,7 +3261,7 @@ window.showSwimmingImportModal = function(dayNumber) {
                 <select id="swimTargetDay" onchange="updateSwimmingEventsPreview()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + chronoDayOptions + '</select>\
             </div>\
             <div style="margin-bottom: 12px;">\
-                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Nageurs par série (couloirs) :</label>\
+                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Participants par série (couloirs) :</label>\
                 <select id="swimLanesPerSerie" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">\
                     <option value="3">3 couloirs</option>\
                     <option value="4">4 couloirs</option>\
@@ -3261,7 +3305,7 @@ window.showSwimmingImportModal = function(dayNumber) {
             <div style="display: flex; gap: 10px; justify-content: flex-end; position: sticky; bottom: 0; background: white; padding-top: 10px;">\
                 <button onclick="document.getElementById(\'swimmingImportModal\').remove()" style="padding: 8px 15px; border: 1px solid #ddd; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 13px;">Annuler</button>\
                 <button onclick="previewSwimmingImport(' + dayNumber + ')" style="padding: 8px 15px; border: none; background: #3498db; color: white; border-radius: 4px; cursor: pointer; font-size: 13px;">👁️ Aperçu</button>\
-                <button onclick="confirmSwimmingImport(' + dayNumber + ')" style="padding: 8px 15px; border: none; background: #16a085; color: white; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">🏊 Générer séries</button>\
+                <button onclick="confirmSwimmingImport(' + dayNumber + ')" style="padding: 8px 15px; border: none; background: #16a085; color: white; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">🏁 Générer les séries</button>\
             </div>\
         </div>';
 
@@ -3287,7 +3331,7 @@ function existingSwimmingSeriesWarning(dayNumber) {
     });
     if (total === 0) return '';
     return '⚠️ ' + total + (total > 1 ? ' séries existantes seront remplacées' : ' série existante sera remplacée')
-        + (swum > 0 ? ', dont ' + swum + ' déjà nagée' + (swum > 1 ? 's' : '') + ' : leurs temps seront perdus' : '') + '.\n'
+        + (swum > 0 ? ', dont ' + swum + ' déjà disputée' + (swum > 1 ? 's' : '') + ' : leurs temps seront perdus' : '') + '.\n'
         + 'Pour ajouter une série sur place, utilisez « ➕ Série » dans l\'épreuve.';
 }
 
@@ -3699,7 +3743,7 @@ window.previewSwimmingImport = function(dayNumber) {
     events.forEach(function(evt) {
         var group = eventGroups[evt.id];
         if (!group || group.entries.length === 0) {
-            html += '<div style="margin:6px 0;padding:6px;background:#fff3cd;border-radius:4px;font-size:11px;">⚠️ <strong>' + evt.name + '</strong> — aucun nageur</div>';
+            html += '<div style="margin:6px 0;padding:6px;background:#fff3cd;border-radius:4px;font-size:11px;">⚠️ <strong>' + evt.name + '</strong> — aucun participant</div>';
             return;
         }
 
@@ -3709,7 +3753,7 @@ window.previewSwimmingImport = function(dayNumber) {
         var nbSeries = Math.ceil(sorted.length / lanesPerSerie);
 
         html += '<div style="margin:8px 0;padding:8px;background:#e8f4f8;border-radius:4px;border-left:3px solid #16a085;">';
-        html += '<strong>🎯 ' + evt.name + '</strong> — ' + sorted.length + ' nageurs → ' + nbSeries + ' série(s)';
+        html += '<strong>🎯 ' + evt.name + '</strong> — ' + sorted.length + ' participants → ' + nbSeries + ' série(s)';
 
         for (var i = 0; i < sorted.length; i += lanesPerSerie) {
             var batch = sorted.slice(i, i + lanesPerSerie);
@@ -3767,10 +3811,10 @@ window.confirmSwimmingImport = function(dayNumber) {
         var sample = result.unmatched.slice(0, 3).map(function(e) {
             return '   ' + e.distance + 'm ' + (e.stroke || '(nage non précisée)') + ' – ' + (e.swimmerName || e.rawName);
         }).join('\n');
-        alert('🏊 Aucune série créée : aucun nageur ne correspond à une épreuve.\n\n'
+        alert('🏁 Aucune série créée : aucun participant ne correspond à une épreuve.\n\n'
             + 'Épreuves de la journée : ' + evNames + '\n'
             + 'Épreuves lues dans la liste, par ex :\n' + sample + '\n\n'
-            + 'Le nom de l\'épreuve doit contenir la distance et la nage (ex : « 50m Nage Libre »), '
+            + 'Le nom de l\'épreuve doit contenir la distance, et la nage en natation (ex : « 50m Nage Libre », « 200m »), '
             + 'ou choisissez une « Épreuve par défaut ».\n'
             + 'Une ligne sans nage n\'est placée que si une seule épreuve a cette distance.');
         return;

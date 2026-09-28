@@ -13,6 +13,40 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏁 « Séries natation » devient « Séries automatiques »
+- Le bouton et sa fenêtre s'appellent désormais **« 🏁 Séries automatiques »** : le même
+  générateur (séries par couloirs, au temps d'engagement) sert aussi à l'athlétisme. Textes
+  neutres (« participants » au lieu de « nageurs »), exemple d'athlétisme dans l'aide
+  (« Marie Leroy 200m 25.40 »). Case « Mode couloirs (un bouton d'arrêt par couloir) », séries « déjà disputées ».
+- **Athlétisme** : deux épreuves de même distance le même jour (« 100m » et « 100m haies »,
+  « 100m Benjamins » et « 100m Minimes ») sont départagées par les mots de l'épreuve écrits sur
+  la ligne ; une ligne sans précision va dans l'épreuve sans précision (« 100m »). Les séries
+  d'athlétisme sont marquées « course » (plus « natation »), gardent le classement par épreuve,
+  et le titre devient « 🏁 Résultats par épreuve » (« 🏊 Résultats natation par épreuve »
+  reste pour une compétition 100 % natation). La natation (« 20m libre » / « 20m brasse »)
+  est inchangée.
+
+### 🎯 Épreuves en masse
+- La fenêtre **« 🎯 Épreuve »** accepte **une épreuve par ligne** : collez la liste des
+  épreuves (« 50m brasse », « 50m dos »…) pour toutes les créer d'un coup, avec la même date.
+  Lignes vides et puces ignorées ; une épreuve qui existe déjà n'est pas recréée (le message
+  le dit). Ctrl+Entrée pour valider.
+
+### 🏊 « + » des Participants disponibles vers les séries « Séries natation »
+- Le **« + »** d'un participant et le bouton **« ➕ Ajouter à une série »** (cochés) proposent
+  désormais **toutes les séries**, y compris celles générées par « 🏊 Séries natation »
+  (avant : seulement les séries créées à la main, et « Créez une série » après une simple
+  génération). Les séries sont groupées par épreuve, avec le couloir que prendra le nageur
+  (« → couloir 6 ») et « ✅ terminée » pour les séries déjà nagées.
+- **Dossard toujours unique dans la série** : le nageur garde son dossard s'il est libre,
+  sinon il reçoit le plus grand + 1. Avant, un ajout dans une série générée pouvait recevoir
+  un dossard déjà pris (ex. la Série 2 porte les dossards 6 à 10 : le nouveau recevait 6),
+  ce qui mélangeait les deux nageurs en course (DNS, ✏️, arrivées).
+- **Nageur déjà dans une autre série de la même épreuve → déplacement** : la fenêtre
+  l'annonce (« ⚠️ déjà en Série 2 : sera déplacé ici »), une confirmation est demandée, il est
+  retiré de son ancienne série (il n'est donc jamais classé deux fois dans l'épreuve). Refusé
+  s'il a déjà nagé dans l'ancienne série ; un DNS (pas parti) peut être déplacé.
+
 ### 🏊 Séries natation : ajouter ou modifier sur place
 - **« ➕ Série » dans chaque épreuve**, bien visible dans son en-tête, avec une fenêtre
   **pré-remplie** (natation, 50 m, mode couloirs, « Série 8 »…). Il ne reste qu'à placer les

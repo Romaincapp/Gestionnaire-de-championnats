@@ -212,7 +212,7 @@ describe('« 🏊 Séries natation » quand des séries existent déjà', () => 
         window.showSwimmingImportModal(1);
         const text = document.getElementById('swimmingImportModal').textContent;
         expect(text).toMatch(/3 séries existantes/);
-        expect(text).toMatch(/1 déjà nagée/);
+        expect(text).toMatch(/1 déjà disputée/);
         expect(text).toContain('➕ Série');
     });
 
@@ -222,7 +222,7 @@ describe('« 🏊 Séries natation » quand des séries existent déjà', () => 
         regenerateViaModal();
         expect(confirmSpy).toHaveBeenCalledTimes(1);
         expect(confirmSpy.mock.calls[0][0]).toMatch(/3 séries existantes/);
-        expect(confirmSpy.mock.calls[0][0]).toMatch(/1 déjà nagée/);
+        expect(confirmSpy.mock.calls[0][0]).toMatch(/1 déjà disputée/);
         expect(event().series).toEqual(before);
         expect(event().series[0].results).toHaveLength(1);
         expect(chronoData().series.some(s => s.name === 'Série 3')).toBe(true);

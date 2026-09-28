@@ -35,9 +35,27 @@ Ce mode fonctionne comme le système classique :
 En mode courses, vous pouvez :
 
 #### Créer des épreuves
-- Cliquez sur "🎯 Nouvelle Épreuve"
-- Donnez un nom (ex: "50m nage libre", "10km")
+- Cliquez sur "🎯 Épreuve"
+- Donnez un nom (ex: "50m nage libre", "10km") — ou **plusieurs, une par ligne** : collez la
+  liste des épreuves pour toutes les créer d'un coup (une épreuve déjà existante n'est pas
+  recréée)
 - Ajoutez une date optionnelle
+
+#### Séries automatiques (natation, athlétisme…)
+- **« 🏁 Séries automatiques »** (ex « 🏊 Séries natation ») répartit les participants en
+  séries par couloirs, triés au temps d'engagement (le plus rapide au centre). Une ligne par
+  participant avec son épreuve et son temps : « Jean Dupont 50m libre 0:32.50 »,
+  « Marie Leroy 200m 25.40 ».
+- La ligne est placée dans l'épreuve dont le nom contient la **distance** et, en natation, la
+  **nage** (« 20m libre » / « 20m brasse »). Plusieurs épreuves à la même distance sans nage
+  (athlétisme : « 100m » et « 100m haies », « 100m Benjamins » et « 100m Minimes ») sont
+  départagées par les **mots de l'épreuve présents sur la ligne** (« Emma Roux 100m haies
+  15.20 » → « 100m haies ») ; une ligne sans précision va dans l'épreuve sans précision
+  (« 100m »). Si rien ne départage, la ligne n'est pas placée (utiliser « Épreuve par défaut »).
+- Séries générées en mode couloirs, marquées **natation** si l'épreuve ou ses lignes donnent
+  une nage, sinon **course** (athlétisme). Classement **par épreuve** dans les deux cas, titré
+  « Résultats natation par épreuve » seulement si tout est de la natation, sinon
+  « Résultats par épreuve ».
 
 #### Créer des séries configurables
 - Chaque série appartient à une épreuve : cliquez sur **« ➕ Série »** dans l'en-tête de
@@ -45,10 +63,10 @@ En mode courses, vous pouvez :
   sans épreuve n'était ni imprimée ni classée par épreuve)
 - La fenêtre est **pré-remplie** à partir de la dernière série de l'épreuve (ou de son nom :
   « 100m Brasse » → Natation, 100 m, mode couloirs) et propose le nom « Série N+1 » : pratique
-  pour **ajouter une série natation sur place** sans relancer « 🏊 Séries natation »
+  pour **ajouter une série natation sur place** sans relancer « 🏁 Séries automatiques »
 - 🗑️ sur une série la supprime (refusé pendant sa course) ; une ancienne série
   « indépendante » se rattache à une épreuve via « 📎 Rattacher à une épreuve… »
-- « 🏊 Séries natation » **remplace** toutes les séries des épreuves (y compris celles déjà
+- « 🏁 Séries automatiques » **remplace** toutes les séries des épreuves (y compris celles déjà
   nagées) : la fenêtre l'annonce, et une confirmation est demandée si des séries existent
 - Configurez les options :
   - **Nom** : ex: "Série 1", "Finale A"
@@ -58,6 +76,11 @@ En mode courses, vous pouvez :
   - **Mode couloirs** : Pour natation avec arrêt par touche 1-9
 
 #### Gérer les participants
+- Depuis « 👥 Participants disponibles » : le **« + »** d'un participant (ou « ➕ Ajouter à une
+  série » pour les cochés) propose toutes les séries, **y compris celles générées par
+  « 🏁 Séries automatiques »**, groupées par épreuve, avec le couloir que prendra le nageur. Un
+  nageur déjà dans une autre série de la même épreuve y est **déplacé** (après confirmation ;
+  impossible s'il y a déjà nagé). Son dossard reste unique dans la série.
 - Par série, cliquez sur "👥 Participants"
 - Ajoutez les noms, numéros de dossard, clubs et catégories
 - **Mode couloirs** : Assignez un numéro de couloir (1-9) pour la natation

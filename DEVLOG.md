@@ -33,6 +33,121 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 4) — Séries automatiques : athlétisme sans ses deux limites
+
+- **Contexte** : « Oui corrige les deux limites puis merge » (limites notées en suite 3).
+  Remarque de l'utilisateur : « c'est bizarre la limite car ça fonctionnait bien avant avec
+  20m libre et 20m brasse » → exact : la **nage** écrite sur la ligne départage déjà ; la
+  limite ne touchait que les lignes **sans nage** (athlétisme). Cas ajouté aux tests.
+- **Fait** :
+  - `chrono.iife.js` / `matchEntryToEvent` : ligne sans nage et plusieurs épreuves à la même
+    distance → l'épreuve dont tous les mots (hors distance, mots vides, sans accents :
+    `eventQualifierWords`) sont sur la ligne, la plus précise l'emporte ; sinon l'unique
+    épreuve sans précision ; sinon non placée. Les mots de l'épreuve sont retirés du nom
+    (`stripEventWordsFromName` : « Emma Roux Haies » → « Emma Roux »). Natation : « 50m » sans
+    nage entre 50m libre et 50m dos reste ambigu (inchangé).
+  - `generateSwimmingSeries` : `sportType` = celui de l'épreuve, sinon `swimming` si l'épreuve
+    ou ses lignes donnent une nage, sinon `running` (toujours `laneMode`). Le classement par
+    épreuve (`isSwimmingOnlyCompetition`, qui accepte déjà `laneMode`) s'applique donc aussi
+    à l'athlétisme.
+  - `multisport.iife.js` : `eventRankingTitle()` (exposée) → « 🏊 Résultats natation par
+    épreuve » si toutes les séries sont de la natation, sinon « 🏁 Résultats par épreuve » ;
+    utilisée par l'onglet et la fenêtre de classement (`ui.iife.js`).
+- **Tests** : `autoSeries.test.js` passe à 10 (100m / 100m haies, Benjamins / Minimes,
+  20m libre / 20m brasse, 50m sans nage ambigu, type de sport, titre, ➕ Série sur une épreuve
+  d'athlétisme ; 5 échouaient avant). `npm test` : 241/241. `npm run test:e2e` : 0 problème.
+- **Fichiers touchés** : `src/chrono.iife.js`, `src/multisport.iife.js`, `src/ui.iife.js`,
+  `tests/unit/autoSeries.test.js`, `MULTISPORT.md`, `AGENTS.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (PR #86).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · MULTISPORT.md ✅ · tests ✅
+
+### 2026-09-28 (suite 3) — « Séries natation » renommé « Séries automatiques »
+
+- **Contexte** : demande utilisateur : « la modal série natation, ça peut également servir
+  pour des séries d'athlétisme il me semble, on pourrait juste l'appeler séries
+  automatiques ? »
+- **Vérifié avant de renommer** (sonde jsdom avec 100m, 200m, 100m haies, 400m) : le
+  générateur marche pour l'athlétisme quand la distance est **unique** dans la journée (200m,
+  400m → séries par couloirs triées au temps). Limites : (1) « 100m » et « 100m haies » ont la
+  même distance → une ligne « Nom 100m 12.45 » n'est placée nulle part (ambigu, même règle
+  que « 50m » sans nage en natation) ; (2) les séries générées portent `sportType:
+  'swimming'` → classement par épreuve titré « Résultats natation » ; (3) un nom contenant un
+  mot de nage près de la distance (« Dos Santos ») peut être pris pour une nage (préexistant).
+  Non modifié ici : proposé à l'utilisateur.
+- **Fait** : libellés visibles uniquement (fonctions internes `generateSwimmingSeries`,
+  `showSwimmingImportModal`… inchangées) — bouton « 🏁 Séries automatiques » (journée Courses
+  `multisport.iife.js` et barre d'une journée Matchs `ui.iife.js`, avec info-bulle), titre de
+  la fenêtre, « Participants par série », « 🏁 Générer les séries », aperçu / notification /
+  alertes en « participants », exemple d'athlétisme dans l'aide ; case « Mode couloirs (un
+  bouton d'arrêt par couloir) » de la fenêtre ➕ Série ; « déjà nagée(s) » → « déjà
+  disputée(s) » dans l'avertissement et les messages de déplacement.
+- **Tests** : `autoSeries.test.js` (3 : libellés, fenêtre, athlétisme 200m/400m ; les 3
+  échouaient avant). `npm test` : 234/234. `npm run test:e2e` (libellés mis à jour) : 0
+  problème.
+- **Fichiers touchés** : `src/chrono.iife.js`, `src/multisport.iife.js`, `src/ui.iife.js`,
+  `tests/unit/autoSeries.test.js`, `tests/e2e/natation.e2e.js`, `MULTISPORT.md`,
+  `claude.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (ajouté à la PR #86, pas encore
+  mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · MULTISPORT.md ✅ · claude.md ✅ · AGENTS.md (pas de
+  changement d'API) · tests ✅
+- **Suite possible** : épreuves de même distance départagées par les mots du nom (« haies ») ;
+  type de sport déduit de l'épreuve (athlétisme ≠ natation) avec un titre de classement
+  neutre.
+
+### 2026-09-28 (suite 2) — Épreuves en masse (une par ligne)
+
+- **Contexte** : demande utilisateur : « ça serait bien de pouvoir ajouter des épreuves en
+  masse également, une épreuve par ligne au lieu d'une épreuve à la fois. Insère ça dans le
+  modal existant. »
+- **Fait** (`src/multisport.iife.js`) : dans `showAddEventModalForDay`, le champ
+  `#eventName-N` devient un `<textarea>` (même id, « une épreuve par ligne », Ctrl+Entrée
+  valide) ; `saveEventForDay` crée une épreuve par ligne via `addChronoEvent` (même date),
+  ignore lignes vides et puces (`-`, `•`, `*`) et ne recrée pas une épreuve déjà présente
+  (dans la liste ou la journée, sans tenir compte des majuscules). Messages : « Épreuve
+  créée ! » (une seule, comme avant), « 3 épreuves créées (2 déjà existantes, ignorées) »,
+  « … existe déjà » (rien de créé, fenêtre laissée ouverte).
+- **Tests** : `bulkEvents.test.js` (6 ; 4 échouaient avant, les 2 autres gardent le
+  comportement à une ligne / champ vide). `npm test` : 231/231. `npm run test:e2e` : l'étape 3
+  crée désormais les 8 épreuves en un seul collage : 0 problème.
+- **Fichiers touchés** : `src/multisport.iife.js`, `tests/unit/bulkEvents.test.js`,
+  `tests/e2e/natation.e2e.js`, `AGENTS.md`, `MULTISPORT.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (ajouté à la PR #86, pas encore
+  mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · MULTISPORT.md ✅ · tests ✅
+
+### 2026-09-28 (suite) — « + » des Participants disponibles vers les séries générées
+
+- **Contexte** : signalé par l'utilisateur : « le bouton "+" sur la ligne du participant dans
+  "participants disponibles" est lié aux séries créées manuellement […] je ne sais pas ajouter
+  à des séries qui ont été créées via le bouton "série natation" ; vérifie si c'est possible
+  de les ajouter aussi sans tout casser ». Choix validé : un nageur déjà dans une autre série
+  de la même épreuve est **déplacé** (confirmation), refusé s'il y a déjà nagé.
+- **Diagnostic** : `showAddToSerieModal` et `showBulkAddToSerieModal` ne listaient que
+  `chronoData.series` (séries « à plat »), et `renderParticipantsSection` ne comptait qu'elles
+  (« Créez une série » après une génération). Piège : `addChronoParticipant` donnait
+  `bib = nombre de participants + 1`, déjà pris dans une série générée (dossards continus :
+  Série 2 = 6..10 → nouveau dossard 6), or le dossard est la clé des actions de course.
+- **Fait** (`src/multisport.iife.js`) : `getDaySeriesByEvent` (exposée ; séries par épreuve
+  via `getEventSeries`, puis séries sans épreuve) ; `renderSeriePickerHTML` partagé par les
+  deux fenêtres (titre par épreuve, nombre, « ✅ terminée », « → couloir N » via
+  `nextFreeLane`, « ⚠️ déjà en Série X : sera déplacé ici », `data-serie-id`) ;
+  `placeParticipantInSerie` (ajout ou déplacement, dossard du nageur s'il est libre dans la
+  série) ; `nextFreeBib` (plus grand dossard + 1) comme repli d'`addChronoParticipant` ;
+  `addExistingParticipantToSerie` : refus si déjà dans la série, confirmation de
+  déplacement, refus si déjà nagé (arrivé, DISQ, tours ou résultat ; DNS déplaçable) ;
+  `bulkAddParticipantsToSerie` : une seule confirmation listant les déplacés, compte-rendu
+  ajoutés / déplacés / déjà présents / non déplacés.
+- **Tests** : `addToGeneratedSerie.test.js` (15 ; 14 échouaient avant). `npm test` :
+  225/225. `npm run test:e2e` : nouvelle étape 12 (retardataire ajouté via « + » à une série
+  générée : couloir et dossard uniques, bouton d'arrêt ; déplacement d'un nageur de Série 3
+  vers Série 7) : 0 problème.
+- **Fichiers touchés** : `src/multisport.iife.js`, `tests/unit/addToGeneratedSerie.test.js`,
+  `tests/e2e/natation.e2e.js`, `AGENTS.md`, `MULTISPORT.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #85 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · MULTISPORT.md ✅ · claude.md (piège n°14
+  déjà général : toujours `getEventSeries`) · tests ✅
+
 ### 2026-09-28 — Séries natation : ajouter / modifier sur place sans risque
 
 - **Contexte** : cas vécu par l'utilisateur en compétition. Séries générées par « 🏊 Séries
