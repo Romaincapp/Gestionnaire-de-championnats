@@ -60,6 +60,13 @@ En mode courses, vous pouvez :
   une nage, sinon **course** (athlétisme). Classement **par épreuve** dans les deux cas, titré
   « Résultats natation par épreuve » seulement si tout est de la natation, sinon
   « Résultats par épreuve ».
+- **Points et classement des clubs** : chaque tableau d'épreuve a une colonne **Points**
+  (barème 25-19-17-15-12-10-8-6-4-2). Un club ne marque qu'**une fois par épreuve**, avec
+  son meilleur classé, et les clubs sont reclassés entre eux (1er et 2e du club A, 3e du
+  club B → A 25, B 19 ; « – » pour le 2e nageur de A). Nageurs sans club : classés, sans
+  points. En tête, le tableau **« 🏆 Classement des clubs (toutes épreuves) »** : Rang ·
+  Club · une colonne par épreuve (points gagnés, « – » si absent) · Total ; à total égal,
+  le plus de 25 points passe devant.
 
 #### Créer des séries configurables
 - Chaque série appartient à une épreuve : cliquez sur **« ➕ Série »** dans l'en-tête de

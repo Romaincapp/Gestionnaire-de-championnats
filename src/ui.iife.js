@@ -714,9 +714,16 @@
     function exportMultisportRanking() {
         // Natation : exporter le classement par épreuve (les points n'y ont pas de sens)
         const swimmingOnly = typeof isSwimmingOnlyCompetition === 'function' && isSwimmingOnlyCompetition();
-        const ranking = swimmingOnly && typeof calculateEventRankings === 'function'
-            ? { type: 'classement-par-epreuve', events: calculateEventRankings() }
-            : (typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {});
+        let ranking;
+        if (swimmingOnly && typeof calculateEventRankings === 'function') {
+            // Épreuves (entrées avec clubPoints) + classement des clubs toutes épreuves
+            // (perEvent aligné sur events)
+            const events = calculateEventRankings();
+            ranking = { type: 'classement-par-epreuve', events: events,
+                clubs: typeof calculateClubEventRanking === 'function' ? calculateClubEventRanking(events) : [] };
+        } else {
+            ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
+        }
         const dataStr = JSON.stringify(ranking, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);

@@ -1725,12 +1725,96 @@
                         prevCs = cs;
                         prevRank = e.rank;
                     });
+                    assignEventClubPoints(entries);
                     out.push({ dayNumber: Number(dayKey), eventId: evt.id, eventName: evt.name, entries: entries, outOfRace: outOfRace });
                 });
             });
         return out;
     }
     global.calculateEventRankings = calculateEventRankings;
+
+    // Club normalisé (« CN Liège » = « cn  liège ») ; '' si pas de club
+    function clubKey(club) {
+        return String(club || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
+    // Points des clubs dans une épreuve (entrées déjà classées au temps) : un club ne
+    // marque qu'une fois, avec son meilleur classé, et ces meilleurs sont reclassés entre
+    // clubs (1er et 2e du club A, 3e du club B → A 25, B 19). Barème Multisport
+    // 25-19-17…, ex æquo au centième = même rang club. clubPoints null : sans club ou
+    // club déjà compté.
+    function assignEventClubPoints(entries) {
+        var seen = {}, clubIndex = 0, prevCs = null, prevRank = 0;
+        entries.forEach(function(e) {
+            e.clubPoints = null;
+            e.clubRank = null;
+            var key = clubKey(e.club);
+            if (!key || seen[key]) return;
+            seen[key] = true;
+            clubIndex++;
+            var cs = Math.round(e.time / 10);
+            e.clubRank = cs === prevCs ? prevRank : clubIndex;
+            prevCs = cs;
+            prevRank = e.clubRank;
+            e.clubPoints = calculateMultisportPositionPoints(e.clubRank);
+        });
+    }
+
+    // Classement des clubs toutes épreuves : points de chaque épreuve (perEvent, aligné
+    // sur `events` ; null = personne du club classé dans l'épreuve) et total. Tri par
+    // total, puis nombre de 1res places club (25 points), puis nom ; même rang si total
+    // et 1res places sont égaux.
+    function calculateClubEventRanking(events) {
+        events = events || calculateEventRankings();
+        var clubs = {}, order = [];
+        events.forEach(function(evt, i) {
+            evt.entries.forEach(function(e) {
+                if (e.clubPoints == null) return;
+                var key = clubKey(e.club);
+                if (!clubs[key]) {
+                    clubs[key] = { club: String(e.club).trim(), perEvent: events.map(function() { return null; }), total: 0, wins: 0 };
+                    order.push(key);
+                }
+                clubs[key].perEvent[i] = e.clubPoints;
+                clubs[key].total += e.clubPoints;
+                if (e.clubRank === 1) clubs[key].wins++;
+            });
+        });
+        var list = order.map(function(k) { return clubs[k]; });
+        list.sort(function(a, b) {
+            return (b.total - a.total) || (b.wins - a.wins) || a.club.localeCompare(b.club);
+        });
+        list.forEach(function(c, i) {
+            var prev = list[i - 1];
+            c.rank = prev && prev.total === c.total && prev.wins === c.wins ? prev.rank : i + 1;
+        });
+        return list;
+    }
+    global.calculateClubEventRanking = calculateClubEventRanking;
+
+    function buildClubRankingHTML(events, clubs, multiDay) {
+        var th = 'padding: 6px; text-align: center; font-size: 11px; vertical-align: bottom;';
+        var html = '<div class="club-ranking" style="margin: 0 0 26px 0; page-break-inside: avoid;">';
+        html += '<h3 style="margin: 0 0 4px 0; color: #16a085;">🏆 Classement des clubs (toutes épreuves)</h3>';
+        html += '<p style="margin: 0 0 8px 0; font-size: 12px; color: #7f8c8d;">Barème 25-19-17-15-12-10-8-6-4-2 : un club marque une fois par épreuve, avec son meilleur classé.</p>';
+        html += '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
+        html += '<thead><tr><th style="' + th + '">Rang</th><th style="' + th + ' text-align: left;">Club</th>';
+        events.forEach(function(evt) {
+            html += '<th style="' + th + '">' + escapeLaneHtml(evt.eventName) + (multiDay ? ' (J' + evt.dayNumber + ')' : '') + '</th>';
+        });
+        html += '<th style="' + th + '">Total</th></tr></thead><tbody>';
+        clubs.forEach(function(c) {
+            html += '<tr style="border-bottom: 1px solid #ecf0f1;">' +
+                '<td style="padding: 6px; text-align: center; font-weight: bold;">' + c.rank + '</td>' +
+                '<td style="padding: 6px; text-align: left; font-weight: bold;">' + escapeLaneHtml(c.club) + '</td>';
+            c.perEvent.forEach(function(pts) {
+                html += '<td style="padding: 6px; text-align: center;' + (pts == null ? ' color: #bdc3c7;' : '') + '">' + (pts == null ? '–' : pts) + '</td>';
+            });
+            html += '<td style="padding: 6px; text-align: center; font-weight: bold; color: #16a085;">' + c.total + '</td></tr>';
+        });
+        html += '</tbody></table></div></div>';
+        return html;
+    }
 
     // Tableaux HTML du classement par épreuve (un par épreuve), utilisés par
     // l'onglet, l'impression / export HTML et le second écran « Afficher ».
@@ -1742,6 +1826,8 @@
         var multiDay = events.some(function(e) { return e.dayNumber !== events[0].dayNumber; });
         var medals = ['🥇', '🥈', '🥉'];
         var html = '';
+        var clubs = calculateClubEventRanking(events);
+        if (clubs.length > 0) html += buildClubRankingHTML(events, clubs, multiDay);
         events.forEach(function(evt) {
             html += '<div class="event-ranking" style="margin: 0 0 22px 0; page-break-inside: avoid;">';
             html += '<h3 style="margin: 0 0 8px 0; color: #16a085;">🏊 ' + escapeLaneHtml(evt.eventName) +
@@ -1750,14 +1836,17 @@
             html += '<table style="width: 100%; border-collapse: collapse;">';
             html += '<thead><tr><th style="padding: 8px; text-align: center;">Rang</th><th style="padding: 8px; text-align: left;">Nageur</th>' +
                 '<th style="padding: 8px; text-align: center;">Club</th><th style="padding: 8px; text-align: center;">Série</th>' +
-                '<th style="padding: 8px; text-align: center;">Temps</th></tr></thead><tbody>';
+                '<th style="padding: 8px; text-align: center;">Temps</th><th style="padding: 8px; text-align: center;">Points</th></tr></thead><tbody>';
             evt.entries.forEach(function(e) {
+                var pointsCell = e.clubPoints != null
+                    ? '<td style="padding: 8px; text-align: center; font-weight: bold; color: #16a085;">' + e.clubPoints + '</td>'
+                    : '<td style="padding: 8px; text-align: center; color: #bdc3c7;" title="' + (e.club ? 'Déjà compté pour ce club' : 'Sans club') + '">–</td>';
                 html += '<tr style="border-bottom: 1px solid #ecf0f1;">' +
                     '<td style="padding: 8px; text-align: center; font-weight: bold;">' + (e.rank <= 3 ? medals[e.rank - 1] + ' ' : '') + e.rank + '</td>' +
                     '<td style="padding: 8px; font-weight: bold;">' + escapeLaneHtml(e.name) + '</td>' +
                     '<td style="padding: 8px; text-align: center;">' + (e.club ? escapeLaneHtml(e.club) : '-') + '</td>' +
                     '<td style="padding: 8px; text-align: center;">' + escapeLaneHtml(e.serieName) + '</td>' +
-                    '<td style="padding: 8px; text-align: center; font-family: monospace;">' + formatDurationHMS(e.time) + '</td></tr>';
+                    '<td style="padding: 8px; text-align: center; font-family: monospace;">' + formatDurationHMS(e.time) + '</td>' + pointsCell + '</tr>';
             });
             evt.outOfRace.forEach(function(o) {
                 html += '<tr style="border-bottom: 1px solid #ecf0f1; color: #7f8c8d;">' +
@@ -1765,7 +1854,8 @@
                     '<td style="padding: 8px;">' + escapeLaneHtml(o.name) + '</td>' +
                     '<td style="padding: 8px; text-align: center;">' + (o.club ? escapeLaneHtml(o.club) : '-') + '</td>' +
                     '<td style="padding: 8px; text-align: center;">' + escapeLaneHtml(o.serieName) + '</td>' +
-                    '<td style="padding: 8px; text-align: center;">-</td></tr>';
+                    '<td style="padding: 8px; text-align: center;">-</td>' +
+                    '<td style="padding: 8px; text-align: center;">–</td></tr>';
             });
             html += '</tbody></table></div>';
         });

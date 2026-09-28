@@ -107,7 +107,10 @@ describe('affichage', () => {
     test('impression / export HTML : un tableau par épreuve', () => {
         const doc = window.buildMultisportRankingDoc(false);
         expect(doc).toContain('Résultats par épreuve');
-        expect((doc.match(/<table/g) || []).length).toBe(2);
+        // Un tableau par épreuve, plus le classement des clubs (toutes épreuves)
+        expect((doc.match(/class="event-ranking"/g) || []).length).toBe(2);
+        expect((doc.match(/class="club-ranking"/g) || []).length).toBe(1);
+        expect((doc.match(/<table/g) || []).length).toBe(3);
         expect(doc).not.toContain('Classement Général des Courses');
     });
 
