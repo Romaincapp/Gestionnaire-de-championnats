@@ -347,6 +347,50 @@ async function openFresh(browser) {
     await page.waitForTimeout(500);
 
     // ---------------------------------------------------------------
+    step('9c. ✏️ Changer le club d\'un nageur classé (inscrit dans plusieurs épreuves) → classements à jour');
+    // Après « Séries automatiques », la liste a une ligne par inscription : un nageur
+    // inscrit dans 2 épreuves y figure 2 fois (✏️ était refusé : « porte déjà ce nom »)
+    const clubTarget = await state(page, (ranked) => {
+        const list = championship.days[1].chronoData.participants;
+        const count = n => list.filter(p => p.name === n).length;
+        const name = ranked.find(n => count(n) > 1) || ranked[0];
+        const p = list.find(x => x.name === name);
+        return { name, id: p.id, club: p.club, entries: count(name) };
+    }, expected.map(e => e.name));
+    const editClub = async (club) => {
+        await page.locator(`#participant-row-1-${clubTarget.id} button[title="Éditer nom / dossard"]`).click();
+        await page.fill(`#edit-pclub-1-${clubTarget.id}`, club);
+        await page.locator(`#participant-row-1-${clubTarget.id} button[title="Enregistrer"]`).click();
+        await page.waitForTimeout(300);
+    };
+    await editClub('Club Test E2E');
+    const propagated = await state(page, (name) => {
+        const cd = championship.days[1].chronoData;
+        const clubs = [];
+        cd.participants.forEach(p => { if (p.name === name) clubs.push(p.club); });
+        cd.events.forEach(e => (e.series || []).forEach(s => {
+            (s.participants || []).forEach(p => { if (p.name === name) clubs.push(p.club); });
+            (s.results || []).forEach(r => { if (r.name === name) clubs.push(r.club); });
+        }));
+        return clubs;
+    }, clubTarget.name);
+    check(propagated.length > clubTarget.entries && propagated.every(c => c === 'Club Test E2E'),
+        `✏️ ${clubTarget.name} (${clubTarget.entries} inscription(s)) : club changé dans la liste, les séries et les résultats (${propagated.length} fiches)`);
+    await page.getByText('🏅 Multisport', { exact: true }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(700);
+    const clubView = await page.locator('#multisportRankingContent').evaluate((el, name) => {
+        const clubRows = [...el.querySelectorAll('.club-ranking tbody tr')].map(tr => tr.cells[1].textContent.trim());
+        const card = [...el.querySelectorAll('.event-ranking')].find(c => c.textContent.includes('50m brasse'));
+        const heads = [...card.querySelectorAll('thead th')].map(th => th.textContent.trim());
+        const row = [...card.querySelectorAll('tbody tr')].find(tr => tr.textContent.includes(name));
+        return { inClubs: clubRows.includes('Club Test E2E'), rowClub: row ? row.cells[heads.indexOf('Club')].textContent.trim() : null };
+    }, clubTarget.name);
+    check(clubView.inClubs && clubView.rowClub === 'Club Test E2E', 'classement par épreuve et tableau des clubs : nouveau club affiché');
+    await page.getByText('Journée 1', { exact: true }).first().click();
+    await page.waitForTimeout(500);
+    await editClub(clubTarget.club); // retour au club d'origine pour la suite
+
+    // ---------------------------------------------------------------
     step('10. 💾 Exporter la journée, puis 📥 Importer dans un navigateur vierge');
     const [download] = await Promise.all([page.waitForEvent('download'), btn(page, '💾 Exporter')]);
     const file = path.join(OUT, 'export-J1.json');

@@ -13,6 +13,16 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏷️ Changer un club depuis « Participants disponibles » : suivi partout
+- **« 🏷️ Affecter aux cochés »** corrige aussi les résultats déjà enregistrés : avant, après
+  une course, le classement par épreuve et le tableau des clubs gardaient l'ancien club.
+- **✏️ sur un nageur inscrit dans plusieurs épreuves** (une ligne par épreuve après
+  « 🏁 Séries automatiques ») : accepté. Avant, refusé avec « Un participant porte déjà ce
+  nom ». Toutes ses inscriptions suivent (liste, séries, résultats) ; changer le club ne
+  réécrit plus son dossard dans ses autres épreuves.
+- Même correction pour ✏️ dans « 👥 Gérer les participants » et dans la fenêtre 🏊 des
+  couloirs. Le chrono d'une course en cours prend aussi le nouveau club.
+
 ### 🎉 Épreuves « fun » hors classement des clubs
 - Case **« 🎉 Épreuve fun »** dans la fenêtre de création d'épreuve (elle s'applique à toutes
   les épreuves saisies d'un coup) et dans ✏️ Modifier l'épreuve (cocher / décocher à tout
