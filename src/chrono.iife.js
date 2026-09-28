@@ -2859,6 +2859,29 @@ function parseSwimmingEntry(rawName) {
     };
 }
 
+// Mots d'une épreuve en plus de sa distance : « 100m haies » → ['haies'],
+// « 100m Benjamins » → ['benjamins'], « 100m » → [] (minuscules, sans accents)
+var EVENT_NAME_STOPWORDS = ['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'm', 'metre', 'metres'];
+function normalizeEventWord(w) {
+    return String(w || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function splitEventWords(text) {
+    return String(text || '').split(/[\s,;:()\/.\-–—]+/).map(normalizeEventWord).filter(Boolean);
+}
+function eventQualifierWords(evt) {
+    return splitEventWords(evt.name).filter(function(w) {
+        return !/^\d/.test(w) && EVENT_NAME_STOPWORDS.indexOf(w) === -1;
+    });
+}
+// Retirer du nom du participant les mots de l'épreuve (« Emma Roux Haies » → « Emma Roux »)
+function stripEventWordsFromName(entry, evt) {
+    var q = eventQualifierWords(evt);
+    if (!entry.swimmerName || q.length === 0) return;
+    entry.swimmerName = entry.swimmerName.split(/\s+/).filter(function(w) {
+        return q.indexOf(normalizeEventWord(w)) === -1;
+    }).join(' ').trim();
+}
+
 // Matcher une entrée parsée à une épreuve
 function matchEntryToEvent(entry, events) {
     // Épreuve forcée (via "Épreuve par défaut" quand la donnée manque)
@@ -2868,13 +2891,29 @@ function matchEntryToEvent(entry, events) {
         }
     }
     // Ligne sans nage : la distance seule suffit si une seule épreuve l'a
-    // (sinon ambigu, ex. 50m libre et 50m dos : on ne devine pas)
     if (!entry.stroke) {
         var sameDistance = events.filter(function(evt) {
             var inf = deriveSwimmingEventInfo(evt);
             return inf && inf.distance === entry.distance;
         });
-        return sameDistance.length === 1 ? sameDistance[0] : null;
+        if (sameDistance.length <= 1) return sameDistance[0] || null;
+        // Plusieurs épreuves à cette distance (athlétisme : « 100m » et « 100m haies »,
+        // « 100m Benjamins » et « 100m Minimes ») : l'épreuve dont tous les mots sont
+        // dans la ligne (la plus précise l'emporte), sinon la seule épreuve sans
+        // précision. Natation : « 50m » sans nage entre 50m libre et 50m dos reste
+        // ambigu (on ne devine pas).
+        var words = splitEventWords(entry.rawName);
+        var qualified = sameDistance.filter(function(evt) {
+            var q = eventQualifierWords(evt);
+            return q.length > 0 && q.every(function(w) { return words.indexOf(w) !== -1; });
+        }).sort(function(a, b) { return eventQualifierWords(b).length - eventQualifierWords(a).length; });
+        if (qualified.length > 0) {
+            if (qualified.length > 1 && eventQualifierWords(qualified[0]).length === eventQualifierWords(qualified[1]).length) return null;
+            stripEventWordsFromName(entry, qualified[0]);
+            return qualified[0];
+        }
+        var plain = sameDistance.filter(function(evt) { return eventQualifierWords(evt).length === 0; });
+        return plain.length === 1 ? plain[0] : null;
     }
 
     // Distance + nage lues dans le nom de l'épreuve (« 50m Nage Libre »,
@@ -3043,6 +3082,10 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         // sur un repli à 1000 m (« 1,00 km » par nageur sur un 50 m).
         var evtInfo = deriveSwimmingEventInfo(evt);
         var serieDistance = evt.distance || (evtInfo && evtInfo.distance) || 0;
+        // Natation si l'épreuve ou ses lignes donnent une nage ; sinon course
+        // (athlétisme : « 200m », « 100m haies »), toujours en mode couloirs
+        var serieSport = evt.sportType || ((evtInfo && evtInfo.stroke) || entries.some(function(e) { return e.stroke; })
+            ? 'swimming' : 'running');
 
         // Créer les séries
         for (var i = 0; i < sorted.length; i += lanesPerSerie) {
@@ -3091,7 +3134,7 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
                 id: nextSerieId++,
                 name: 'Série ' + serieNum,
                 eventId: evt.id,
-                sportType: evt.sportType || 'swimming',
+                sportType: serieSport,
                 distance: serieDistance,
                 raceType: evt.raceType || 'individual',
                 relayDuration: null,

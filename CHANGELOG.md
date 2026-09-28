@@ -18,9 +18,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   générateur (séries par couloirs, au temps d'engagement) sert aussi à l'athlétisme. Textes
   neutres (« participants » au lieu de « nageurs »), exemple d'athlétisme dans l'aide
   (« Marie Leroy 200m 25.40 »). Case « Mode couloirs (un bouton d'arrêt par couloir) », séries « déjà disputées ».
-- Limite connue en athlétisme : deux épreuves de même distance le même jour (« 100m » et
-  « 100m haies ») sont ambiguës pour une ligne sans précision ; les séries générées sont
-  marquées « natation » (voir `MULTISPORT.md`).
+- **Athlétisme** : deux épreuves de même distance le même jour (« 100m » et « 100m haies »,
+  « 100m Benjamins » et « 100m Minimes ») sont départagées par les mots de l'épreuve écrits sur
+  la ligne ; une ligne sans précision va dans l'épreuve sans précision (« 100m »). Les séries
+  d'athlétisme sont marquées « course » (plus « natation »), gardent le classement par épreuve,
+  et le titre devient « 🏁 Résultats par épreuve » (« 🏊 Résultats natation par épreuve »
+  reste pour une compétition 100 % natation). La natation (« 20m libre » / « 20m brasse »)
+  est inchangée.
 
 ### 🎯 Épreuves en masse
 - La fenêtre **« 🎯 Épreuve »** accepte **une épreuve par ligne** : collez la liste des

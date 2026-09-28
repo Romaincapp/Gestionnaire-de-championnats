@@ -1617,7 +1617,8 @@
     global.getEventSeries = getEventSeries;
 
     // Vrai pour une compétition uniquement composée de journées Courses dont
-    // toutes les séries (avec participants) sont de la natation.
+    // toutes les séries (avec participants) sont de la natation OU en mode couloirs
+    // (séries automatiques d'athlétisme) : classement par épreuve.
     function isSwimmingOnlyCompetition() {
         if (!hasChronoDays() || hasChampionshipDays()) return false;
         var found = false, allSwim = true;
@@ -1636,6 +1637,24 @@
         return found && allSwim;
     }
     global.isSwimmingOnlyCompetition = isSwimmingOnlyCompetition;
+
+    // Titre du classement par épreuve : « natation » seulement si toutes les séries le
+    // sont ; neutre dès qu'il y a de l'athlétisme (séries automatiques en couloirs)
+    function eventRankingTitle() {
+        var allSwimming = true;
+        Object.keys(global.championship.days).forEach(function(dayKey) {
+            var day = global.championship.days[dayKey];
+            if (!day || day.dayType !== DAY_TYPES.CHRONO || !day.chronoData) return;
+            var cd = day.chronoData;
+            var series = (cd.series || []).slice();
+            (cd.events || []).forEach(function(evt) { series = series.concat(evt.series || []); });
+            series.forEach(function(s) {
+                if (s && (s.participants || []).length && s.sportType !== 'swimming') allSwimming = false;
+            });
+        });
+        return allSwimming ? '🏊 Résultats natation par épreuve' : '🏁 Résultats par épreuve';
+    }
+    global.eventRankingTitle = eventRankingTitle;
 
     // [{ dayNumber, eventId, eventName, entries: [{rank, name, club, category,
     //    serieName, time}], outOfRace: [{name, club, serieName, status}] }]

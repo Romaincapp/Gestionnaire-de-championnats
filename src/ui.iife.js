@@ -552,7 +552,7 @@
         // ne s'applique pas — classement par épreuve, au temps.
         const swimmingOnly = typeof isSwimmingOnlyCompetition === 'function' && isSwimmingOnlyCompetition();
         const title = document.getElementById('multisport-hub-title');
-        if (title) title.textContent = swimmingOnly ? '🏊 Résultats natation par épreuve' : '🏅 Classement Multisport (Matchs + Courses)';
+        if (title) title.textContent = swimmingOnly ? eventRankingTitle() : '🏅 Classement Multisport (Matchs + Courses)';
         const info = document.querySelector('#multisport-ranking .multisport-info');
         if (info) info.style.display = swimmingOnly ? 'none' : '';
 
@@ -615,7 +615,7 @@
     function openMultisportRankingInNewWindow() {
         const content = buildMultisportRankingContentHTML();
         const swimmingOnly = typeof isSwimmingOnlyCompetition === 'function' && isSwimmingOnlyCompetition();
-        const windowTitle = swimmingOnly ? '🏊 Résultats natation par épreuve' : '🏅 Classement Multisport';
+        const windowTitle = swimmingOnly ? eventRankingTitle() : '🏅 Classement Multisport';
 
         const html = `<!DOCTYPE html>
         <html><head><meta charset="UTF-8"><title>${windowTitle}</title>

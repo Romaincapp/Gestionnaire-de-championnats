@@ -33,6 +33,34 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 4) — Séries automatiques : athlétisme sans ses deux limites
+
+- **Contexte** : « Oui corrige les deux limites puis merge » (limites notées en suite 3).
+  Remarque de l'utilisateur : « c'est bizarre la limite car ça fonctionnait bien avant avec
+  20m libre et 20m brasse » → exact : la **nage** écrite sur la ligne départage déjà ; la
+  limite ne touchait que les lignes **sans nage** (athlétisme). Cas ajouté aux tests.
+- **Fait** :
+  - `chrono.iife.js` / `matchEntryToEvent` : ligne sans nage et plusieurs épreuves à la même
+    distance → l'épreuve dont tous les mots (hors distance, mots vides, sans accents :
+    `eventQualifierWords`) sont sur la ligne, la plus précise l'emporte ; sinon l'unique
+    épreuve sans précision ; sinon non placée. Les mots de l'épreuve sont retirés du nom
+    (`stripEventWordsFromName` : « Emma Roux Haies » → « Emma Roux »). Natation : « 50m » sans
+    nage entre 50m libre et 50m dos reste ambigu (inchangé).
+  - `generateSwimmingSeries` : `sportType` = celui de l'épreuve, sinon `swimming` si l'épreuve
+    ou ses lignes donnent une nage, sinon `running` (toujours `laneMode`). Le classement par
+    épreuve (`isSwimmingOnlyCompetition`, qui accepte déjà `laneMode`) s'applique donc aussi
+    à l'athlétisme.
+  - `multisport.iife.js` : `eventRankingTitle()` (exposée) → « 🏊 Résultats natation par
+    épreuve » si toutes les séries sont de la natation, sinon « 🏁 Résultats par épreuve » ;
+    utilisée par l'onglet et la fenêtre de classement (`ui.iife.js`).
+- **Tests** : `autoSeries.test.js` passe à 10 (100m / 100m haies, Benjamins / Minimes,
+  20m libre / 20m brasse, 50m sans nage ambigu, type de sport, titre, ➕ Série sur une épreuve
+  d'athlétisme ; 5 échouaient avant). `npm test` : 241/241. `npm run test:e2e` : 0 problème.
+- **Fichiers touchés** : `src/chrono.iife.js`, `src/multisport.iife.js`, `src/ui.iife.js`,
+  `tests/unit/autoSeries.test.js`, `MULTISPORT.md`, `AGENTS.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (PR #86).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · MULTISPORT.md ✅ · tests ✅
+
 ### 2026-09-28 (suite 3) — « Séries natation » renommé « Séries automatiques »
 
 - **Contexte** : demande utilisateur : « la modal série natation, ça peut également servir
