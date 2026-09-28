@@ -2883,6 +2883,8 @@ function parseSwimmingEntry(rawName) {
         rawName: rawName
     };
 }
+// Utilisée aussi par « Participants disponibles » (raison d'une ligne non placée)
+window.parseSwimmingEntry = parseSwimmingEntry;
 
 // Mots d'une épreuve en plus de sa distance : « 100m haies » → ['haies'],
 // « 100m Benjamins » → ['benjamins'], « 100m » → [] (minuscules, sans accents)
@@ -3137,7 +3139,10 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
                     totalTime: null,
                     laps: 0,
                     swimImport: true,
-                    swimRaw: entry.rawName || ''
+                    swimRaw: entry.rawName || '',
+                    // Pour la ligne d'infos de « Participants disponibles »
+                    swimEventId: evt.id,
+                    seedTimeMs: entry.timeMs > 0 ? entry.timeMs : 0
                 });
 
                 return {

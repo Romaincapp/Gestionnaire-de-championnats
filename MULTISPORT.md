@@ -94,6 +94,12 @@ En mode courses, vous pouvez :
   - **Mode couloirs** : Pour natation avec arrêt par touche 1-9
 
 #### Gérer les participants
+- Après « 🏁 Séries automatiques », « 👥 Participants disponibles » a **une fiche par
+  inscription** (nom, club) : la ligne brute est découpée, et gardée en info-bulle sur le nom.
+  Sur la même ligne, à droite : « 🎯 50m brasse · ⏱ 1m02,00s · Série 1, couloir 3 »
+  (épreuve, temps d'engagement, série et couloir actuels). Les lignes **non placées**
+  (non comprises, ou sans épreuve correspondante) sont en tête, avec « ⚠️ non placée ».
+- La liste **s'agrandit à la souris** : tirer le coin en bas à droite. La hauteur est gardée.
 - Depuis « 👥 Participants disponibles » : le **« + »** d'un participant (ou « ➕ Ajouter à une
   série » pour les cochés) propose toutes les séries, **y compris celles générées par
   « 🏁 Séries automatiques »**, groupées par épreuve, avec le couloir que prendra le nageur. Un

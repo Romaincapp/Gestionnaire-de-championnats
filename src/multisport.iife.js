@@ -531,15 +531,43 @@
             html += '<label style="font-size: 11px; color: #7f8c8d; cursor: pointer; white-space: nowrap;"><input type="checkbox" onchange="toggleAllParticipants(' + dayNumber + ', this.checked)" style="vertical-align: middle;"> Tout</label>';
             html += '</div>';
 
-            html += '<div style="max-height: 200px; overflow-y: auto;">';
-            participants.forEach(function(p) {
-                html += '<div id="participant-row-' + dayNumber + '-' + p.id + '" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; background: #f8f9fa; border-radius: 6px;">';
-                html += '<label style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; font-size: 12px; color: #2c3e50;">';
+            // Après « 🏁 Séries automatiques » : une fiche par inscription. Infos de chaque
+            // fiche (épreuve, engagement, série, couloir) et lignes non placées en tête.
+            var placement = buildParticipantPlacement(chronoData);
+            var generated = participants.some(function(p) { return p.swimImport; });
+            var unplacedReason = function(p) {
+                if (!generated || p.swimImport || placement.byName[String(p.name || '').toLowerCase()]) return '';
+                if (typeof global.parseSwimmingEntry === 'function' && !global.parseSwimmingEntry(p.name)) {
+                    return 'Non placée : ligne non comprise par « 🏁 Séries automatiques » (distance ou nage manquante ?)';
+                }
+                return 'Non placée : aucune épreuve ne correspond (ou ajouté après la génération) — « + » pour l\'ajouter à une série';
+            };
+            var ordered = participants.map(function(p) { return { p: p, unplaced: unplacedReason(p) }; });
+            ordered.sort(function(a, b) { return (b.unplaced ? 1 : 0) - (a.unplaced ? 1 : 0); }); // stable
+
+            // Hauteur de la liste : agrandissable à la souris (poignée en bas à droite),
+            // gardée d'un affichage à l'autre (préférence de ce navigateur)
+            var savedHeight = readParticipantsListHeight();
+            var listHeight = savedHeight || (participants.length > 6 ? 200 : 0);
+            html += '<div id="participants-list-' + dayNumber + '" data-initial-height="' + listHeight + '" ' +
+                'onmouseup="saveParticipantsListHeight(' + dayNumber + ', this)" ' +
+                'style="' + (listHeight ? 'height: ' + listHeight + 'px; ' : '') + 'min-height: 60px; overflow-y: auto; resize: vertical;">';
+            ordered.forEach(function(item) {
+                var p = item.p;
+                html += '<div id="participant-row-' + dayNumber + '-' + p.id + '" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; background: ' + (item.unplaced ? '#fff8e6' : '#f8f9fa') + '; border-radius: 6px;">';
+                html += '<label style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; flex: 1; min-width: 0; cursor: pointer; font-size: 12px; color: #2c3e50;">';
                 html += '<input type="checkbox" class="participant-check-' + dayNumber + '" value="' + p.id + '">';
                 html += '<span style="font-weight: bold; color: #e67e22; min-width: 26px;">#' + (p.bib != null ? p.bib : '-') + '</span>';
-                html += '<span>' + p.name + '</span>';
+                html += '<span' + (p.swimRaw ? ' title="' + escapeLaneHtml('Ligne d\'origine : ' + p.swimRaw) + '"' : '') + '>' + p.name + '</span>';
                 if (p.club) {
                     html += '<span style="font-size: 10px; background: #16a085; color: white; padding: 2px 6px; border-radius: 3px;">' + p.club + '</span>';
+                }
+                if (item.unplaced) {
+                    html += '<span class="participant-unplaced" title="' + escapeLaneHtml(item.unplaced) + '" style="font-size: 10px; font-weight: 600; color: #9a6700; background: #fdebc8; padding: 2px 6px; border-radius: 3px;">⚠️ non placée</span>';
+                }
+                var info = participantEntryInfo(p, chronoData, placement);
+                if (info) {
+                    html += '<span class="participant-entry-info" style="margin-left: auto; font-size: 11px; color: #64748b; white-space: nowrap;">' + escapeLaneHtml(info) + '</span>';
                 }
                 html += '</label>';
 
@@ -557,11 +585,68 @@
                 html += '</div>'; // fin ligne participant
             });
             html += '</div>';
+            if (listHeight) {
+                html += '<div style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 2px;">↘ tirer le coin pour agrandir la liste</div>';
+            }
         }
-        
+
         html += '</div>';
         return html;
     }
+
+    // Où se trouve chaque nageur de la journée : par id de participant de série et, en
+    // secours, par épreuve + nom (un nageur déplacé avec « + » a une nouvelle fiche de
+    // série, avec un autre id). byName : présent dans au moins une série.
+    function buildParticipantPlacement(chronoData) {
+        var byId = {}, byEventName = {}, byName = {};
+        getDaySeriesByEvent(chronoData).forEach(function(group) {
+            group.series.forEach(function(serie) {
+                (serie.participants || []).forEach(function(sp) {
+                    if (!sp) return;
+                    var where = { serieName: serie.name, lane: serie.laneMode ? sp.laneNumber : null };
+                    var key = String(sp.name || '').toLowerCase();
+                    if (sp.id != null) byId[sp.id] = where;
+                    if (group.event) byEventName[group.event.id + '|' + key] = where;
+                    byName[key] = true;
+                });
+            });
+        });
+        return { byId: byId, byEventName: byEventName, byName: byName };
+    }
+
+    // Ligne d'infos d'une fiche générée par « 🏁 Séries automatiques » :
+    // « 🎯 50m libre · ⏱ 32,50s · Série 1, couloir 4 ». La série et le couloir sont lus
+    // en direct (restent justes après un déplacement). '' pour une autre fiche.
+    function participantEntryInfo(p, chronoData, placement) {
+        if (!p.swimImport || p.swimEventId == null) return '';
+        var evt = (chronoData.events || []).find(function(e) { return e.id === p.swimEventId; });
+        if (!evt) return '';
+        var parts = ['🎯 ' + evt.name];
+        if (p.seedTimeMs > 0) parts.push('⏱ ' + formatDurationHMS(p.seedTimeMs));
+        var where = placement.byId[p.id] || placement.byEventName[evt.id + '|' + String(p.name || '').toLowerCase()];
+        parts.push(where ? where.serieName + (where.lane ? ', couloir ' + where.lane : '') : '⚠️ hors série');
+        return parts.join(' · ');
+    }
+
+    function readParticipantsListHeight() {
+        try {
+            var h = parseInt(localStorage.getItem('chronoParticipantsListHeight'), 10);
+            return h > 0 ? h : 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    // Enregistre la hauteur de la liste quand on relâche la poignée ; un simple clic dans
+    // la liste (case, bouton) ne change rien
+    function saveParticipantsListHeight(dayNumber, el) {
+        if (!el) return;
+        var h = parseInt(el.style.height, 10);
+        if (!(h > 0) || String(h) === el.getAttribute('data-initial-height')) return;
+        el.setAttribute('data-initial-height', String(h));
+        try { localStorage.setItem('chronoParticipantsListHeight', String(h)); } catch (e) { /* navigation privée */ }
+    }
+    global.saveParticipantsListHeight = saveParticipantsListHeight;
 
     /**
      * Ajoute rapidement un participant à la journée
