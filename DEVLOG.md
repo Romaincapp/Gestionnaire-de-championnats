@@ -33,6 +33,29 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 12) — « 🏁 Séries automatiques » : la journée ouverte par défaut
+
+- **Contexte** : « si je suis dans la J2 et que je clique sur ce bouton, c'est logique que
+  je souhaite des séries dans cette journée précisément ».
+- **Diagnostic** (`showSwimmingImportModal`, `src/chrono.iife.js`) : la source était triée
+  par nombre de lignes lisibles, la journée ouverte ne servant qu'à départager (depuis la J2,
+  la liste plus longue de la J1 passait devant) ; une journée ouverte sans épreuve prenait
+  silencieusement pour destination la première journée Courses avec épreuves (risque de
+  remplacer les séries de la J1 depuis la J2).
+- **Fait** : destination = journée ouverte quand c'est une journée Courses (sans épreuve :
+  `alert` « Créez d'abord une épreuve dans la Journée N », pas de fenêtre) ; depuis une
+  journée Matchs (bouton de sa barre d'outils, `ui.iife.js`) : inchangé, première journée
+  Courses avec épreuves. Source = la journée ouverte si sa liste a au moins une ligne
+  comprise, sinon la plus lisible des autres, avec la ligne « La Journée N n'a pas de liste
+  de participants reconnue : liste prise par défaut dans la Journée X » (`#swimSourceHint`).
+- **Tests** : `autoSeries.test.js` + 4 (J2 avec sa liste → J2/J2 ; J2 sans liste → autre
+  journée + explication, destination J2 ; bouton d'une journée Matchs → inchangé ; J2 sans
+  épreuve → message, rien de généré dans la J1).
+- **Fichiers touchés** : `src/chrono.iife.js`, `tests/unit/autoSeries.test.js`,
+  `CHANGELOG.md`, `MULTISPORT.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #93 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · MULTISPORT.md ✅ · AGENTS.md (pas de fonction exposée nouvelle) · tests ✅
+
 ### 2026-09-28 (suite 11) — Classement par épreuve : le club du participant de la série fait foi
 
 - **Contexte** : export utilisateur (`competition-chrono-J1-…_6.json`, non versionné :

@@ -177,3 +177,71 @@ describe('relais (« 4x400m », « 4x400m mixte », « 4x50m libre »)', () => {
         document.getElementById('serieModal-1').remove();
     });
 });
+
+// ------------------------------------------------------------------------------------
+// Journée ouverte par défaut (demande utilisateur) : « si je suis dans la J2 et que je
+// clique sur ce bouton, c'est logique que je souhaite des séries dans cette journée ».
+// Avant : source = la liste la plus longue de toutes les journées (la J1 passait devant),
+// et destination = une autre journée si la journée ouverte n'avait pas d'épreuve.
+// ------------------------------------------------------------------------------------
+describe('journée ouverte par défaut', () => {
+    const chronoDay = (events, lines) => ({
+        dayType: 'chrono', players: {}, matches: {},
+        chronoData: {
+            events: events.map((name, i) => ({ id: i + 1, name, series: [] })),
+            series: [], participants: lines.map((name, i) => ({ id: i + 1, name, club: '', bib: i + 1 })),
+            nextEventId: events.length + 1, nextSerieId: 1, nextParticipantId: lines.length + 1,
+        },
+    });
+    const modalText = () => document.getElementById('swimmingImportModal').textContent.replace(/\s+/g, ' ');
+    let alertSpy;
+    beforeEach(() => { alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {}); });
+    afterEach(() => { alertSpy.mockRestore(); });
+
+    test('J2 avec sa propre liste : source et destination = J2, même si la J1 a une liste plus longue', () => {
+        championship.days = {
+            1: chronoDay(['200m', '400m'], LINES),
+            2: chronoDay(['200m'], ['Eva Roy 200m 26.00']),
+        };
+        window.showSwimmingImportModal(2);
+        expect(document.getElementById('swimSourceDay').value).toBe('2');
+        expect(document.getElementById('swimTargetDay').value).toBe('2');
+        expect(modalText()).not.toContain('liste prise par défaut');
+    });
+
+    test('J2 sans liste : la liste d\'une autre journée, et c\'est expliqué ; destination = J2', () => {
+        championship.days = {
+            1: { dayType: 'championship', matches: { 1: [] }, players: { 1: LINES.map(n => ({ name: n, club: '' })) } },
+            2: chronoDay(['200m', '400m'], []),
+        };
+        window.showSwimmingImportModal(2);
+        expect(document.getElementById('swimSourceDay').value).toBe('1');
+        expect(document.getElementById('swimTargetDay').value).toBe('2');
+        expect(modalText()).toContain('La Journée 2 n\'a pas de liste de participants reconnue : liste prise par défaut dans la Journée 1.');
+    });
+
+    test('bouton d\'une journée Matchs (liste brute) : source = elle, destination = la journée Courses', () => {
+        championship.days = {
+            1: { dayType: 'championship', matches: { 1: [] }, players: { 1: LINES.map(n => ({ name: n, club: '' })) } },
+            2: chronoDay(['200m', '400m'], []),
+        };
+        window.showSwimmingImportModal(1);
+        expect(document.getElementById('swimSourceDay').value).toBe('1');
+        expect(document.getElementById('swimTargetDay').value).toBe('2');
+        expect(modalText()).not.toContain('liste prise par défaut');
+        expect(alertSpy).not.toHaveBeenCalled();
+    });
+
+    test('J2 sans épreuve : message, pas de fenêtre, rien de généré dans la J1', () => {
+        championship.days = {
+            1: chronoDay(['200m', '400m'], LINES),
+            2: chronoDay([], ['Eva Roy 200m 26.00']),
+        };
+        window.showSwimmingImportModal(2);
+        expect(document.getElementById('swimmingImportModal')).toBeNull();
+        expect(alertSpy).toHaveBeenCalledTimes(1);
+        expect(alertSpy.mock.calls[0][0]).toContain('Journée 2');
+        expect(alertSpy.mock.calls[0][0]).toContain('🎯 Épreuve');
+        expect(championship.days[1].chronoData.events.every(e => e.series.length === 0)).toBe(true);
+    });
+});

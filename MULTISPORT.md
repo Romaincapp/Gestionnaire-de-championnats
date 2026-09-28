@@ -46,6 +46,10 @@ En mode courses, vous pouvez :
   séries par couloirs, triés au temps d'engagement (le plus rapide au centre). Une ligne par
   participant avec son épreuve et son temps : « Jean Dupont 50m libre 0:32.50 »,
   « Marie Leroy 200m 25.40 ».
+- La fenêtre part de la **journée ouverte** : les séries sont créées dans cette journée, à
+  partir de sa liste de participants. Si elle n'a pas de liste, celle d'une autre journée
+  (par ex. une journée Matchs) est proposée, et c'est indiqué. Si elle n'a pas encore
+  d'épreuve, un message demande d'en créer une (« 🎯 Épreuve ») : rien n'est généré ailleurs.
 - La ligne est placée dans l'épreuve dont le nom contient la **distance** et, en natation, la
   **nage** (« 20m libre » / « 20m brasse »). Plusieurs épreuves à la même distance sans nage
   (athlétisme : « 100m » et « 100m haies », « 100m Benjamins » et « 100m Minimes ») sont

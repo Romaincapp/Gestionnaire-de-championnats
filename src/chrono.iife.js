@@ -3221,8 +3221,21 @@ window.showSwimmingImportModal = function(dayNumber) {
         }
     }
 
-    // Ces deux cas bloquent l'ouverture de la modale : alert() plutôt qu'un
+    // Destination : la journée ouverte (bouton d'une journée Courses). Sans épreuve, on le
+    // dit plutôt que de générer dans une autre journée, dont les séries seraient
+    // remplacées. Depuis une journée Matchs (bouton de sa barre d'outils) : la première
+    // journée Courses qui a des épreuves.
+    var currentDay = championship.days[dayNumber];
+    var currentIsChrono = !!(currentDay && currentDay.dayType === 'chrono');
+    var currentHasEvents = chronoDays.some(function(cd) { return String(cd.day) === String(dayNumber); });
+
+    // Ces cas bloquent l'ouverture de la modale : alert() plutôt qu'un
     // toast éphémère, sinon le clic semble ne rien faire
+    if (currentIsChrono && !currentHasEvents) {
+        alert('🏁 Séries automatiques\n\nCréez d\'abord une épreuve dans la Journée ' + dayNumber
+            + ' avec le bouton « 🎯 Épreuve » (ex : « 50m Nage Libre », « 100m Dos », « 200m »).');
+        return;
+    }
     if (chronoDays.length === 0) {
         alert('🏁 Séries automatiques\n\nCréez d\'abord une épreuve avec le bouton « 🎯 Épreuve » '
             + '(ex : « 50m Nage Libre », « 100m Dos », « 200m »).');
@@ -3238,18 +3251,19 @@ window.showSwimmingImportModal = function(dayNumber) {
         return;
     }
 
-    // Si la journée courante est chrono avec épreuves, l'utiliser comme destination
-    // Sinon, chercher une journée chrono disponible
-    var targetDay = dayNumber;
-    var currentDay = championship.days[dayNumber];
-    if (!currentDay || currentDay.dayType !== 'chrono' || !currentDay.chronoData || !currentDay.chronoData.events || currentDay.chronoData.events.length === 0) {
-        targetDay = parseInt(chronoDays[0].day);
-    }
-    // Proposer d'abord la source la plus lisible, puis la journée courante
+    var targetDay = currentIsChrono ? parseInt(dayNumber) : parseInt(chronoDays[0].day);
+    // Source : la liste de la journée ouverte si elle en a une (au moins une ligne
+    // comprise) ; sinon la plus lisible des autres journées (ex. une journée Matchs),
+    // en le signalant
+    function isOpenDayList(sd) { return String(sd.day) === String(dayNumber) && sd.readable > 0; }
     sourceDays.sort(function(a, b) {
-        return (b.readable - a.readable)
+        return (isOpenDayList(b) - isOpenDayList(a))
+            || (b.readable - a.readable)
             || ((String(b.day) === String(dayNumber)) - (String(a.day) === String(dayNumber)));
     });
+    var sourceHintHtml = String(sourceDays[0].day) === String(dayNumber) ? ''
+        : '<div id="swimSourceHint" style="margin-top: 5px; font-size: 12px; color: #9a6700;">ℹ️ La Journée ' + dayNumber
+            + ' n\'a pas de liste de participants reconnue : liste prise par défaut dans la Journée ' + sourceDays[0].day + '.</div>';
 
     var events = championship.days[targetDay].chronoData.events;
     // Stocker le targetDay pour l'utiliser dans les callbacks
@@ -3281,7 +3295,7 @@ window.showSwimmingImportModal = function(dayNumber) {
             <div id="swimExistingWarning" style="display: none; margin-bottom: 12px; padding: 10px; background: #fff3cd; border: 1px solid #ffe08a; border-radius: 6px; font-size: 13px; color: #7a5b00;"></div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée source (avec noms bruts) :</label>\
-                <select id="swimSourceDay" onchange="renderSwimmingColumnMapping()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + sourceDayOptions + '</select>\
+                <select id="swimSourceDay" onchange="renderSwimmingColumnMapping()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + sourceDayOptions + '</select>' + sourceHintHtml + '\
             </div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée destination (chrono avec épreuves) :</label>\

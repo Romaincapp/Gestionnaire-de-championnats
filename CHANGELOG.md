@@ -13,6 +13,16 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏁 Séries automatiques : la journée ouverte par défaut
+- La fenêtre propose la **journée ouverte** comme source et comme destination. Avant, la
+  source était la plus longue liste de toutes les journées (depuis la J2, la liste de la J1
+  passait devant), et une journée ouverte sans épreuve envoyait les séries dans une autre
+  journée, dont les séries étaient remplacées.
+- Journée ouverte sans liste : la liste d'une autre journée est proposée, et c'est indiqué.
+  Journée ouverte sans épreuve : message « Créez d'abord une épreuve dans la Journée N ».
+- Depuis une journée Matchs, le bouton fonctionne comme avant (sa liste vers la journée
+  Courses).
+
 ### 🏆 Classement par épreuve : le bon club, même après une correction
 - Un club corrigé après la course (ex. « Les Aquaphiles » → « Aquaphiles ») n'apparaît plus
   sous l'ancien nom dans le classement par épreuve ni dans le tableau des clubs : le club du
