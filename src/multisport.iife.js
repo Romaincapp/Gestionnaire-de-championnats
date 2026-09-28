@@ -255,7 +255,7 @@
         return global.championship.days[dayNumber].chronoData;
     }
 
-    function addChronoEvent(dayNumber, eventName, eventDate) {
+    function addChronoEvent(dayNumber, eventName, eventDate, fun) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return null;
         
@@ -265,6 +265,8 @@
             date: eventDate,
             createdAt: new Date().toISOString()
         };
+        // Épreuve « fun » : résultats affichés, mais hors classement des clubs
+        if (fun) event.fun = true;
         
         chronoData.events.push(event);
         saveToLocalStorage();
@@ -1216,6 +1218,7 @@
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
         html += '<div style="display: flex; align-items: center; gap: 8px;">';
         html += '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">🎯 ' + event.name + '</h4>';
+        if (event.fun) html += funEventBadgeHTML();
         html += '<button onclick="editEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
         html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
         html += '</div>';
@@ -1725,8 +1728,13 @@
                         prevCs = cs;
                         prevRank = e.rank;
                     });
-                    assignEventClubPoints(entries);
-                    out.push({ dayNumber: Number(dayKey), eventId: evt.id, eventName: evt.name, entries: entries, outOfRace: outOfRace });
+                    var fun = !!evt.fun;
+                    if (fun) {
+                        entries.forEach(function(e) { e.clubPoints = null; e.clubRank = null; });
+                    } else {
+                        assignEventClubPoints(entries);
+                    }
+                    out.push({ dayNumber: Number(dayKey), eventId: evt.id, eventName: evt.name, fun: fun, entries: entries, outOfRace: outOfRace });
                 });
             });
         return out;
@@ -1792,6 +1800,10 @@
     }
     global.calculateClubEventRanking = calculateClubEventRanking;
 
+    function funEventBadgeHTML() {
+        return '<span class="fun-event-badge" title="Épreuve fun : hors classement des clubs" style="display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8e44ad; background: #f4ecf7; border-radius: 10px;">🎉 Fun</span>';
+    }
+
     function buildClubRankingHTML(events, clubs, multiDay) {
         var th = 'padding: 6px; text-align: center; font-size: 11px; vertical-align: bottom;';
         var html = '<div class="club-ranking" style="margin: 0 0 26px 0; page-break-inside: avoid;">';
@@ -1826,19 +1838,27 @@
         var multiDay = events.some(function(e) { return e.dayNumber !== events[0].dayNumber; });
         var medals = ['🥇', '🥈', '🥉'];
         var html = '';
-        var clubs = calculateClubEventRanking(events);
-        if (clubs.length > 0) html += buildClubRankingHTML(events, clubs, multiDay);
+        // Les épreuves fun n'ont pas de colonne dans le classement des clubs
+        var scored = events.filter(function(e) { return !e.fun; });
+        var clubs = calculateClubEventRanking(scored);
+        if (clubs.length > 0) html += buildClubRankingHTML(scored, clubs, multiDay);
         events.forEach(function(evt) {
+            var withPoints = !evt.fun;
             html += '<div class="event-ranking" style="margin: 0 0 22px 0; page-break-inside: avoid;">';
             html += '<h3 style="margin: 0 0 8px 0; color: #16a085;">🏊 ' + escapeLaneHtml(evt.eventName) +
                 (multiDay ? ' — Journée ' + evt.dayNumber : '') +
-                ' <span style="font-size: 12px; color: #7f8c8d; font-weight: normal;">(' + evt.entries.length + ' classé' + (evt.entries.length > 1 ? 's' : '') + ')</span></h3>';
+                ' <span style="font-size: 12px; color: #7f8c8d; font-weight: normal;">(' + evt.entries.length + ' classé' + (evt.entries.length > 1 ? 's' : '') + ')</span>' +
+                (evt.fun ? ' ' + funEventBadgeHTML() : '') + '</h3>';
+            if (evt.fun) {
+                html += '<p class="fun-event-note" style="margin: 0 0 8px 0; font-size: 12px; color: #7f8c8d;">🎉 Épreuve fun — hors classement des clubs</p>';
+            }
             html += '<table style="width: 100%; border-collapse: collapse;">';
             html += '<thead><tr><th style="padding: 8px; text-align: center;">Rang</th><th style="padding: 8px; text-align: left;">Nageur</th>' +
                 '<th style="padding: 8px; text-align: center;">Club</th><th style="padding: 8px; text-align: center;">Série</th>' +
-                '<th style="padding: 8px; text-align: center;">Temps</th><th style="padding: 8px; text-align: center;">Points</th></tr></thead><tbody>';
+                '<th style="padding: 8px; text-align: center;">Temps</th>' +
+                (withPoints ? '<th style="padding: 8px; text-align: center;">Points</th>' : '') + '</tr></thead><tbody>';
             evt.entries.forEach(function(e) {
-                var pointsCell = e.clubPoints != null
+                var pointsCell = !withPoints ? '' : e.clubPoints != null
                     ? '<td style="padding: 8px; text-align: center; font-weight: bold; color: #16a085;">' + e.clubPoints + '</td>'
                     : '<td style="padding: 8px; text-align: center; color: #bdc3c7;" title="' + (e.club ? 'Déjà compté pour ce club' : 'Sans club') + '">–</td>';
                 html += '<tr style="border-bottom: 1px solid #ecf0f1;">' +
@@ -1855,7 +1875,7 @@
                     '<td style="padding: 8px; text-align: center;">' + (o.club ? escapeLaneHtml(o.club) : '-') + '</td>' +
                     '<td style="padding: 8px; text-align: center;">' + escapeLaneHtml(o.serieName) + '</td>' +
                     '<td style="padding: 8px; text-align: center;">-</td>' +
-                    '<td style="padding: 8px; text-align: center;">–</td></tr>';
+                    (withPoints ? '<td style="padding: 8px; text-align: center;">–</td>' : '') + '</tr>';
             });
             html += '</tbody></table></div>';
         });
@@ -2531,6 +2551,10 @@
             '<label>Date :</label>' +
             '<input type="date" id="eventDate-' + dayNumber + '" style="width: 100%; padding: 10px; margin-top: 5px;">' +
             '</div>' +
+            '<label style="display: flex; align-items: flex-start; gap: 8px; margin: 15px 0; cursor: pointer;">' +
+            '<input type="checkbox" id="eventFun-' + dayNumber + '" style="margin-top: 3px;">' +
+            '<span>🎉 Épreuve fun <span style="display: block; font-size: 12px; color: #7f8c8d;">Hors classement des clubs (s\'applique à toutes les épreuves saisies)</span></span>' +
+            '</label>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeEventModalForDay(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
             '<button onclick="saveEventForDay(' + dayNumber + ')" class="btn btn-primary">Sauvegarder</button>' +
@@ -2549,6 +2573,7 @@
     function saveEventForDay(dayNumber) {
         var nameInput = document.getElementById('eventName-' + dayNumber);
         var dateInput = document.getElementById('eventDate-' + dayNumber);
+        var funInput = document.getElementById('eventFun-' + dayNumber);
 
         var names = (nameInput ? nameInput.value : '').split(/\r?\n/).map(function(line) {
             return line.replace(/^[\s\-•*]+/, '').trim();
@@ -2566,7 +2591,7 @@
             var key = name.toLowerCase();
             if (seen[key]) { skipped++; return; }
             seen[key] = true;
-            if (addChronoEvent(dayNumber, name, dateInput ? dateInput.value : null)) created++;
+            if (addChronoEvent(dayNumber, name, dateInput ? dateInput.value : null, funInput && funInput.checked)) created++;
         });
 
         if (created === 0) {
@@ -2613,6 +2638,10 @@
             '<label>Date :</label>' +
             '<input type="date" id="editEventDate-' + dayNumber + '-' + eventId + '" value="' + (event.date || '') + '" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ddd;">' +
             '</div>' +
+            '<label style="display: flex; align-items: flex-start; gap: 8px; margin: 15px 0; cursor: pointer;">' +
+            '<input type="checkbox" id="editEventFun-' + dayNumber + '-' + eventId + '"' + (event.fun ? ' checked' : '') + ' style="margin-top: 3px;">' +
+            '<span>🎉 Épreuve fun <span style="display: block; font-size: 12px; color: #7f8c8d;">Résultats affichés, mais hors classement des clubs</span></span>' +
+            '</label>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeEditEventModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
             '<button onclick="saveEditedEvent(' + dayNumber + ', ' + eventId + ')" class="btn btn-primary">💾 Sauvegarder</button>' +
@@ -2643,6 +2672,11 @@
         
         event.name = nameInput.value.trim();
         event.date = dateInput ? dateInput.value : null;
+        var funInput = document.getElementById('editEventFun-' + dayNumber + '-' + eventId);
+        if (funInput) {
+            if (funInput.checked) event.fun = true;
+            else delete event.fun;
+        }
         
         saveToLocalStorage();
         closeEditEventModal(dayNumber);

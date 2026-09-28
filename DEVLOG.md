@@ -33,6 +33,30 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 9) — Épreuves « fun » hors classement des clubs
+
+- **Contexte** : après la PR #90, « il y a certaines épreuves qui ne doivent pas entrer dans le
+  classement, c'est des épreuves "fun" ». Choix de l'utilisateur : une case à cocher, à la
+  création de l'épreuve et en édition ; les résultats restent affichés.
+- **Fait** (`src/multisport.iife.js`) :
+  - case « 🎉 Épreuve fun » dans `showAddEventModalForDay` (s'applique à toutes les lignes
+    saisies, `addChronoEvent(..., fun)`) et dans `editEventForDay` / `saveEditedEvent`
+    (coche / décoche) → champ `event.fun` (absent si non coché) ;
+  - badge « 🎉 Fun » sur la carte de l'épreuve (`renderEventCard`) ;
+  - `calculateEventRankings()` : `fun` sur chaque épreuve ; une épreuve fun garde rangs et
+    temps mais aucun `clubPoints` / `clubRank` ;
+  - `buildEventRankingsHTML()` : pas de colonne dans le tableau des clubs (qui disparaît si
+    toutes les épreuves sont fun), tableau de l'épreuve sans colonne « Points », avec le
+    badge et « 🎉 Épreuve fun — hors classement des clubs ».
+- **Tests** : nouveau `funEvents.test.js` (8 tests, 7 échouaient avant) ; e2e natation,
+  étape 9b : ✏️ cocher « Épreuve fun » sur 50m brasse → badge, résultats affichés sans
+  Points, absente du classement des clubs ; décocher → elle revient.
+- **Fichiers touchés** : `src/multisport.iife.js`, `src/ui.iife.js` (commentaire export
+  JSON), `tests/unit/funEvents.test.js`, `tests/e2e/natation.e2e.js`, `CHANGELOG.md`,
+  `MULTISPORT.md`, `AGENTS.md`, `claude.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #90 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · MULTISPORT.md ✅ · AGENTS.md ✅ · tests ✅
+
 ### 2026-09-28 (suite 8) — Points par épreuve et classement des clubs
 
 - **Contexte** : « il serait possible d'ajouter une colonne "point" dans le général ? cela

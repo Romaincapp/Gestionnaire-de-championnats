@@ -13,6 +13,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎉 Épreuves « fun » hors classement des clubs
+- Case **« 🎉 Épreuve fun »** dans la fenêtre de création d'épreuve (elle s'applique à toutes
+  les épreuves saisies d'un coup) et dans ✏️ Modifier l'épreuve (cocher / décocher à tout
+  moment). Un badge « 🎉 Fun » s'affiche sur l'épreuve.
+- Une épreuve fun garde son tableau de résultats (temps, rangs, médailles) mais n'entre pas
+  dans le classement des clubs : pas de colonne « Points », pas de colonne dans le tableau
+  des clubs, rien dans le total. Onglet, impression, second écran 📺 et export JSON (`fun`).
+
 ### 🏆 Points par épreuve et classement des clubs
 - Le classement par épreuve (natation, athlétisme en couloirs) a une colonne **Points** :
   barème 25-19-17-15-12-10-8-6-4-2. Un club ne marque **qu'une fois par épreuve**, avec son

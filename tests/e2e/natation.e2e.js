@@ -308,6 +308,45 @@ async function openFresh(browser) {
     await page.waitForTimeout(500);
 
     // ---------------------------------------------------------------
+    step('9b. 🎉 Épreuve fun : ✏️ cocher « Épreuve fun » sur 50m brasse, puis décocher');
+    const brasseEventCard = () => page.locator('.chrono-event-card', { hasText: '50m brasse' }).filter({ visible: true }).first();
+    const setFun = async (on) => {
+        await brasseEventCard().locator('button[title="Modifier"]').click();
+        await page.waitForTimeout(250);
+        await page.locator('[id^="editEventFun-1-"]').filter({ visible: true }).first().setChecked(on);
+        await btn(page, '💾 Sauvegarder');
+    };
+    await setFun(true);
+    check(await brasseEventCard().locator('.fun-event-badge').count() === 1
+        && await state(page, () => championship.days[1].chronoData.events.find(e => e.name === '50m brasse').fun === true),
+        'case cochée : badge « 🎉 Fun » sur la carte de l\'épreuve');
+    await page.getByText('🏅 Multisport', { exact: true }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(700);
+    const funView = await page.locator('#multisportRankingContent').evaluate(el => {
+        const card = [...el.querySelectorAll('.event-ranking')].find(c => c.textContent.includes('50m brasse'));
+        const clubHeads = [...el.querySelectorAll('.club-ranking thead th')].map(th => th.textContent.trim());
+        return {
+            shown: !!card && card.querySelectorAll('tbody tr').length > 0,
+            points: !!card && [...card.querySelectorAll('thead th')].some(th => th.textContent.trim() === 'Points'),
+            note: !!card && card.textContent.includes('hors classement des clubs'),
+            inClubs: clubHeads.includes('50m brasse'),
+        };
+    });
+    check(funView.shown && !funView.points && funView.note && !funView.inClubs,
+        'épreuve fun : résultats affichés, sans colonne Points, absente du classement des clubs');
+    await snap(page, 'epreuve-fun');
+    await page.getByText('Journée 1', { exact: true }).first().click();
+    await page.waitForTimeout(500);
+    await setFun(false);
+    await page.getByText('🏅 Multisport', { exact: true }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(700);
+    const backInClubs = await page.locator('#multisportRankingContent .club-ranking thead th', { hasText: '50m brasse' }).count();
+    check(backInClubs === 1 && await brasseEventCard().locator('.fun-event-badge').count() === 0,
+        'case décochée : 50m brasse revient dans le classement des clubs');
+    await page.getByText('Journée 1', { exact: true }).first().click();
+    await page.waitForTimeout(500);
+
+    // ---------------------------------------------------------------
     step('10. 💾 Exporter la journée, puis 📥 Importer dans un navigateur vierge');
     const [download] = await Promise.all([page.waitForEvent('download'), btn(page, '💾 Exporter')]);
     const file = path.join(OUT, 'export-J1.json');
