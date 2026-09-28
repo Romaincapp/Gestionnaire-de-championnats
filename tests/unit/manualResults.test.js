@@ -189,3 +189,30 @@ describe('cache de course', () => {
         expect(document.getElementById('resultsModal-1')).toBeNull();
     });
 });
+
+describe('série terminée avec des DNS / DISQ (signalé par l\'utilisateur)', () => {
+    const card = () => document.querySelector('#chrono-content-1 .chrono-serie-card');
+    const isGreen = (el) => /#27ae60|rgb\(39, 174, 96\)/.test(el.style.borderLeft || el.getAttribute('style'));
+
+    test('temps + DNS + DISQ : série terminée, carte verte « 5/5 »', () => {
+        fillAndSave({ 'Emma Roux': '35.10', 'Chloe Durand': 'DNS', 'Alice Martin': '31.05', 'Bruno Petit': 'DISQ', 'David Leroy': '34.00' });
+        expect(serie().status).toBe('completed');
+        expect(card().textContent).toMatch(/5\/5/);
+        expect(card().textContent).toMatch(/1 DNS/);
+        expect(card().textContent).toMatch(/1 DISQ/);
+        expect(isGreen(card())).toBe(true);
+    });
+
+    test('tout le monde DNS ou DISQ : série terminée aussi', () => {
+        fillAndSave({ 'Emma Roux': 'DNS', 'Chloe Durand': 'DNS', 'Alice Martin': 'DISQ', 'Bruno Petit': 'DNS', 'David Leroy': 'DNS' });
+        expect(serie().status).toBe('completed');
+        expect(isGreen(card())).toBe(true);
+    });
+
+    test('série incomplète : pas terminée, carte bleue « 4/5 »', () => {
+        fillAndSave({ 'Emma Roux': '35.10', 'Chloe Durand': 'DNS', 'Alice Martin': '31.05', 'Bruno Petit': '32.40' });
+        expect(serie().status).not.toBe('completed');
+        expect(card().textContent).toMatch(/4\/5/);
+        expect(isGreen(card())).toBe(false);
+    });
+});

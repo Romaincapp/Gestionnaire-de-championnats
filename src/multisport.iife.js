@@ -1240,18 +1240,44 @@
         return html;
     }
 
+    // Avancement d'une série : un participant est « réglé » s'il a un temps (arrivé ou
+    // ligne de résultats) ou s'il est DNS / DISQ. Avant, seuls les résultats comptaient :
+    // une série avec un DNS restait « 4/5 » et n'était jamais terminée.
+    function serieProgress(serie) {
+        var participants = serie.participants || [];
+        var resultNames = {};
+        (serie.results || []).forEach(function(r) { if (r && r.name) resultNames[r.name.toLowerCase()] = true; });
+        var dns = 0, disq = 0, settled = 0;
+        participants.forEach(function(p) {
+            if (p.status === 'dns') dns++;
+            else if (p.status === 'disq') disq++;
+            if (p.status === 'dns' || p.status === 'disq' || p.status === 'finished'
+                || (p.name && resultNames[p.name.toLowerCase()])) settled++;
+        });
+        return {
+            total: participants.length, settled: settled, dns: dns, disq: disq,
+            complete: participants.length > 0 && settled === participants.length
+        };
+    }
+
     // attachEvents (séries indépendantes seulement) : épreuves proposées dans
     // « 📎 Rattacher à une épreuve »
     function renderSerieCard(dayNumber, serie, compact, attachEvents) {
-        var completedCount = serie.results ? serie.results.length : 0;
-        var totalCount = serie.participants ? serie.participants.length : 0;
-        var hasResults = completedCount > 0;
-        
-        var html = '<div class="chrono-serie-card" style="background: #f8f9fa; border-radius: 8px; padding: ' + (compact ? '8px 10px' : '10px 12px') + '; border-left: 4px solid ' + (completedCount === totalCount && totalCount > 0 ? '#27ae60' : '#3498db') + '; margin-bottom: 8px;">';
+        var progress = serieProgress(serie);
+        var completedCount = progress.settled;
+        var totalCount = progress.total;
+        var hasResults = (serie.results || []).length > 0 || progress.dns + progress.disq > 0;
+        var complete = progress.complete || serie.status === 'completed';
+        var outOfRace = [];
+        if (progress.dns) outOfRace.push(progress.dns + ' DNS');
+        if (progress.disq) outOfRace.push(progress.disq + ' DISQ');
+
+        var html = '<div class="chrono-serie-card" style="background: #f8f9fa; border-radius: 8px; padding: ' + (compact ? '8px 10px' : '10px 12px') + '; border-left: 4px solid ' + (complete ? '#27ae60' : '#3498db') + '; margin-bottom: 8px;">';
         html += '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">';
         html += '<div>';
         html += '<strong style="color: #2c3e50; font-size: 13px;">🏃 ' + serie.name + '</strong>';
-        html += '<span style="color: #7f8c8d; font-size: 11px; margin-left: 8px;">' + completedCount + '/' + totalCount + ' résultats</span>';
+        html += '<span style="color: #7f8c8d; font-size: 11px; margin-left: 8px;">' + (complete ? '✅ ' : '') + completedCount + '/' + totalCount + ' résultats' +
+            (outOfRace.length ? ' (dont ' + outOfRace.join(', ') + ')' : '') + '</span>';
         html += '</div>';
         html += '<div style="display: flex; gap: 4px;">';
         html += '<button onclick="manageSerieParticipants(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Gérer les participants">👥</button>';
@@ -3530,8 +3556,8 @@
             applyManualResult(serie, x.p, x.r, counts);
         });
 
-        var inRace = serie.participants.filter(function(p) { return p.status !== 'dns' && p.status !== 'disq'; });
-        if (inRace.length > 0 && inRace.every(function(p) { return p.status === 'finished'; })) {
+        // Terminée quand chacun a un temps ou est DNS / DISQ (tout le monde DNS compris)
+        if (serieProgress(serie).complete) {
             serie.status = 'completed';
         } else if (serie.status === 'completed') {
             serie.status = 'ready';

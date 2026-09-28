@@ -33,6 +33,28 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 7) — Série terminée avec des DNS / DISQ
+
+- **Contexte** : retour de l'utilisateur après la PR #88 : « si je mets un DNS ou un DISQ cela
+  ne termine pas la série, si je mets des temps à tout le monde par contre la série se
+  termine bien ».
+- **Diagnostic** : la carte de série (`renderSerieCard`) comptait `serie.results` contre le
+  nombre de participants : un DNS/DISQ n'a pas de ligne de résultats → « 4/5 résultats »,
+  bordure bleue, jamais « terminée » à l'écran (même quand `serie.status` valait
+  `completed`). Et `saveSerieResults` ne marquait pas terminée une série où tout le monde
+  est DNS/DISQ.
+- **Fait** (`src/multisport.iife.js`) : `serieProgress(serie)` — un participant est « réglé »
+  s'il est arrivé, a une ligne de résultats, ou est DNS/DISQ ; la carte affiche
+  « ✅ 5/5 résultats (dont 1 DNS, 1 DISQ) » en vert quand tout est réglé (ou série
+  `completed`) ; la saisie manuelle marque la série terminée selon la même règle.
+- **Tests** : `manualResults.test.js` passe à 15 (temps + DNS + DISQ → terminée, carte verte
+  « 5/5 » ; tout le monde DNS/DISQ → terminée ; incomplète → « 4/5 », bleue ; les 3
+  échouaient avant).
+- **Fichiers touchés** : `src/multisport.iife.js`, `tests/unit/manualResults.test.js`,
+  `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #88 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md (pas de fonction exposée nouvelle) · tests ✅
+
 ### 2026-09-28 (suite 6) — Saisie manuelle des résultats (⏱️) : ordre des couloirs, DNS/DISQ, fiabilité
 
 - **Contexte** : « tu vois le bouton "saisie manuelle des résultats" ? vérifie la manière dont
