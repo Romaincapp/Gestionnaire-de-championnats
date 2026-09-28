@@ -33,6 +33,48 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 — Séries natation : ajouter / modifier sur place sans risque
+
+- **Contexte** : cas vécu par l'utilisateur en compétition. Séries générées par « 🏊 Séries
+  natation », puis, sur place, une série ajoutée avec le bouton du haut « 🏃 Série » ; il n'a
+  pas osé recliquer « Séries natation » de peur de tout refaire. Demande : « un bouton à
+  chaque épreuve pour ajouter une série directement à cette épreuve », vérifier l'utilité du
+  bouton du haut, et « réfléchis à ce cas de figure car c'est toujours pratique d'ajouter ou
+  modifier des séries natation sur place ».
+- **Diagnostic** : (1) « 🏃 Série » (haut) créait une série sans épreuve — sa fenêtre n'a
+  pas de choix d'épreuve — donc ni imprimée ni classée par épreuve ; (2) le « + Série » de
+  l'épreuve existait (gris, en bas de carte) mais `renderEventCard` n'affichait que
+  `event.series` s'il n'était pas vide, alors que `addChronoSerie` range la série « à plat »
+  → série ajoutée à une épreuve générée **invisible** ; (3) fenêtre toujours « Course à pied,
+  1000 m, sans couloirs » ; (4) régénérer « Séries natation » efface toutes les séries des
+  épreuves, même nagées, **sans confirmation** ; (5) aucun moyen de supprimer une série.
+- **Fait** :
+  - `multisport.iife.js` : bouton « ➕ Série » vert dans l'en-tête de `renderEventCard`
+    (ancien « + Série » du bas retiré), séries via `getEventSeries` ; nouvelle
+    `getSerieDefaultsForEvent` (réglages de la dernière série de l'épreuve, sinon déduits
+    du nom via `deriveSwimmingEventInfo` : natation seulement si nage ET distance) +
+    `showAddSerieModalForDayAndEvent` pré-remplie (titre = nom de l'épreuve, « Série N+1 ») ;
+    bouton « 🏃 Série » retiré de la barre ; `attachSerieToEvent` (sélecteur « 📎 Rattacher à
+    une épreuve… » sur les séries indépendantes) ; `deleteSerieForDay` (🗑️ sur chaque carte
+    de série, confirmation avec nombre de temps perdus, refus pendant la course) ;
+    `deleteEventForDay` compte les séries imbriquées.
+  - `chrono.iife.js` : `existingSwimmingSeriesWarning` → encadré dans la fenêtre « Séries
+    natation » (mis à jour au changement de journée cible) + `confirm()` au clic « Générer » ;
+    la régénération retire aussi les séries « à plat » des épreuves régénérées (cohérent avec
+    le message) ; `deriveSwimmingEventInfo` exposée sur `window`.
+- **Tests** : `addSerieOnSite.test.js` (18 ; 16 échouaient avant le correctif). `npm test` :
+  210/210. `npm run test:e2e` : nouvelle étape 11 (➕ Série sur place dans « 50m brasse » →
+  fenêtre pré-remplie → série visible → 🏊 couloirs 3-4 → boutons d'arrêt = couloirs choisis
+  → course → avertissement de « Séries natation » → Annuler) ; la feuille imprimée couvre 34
+  séries : 0 problème.
+- **Fichiers touchés** : `src/multisport.iife.js`, `src/chrono.iife.js`,
+  `tests/unit/addSerieOnSite.test.js`, `tests/e2e/natation.e2e.js`, `MULTISPORT.md`,
+  `AGENTS.md`, `claude.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #84 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · MULTISPORT.md ✅ · claude.md ✅ · tests ✅
+- **Suite possible** : déplacer un nageur d'une série à une autre en un geste (aujourd'hui :
+  🏊 dans les deux séries) ; renommer une série.
+
 ### 2026-09-24 (suite 5) — Couloirs sans ambiguïté (écran de course, boutons, feuille imprimée)
 
 - **Contexte** : signalé par l'utilisateur. « Les boutons du mode couloir affichent le numéro

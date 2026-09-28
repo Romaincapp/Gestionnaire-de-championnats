@@ -426,7 +426,8 @@
         html += '<div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px;">';
         html += '<span style="font-size: 13px; color: #64748b; margin-right: 5px;">⏱️ Actions:</span>';
         html += '<button onclick="showAddEventModalForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #e67e22; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🎯 Épreuve</button>';
-        html += '<button onclick="showAddSerieModalForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🏃 Série</button>';
+        // Pas de bouton « Série » ici : une série se crée dans son épreuve (➕ Série de la
+        // carte). Créée d'ici, elle n'avait pas d'épreuve : ni imprimée ni classée par épreuve.
         html += '<span style="color: #cbd5e1;">|</span>';
         html += '<button onclick="showImportPlayersModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer participants</button>';
         html += '<span id="chrono-quick-copy-buttons-' + dayNumber + '" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>';
@@ -463,7 +464,7 @@
             html += '<div class="chrono-orphan-series" style="margin-top: 15px;">';
             html += '<h4 style="font-size: 13px; color: #64748b; margin-bottom: 8px;">🏃 Séries indépendantes</h4>';
             orphanSeries.forEach(function(serie) {
-                html += renderSerieCard(dayNumber, serie);
+                html += renderSerieCard(dayNumber, serie, false, chronoData.events);
             });
             html += '</div>';
         }
@@ -1086,10 +1087,9 @@
     }
 
     function renderEventCard(dayNumber, event, chronoData) {
-        // Chercher les séries à la fois dans event.series (nouveau format) et chronoData.series (ancien format)
-        var eventSeries = (event.series && event.series.length > 0)
-            ? event.series
-            : (chronoData.series || []).filter(function(s) { return s.eventId === event.id; });
+        // Séries imbriquées (génération natation) ET « à plat » (➕ Série) : avant, une série
+        // ajoutée sur place à une épreuve générée n'apparaissait pas ici.
+        var eventSeries = getEventSeries(chronoData, event);
         
         var html = '<div class="chrono-event-card" style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">';
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
@@ -1098,11 +1098,14 @@
         html += '<button onclick="editEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
         html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
         html += '</div>';
+        html += '<div style="display: flex; align-items: center; gap: 8px;">';
         html += '<span style="color: #7f8c8d; font-size: 11px;">' + (event.date || '') + '</span>';
+        html += '<button onclick="showAddSerieModalForDayAndEvent(' + dayNumber + ', ' + event.id + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Ajouter une série à cette épreuve">➕ Série</button>';
+        html += '</div>';
         html += '</div>';
         
         if (eventSeries.length === 0) {
-            html += '<p style="color: #95a5a6; font-size: 13px;">Aucune série</p>';
+            html += '<p style="color: #95a5a6; font-size: 13px;">Aucune série — ➕ Série pour en ajouter une</p>';
         } else {
             html += '<div class="event-series" style="display: grid; gap: 10px;">';
             eventSeries.forEach(function(serie) {
@@ -1111,13 +1114,14 @@
             html += '</div>';
         }
         
-        html += '<button onclick="showAddSerieModalForDayAndEvent(' + dayNumber + ', ' + event.id + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 11px; background: #ecf0f1; color: #2c3e50; border: none; border-radius: 5px; cursor: pointer; margin-top: 8px;">+ Série</button>';
         html += '</div>';
         
         return html;
     }
 
-    function renderSerieCard(dayNumber, serie, compact) {
+    // attachEvents (séries indépendantes seulement) : épreuves proposées dans
+    // « 📎 Rattacher à une épreuve »
+    function renderSerieCard(dayNumber, serie, compact, attachEvents) {
         var completedCount = serie.results ? serie.results.length : 0;
         var totalCount = serie.participants ? serie.participants.length : 0;
         var hasResults = completedCount > 0;
@@ -1137,8 +1141,18 @@
         }
         html += '<button onclick="enterSerieResults(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: ' + (hasResults ? '#27ae60' : '#95a5a6') + '; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Saisie manuelle des résultats">⏱️</button>';
         html += '<button onclick="showSerieRanking(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f39c12; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Voir le classement">🏆</button>';
+        html += '<button onclick="deleteSerieForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 5px; cursor: pointer;" title="Supprimer la série">🗑️</button>';
         html += '</div>';
         html += '</div>';
+        if (attachEvents && attachEvents.length > 0) {
+            html += '<div style="margin-top: 6px; font-size: 11px; color: #7f8c8d;">Sans épreuve : ni imprimée ni classée par épreuve. ';
+            html += '<select id="attachSerie-' + dayNumber + '-' + serie.id + '" onchange="if (this.value) attachSerieToEvent(' + dayNumber + ', ' + serie.id + ', parseInt(this.value))" style="padding: 3px 6px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 4px;">';
+            html += '<option value="">📎 Rattacher à une épreuve…</option>';
+            attachEvents.forEach(function(evt) {
+                html += '<option value="' + evt.id + '">' + evt.name + '</option>';
+            });
+            html += '</select></div>';
+        }
         html += '</div>';
         
         return html;
@@ -2362,7 +2376,7 @@
         var event = chronoData.events.find(function(e) { return e.id === eventId; });
         if (!event) return;
 
-        var seriesCount = chronoData.series.filter(function(s) { return s.eventId === eventId; }).length;
+        var seriesCount = getEventSeries(chronoData, event).length;
         var confirmMessage = seriesCount > 0
             ? 'Êtes-vous sûr de vouloir supprimer "' + event.name + '" et ses ' + seriesCount + ' série(s) ?'
             : 'Êtes-vous sûr de vouloir supprimer "' + event.name + '" ?';
@@ -2381,8 +2395,54 @@
         showAddSerieModalForDayAndEvent(dayNumber, null);
     }
 
+    // Réglages proposés pour une nouvelle série d'une épreuve : ceux de sa dernière
+    // série (ajout sur place d'une série natation : natation, 50 m, couloirs), sinon
+    // déduits de l'épreuve (« 100m Brasse » → natation, 100 m, couloirs).
+    function getSerieDefaultsForEvent(chronoData, event) {
+        var defaults = { name: '', sportType: 'running', raceType: 'individual', distance: 1000, relayDuration: 60, laneMode: false };
+        if (!event) return defaults;
+
+        var series = getEventSeries(chronoData, event);
+        var maxNum = series.length;
+        series.forEach(function(s) {
+            var m = String(s.name || '').match(/S[ée]rie\s*(\d+)/i);
+            if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+        });
+        defaults.name = 'Série ' + (maxNum + 1);
+
+        var info = typeof deriveSwimmingEventInfo === 'function' ? deriveSwimmingEventInfo(event) : null;
+        var last = series[series.length - 1];
+        if (last) {
+            defaults.sportType = last.sportType || defaults.sportType;
+            defaults.raceType = last.raceType || defaults.raceType;
+            if (last.relayDuration) defaults.relayDuration = last.relayDuration;
+            defaults.laneMode = !!last.laneMode;
+            var lastDistance = last.distance || event.distance
+                || (defaults.sportType === 'swimming' && info && info.distance);
+            if (lastDistance) defaults.distance = lastDistance;
+            return defaults;
+        }
+
+        // Natation si l'épreuve le dit, sinon si son nom donne une nage ET une distance
+        var swimming = event.sportType ? event.sportType === 'swimming'
+            : (!!event.laneMode || !!(info && info.stroke && info.distance));
+        defaults.sportType = event.sportType || (swimming ? 'swimming' : defaults.sportType);
+        if (event.raceType) defaults.raceType = event.raceType;
+        var distance = event.distance || (swimming && info && info.distance);
+        if (distance) defaults.distance = distance;
+        defaults.laneMode = !!event.laneMode || swimming;
+        return defaults;
+    }
+
     function showAddSerieModalForDayAndEvent(dayNumber, eventId) {
         if (document.getElementById('serieModal-' + dayNumber)) return;
+
+        var chronoData = getChronoDataForDay(dayNumber);
+        var event = chronoData && eventId ? (chronoData.events || []).find(function(e) { return e.id === eventId; }) : null;
+        var d = getSerieDefaultsForEvent(chronoData, event);
+        function opt(value, label, current) {
+            return '<option value="' + value + '"' + (value === current ? ' selected' : '') + '>' + label + '</option>';
+        }
         
         var modal = document.createElement('div');
         modal.id = 'serieModal-' + dayNumber;
@@ -2391,38 +2451,38 @@
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
             'align-items: center; z-index: 10000;">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 450px; width: 90%; max-height: 90vh; overflow-y: auto;">' +
-            '<h3>🏃 Nouvelle Série - Journée ' + dayNumber + '</h3>' +
+            '<h3>🏃 Nouvelle série' + (event ? ' — ' + event.name : ' - Journée ' + dayNumber) + '</h3>' +
             '<div style="margin: 15px 0;">' +
             '<label>Nom :</label>' +
-            '<input type="text" id="serieName-' + dayNumber + '" style="width: 100%; padding: 10px; margin-top: 5px;" placeholder="ex: Série 1, Finale A">' +
+            '<input type="text" id="serieName-' + dayNumber + '" value="' + d.name + '" style="width: 100%; padding: 10px; margin-top: 5px;" placeholder="ex: Série 1, Finale A">' +
             '</div>' +
             '<input type="hidden" id="serieEventId-' + dayNumber + '" value="' + (eventId || '') + '">' +
             '<div style="margin: 15px 0;">' +
             '<label>Sport :</label>' +
             '<select id="serieSportType-' + dayNumber + '" style="width: 100%; padding: 10px; margin-top: 5px;">' +
-            '<option value="running">🏃 Course à pied</option>' +
-            '<option value="cycling">🚴 Cyclisme</option>' +
-            '<option value="swimming">🏊 Natation</option>' +
+            opt('running', '🏃 Course à pied', d.sportType) +
+            opt('cycling', '🚴 Cyclisme', d.sportType) +
+            opt('swimming', '🏊 Natation', d.sportType) +
             '</select>' +
             '</div>' +
             '<div style="margin: 15px 0;">' +
             '<label>Type de course :</label>' +
             '<select id="serieRaceType-' + dayNumber + '" style="width: 100%; padding: 10px; margin-top: 5px;" onchange="toggleRelayOptionsForDay(' + dayNumber + ')">' +
-            '<option value="individual">Individuelle</option>' +
-            '<option value="relay">Relais (durée limitée)</option>' +
-            '<option value="interclub">Interclub (par club)</option>' +
+            opt('individual', 'Individuelle', d.raceType) +
+            opt('relay', 'Relais (durée limitée)', d.raceType) +
+            opt('interclub', 'Interclub (par club)', d.raceType) +
             '</select>' +
             '</div>' +
             '<div style="margin: 15px 0;">' +
             '<label>Distance par tour (mètres) :</label>' +
-            '<input type="number" id="serieDistance-' + dayNumber + '" value="1000" min="50" style="width: 100%; padding: 10px; margin-top: 5px;">' +
+            '<input type="number" id="serieDistance-' + dayNumber + '" value="' + d.distance + '" min="10" style="width: 100%; padding: 10px; margin-top: 5px;">' +
             '</div>' +
-            '<div id="relayOptions-' + dayNumber + '" style="margin: 15px 0; display: none;">' +
+            '<div id="relayOptions-' + dayNumber + '" style="margin: 15px 0; display: ' + (d.raceType === 'relay' ? 'block' : 'none') + ';">' +
             '<label>Durée du relais (minutes) :</label>' +
-            '<input type="number" id="serieRelayDuration-' + dayNumber + '" value="60" min="5" style="width: 100%; padding: 10px; margin-top: 5px;">' +
+            '<input type="number" id="serieRelayDuration-' + dayNumber + '" value="' + d.relayDuration + '" min="5" style="width: 100%; padding: 10px; margin-top: 5px;">' +
             '</div>' +
             '<div style="margin: 15px 0;">' +
-            '<label><input type="checkbox" id="serieLaneMode-' + dayNumber + '"> Mode couloirs (natation)</label>' +
+            '<label><input type="checkbox" id="serieLaneMode-' + dayNumber + '"' + (d.laneMode ? ' checked' : '') + '> Mode couloirs (natation)</label>' +
             '</div>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeSerieModalForDay(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
@@ -2477,6 +2537,52 @@
             refreshChronoDisplay(dayNumber);
             showNotification('Série créée !', 'success');
         }
+    }
+
+    // Rattacher une série indépendante (créée sans épreuve) à une épreuve : elle est
+    // alors affichée sous l'épreuve, imprimée et classée par épreuve.
+    function attachSerieToEvent(dayNumber, serieId, eventId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        eventId = parseInt(eventId);
+        var event = (chronoData.events || []).find(function(e) { return e.id === eventId; });
+        var serie = (chronoData.series || []).find(function(s) { return s.id === serieId; });
+        if (!event || !serie) return;
+
+        serie.eventId = event.id;
+        saveToLocalStorage();
+        refreshChronoDisplay(dayNumber);
+        showNotification('« ' + serie.name + ' » rattachée à « ' + event.name + ' »', 'success');
+    }
+
+    // Supprimer une série (créée par erreur, en trop…), qu'elle soit imbriquée dans son
+    // épreuve (génération natation) ou « à plat » (➕ Série). Refusé pendant sa course.
+    function deleteSerieForDay(dayNumber, serieId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+
+        var live = global.raceData && global.raceData.currentSerie;
+        if (live && live.id === serieId && live.dayNumber === dayNumber && (live.isRunning || live.status === 'running')) {
+            showNotification('Course en cours : terminez-la avant de supprimer la série', 'warning');
+            return;
+        }
+
+        var participants = serie.participants || [];
+        var finished = participants.filter(function(p) { return p.status === 'finished'; }).length;
+        var times = Math.max((serie.results || []).length, finished);
+        var message = 'Supprimer « ' + serie.name + ' » (' + participants.length + ' participant(s)) ?';
+        if (times > 0) message += '\n\n⚠️ Ses ' + times + ' temps seront perdus.';
+        if (!confirm(message)) return;
+
+        chronoData.series = (chronoData.series || []).filter(function(s) { return s !== serie; });
+        (chronoData.events || []).forEach(function(evt) {
+            if (evt.series) evt.series = evt.series.filter(function(s) { return s !== serie; });
+        });
+        saveToLocalStorage();
+        refreshChronoDisplay(dayNumber);
+        showNotification('Série supprimée', 'success');
     }
 
     function manageSerieParticipants(dayNumber, serieId) {
@@ -3891,6 +3997,9 @@
     global.importPlayersFromDay = importPlayersFromDay;
     global.showAddSerieModalForDay = showAddSerieModalForDay;
     global.showAddSerieModalForDayAndEvent = showAddSerieModalForDayAndEvent;
+    global.getSerieDefaultsForEvent = getSerieDefaultsForEvent;
+    global.attachSerieToEvent = attachSerieToEvent;
+    global.deleteSerieForDay = deleteSerieForDay;
     global.closeSerieModalForDay = closeSerieModalForDay;
     global.saveSerieForDay = saveSerieForDay;
     global.toggleRelayOptionsForDay = toggleRelayOptionsForDay;

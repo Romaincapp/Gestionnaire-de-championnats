@@ -311,7 +311,54 @@ async function openFresh(browser) {
     await fresh.context.close();
 
     // ---------------------------------------------------------------
-    step('11. 🖨️ Imprimer séries');
+    step('11. Sur place : ➕ Série dans « 50m brasse », 🏊 couloirs, course — sans relancer « Séries natation »');
+    const brasseId = await state(page, () => championship.days[1].chronoData.events.find(e => e.name === '50m brasse').id);
+    const brasseSeries = (id) => state(page, (evId) => {
+        const cd = championship.days[1].chronoData;
+        return getEventSeries(cd, cd.events.find(e => e.id === evId)).map(s => JSON.parse(JSON.stringify(s)));
+    }, id);
+    const nBefore = (await brasseSeries(brasseId)).length;
+    check(!(await page.locator('button[onclick="showAddSerieModalForDay(1)"]').count()), 'plus de bouton « 🏃 Série » sans épreuve dans la barre d\'actions');
+    await page.click(`button[onclick="showAddSerieModalForDayAndEvent(1, ${brasseId})"]`);
+    await page.waitForTimeout(300);
+    const form = await state(page, () => ({
+        name: document.getElementById('serieName-1').value, sport: document.getElementById('serieSportType-1').value,
+        distance: document.getElementById('serieDistance-1').value, lanes: document.getElementById('serieLaneMode-1').checked,
+    }));
+    check(form.name === 'Série ' + (nBefore + 1) && form.sport === 'swimming' && form.distance === '50' && form.lanes,
+        'fenêtre pré-remplie depuis l\'épreuve : ' + JSON.stringify(form));
+    await btn(page, 'Sauvegarder');
+    const added = (await brasseSeries(brasseId)).pop();
+    const brasseCard = page.locator('.chrono-event-card').filter({ has: page.locator('h4', { hasText: /^🎯 50m brasse$/ }) });
+    check((await brasseCard.innerText()).includes(added.name), `« ${added.name} » apparaît sous « 50m brasse »`);
+    await page.click(`button[onclick="assignSerieLanes(1, ${added.id})"]`);
+    await page.waitForTimeout(300);
+    const pool = await state(page, () => championship.days[1].chronoData.participants.filter(p => p.swimImport).slice(0, 2).map(p => ({ id: p.id, name: p.name })));
+    await page.selectOption('#laneSel-1-3', String(pool[0].id));
+    await page.selectOption('#laneSel-1-4', String(pool[1].id));
+    await btn(page, '💾 Enregistrer');
+    await page.click(`button[onclick="startChronoRaceForDay(1, ${added.id})"]`);
+    await page.waitForTimeout(400);
+    await page.click('#startStopBtn');
+    await page.waitForTimeout(800);
+    const laneNames = await page.locator('[id^="lane-"]').evaluateAll(els => els.map(el => el.id.replace('lane-', '') + ':' + el.querySelector('.lane-name').textContent));
+    check(JSON.stringify(laneNames) === JSON.stringify(['3:' + pool[0].name, '4:' + pool[1].name]), 'boutons d\'arrêt = couloirs choisis dans 🏊 (' + laneNames.join(', ') + ')');
+    await laneBox(3).click(); await page.waitForTimeout(300);
+    await laneBox(4).click(); await page.waitForTimeout(300);
+    await btn(page, '🏁 Terminer la Série');
+    await page.waitForTimeout(400);
+    const addedDone = (await brasseSeries(brasseId)).pop();
+    check((addedDone.results || []).length === 2, `« ${added.name} » nagée : ${(addedDone.results || []).length} temps enregistrés`);
+    await btn(page, '🏊 Séries natation');
+    const warn = (await page.locator('#swimExistingWarning').innerText()).replace(/\s+/g, ' ');
+    check(/séries existantes seront remplacées/.test(warn) && /déjà nagées/.test(warn) && warn.includes('➕ Série'),
+        '« Séries natation » prévient avant de tout remplacer : ' + warn.slice(0, 110) + '…');
+    await page.locator('#swimmingImportModal').getByRole('button', { name: 'Annuler', exact: true }).click();
+    await page.waitForTimeout(250);
+    await snap(page, 'serie-ajoutee-sur-place');
+
+    // ---------------------------------------------------------------
+    step('12. 🖨️ Imprimer séries');
     const [printPopup] = await Promise.all([context.waitForEvent('page', { timeout: 5000 }).catch(() => null), btn(page, '🖨️ Imprimer séries')]);
     check(!!printPopup, 'fenêtre d\'impression des séries ouverte');
     if (printPopup) {

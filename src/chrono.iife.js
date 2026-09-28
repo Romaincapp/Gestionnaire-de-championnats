@@ -3021,6 +3021,9 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         var entries = eventGroups[evt.id];
         // Réinitialiser les séries de TOUTES les épreuves ciblées (même vides),
         // pour ne pas laisser d'anciennes séries traîner lors d'une régénération.
+        // Les séries ajoutées via ➕ Série (rangées « à plat » avec leur eventId) sont
+        // remplacées elles aussi, comme l'annonce la confirmation.
+        dayData.chronoData.series = (dayData.chronoData.series || []).filter(function(s) { return s.eventId !== evt.id; });
         if (!entries || entries.length === 0) {
             evt.series = [];
             return;
@@ -3204,6 +3207,7 @@ window.showSwimmingImportModal = function(dayNumber) {
     modal.innerHTML = '\
         <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 95%; max-height: 85vh; overflow-y: auto;">\
             <h3 style="margin: 0 0 15px 0; color: #16a085; font-size: 16px;">🏊 Import natation → Séries par couloirs</h3>\
+            <div id="swimExistingWarning" style="display: none; margin-bottom: 12px; padding: 10px; background: #fff3cd; border: 1px solid #ffe08a; border-radius: 6px; font-size: 13px; color: #7a5b00;"></div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée source (avec noms bruts) :</label>\
                 <select id="swimSourceDay" onchange="renderSwimmingColumnMapping()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + sourceDayOptions + '</select>\
@@ -3262,7 +3266,38 @@ window.showSwimmingImportModal = function(dayNumber) {
         </div>';
 
     document.body.appendChild(modal);
+    renderSwimmingExistingWarning(targetDay);
 };
+
+// Régénérer les séries natation REMPLACE toutes les séries des épreuves de la journée,
+// y compris celles déjà nagées. Texte d'avertissement ('' si aucune série n'existe).
+function existingSwimmingSeriesWarning(dayNumber) {
+    var dd = championship.days[dayNumber];
+    var cd = dd && dd.chronoData;
+    if (!cd) return '';
+    var total = 0, swum = 0;
+    (cd.events || []).forEach(function(evt) {
+        var list = typeof getEventSeries === 'function' ? getEventSeries(cd, evt) : (evt.series || []);
+        list.forEach(function(s) {
+            total++;
+            var started = s.status === 'completed' || (s.results && s.results.length > 0)
+                || (s.participants || []).some(function(p) { return p.status === 'finished' || (p.laps && p.laps.length > 0); });
+            if (started) swum++;
+        });
+    });
+    if (total === 0) return '';
+    return '⚠️ ' + total + (total > 1 ? ' séries existantes seront remplacées' : ' série existante sera remplacée')
+        + (swum > 0 ? ', dont ' + swum + ' déjà nagée' + (swum > 1 ? 's' : '') + ' : leurs temps seront perdus' : '') + '.\n'
+        + 'Pour ajouter une série sur place, utilisez « ➕ Série » dans l\'épreuve.';
+}
+
+function renderSwimmingExistingWarning(dayNumber) {
+    var el = document.getElementById('swimExistingWarning');
+    if (!el) return;
+    var warning = existingSwimmingSeriesWarning(dayNumber);
+    el.style.display = warning ? 'block' : 'none';
+    el.innerHTML = warning.replace(/\n/g, '<br>');
+}
 
 // Rafraîchir la liste des épreuves cibles quand la journée destination change
 window.updateSwimmingEventsPreview = function() {
@@ -3276,6 +3311,7 @@ window.updateSwimmingEventsPreview = function() {
     var events = (dd && dd.chronoData && dd.chronoData.events) ? dd.chronoData.events : [];
 
     if (dayLabel) dayLabel.textContent = 'J' + targetDay;
+    renderSwimmingExistingWarning(targetDay);
     previewDiv.innerHTML = events.length > 0
         ? events.map(function(e) {
             return '<span style="display:inline-block;padding:3px 8px;margin:2px;background:#e8f4f8;border-radius:4px;font-size:11px;">' + e.name + '</span>';
@@ -3494,6 +3530,10 @@ function deriveSwimmingEventInfo(evt) {
         stroke: stroke
     };
 }
+
+// Exposée : la fenêtre « ➕ Série » (multisport.iife.js) pré-remplit une nouvelle série
+// natation (distance, couloirs) depuis le nom de l'épreuve.
+window.deriveSwimmingEventInfo = deriveSwimmingEventInfo;
 
 // Appliquer une épreuve par défaut quand distance/nage manquent, et forcer l'épreuve.
 // Renvoie l'entrée complétée, ou null si toujours inexploitable.
@@ -3717,6 +3757,9 @@ window.confirmSwimmingImport = function(dayNumber) {
         showNotification('Aucune entrée n\'a pu être parsée avec ce séparateur/mapping', 'error');
         return;
     }
+
+    var warning = existingSwimmingSeriesWarning(targetDayNumber);
+    if (warning && !confirm(warning + '\n\nRégénérer quand même toutes les séries ?')) return;
 
     var result = window.generateSwimmingSeries(targetDayNumber, sourceDayNumber, lanesPerSerie, collected.parsed, collected.errors);
     if (result && result.totalSeries === 0) {

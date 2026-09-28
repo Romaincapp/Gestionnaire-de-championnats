@@ -13,6 +13,23 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏊 Séries natation : ajouter ou modifier sur place
+- **« ➕ Série » dans chaque épreuve**, bien visible dans son en-tête, avec une fenêtre
+  **pré-remplie** (natation, 50 m, mode couloirs, « Série 8 »…). Il ne reste qu'à placer les
+  nageurs avec 🏊. Avant, une série ajoutée ainsi à une épreuve générée par « Séries
+  natation » **n'apparaissait pas** sous l'épreuve, et la fenêtre repartait sur « Course à
+  pied, 1000 m, sans couloirs ».
+- Le bouton **« 🏃 Série » de la barre d'actions est retiré** : il créait une série sans
+  épreuve, ni imprimée ni classée par épreuve. Les séries « indépendantes » existantes
+  restent visibles et se rattachent à une épreuve via « 📎 Rattacher à une épreuve… ».
+- **🗑️ Supprimer une série** (créée par erreur, en trop) ; refusé pendant sa course, les
+  temps perdus sont annoncés.
+- **« 🏊 Séries natation » protégé** : régénérer remplace toutes les séries des épreuves, même
+  celles déjà nagées (leurs temps étaient perdus sans prévenir). La fenêtre l'annonce
+  (« 34 séries existantes seront remplacées, dont 3 déjà nagées ») et une confirmation est
+  demandée.
+- La suppression d'une épreuve annonce aussi ses séries générées.
+
 ### 🏊 Natation : classement par épreuve
 - Pour une compétition de natation, le classement général (distance & temps, pensé pour la
   course à pied) est remplacé par un **classement par épreuve** : toutes les séries d'une même
