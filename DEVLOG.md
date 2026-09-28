@@ -33,6 +33,38 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 10) — Changer un club depuis « Participants disponibles » : suivi partout
+
+- **Contexte** : « j'ai mis à jour les clubs dans la liste des participants disponibles, ça
+  impacte bien le reste dans l'app ? les séries, les classements ? »
+- **Diagnostic** (simulation sur les 150 lignes réelles de `jsondetest/natation test 2.json`
+  après « 🏁 Séries automatiques ») :
+  - ✏️ sur un nageur inscrit dans une seule épreuve : OK partout ;
+  - ✏️ sur un nageur inscrit dans plusieurs épreuves (42 dans les données de test : la liste
+    a une ligne par inscription) : **refusé**, « Un participant porte déjà ce nom » ;
+  - « 🏷️ Affecter aux cochés » : liste et séries mises à jour, mais pas `serie.results` →
+    le classement par épreuve et le tableau des clubs gardaient **l'ancien club** pour les
+    séries déjà nagées (le classement lit `r.club || p.club`) ; cache `raceData` non mis à
+    jour (un club vidé revenait à la fin de la course suivante) ;
+  - `applyParticipantRename` modifiait le cache de course de **toutes** les journées, où un
+    même id peut désigner un autre nageur ; et un ✏️ de club réécrivait le dossard du
+    nageur dans ses autres épreuves.
+- **Fait** (`src/multisport.iife.js`) : helper `updateParticipantEverywhere(dayNumber,
+  chronoData, match, changes)` — liste, séries (participants **et** résultats), cache de
+  course de cette journée seulement (sauvegardé) ; `applyParticipantRename` passe par lui
+  (id ou ancien nom) ; `nameTakenByOther` (doublon = nom d'un **autre** nageur) ;
+  `editedChanges` (dossard propagé seulement s'il a changé). Utilisés par ✏️ de la liste
+  (`saveParticipantInfo`), ✏️ d'une série (`saveSerieParticipant`), fenêtre 🏊
+  (`saveLaneSwimmer`), 🏷️ (`assignClubToSelected`) et l'harmonisation des noms.
+- **Tests** : nouveau `participantClubUpdate.test.js` (9 tests, 6 échouaient avant) ; e2e
+  natation étape 9c : ✏️ club d'un nageur classé inscrit dans 2 épreuves → liste, séries,
+  résultats, classement par épreuve et tableau des clubs à jour.
+- **Hors périmètre** : une journée importée depuis une autre (J2 ← J1) garde ses copies.
+- **Fichiers touchés** : `src/multisport.iife.js`, `tests/unit/participantClubUpdate.test.js`,
+  `tests/e2e/natation.e2e.js`, `CHANGELOG.md`, `claude.md` (piège n° 15), ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #91 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md (pas de fonction exposée nouvelle) · tests ✅
+
 ### 2026-09-28 (suite 9) — Épreuves « fun » hors classement des clubs
 
 - **Contexte** : après la PR #90, « il y a certaines épreuves qui ne doivent pas entrer dans le

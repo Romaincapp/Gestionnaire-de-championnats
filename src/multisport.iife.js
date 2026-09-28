@@ -642,24 +642,8 @@
             return ids[String(p.id)] || (p.name && names[p.name.toLowerCase()]);
         }
 
-        var count = 0;
-        chronoData.participants.forEach(function(p) {
-            if (matches(p)) { p.club = club; count++; }
-        });
-
-        // Propager le club aux mêmes participants présents dans les séries
-        (chronoData.series || []).forEach(function(s) {
-            (s.participants || []).forEach(function(p) {
-                if (matches(p)) p.club = club;
-            });
-        });
-        (chronoData.events || []).forEach(function(ev) {
-            (ev.series || []).forEach(function(s) {
-                (s.participants || []).forEach(function(p) {
-                    if (matches(p)) p.club = club;
-                });
-            });
-        });
+        // Liste, séries, résultats déjà enregistrés et cache de course de la journée
+        var count = updateParticipantEverywhere(dayNumber, chronoData, matches, { club: club });
 
         // Mémoriser le club dans la liste globale s'il est nouveau
         if (club && window.clubsModule && window.clubsModule.addClub) {
@@ -849,20 +833,19 @@
         var newName = toTitleCase(nameEl.value.trim());
         if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
 
-        // Doublon de nom avec un autre participant
-        var dup = chronoData.participants.some(function(x) {
-            return x.id !== participantId && (x.name || '').toLowerCase() === newName.toLowerCase();
-        });
-        if (dup) { showNotification('Un participant porte déjà ce nom', 'warning'); return; }
+        if (nameTakenByOther(chronoData.participants, participantId, p.name, newName)) {
+            showNotification('Un participant porte déjà ce nom', 'warning');
+            return;
+        }
 
         var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
         var clubEl = document.getElementById('edit-pclub-' + dayNumber + '-' + participantId);
         var newClub = clubEl ? clubEl.value.trim() : undefined;
         var categoryEl = document.getElementById('edit-pcategory-' + dayNumber + '-' + participantId);
         var newCategory = categoryEl ? categoryEl.value.trim() : undefined;
-        var oldName = p.name;
 
-        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub, newCategory);
+        applyParticipantRename(dayNumber, chronoData, participantId, p.name,
+            editedChanges(p, newName, newBib, newClub, newCategory));
 
         saveToLocalStorage();
         refreshChronoDisplay(dayNumber);
@@ -870,37 +853,76 @@
     }
     global.saveParticipantInfo = saveParticipantInfo;
 
-    /**
-     * Renomme / re-dossarde un participant partout : liste globale, séries,
-     * résultats et séries imbriquées dans les événements. Match par id OU ancien nom.
-     */
-    function applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub, newCategory) {
-        function applyTo(list) {
-            (list || []).forEach(function(sp) {
-                if ((participantId != null && sp.id === participantId) ||
-                    (oldName && (sp.name || '').toLowerCase() === oldName.toLowerCase())) {
-                    sp.name = newName;
-                    if (newBib != null && !isNaN(newBib)) sp.bib = newBib;
-                    if (newClub !== undefined) sp.club = newClub;
-                    if (newCategory !== undefined) sp.category = newCategory;
-                }
-            });
-        }
-        applyTo(chronoData.participants);
-        (chronoData.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
-        (chronoData.events || []).forEach(function(ev) {
-            (ev.series || []).forEach(function(s) { applyTo(s.participants); applyTo(s.results); });
+    // Le nom est-il porté par un AUTRE nageur de la liste ? Après « 🏁 Séries
+    // automatiques », un nageur a une ligne par inscription (même nom, une par
+    // épreuve) : ces lignes sont les siennes et suivent la modification.
+    function nameTakenByOther(list, participantId, oldName, newName) {
+        if (sameName(newName, oldName)) return false;
+        return (list || []).some(function(x) {
+            return x.id !== participantId && sameName(x.name, newName);
         });
+    }
 
-        // Garder synchronisée la copie "course" de l'ancien système (raceData) si une
-        // course est en cours / déjà lancée.
-        if (window.raceData) {
-            if (window.raceData.currentSerie) applyTo(window.raceData.currentSerie.participants);
-            (window.raceData.series || []).forEach(function(s) { applyTo(s.participants); });
-            (window.raceData.events || []).forEach(function(ev) {
-                (ev.series || []).forEach(function(s) { applyTo(s.participants); });
+    // Modifications d'une fiche éditée (✏️) à propager. Nom, club et catégorie modifiée
+    // valent pour le nageur (toutes ses inscriptions) ; le dossard est propre à chaque
+    // inscription : propagé seulement s'il a été changé.
+    function editedChanges(p, newName, newBib, newClub, newCategory) {
+        var changes = { name: newName };
+        if (newBib != null && !isNaN(newBib) && String(newBib) !== String(p.bib)) changes.bib = newBib;
+        if (newClub !== undefined) changes.club = newClub;
+        if (newCategory !== undefined && newCategory !== (p.category || '')) changes.category = newCategory;
+        return changes;
+    }
+
+    /**
+     * Applique `changes` (name, bib, club, category : seuls les champs présents) à un
+     * nageur partout dans la journée : liste, séries (participants ET résultats — le
+     * classement lit le club du résultat en priorité) et cache de course de CETTE
+     * journée (dans les autres, un même id peut désigner quelqu'un d'autre).
+     * match(p) désigne le nageur. Retourne le nombre de lignes de la liste modifiées.
+     */
+    function updateParticipantEverywhere(dayNumber, chronoData, match, changes) {
+        var listCount = 0;
+        function applyTo(list, isList) {
+            (list || []).forEach(function(sp) {
+                if (!sp || !match(sp)) return;
+                if (changes.name !== undefined) sp.name = changes.name;
+                if (changes.bib !== undefined) sp.bib = changes.bib;
+                if (changes.club !== undefined) sp.club = changes.club;
+                if (changes.category !== undefined) sp.category = changes.category;
+                if (isList) listCount++;
             });
         }
+        function applyToSerie(serie) {
+            applyTo(serie.participants);
+            applyTo(serie.results);
+        }
+        applyTo(chronoData.participants, true);
+        (chronoData.series || []).forEach(applyToSerie);
+        (chronoData.events || []).forEach(function(ev) { (ev.series || []).forEach(applyToSerie); });
+
+        // Cache du moteur de course (raceData) : course en cours ou déjà lancée
+        var rd = global.raceData;
+        if (rd && dayNumber != null) {
+            dayNumber = Number(dayNumber);
+            if (rd.currentSerie && Number(rd.currentDayNumber) === dayNumber) applyTo(rd.currentSerie.participants);
+            (rd.series || []).forEach(function(rs) {
+                if (Number(rs.dayNumber) === dayNumber) applyTo(rs.participants);
+            });
+            (rd.events || []).forEach(function(ev) {
+                if (Number(ev.dayNumber) === dayNumber) (ev.series || []).forEach(function(rs) { applyTo(rs.participants); });
+            });
+            if (typeof global.saveChronoToLocalStorage === 'function') global.saveChronoToLocalStorage();
+        }
+        return listCount;
+    }
+
+    // Renomme / modifie un nageur partout dans la journée. Correspondance par id OU
+    // ancien nom (les copies en série ont souvent un autre id que la ligne de la liste).
+    function applyParticipantRename(dayNumber, chronoData, participantId, oldName, changes) {
+        return updateParticipantEverywhere(dayNumber, chronoData, function(sp) {
+            return (participantId != null && sp.id === participantId) || (!!oldName && sameName(sp.name, oldName));
+        }, changes);
     }
 
     /**
@@ -2467,7 +2489,7 @@
             if (!dayData) return;
 
             if (dayData.chronoData) {
-                applyParticipantRename(dayData.chronoData, null, oldName, newName, null);
+                applyParticipantRename(dayNumber, dayData.chronoData, null, oldName, { name: newName });
             }
 
             if (dayData.players) {
@@ -3045,9 +3067,9 @@
         var newClub = clubEl ? clubEl.value.trim() : undefined;
         var categoryEl = document.getElementById('edit-spcategory-' + dayNumber + '-' + serieId + '-' + participantId);
         var newCategory = categoryEl ? categoryEl.value.trim() : undefined;
-        var oldName = p.name;
 
-        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub, newCategory);
+        applyParticipantRename(dayNumber, chronoData, participantId, p.name,
+            editedChanges(p, newName, newBib, newClub, newCategory));
 
         saveToLocalStorage();
         refreshSerieParticipantsList(dayNumber, serieId);
@@ -3339,16 +3361,16 @@
         var newName = toTitleCase(nameEl.value.trim());
         if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
 
-        var dup = (chronoData.participants || []).some(function(x) {
-            return x.id !== participantId && (x.name || '').toLowerCase() === newName.toLowerCase();
-        });
-        if (dup) { showNotification('Un participant porte déjà ce nom', 'warning'); return; }
+        if (nameTakenByOther(chronoData.participants, participantId, p.name, newName)) {
+            showNotification('Un participant porte déjà ce nom', 'warning');
+            return;
+        }
 
         var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
         var newClub = clubEl ? clubEl.value.trim() : undefined;
-        var oldName = p.name;
 
-        applyParticipantRename(chronoData, participantId, oldName, newName, newBib, newClub);
+        applyParticipantRename(dayNumber, chronoData, participantId, p.name,
+            editedChanges(p, newName, newBib, newClub, undefined));
         saveToLocalStorage();
 
         // Redessiner la modale en conservant les sélections (identifiées par id du pool)
