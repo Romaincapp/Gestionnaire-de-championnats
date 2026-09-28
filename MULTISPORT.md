@@ -101,10 +101,16 @@ En mode courses, vous pouvez :
 - Les temps sont sauvegardés automatiquement
 - **🏁 Fin** : Termine la course et retourne à la liste
 
-**Méthode 2 : Saisie manuelle**
-- Cliquez sur "⏱️ Résultats"
-- Entrez les temps au format `mm:ss.ms` ou secondes
-- Exemples: `1:23.45`, `45.5`, `2:30`
+**Méthode 2 : Saisie manuelle** (bouton ⏱️ d'une série)
+- En mode couloirs, colonne **Couloir** et lignes **dans l'ordre du bassin**, comme la feuille
+  « 🖨️ Imprimer séries » : on recopie la feuille ligne par ligne (Entrée = ligne suivante)
+- Dans chaque champ : un temps (`1:02.35`, `62.35`, `62,35`, `1'02"35`, `1:02:35` pour les
+  heures), ou **`DNS`** / **`DISQ`** (`DSQ`, `DQ` acceptés) ; un champ vidé retire le temps
+- Une saisie illisible est signalée en rouge et rien n'est enregistré tant qu'elle n'est pas
+  corrigée
+- Un temps saisi compte comme une arrivée au chrono (feuille imprimée, classements) ; la
+  série passe « terminée » quand tout le monde a un temps (ou DNS/DISQ). Refusé pendant que
+  la course de cette série tourne
 
 #### Interface de Course Live Complète
 

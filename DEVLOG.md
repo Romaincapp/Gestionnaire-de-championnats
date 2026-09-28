@@ -33,6 +33,40 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 6) — Saisie manuelle des résultats (⏱️) : ordre des couloirs, DNS/DISQ, fiabilité
+
+- **Contexte** : « tu vois le bouton "saisie manuelle des résultats" ? vérifie la manière dont
+  il récolte ses données ». Problème vécu : « je les vois dans un mauvais ordre, il faudrait
+  une colonne couloir dans ce modal pour les avoir dans le bon ordre ». Proposition de
+  l'utilisateur retenue : « écrire DNS ou DISQ dans ce champ ».
+- **Diagnostic** (`enterSerieResults` → `renderResultsForm` → `saveSerieResults` →
+  `recordChronoResult`) : ordre de la série + dossard seul ; champs identifiés par le seul
+  dossard ; **TypeError** sur une série générée (pas de `serie.results`) ; seul
+  `totalTime` écrit (statut « prêt » → feuille imprimée « - », `getSerieRanking` distance 0) ;
+  DNS/DISQ avec champ, ancien temps ré-enregistré ; champ vidé ignoré ; saisie illisible
+  ignorée en silence (`1'02"35` → 1 s, `1:02:35` → 1 min 02) ; cache `raceData` repris à la
+  réouverture puis « Terminer » réécrivait les résultats.
+- **Fait** (`src/multisport.iife.js`) : colonne Couloir + tri par couloir en mode couloirs
+  (`ensureSerieLanes` avant affichage), champs `result-time-<jour>-<série>-<id>` avec
+  `data-initial`, Entrée → ligne suivante (`manualResultNext`, exposée) ; `parseManualResult`
+  (vide / DNS / DISQ-DSQ-DQ / temps / illisible) et `parseTimeInput` réécrit (1'02"35,
+  h:mm:ss, validation stricte, exposé) ; `applyManualResult` : temps = arrivée complète
+  (`finished`, `finishTime`, `totalTime`, distance, ligne de résultats avec club/catégorie),
+  DNS/DISQ = statut + retiré des résultats, vide = retour « prêt » ; champs inchangés non
+  réécrits (précision du chrono) sauf ancien temps « à moitié » ; saisie illisible → rien
+  d'enregistré, champ en rouge ; statut de série recalculé ; `dropSerieFromRaceCache` retire
+  l'entrée de la série du cache (réouverture = série de la journée via `toRaceParticipant`) ;
+  saisie refusée pendant que la course de la série tourne (`isSerieRaceRunning`) ;
+  `recordChronoResult` crée `serie.results` s'il manque.
+- **Tests** : `manualResults.test.js` (12 ; 11 échouaient avant, dont le TypeError).
+  `npm test` : 256/256. `npm run test:e2e` : étape 12b (⏱️ sur une série générée : colonne
+  Couloir dans l'ordre du bassin, 4 temps + DNS, série terminée) : 0 problème.
+- **Fichiers touchés** : `src/multisport.iife.js`, `tests/unit/manualResults.test.js`,
+  `tests/e2e/natation.e2e.js`, `MULTISPORT.md`, `AGENTS.md`, `claude.md`, `CHANGELOG.md`,
+  ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #87 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · MULTISPORT.md ✅ · claude.md ✅ · tests ✅
+
 ### 2026-09-28 (suite 5) — Séries automatiques : relais (4x400m, 4x400m mixte, 4x50m libre)
 
 - **Contexte** : question de l'utilisateur : « 4x400m et 4x400m mixte ça passerait ? ».

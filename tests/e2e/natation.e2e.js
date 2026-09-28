@@ -403,6 +403,35 @@ async function openFresh(browser) {
     await page.waitForTimeout(300);
 
     // ---------------------------------------------------------------
+    step('12b. ⏱️ Saisie manuelle d\'une série générée (ordre des couloirs, temps, DNS)');
+    const dosSerie = await state(page, () => {
+        const cd = championship.days[1].chronoData;
+        const s = getEventSeries(cd, cd.events.find(e => e.name === '50m dos'))[0];
+        return { id: s.id, name: s.name, lanes: s.participants.map(p => ({ lane: p.laneNumber, name: p.name })).sort((a, b) => a.lane - b.lane) };
+    });
+    await page.click(`button[onclick="enterSerieResults(1, ${dosSerie.id})"]`);
+    await page.waitForTimeout(300);
+    const manualRows = await page.locator('#resultsModal-1 tbody tr').evaluateAll(trs => trs.map(tr => tr.cells[0].textContent.trim() + ':' + tr.cells[1].textContent.trim()));
+    const manualHeader = (await page.locator('#resultsModal-1 thead th').first().textContent()).trim();
+    check(manualHeader === 'Couloir' && JSON.stringify(manualRows) === JSON.stringify(dosSerie.lanes.map(l => l.lane + ':' + l.name)),
+        'fenêtre ⏱️ : colonne Couloir, lignes dans l\'ordre du bassin (' + manualRows.map(r => r.split(':')[0]).join(', ') + ')');
+    const manualInputs = page.locator('#resultsModal-1 tbody input');
+    const nManual = await manualInputs.count();
+    for (let i = 0; i < nManual; i++) {
+        await manualInputs.nth(i).fill(i === nManual - 1 ? 'DNS' : '0:4' + i + '.5' + i);
+    }
+    await page.locator('#resultsModal-1').getByRole('button', { name: '💾 Sauvegarder', exact: true }).click();
+    await page.waitForTimeout(300);
+    const dosAfter = await state(page, (id) => {
+        const cd = championship.days[1].chronoData;
+        const s = getEventSeries(cd, cd.events.find(e => e.name === '50m dos')).find(x => x.id === id);
+        return { results: (s.results || []).length, statuses: s.participants.map(p => p.status).sort(), status: s.status };
+    }, dosSerie.id);
+    check(dosAfter.results === nManual - 1 && dosAfter.statuses.filter(x => x === 'finished').length === nManual - 1
+        && dosAfter.statuses.includes('dns') && dosAfter.status === 'completed',
+        `saisie manuelle enregistrée : ${dosAfter.results} temps, 1 DNS, série terminée`);
+
+    // ---------------------------------------------------------------
     step('13. 🖨️ Imprimer séries');
     const [printPopup] = await Promise.all([context.waitForEvent('page', { timeout: 5000 }).catch(() => null), btn(page, '🖨️ Imprimer séries')]);
     check(!!printPopup, 'fenêtre d\'impression des séries ouverte');

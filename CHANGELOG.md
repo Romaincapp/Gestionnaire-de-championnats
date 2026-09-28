@@ -13,6 +13,22 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ⏱️ Saisie manuelle des résultats fiabilisée
+- **Ordre des couloirs** : en mode couloirs, la fenêtre ⏱️ affiche une colonne **Couloir** et
+  les lignes dans l'ordre du bassin, comme la feuille imprimée (avant : ordre des temps
+  d'engagement, avec le seul dossard — facile de se tromper de ligne).
+- **DNS / DISQ** se tapent directement dans le champ (`DNS`, `DISQ`, `DSQ`, `DQ`) ; un DNS ou
+  DISQ existant est affiché tel quel et n'est plus ré-enregistré avec son ancien temps.
+- **Corrections** :
+  - la saisie **plantait** sur une série générée par « 🏁 Séries automatiques » (aucun temps
+    enregistré) ;
+  - un temps saisi restait « Prêt » : la feuille imprimée affichait « - » ; c'est maintenant
+    une arrivée complète (feuille, classements, série « terminée ») ;
+  - rouvrir la course après une saisie manuelle reprenait l'ancienne progression et
+    « Terminer » effaçait les temps saisis ;
+  - un champ vidé ne retirait pas le temps ; une saisie illisible était ignorée en silence
+    (« 1'02"35 » devenait 1 s) — formats `1'02"35` et `1:02:35` acceptés.
+
 ### 🏁 Séries automatiques : relais
 - Les **relais** sont reconnus : « 4x400m », « 4 x 100 m », « 4×50m libre ». Une ligne
   « Team Alpha 4x400m 3:25.00 » va dans l'épreuve « 4x400m », jamais dans le 400m
