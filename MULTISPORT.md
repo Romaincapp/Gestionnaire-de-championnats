@@ -40,8 +40,16 @@ En mode courses, vous pouvez :
 - Ajoutez une date optionnelle
 
 #### Créer des séries configurables
-- Par épreuve ou indépendantes
-- Cliquez sur "🏃 Nouvelle Série"
+- Chaque série appartient à une épreuve : cliquez sur **« ➕ Série »** dans l'en-tête de
+  l'épreuve (il n'y a plus de bouton « Série » dans la barre d'actions : une série créée
+  sans épreuve n'était ni imprimée ni classée par épreuve)
+- La fenêtre est **pré-remplie** à partir de la dernière série de l'épreuve (ou de son nom :
+  « 100m Brasse » → Natation, 100 m, mode couloirs) et propose le nom « Série N+1 » : pratique
+  pour **ajouter une série natation sur place** sans relancer « 🏊 Séries natation »
+- 🗑️ sur une série la supprime (refusé pendant sa course) ; une ancienne série
+  « indépendante » se rattache à une épreuve via « 📎 Rattacher à une épreuve… »
+- « 🏊 Séries natation » **remplace** toutes les séries des épreuves (y compris celles déjà
+  nagées) : la fenêtre l'annonce, et une confirmation est demandée si des séries existent
 - Configurez les options :
   - **Nom** : ex: "Série 1", "Finale A"
   - **Sport** : 🏃 Course à pied, 🚴 Cyclisme, 🏊 Natation
