@@ -63,6 +63,27 @@ describe('points par épreuve', () => {
         expect(p['Nageur 10']).toBe(0);
     });
 
+    // Cas réel (export utilisateur 2026-09) : club renommé avec « 🏷️ Affecter aux cochés »
+    // avant la PR #92, qui ne corrigeait pas les résultats déjà enregistrés. Le
+    // participant de la série fait foi (comme au classement général des courses).
+    test('club renommé après la course : le club du participant de la série fait foi', () => {
+        setEvents([['50m libre', [['Anne A', 'Aquaphiles', 30], ['Bea B', 'Club B', 31], ['Alex A', 'Aquaphiles', 32]]]]);
+        const s = championship.days[1].chronoData.events[0].series[0];
+        s.results[0].club = 'Les Aquaphiles';
+        s.results[2].club = 'Les Aquaphiles';
+        const events = window.calculateEventRankings();
+        expect(events[0].entries.map(e => e.club)).toEqual(['Aquaphiles', 'Club B', 'Aquaphiles']);
+        expect(points(events[0])).toEqual({ 'Anne A': 25, 'Bea B': 19, 'Alex A': null });
+        expect(window.calculateClubEventRanking(events).map(c => [c.club, c.total])).toEqual([['Aquaphiles', 25], ['Club B', 19]]);
+    });
+
+    test('résultat sans participant correspondant : son propre club (repli)', () => {
+        setEvents([['50m libre', [['Anne A', 'Club A', 30]]]]);
+        const s = championship.days[1].chronoData.events[0].series[0];
+        s.results.push({ name: 'Hors Liste', club: 'Club Z', bib: 9, time: 31000 });
+        expect(window.calculateEventRankings()[0].entries.find(e => e.name === 'Hors Liste').club).toBe('Club Z');
+    });
+
     test('clubs regroupés sans tenir compte des majuscules ni des espaces', () => {
         setEvents([['50m libre', [['Anne', 'CN Liège', 30], ['Paul', ' cn  liège ', 31], ['Bea', 'Club B', 32]]]]);
         expect(points(window.calculateEventRankings()[0])).toEqual({ Anne: 25, Paul: null, Bea: 19 });

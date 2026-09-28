@@ -33,6 +33,32 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 11) — Classement par épreuve : le club du participant de la série fait foi
+
+- **Contexte** : export utilisateur (`competition-chrono-J1-…_6.json`, non versionné :
+  données personnelles) — « Les Aquaphiles » renommé « Aquaphiles » et « IMPH APRIS »
+  renommé « Apris » dans « Participants disponibles », mais les anciens noms restaient au
+  classement général (tableau des clubs : « Les Aquaphiles » 52, « Aquaphiles » 19,
+  « IMPH APRIS » 12).
+- **Diagnostic** : liste et participants des séries corrects ; 13 `serie.results` de
+  séries déjà nagées gardaient l'ancien club — trace de « 🏷️ Affecter aux cochés » avant
+  la PR #92 (ou de l'ancienne version encore chargée dans le navigateur). Pas le stockage
+  local : c'est dans les données de la compétition. `calculateEventRankings()` lisait
+  `r.club || p.club` (résultat d'abord), alors que le classement général des courses
+  (`getChronoResultsForDay`) lit déjà `p.club || result.club`.
+- **Fait** (`src/multisport.iife.js`, une ligne) : `calculateEventRankings()` prend le club
+  du participant de la série en priorité, le résultat en repli. Les données existantes
+  s'affichent justes sans rien refaire.
+- **Vérifié** : sur le fichier de l'utilisateur (simulation jsdom), 7 clubs, « Aquaphiles »
+  3e (73), plus de « Les Aquaphiles » ni « IMPH APRIS ».
+- **Tests** : `clubRanking.test.js` + 2 (club renommé après la course → club du
+  participant, un seul club, bons points — échouait avant ; repli sur le résultat sans
+  participant correspondant).
+- **Fichiers touchés** : `src/multisport.iife.js`, `tests/unit/clubRanking.test.js`,
+  `CHANGELOG.md`, `claude.md` (piège n° 15), ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #92 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md (pas de fonction exposée nouvelle) · tests ✅
+
 ### 2026-09-28 (suite 10) — Changer un club depuis « Participants disponibles » : suivi partout
 
 - **Contexte** : « j'ai mis à jour les clubs dans la liste des participants disponibles, ça
