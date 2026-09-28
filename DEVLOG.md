@@ -33,6 +33,38 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite) — « + » des Participants disponibles vers les séries générées
+
+- **Contexte** : signalé par l'utilisateur : « le bouton "+" sur la ligne du participant dans
+  "participants disponibles" est lié aux séries créées manuellement […] je ne sais pas ajouter
+  à des séries qui ont été créées via le bouton "série natation" ; vérifie si c'est possible
+  de les ajouter aussi sans tout casser ». Choix validé : un nageur déjà dans une autre série
+  de la même épreuve est **déplacé** (confirmation), refusé s'il y a déjà nagé.
+- **Diagnostic** : `showAddToSerieModal` et `showBulkAddToSerieModal` ne listaient que
+  `chronoData.series` (séries « à plat »), et `renderParticipantsSection` ne comptait qu'elles
+  (« Créez une série » après une génération). Piège : `addChronoParticipant` donnait
+  `bib = nombre de participants + 1`, déjà pris dans une série générée (dossards continus :
+  Série 2 = 6..10 → nouveau dossard 6), or le dossard est la clé des actions de course.
+- **Fait** (`src/multisport.iife.js`) : `getDaySeriesByEvent` (exposée ; séries par épreuve
+  via `getEventSeries`, puis séries sans épreuve) ; `renderSeriePickerHTML` partagé par les
+  deux fenêtres (titre par épreuve, nombre, « ✅ terminée », « → couloir N » via
+  `nextFreeLane`, « ⚠️ déjà en Série X : sera déplacé ici », `data-serie-id`) ;
+  `placeParticipantInSerie` (ajout ou déplacement, dossard du nageur s'il est libre dans la
+  série) ; `nextFreeBib` (plus grand dossard + 1) comme repli d'`addChronoParticipant` ;
+  `addExistingParticipantToSerie` : refus si déjà dans la série, confirmation de
+  déplacement, refus si déjà nagé (arrivé, DISQ, tours ou résultat ; DNS déplaçable) ;
+  `bulkAddParticipantsToSerie` : une seule confirmation listant les déplacés, compte-rendu
+  ajoutés / déplacés / déjà présents / non déplacés.
+- **Tests** : `addToGeneratedSerie.test.js` (15 ; 14 échouaient avant). `npm test` :
+  225/225. `npm run test:e2e` : nouvelle étape 12 (retardataire ajouté via « + » à une série
+  générée : couloir et dossard uniques, bouton d'arrêt ; déplacement d'un nageur de Série 3
+  vers Série 7) : 0 problème.
+- **Fichiers touchés** : `src/multisport.iife.js`, `tests/unit/addToGeneratedSerie.test.js`,
+  `tests/e2e/natation.e2e.js`, `AGENTS.md`, `MULTISPORT.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #85 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · MULTISPORT.md ✅ · claude.md (piège n°14
+  déjà général : toujours `getEventSeries`) · tests ✅
+
 ### 2026-09-28 — Séries natation : ajouter / modifier sur place sans risque
 
 - **Contexte** : cas vécu par l'utilisateur en compétition. Séries générées par « 🏊 Séries

@@ -58,6 +58,11 @@ En mode courses, vous pouvez :
   - **Mode couloirs** : Pour natation avec arrêt par touche 1-9
 
 #### Gérer les participants
+- Depuis « 👥 Participants disponibles » : le **« + »** d'un participant (ou « ➕ Ajouter à une
+  série » pour les cochés) propose toutes les séries, **y compris celles générées par
+  « 🏊 Séries natation »**, groupées par épreuve, avec le couloir que prendra le nageur. Un
+  nageur déjà dans une autre série de la même épreuve y est **déplacé** (après confirmation ;
+  impossible s'il y a déjà nagé). Son dossard reste unique dans la série.
 - Par série, cliquez sur "👥 Participants"
 - Ajoutez les noms, numéros de dossard, clubs et catégories
 - **Mode couloirs** : Assignez un numéro de couloir (1-9) pour la natation

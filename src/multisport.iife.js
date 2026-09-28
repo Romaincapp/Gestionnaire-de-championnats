@@ -338,6 +338,18 @@
     }
     global.ensureSerieLanes = ensureSerieLanes;
 
+    // Dossard libre d'une série : le plus grand + 1. « Nombre de participants + 1 »
+    // retombait sur un dossard déjà pris dans les séries natation générées (dossards
+    // continus : Série 2 = 6..10), or le dossard est la clé des actions de course.
+    function nextFreeBib(serie) {
+        var max = 0;
+        (serie.participants || []).forEach(function(p) {
+            var b = parseInt(p.bib, 10);
+            if (b > max) max = b;
+        });
+        return max + 1;
+    }
+
     function addChronoParticipant(dayNumber, serieId, name, bib, options) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return null;
@@ -353,7 +365,7 @@
         var participant = {
             id: chronoData.nextParticipantId++,
             name: toTitleCase(name),
-            bib: bib || serie.participants.length + 1,
+            bib: bib || nextFreeBib(serie),
             club: options.club || '',
             category: options.category || '',
             division: options.division || null,
@@ -475,7 +487,9 @@
 
     function renderParticipantsSection(dayNumber, chronoData) {
         var participants = chronoData.participants || [];
-        var series = chronoData.series || [];
+        // Toutes les séries (générées par « Séries natation » comprises) : avant, seules les
+        // séries « à plat » comptaient et le « + » affichait « Créez une série ».
+        var hasSeries = getDaySeriesByEvent(chronoData).length > 0;
         
         var html = '<div class="chrono-participants-section" style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">';
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
@@ -507,7 +521,7 @@
             html += '<input list="clubs-datalist-' + dayNumber + '" id="assign-club-input-' + dayNumber + '" placeholder="Club à affecter" style="flex: 1; min-width: 140px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
             html += '<datalist id="clubs-datalist-' + dayNumber + '">' + datalistOptions + '</datalist>';
             html += '<button onclick="assignClubToSelected(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">🏷️ Affecter aux cochés</button>';
-            if (series.length > 0) {
+            if (hasSeries) {
                 html += '<button onclick="showBulkAddToSerieModal(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">➕ Ajouter à une série</button>';
             }
             html += '<label style="font-size: 11px; color: #7f8c8d; cursor: pointer; white-space: nowrap;"><input type="checkbox" onchange="toggleAllParticipants(' + dayNumber + ', this.checked)" style="vertical-align: middle;"> Tout</label>';
@@ -528,7 +542,7 @@
                 html += '<div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">';
                 html += '<button onclick="editParticipantInfo(' + dayNumber + ', ' + p.id + ')" style="padding: 3px 7px; font-size: 11px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Éditer nom / dossard">✏️</button>';
 
-                if (series.length > 0) {
+                if (hasSeries) {
                     html += '<button onclick="showAddToSerieModal(' + dayNumber + ', ' + p.id + ')" ' +
                         'style="padding: 3px 8px; font-size: 11px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0;">+</button>';
                 } else {
@@ -693,13 +707,17 @@
             return;
         }
 
-        var series = chronoData.series || [];
-        if (series.length === 0) {
+        if (getDaySeriesByEvent(chronoData).length === 0) {
             showNotification('Créez d\'abord une série', 'warning');
             return;
         }
 
         if (document.getElementById('bulkAddToSerieModal-' + dayNumber)) return;
+
+        var names = Array.prototype.map.call(checks, function(ch) {
+            var p = chronoData.participants.find(function(pp) { return String(pp.id) === ch.value; });
+            return p ? p.name : null;
+        }).filter(Boolean);
 
         var html = '<div id="bulkAddToSerieModal-' + dayNumber + '" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
@@ -714,18 +732,8 @@
             '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
             '<div style="margin: 15px 0;">';
 
-        series.forEach(function(serie) {
-            var evt = (chronoData.events || []).find(function(e) { return e.id === serie.eventId; });
-            var label = (evt ? evt.name + ' — ' : '') + serie.name;
-
-            html += '<div onclick="bulkAddParticipantsToSerie(' + dayNumber + ', ' + serie.id + ')" ' +
-                'style="padding: 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; cursor: pointer; ' +
-                'border: 2px solid transparent; transition: all 0.2s;" ' +
-                'onmouseover="this.style.borderColor=\'#27ae60\'; this.style.background=\'#e8f5e9\';" ' +
-                'onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'#f8f9fa\';">' +
-                '<strong style="font-size: 14px;">🏃 ' + label + '</strong>' +
-                '<span style="color: #7f8c8d; font-size: 12px; margin-left: 10px;">' + serie.participants.length + ' participants</span>' +
-                '</div>';
+        html += renderSeriePickerHTML(chronoData, names, function(serie) {
+            return 'bulkAddParticipantsToSerie(' + dayNumber + ', ' + serie.id + ')';
         });
 
         html += '</div>' +
@@ -756,29 +764,36 @@
         var categoryInput = document.getElementById('bulkAddToSerieCategory-' + dayNumber);
         var categoryOverride = categoryInput ? categoryInput.value.trim() : '';
 
-        var added = 0, skipped = 0;
-        ids.forEach(function(id) {
-            var participant = chronoData.participants.find(function(p) { return p.id === id; });
-            if (!participant) return;
+        var participants = ids.map(function(id) {
+            return chronoData.participants.find(function(p) { return p.id === id; });
+        }).filter(Boolean);
 
-            var alreadyInSerie = serie.participants.some(function(existing) {
-                return existing.name.toLowerCase() === participant.name.toLowerCase();
-            });
-            if (alreadyInSerie) { skipped++; return; }
+        // Déjà dans une autre série de l'épreuve : déplacés, après UNE confirmation
+        var toMove = participants.map(function(p) {
+            if (findInSerieByName(serie, p.name)) return null;
+            var other = findOtherSerieOfEvent(chronoData, serie, p.name);
+            return other && !hasSwumInSerie(other, findInSerieByName(other, p.name)) ? { p: p, other: other } : null;
+        }).filter(Boolean);
+        if (toMove.length > 0 && !confirm('Déplacer vers « ' + serie.name + ' » (retirés de leur série actuelle de l\'épreuve) :\n'
+            + toMove.map(function(m) { return '• ' + m.p.name + ' (' + m.other.name + ')'; }).join('\n') + '\n\nContinuer ?')) {
+            return;
+        }
 
-            var category = categoryOverride || participant.category || '';
-            if (addChronoParticipant(dayNumber, serieId, participant.name, null, { club: participant.club, category: category })) {
-                added++;
-            }
+        var counts = { added: 0, moved: 0, present: 0, swum: 0 };
+        participants.forEach(function(participant) {
+            var result = placeParticipantInSerie(dayNumber, chronoData, participant, serie, categoryOverride);
+            if (result) counts[result]++;
         });
 
         saveToLocalStorage();
         closeBulkAddToSerieModal(dayNumber);
         refreshChronoDisplay(dayNumber);
 
-        var msg = added + ' participant(s) ajouté(s) à "' + serie.name + '"';
-        if (skipped > 0) msg += ' (' + skipped + ' déjà présent(s))';
-        showNotification(msg, 'success');
+        var msg = counts.added + ' participant(s) ajouté(s) à "' + serie.name + '"';
+        if (counts.moved > 0) msg += ', ' + counts.moved + ' déplacé(s)';
+        if (counts.present > 0) msg += ' (' + counts.present + ' déjà présent(s))';
+        if (counts.swum > 0) msg += ' — ' + counts.swum + ' non déplacé(s) : déjà nagé dans leur série';
+        showNotification(msg, counts.swum > 0 ? 'warning' : 'success');
     }
     global.bulkAddParticipantsToSerie = bulkAddParticipantsToSerie;
 
@@ -1023,32 +1038,13 @@
         var html = '<div id="addToSerieModal-' + dayNumber + '" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
             'align-items: center; z-index: 10000;">' +
-            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">' +
+            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 420px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>➕ Ajouter ' + participant.name + '</h3>' +
             '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
             '<div style="margin: 15px 0;">';
-        
-        chronoData.series.forEach(function(serie) {
-            // Vérifier si déjà dans cette série
-            var alreadyInSerie = serie.participants.some(function(existing) {
-                return existing.name.toLowerCase() === participant.name.toLowerCase();
-            });
-            
-            if (alreadyInSerie) {
-                html += '<div style="padding: 12px; margin-bottom: 8px; background: #e8f5e9; border-radius: 8px; opacity: 0.6;">' +
-                    '<strong style="font-size: 14px;">🏃 ' + serie.name + '</strong>' +
-                    '<span style="color: #27ae60; font-size: 12px; margin-left: 10px;">✓ Déjà présent</span>' +
-                    '</div>';
-            } else {
-                html += '<div onclick="addExistingParticipantToSerie(' + dayNumber + ', ' + participantId + ', ' + serie.id + ')" ' +
-                    'style="padding: 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; cursor: pointer; ' +
-                    'border: 2px solid transparent; transition: all 0.2s;" ' +
-                    'onmouseover="this.style.borderColor=\'#27ae60\'; this.style.background=\'#e8f5e9\';" ' +
-                    'onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'#f8f9fa\';">' +
-                    '<strong style="font-size: 14px;">🏃 ' + serie.name + '</strong>' +
-                    '<span style="color: #7f8c8d; font-size: 12px; margin-left: 10px;">' + serie.participants.length + ' participants</span>' +
-                    '</div>';
-            }
+
+        html += renderSeriePickerHTML(chronoData, [participant.name], function(serie) {
+            return 'addExistingParticipantToSerie(' + dayNumber + ', ' + participantId + ', ' + serie.id + ')';
         });
         
         html += '</div>' +
@@ -1070,20 +1066,143 @@
         
         var participant = chronoData.participants.find(function(p) { return p.id === participantId; });
         if (!participant) return;
-        
-        // Utiliser la fonction existante addChronoParticipant (en conservant le
-        // club et la catégorie déjà renseignés sur ce participant du jour)
-        var result = addChronoParticipant(dayNumber, serieId, participant.name, null, {
-            club: participant.club,
-            category: participant.category
-        });
-        
-        if (result) {
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+
+        if (findInSerieByName(serie, participant.name)) {
+            showNotification(participant.name + ' est déjà dans « ' + serie.name + ' »', 'info');
+            return;
+        }
+        // Déjà dans une autre série de la même épreuve : déplacement (sinon il serait
+        // classé deux fois dans l'épreuve), refusé s'il y a déjà nagé
+        var other = findOtherSerieOfEvent(chronoData, serie, participant.name);
+        if (other) {
+            if (hasSwumInSerie(other, findInSerieByName(other, participant.name))) {
+                showNotification(participant.name + ' a déjà nagé en « ' + other.name + ' » : déplacement impossible', 'warning');
+                return;
+            }
+            if (!confirm('Déplacer « ' + participant.name + ' » de « ' + other.name + ' » vers « ' + serie.name + ' » ?')) return;
+        }
+
+        var result = placeParticipantInSerie(dayNumber, chronoData, participant, serie, '');
+        if (result === 'added' || result === 'moved') {
             saveToLocalStorage();
             closeAddToSerieModal(dayNumber);
             refreshChronoDisplay(dayNumber);
-            showNotification(participant.name + ' ajouté !', 'success');
+            showNotification(participant.name + (result === 'moved' ? ' déplacé vers « ' + serie.name + ' »' : ' ajouté !'), 'success');
         }
+    }
+
+    function sameName(a, b) {
+        return String(a || '').toLowerCase() === String(b || '').toLowerCase();
+    }
+
+    function findInSerieByName(serie, name) {
+        return (serie.participants || []).find(function(p) { return sameName(p.name, name); }) || null;
+    }
+
+    // A déjà nagé dans cette série (arrivé, disqualifié, tours ou temps enregistrés) ;
+    // un DNS (pas parti) peut encore changer de série
+    function hasSwumInSerie(serie, p) {
+        if (!p) return false;
+        return p.status === 'finished' || p.status === 'disq'
+            || (Array.isArray(p.laps) && p.laps.length > 0)
+            || (serie.results || []).some(function(r) { return sameName(r.name, p.name); });
+    }
+
+    // Autre série de la même épreuve où ce nageur figure déjà, ou null
+    function findOtherSerieOfEvent(chronoData, target, name) {
+        if (!target.eventId) return null;
+        var evt = (chronoData.events || []).find(function(e) { return e.id === target.eventId; });
+        if (!evt) return null;
+        return getEventSeries(chronoData, evt).find(function(s) {
+            return s !== target && findInSerieByName(s, name);
+        }) || null;
+    }
+
+    // Séries de la journée groupées par épreuve (générées par « Séries natation » ET
+    // ajoutées via ➕ Série), puis les séries sans épreuve : [{ event, series }]
+    function getDaySeriesByEvent(chronoData) {
+        var events = chronoData.events || [];
+        var groups = events.map(function(evt) {
+            return { event: evt, series: getEventSeries(chronoData, evt) };
+        }).filter(function(g) { return g.series.length > 0; });
+        var orphans = (chronoData.series || []).filter(function(s) {
+            return !s.eventId || !events.some(function(e) { return e.id === s.eventId; });
+        });
+        if (orphans.length > 0) groups.push({ event: null, series: orphans });
+        return groups;
+    }
+
+    // Place un participant du jour dans une série. S'il est dans une autre série de la
+    // même épreuve, il en est retiré (déplacement) sauf s'il y a déjà nagé. Dossard :
+    // le sien s'il est libre dans la série, sinon le plus grand + 1 (addChronoParticipant).
+    // Retourne 'added' | 'moved' | 'present' | 'swum' (ou null en cas d'échec).
+    function placeParticipantInSerie(dayNumber, chronoData, participant, serie, categoryOverride) {
+        if (findInSerieByName(serie, participant.name)) return 'present';
+        var other = findOtherSerieOfEvent(chronoData, serie, participant.name);
+        var prev = other ? findInSerieByName(other, participant.name) : null;
+        if (prev && hasSwumInSerie(other, prev)) return 'swum';
+
+        var wantedBib = prev ? prev.bib : participant.bib;
+        var bibFree = wantedBib != null && wantedBib !== '' && !serie.participants.some(function(p) {
+            return String(p.bib) === String(wantedBib);
+        });
+        var added = addChronoParticipant(dayNumber, serie.id, participant.name, bibFree ? wantedBib : null, {
+            club: participant.club || (prev && prev.club) || '',
+            category: categoryOverride || participant.category || (prev && prev.category) || ''
+        });
+        if (!added) return null;
+        if (other) {
+            other.participants = other.participants.filter(function(p) { return p !== prev; });
+            return 'moved';
+        }
+        return 'added';
+    }
+
+    // Liste des séries (groupées par épreuve) des fenêtres « + » et « ➕ Ajouter à une
+    // série ». names : noms à ajouter ; onclickFor(serie) : action au clic.
+    function renderSeriePickerHTML(chronoData, names, onclickFor) {
+        var html = '';
+        getDaySeriesByEvent(chronoData).forEach(function(group) {
+            html += '<div style="font-size: 12px; font-weight: 700; color: #475569; margin: 12px 0 6px;">' +
+                (group.event ? '🎯 ' + group.event.name : '🏃 Séries indépendantes') + '</div>';
+            group.series.forEach(function(serie) {
+                var missing = names.filter(function(n) { return !findInSerieByName(serie, n); });
+                var elsewhere = [];
+                missing.forEach(function(n) {
+                    var o = findOtherSerieOfEvent(chronoData, serie, n);
+                    if (o && elsewhere.indexOf(o.name) === -1) elsewhere.push(o.name);
+                });
+
+                var info = serie.participants.length + ' participant(s)';
+                if (serie.status === 'completed') info += ' · ✅ terminée';
+                if (serie.laneMode && missing.length > 0) {
+                    var lane = nextFreeLane(serie);
+                    info += lane ? ' · → couloir ' + lane : ' · couloirs pleins';
+                }
+                var body = '<strong style="font-size: 14px;">🏃 ' + serie.name + '</strong>' +
+                    '<span style="color: #7f8c8d; font-size: 12px; margin-left: 10px;">' + info + '</span>';
+
+                if (missing.length === 0) {
+                    html += '<div data-serie-id="' + serie.id + '" style="padding: 12px; margin-bottom: 8px; background: #e8f5e9; border-radius: 8px; opacity: 0.6;">' +
+                        body + '<span style="color: #27ae60; font-size: 12px; margin-left: 10px;">✓ Déjà présent</span></div>';
+                    return;
+                }
+                if (elsewhere.length > 0) {
+                    body += '<div style="color: #d97706; font-size: 12px; margin-top: 4px;">⚠️ ' +
+                        (names.length === 1 ? 'déjà en ' + elsewhere[0] + ' : sera déplacé ici'
+                            : 'certains déjà en ' + elsewhere.join(', ') + ' : seront déplacés ici') + '</div>';
+                }
+                html += '<div data-serie-id="' + serie.id + '" onclick="' + onclickFor(serie) + '" ' +
+                    'style="padding: 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; cursor: pointer; ' +
+                    'border: 2px solid transparent; transition: all 0.2s;" ' +
+                    'onmouseover="this.style.borderColor=\'#27ae60\'; this.style.background=\'#e8f5e9\';" ' +
+                    'onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'#f8f9fa\';">' +
+                    body + '</div>';
+            });
+        });
+        return html;
     }
 
     function renderEventCard(dayNumber, event, chronoData) {
@@ -4013,6 +4132,7 @@
     global.closeAddParticipantsModal = closeAddParticipantsModal;
     global.saveBulkParticipantsForDay = saveBulkParticipantsForDay;
     global.showAddToSerieModal = showAddToSerieModal;
+    global.getDaySeriesByEvent = getDaySeriesByEvent;
     global.closeAddToSerieModal = closeAddToSerieModal;
     global.addExistingParticipantToSerie = addExistingParticipantToSerie;
     global.enterSerieResults = enterSerieResults;

@@ -13,6 +13,21 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏊 « + » des Participants disponibles vers les séries « Séries natation »
+- Le **« + »** d'un participant et le bouton **« ➕ Ajouter à une série »** (cochés) proposent
+  désormais **toutes les séries**, y compris celles générées par « 🏊 Séries natation »
+  (avant : seulement les séries créées à la main, et « Créez une série » après une simple
+  génération). Les séries sont groupées par épreuve, avec le couloir que prendra le nageur
+  (« → couloir 6 ») et « ✅ terminée » pour les séries déjà nagées.
+- **Dossard toujours unique dans la série** : le nageur garde son dossard s'il est libre,
+  sinon il reçoit le plus grand + 1. Avant, un ajout dans une série générée pouvait recevoir
+  un dossard déjà pris (ex. la Série 2 porte les dossards 6 à 10 : le nouveau recevait 6),
+  ce qui mélangeait les deux nageurs en course (DNS, ✏️, arrivées).
+- **Nageur déjà dans une autre série de la même épreuve → déplacement** : la fenêtre
+  l'annonce (« ⚠️ déjà en Série 2 : sera déplacé ici »), une confirmation est demandée, il est
+  retiré de son ancienne série (il n'est donc jamais classé deux fois dans l'épreuve). Refusé
+  s'il a déjà nagé dans l'ancienne série ; un DNS (pas parti) peut être déplacé.
+
 ### 🏊 Séries natation : ajouter ou modifier sur place
 - **« ➕ Série » dans chaque épreuve**, bien visible dans son en-tête, avec une fenêtre
   **pré-remplie** (natation, 50 m, mode couloirs, « Série 8 »…). Il ne reste qu'à placer les
