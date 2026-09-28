@@ -1736,7 +1736,7 @@
                             var p = partByName[(r.name || '').toLowerCase()] || {};
                             if (p.status === 'dns' || p.status === 'disq') return;
                             entries.push({
-                                name: r.name, club: r.club || p.club || '', category: r.category || p.category || '',
+                                name: r.name, club: p.club || r.club || '', category: r.category || p.category || '',
                                 serieName: s.name, time: r.time
                             });
                         });

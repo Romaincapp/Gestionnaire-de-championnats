@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏆 Classement par épreuve : le bon club, même après une correction
+- Un club corrigé après la course (ex. « Les Aquaphiles » → « Aquaphiles ») n'apparaît plus
+  sous l'ancien nom dans le classement par épreuve ni dans le tableau des clubs : le club du
+  nageur dans sa série fait foi, comme au classement général. Les compétitions existantes
+  s'affichent justes sans rien refaire.
+
 ### 🏷️ Changer un club depuis « Participants disponibles » : suivi partout
 - **« 🏷️ Affecter aux cochés »** corrige aussi les résultats déjà enregistrés : avant, après
   une course, le classement par épreuve et le tableau des clubs gardaient l'ancien club.
