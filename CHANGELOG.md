@@ -13,6 +13,16 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 👥 Participants disponibles : lisible après les séries automatiques
+- Après « 🏁 Séries automatiques », chaque fiche (une par inscription) affiche **sur la même
+  ligne** son épreuve, son temps d'engagement, sa série et son couloir :
+  « 🎯 50m brasse · ⏱ 1m02,00s · Série 1, couloir 3 ». Un nageur inscrit dans deux épreuves
+  n'a plus deux lignes identiques. Série et couloir suivent un déplacement (« + », 🏊).
+- Les lignes **non placées** (non comprises, ou sans épreuve correspondante) sont en tête,
+  surlignées, avec « ⚠️ non placée » et la raison au survol.
+- La ligne d'origine s'affiche au survol du nom.
+- La liste **s'agrandit à la souris** (coin en bas à droite) et garde sa hauteur.
+
 ### 🏁 Séries automatiques : la journée ouverte par défaut
 - La fenêtre propose la **journée ouverte** comme source et comme destination. Avant, la
   source était la plus longue liste de toutes les journées (depuis la J2, la liste de la J1

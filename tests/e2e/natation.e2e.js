@@ -127,6 +127,34 @@ async function openFresh(browser) {
     check(gen.series.every(s => s.distance === parseInt(s.ev, 10)), 'distance de chaque série = distance de l\'épreuve (25 / 50 m)');
     await snap(page, 'series-generees');
 
+    // ---------------------------------------------------------------
+    step('4b. 👥 Participants disponibles : infos de chaque inscription sur la ligne, non placées en tête, liste agrandie à la souris');
+    const listInfo = await page.locator('#participants-list-1').evaluate(el => {
+        const rows = [...el.children];
+        const infos = rows.map(r => r.querySelector('.participant-entry-info')).filter(Boolean);
+        const sameLine = infos.every(i => Math.abs(i.getBoundingClientRect().top - i.closest('[id^="participant-row-"]').querySelector('input').getBoundingClientRect().top) < 12);
+        return {
+            rows: rows.length, infos: infos.length, sameLine,
+            sample: infos[0] ? infos[0].textContent : '',
+            firstUnplaced: !!rows[0].querySelector('.participant-unplaced'),
+            unplaced: el.querySelectorAll('.participant-unplaced').length,
+        };
+    });
+    check(listInfo.infos === gen.placed && listInfo.sameLine && /🎯 .+ · ⏱ .+ · Série \d+, couloir \d/.test(listInfo.sample),
+        `${listInfo.infos} fiches avec épreuve · engagement · série, couloir, sur la même ligne (ex. « ${listInfo.sample} »)`);
+    check(listInfo.firstUnplaced && listInfo.unplaced === LINES.length - gen.placed, `${listInfo.unplaced} ligne(s) non placée(s) signalée(s) en tête de liste`);
+    const listBox = await page.locator('#participants-list-1').boundingBox();
+    await page.mouse.move(listBox.x + listBox.width - 3, listBox.y + listBox.height - 3);
+    await page.mouse.down();
+    await page.mouse.move(listBox.x + listBox.width - 3, listBox.y + listBox.height + 197, { steps: 8 });
+    await page.mouse.up();
+    const grown = Math.round((await page.locator('#participants-list-1').boundingBox()).height);
+    await btn(page, '🔄');
+    const kept = Math.round((await page.locator('#participants-list-1').boundingBox()).height);
+    check(grown >= listBox.height + 150 && Math.abs(kept - grown) <= 2,
+        `liste agrandie à la souris (${Math.round(listBox.height)} → ${grown} px) et gardée après 🔄 (${kept} px)`);
+    await snap(page, 'participants-disponibles');
+
     const brasse50 = gen.series.filter(s => s.ev === '50m brasse');
     const serieA = brasse50[0];
     const serieB = brasse50[1];

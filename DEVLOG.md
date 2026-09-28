@@ -33,6 +33,38 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 13) — Participants disponibles : infos d'inscription sur la ligne, liste agrandissable
+
+- **Contexte** : « quand j'ai ajouté des séries automatiques, ma liste de nageurs est
+  modifiée : il ne reste que nom, prénom et club, alors qu'avant la liste comportait
+  visuellement distance et temps ». Vérifié (150 lignes réelles) : voulu —
+  `generateSwimmingSeries` remplace chaque ligne comprise par une fiche par inscription
+  (nom, club, nouveau dossard ; ligne brute gardée dans `swimRaw` pour une régénération),
+  les lignes non comprises ou sans épreuve restent brutes. Mais épreuve et temps
+  d'engagement n'étaient plus visibles, les 42 nageurs inscrits dans deux épreuves avaient
+  deux lignes identiques, et les lignes non placées étaient noyées. Choix de l'utilisateur :
+  infos **sur la même ligne** (pas en dessous), et liste agrandissable à la souris.
+- **Fait** :
+  - `src/chrono.iife.js` : `generateSwimmingSeries` pose `swimEventId` et `seedTimeMs` sur
+    chaque fiche ; `parseSwimmingEntry` exposée.
+  - `src/multisport.iife.js` (`renderParticipantsSection`) : `participantEntryInfo` →
+    « 🎯 épreuve · ⏱ engagement · Série N, couloir C » à droite de la ligne (série et
+    couloir lus en direct par `buildParticipantPlacement` : par id, sinon épreuve + nom après
+    un déplacement ; « ⚠️ hors série » sinon) ; nom avec info-bulle « Ligne d'origine » ;
+    lignes non placées après une génération en tête, fond jaune, « ⚠️ non placée » + raison
+    (ligne non comprise / aucune épreuve) ; liste `resize: vertical`, hauteur gardée en
+    `localStorage` (`saveParticipantsListHeight`, au relâchement de la souris).
+- **Tests** : nouveau `participantsListInfo.test.js` (9 tests, 8 échouaient avant) ; e2e
+  natation étape 4b : 149 fiches avec leur ligne d'infos sur la même ligne, 1 non placée en
+  tête, liste agrandie **à la souris** (200 → 400 px) et gardée après 🔄.
+- **Vu, non traité** : une ligne sans distance collée via « ➕ Ajouter » est coupée à la
+  virgule du temps (« … 01:02,00 » → club « 00 », `saveBulkParticipantsForDay`).
+- **Fichiers touchés** : `src/chrono.iife.js`, `src/multisport.iife.js`,
+  `tests/unit/participantsListInfo.test.js`, `tests/e2e/natation.e2e.js`, `CHANGELOG.md`,
+  `MULTISPORT.md`, `AGENTS.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #94 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · MULTISPORT.md ✅ · AGENTS.md ✅ · tests ✅
+
 ### 2026-09-28 (suite 12) — « 🏁 Séries automatiques » : la journée ouverte par défaut
 
 - **Contexte** : « si je suis dans la J2 et que je clique sur ce bouton, c'est logique que
