@@ -67,6 +67,9 @@ En mode courses, vous pouvez :
   points. En tête, le tableau **« 🏆 Classement des clubs (toutes épreuves) »** : Rang ·
   Club · une colonne par épreuve (points gagnés, « – » si absent) · Total ; à total égal,
   le plus de 25 points passe devant.
+- **Épreuves fun** : cochez **« 🎉 Épreuve fun »** à la création de l'épreuve ou dans ✏️
+  Modifier l'épreuve. Ses résultats restent affichés (badge « 🎉 Fun »), mais elle n'a pas
+  de colonne « Points » et ne compte pas dans le classement des clubs.
 
 #### Créer des séries configurables
 - Chaque série appartient à une épreuve : cliquez sur **« ➕ Série »** dans l'en-tête de

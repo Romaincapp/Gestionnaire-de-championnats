@@ -717,7 +717,7 @@
         let ranking;
         if (swimmingOnly && typeof calculateEventRankings === 'function') {
             // Épreuves (entrées avec clubPoints) + classement des clubs toutes épreuves
-            // (perEvent aligné sur events)
+            // (perEvent aligné sur events ; épreuve fun : `fun: true`, toujours null)
             const events = calculateEventRankings();
             ranking = { type: 'classement-par-epreuve', events: events,
                 clubs: typeof calculateClubEventRanking === 'function' ? calculateClubEventRanking(events) : [] };
