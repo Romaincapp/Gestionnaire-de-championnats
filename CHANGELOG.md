@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏁 Séries automatiques : relais
+- Les **relais** sont reconnus : « 4x400m », « 4 x 100 m », « 4×50m libre ». Une ligne
+  « Team Alpha 4x400m 3:25.00 » va dans l'épreuve « 4x400m », jamais dans le 400m
+  individuel ; « 4x400m » et « 4x400m mixte » le même jour sont départagés par « mixte ».
+  Les séries de relais portent la distance totale (4x400m → 1 600 m). Avant : ces lignes
+  n'étaient placées nulle part, et une épreuve 4x400m empêchait même de placer le 400m.
+
 ### 🏁 « Séries natation » devient « Séries automatiques »
 - Le bouton et sa fenêtre s'appellent désormais **« 🏁 Séries automatiques »** : le même
   générateur (séries par couloirs, au temps d'engagement) sert aussi à l'athlétisme. Textes

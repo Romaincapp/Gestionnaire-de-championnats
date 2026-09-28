@@ -33,6 +33,32 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 5) — Séries automatiques : relais (4x400m, 4x400m mixte, 4x50m libre)
+
+- **Contexte** : question de l'utilisateur : « 4x400m et 4x400m mixte ça passerait ? ».
+  Sonde : non — « 4x400m » n'était pas lu (`\b` entre « x » et « 400 » : pas de distance),
+  les lignes étaient ignorées, une épreuve « 4x400m » (distance lue 400) rendait le 400m
+  individuel ambigu, et « 4x400m mixte » passait par hasard avec un nom pollué
+  (« Rfc Namur 4x »).
+- **Fait** (`src/chrono.iife.js`) : `parseRelay` (« 4x400m », « 4 x 100 m », « 4×50m » →
+  clé `4x400`, distance totale 1600) utilisé par `parseSwimmingEntry` (champ `relay`, zone
+  retirée du nom), `deriveSwimmingEventInfo` (épreuve : `relay`, distance totale), le mode
+  colonnes (`buildSwimmingEntryFromColumns`, `applySwimmingDefaultEvent`) ;
+  `matchEntryToEvent` exige la même clé de relais (distance seule, distance + nage, repli
+  historique) ; « x » ajouté aux mots vides des noms d'épreuve ; libellés d'aperçu/alerte
+  via `entryEventLabel`. `raceType` reste « individuel » (le type « relay » de l'app est le
+  relais à durée limitée). `multisport.iife.js` : la fenêtre ➕ Série lit la distance du nom
+  de l'épreuve même hors natation (« 4x100m » → 400, « 200m » → 200).
+- **Tests** : `autoSeries.test.js` passe à 13 (4x400m + 4x400m mixte + 400m le même jour,
+  4x50m libre + 50m libre, ➕ Série sur un relais ; 3 échouaient avant). `npm test` :
+  244/244. `npm run test:e2e` : mêmes résultats sur les 150 lignes réelles (149 lues,
+  33 séries) : 0 problème.
+- **Fichiers touchés** : `src/chrono.iife.js`, `src/multisport.iife.js`,
+  `tests/unit/autoSeries.test.js`, `MULTISPORT.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (nouvelle PR, la #86 étant mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · MULTISPORT.md ✅ · AGENTS.md (pas de fonction exposée
+  nouvelle) · tests ✅
+
 ### 2026-09-28 (suite 4) — Séries automatiques : athlétisme sans ses deux limites
 
 - **Contexte** : « Oui corrige les deux limites puis merge » (limites notées en suite 3).

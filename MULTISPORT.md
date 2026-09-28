@@ -52,6 +52,10 @@ En mode courses, vous pouvez :
   départagées par les **mots de l'épreuve présents sur la ligne** (« Emma Roux 100m haies
   15.20 » → « 100m haies ») ; une ligne sans précision va dans l'épreuve sans précision
   (« 100m »). Si rien ne départage, la ligne n'est pas placée (utiliser « Épreuve par défaut »).
+- **Relais** : « 4x400m », « 4 x 100 m », « 4×50m libre » sont reconnus (une ligne par
+  équipe : « Team Alpha 4x400m 3:25.00 »). Un relais ne se confond jamais avec l'épreuve
+  individuelle (« 400m ») ; « 4x400m » et « 4x400m mixte » sont départagés par « mixte ».
+  La série porte la distance totale (4x400m → 1 600 m).
 - Séries générées en mode couloirs, marquées **natation** si l'épreuve ou ses lignes donnent
   une nage, sinon **course** (athlétisme). Classement **par épreuve** dans les deux cas, titré
   « Résultats natation par épreuve » seulement si tout est de la natation, sinon
