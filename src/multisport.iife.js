@@ -2591,7 +2591,8 @@
             : (!!event.laneMode || !!(info && info.stroke && info.distance));
         defaults.sportType = event.sportType || (swimming ? 'swimming' : defaults.sportType);
         if (event.raceType) defaults.raceType = event.raceType;
-        var distance = event.distance || (swimming && info && info.distance);
+        // Distance lue dans le nom (« 200m », relais « 4x100m » → 400), natation ou non
+        var distance = event.distance || (info && info.distance);
         if (distance) defaults.distance = distance;
         defaults.laneMode = !!event.laneMode || swimming;
         return defaults;

@@ -144,3 +144,36 @@ describe('type de sport des séries générées', () => {
         document.getElementById('serieModal-1').remove();
     });
 });
+
+describe('relais (« 4x400m », « 4x400m mixte », « 4x50m libre »)', () => {
+    test('athlétisme : 4x400m, 4x400m mixte et 400m individuel le même jour', () => {
+        const r = generate(['4x400m', '4x400m mixte', '400m'],
+            ['Team Alpha 4x400m 3:25.00', 'Team Gamma 4x400m mixte 3:40.00', 'Luc Leroy 400m 52.10', 'Team Beta 4 x 400m 3:22.00']);
+        expect(r['4x400m']).toEqual(['Team Beta', 'Team Alpha']); // au temps
+        expect(r['4x400m mixte']).toEqual(['Team Gamma']);
+        expect(r['400m']).toEqual(['Luc Leroy']);
+        const [relay, mixed, solo] = championship.days[1].chronoData.events;
+        expect(relay.series[0].distance).toBe(1600); // distance totale du relais
+        expect(mixed.series[0].distance).toBe(1600);
+        expect(solo.series[0].distance).toBe(400);
+        expect(relay.series[0].sportType).toBe('running');
+        expect(relay.series[0].raceType).not.toBe('relay'); // pas le relais « à durée limitée »
+    });
+
+    test('natation : 4x50m libre et 50m libre le même jour', () => {
+        const r = generate(['4x50m libre', '50m libre'], ['Club Dauphins 4x50m libre 2:05.00', 'Ana Lima 50m libre 30.00']);
+        expect(r['4x50m libre']).toEqual(['Club Dauphins']);
+        expect(r['50m libre']).toEqual(['Ana Lima']);
+        const relay = championship.days[1].chronoData.events[0];
+        expect(relay.series[0].distance).toBe(200);
+        expect(relay.series[0].sportType).toBe('swimming');
+    });
+
+    test('« ➕ Série » sur une épreuve de relais sans série : distance totale', () => {
+        generate(['4x100m'], []);
+        document.body.innerHTML = '';
+        window.showAddSerieModalForDayAndEvent(1, 1);
+        expect(document.getElementById('serieDistance-1').value).toBe('400');
+        document.getElementById('serieModal-1').remove();
+    });
+});

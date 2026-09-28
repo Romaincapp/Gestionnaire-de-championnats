@@ -2755,6 +2755,23 @@ function swimSpanGap(a, b) {
 }
 
 // Parse une entrée brute de natation → objet structuré
+// Relais : « 4x400m », « 4 x 100 m », « 4×50m » → { key: '4x400', total: 1600, index, length }.
+// Un relais n'est jamais confondu avec l'épreuve individuelle (« 400m ») : la distance
+// retenue est la distance totale, et la clé du relais doit correspondre.
+var RELAY_REGEX = /\b(\d{1,2})\s*[x×]\s*(\d{2,4})\s*(?:m[eè]tres?\b|m\b)?/i;
+function parseRelay(text) {
+    var m = RELAY_REGEX.exec(String(text || ''));
+    if (!m) return null;
+    var legs = parseInt(m[1], 10), leg = parseInt(m[2], 10);
+    if (!(legs >= 2) || !leg) return null;
+    return { key: legs + 'x' + leg, total: legs * leg, index: m.index, length: m[0].length };
+}
+
+// Libellé d'épreuve d'une entrée lue (« 4x400m », « 50m libre »)
+function entryEventLabel(e) {
+    return (e.relay || e.distance) + 'm' + (e.stroke ? ' ' + e.stroke : '');
+}
+
 function parseSwimmingEntry(rawName) {
     // Normaliser les séparateurs (points comme séparateurs de mots)
     var text = rawName
@@ -2773,14 +2790,21 @@ function parseSwimmingEntry(rawName) {
         text = text.replace(/\(bord\)/i, 'Assisté');
     }
 
-    // Extraire la distance (n'importe quelle distance en mètres : 25, 50, 100, 200...)
-    var distRegex = /\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i;
-    var distMatch = distRegex.exec(text);
-    if (!distMatch) return null;
-
-    var distance = parseInt(distMatch[1]);
+    // Extraire la distance (n'importe quelle distance en mètres : 25, 50, 100, 200...),
+    // ou un relais (« 4x400m » : distance totale 1600)
+    var relayInfo = parseRelay(text);
+    var distance, distSpan;
+    if (relayInfo) {
+        distance = relayInfo.total;
+        distSpan = { start: relayInfo.index, end: relayInfo.index + relayInfo.length };
+    } else {
+        var distRegex = /\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i;
+        var distMatch = distRegex.exec(text);
+        if (!distMatch) return null;
+        distance = parseInt(distMatch[1]);
+        distSpan = { start: distMatch.index, end: distMatch.index + distMatch[0].length };
+    }
     if (!distance || distance <= 0) return null;
-    var distSpan = { start: distMatch.index, end: distMatch.index + distMatch[0].length };
 
     // Nage : la plus proche de la distance, pour qu'un nom comme « Dos Santos »
     // ou « Brassens » ne soit pas pris pour la nage. Facultative : sans nage,
@@ -2854,6 +2878,7 @@ function parseSwimmingEntry(rawName) {
         swimmerName: swimmerName,
         distance: distance,
         stroke: stroke,
+        relay: relayInfo ? relayInfo.key : '',
         timeMs: timeResult.timeMs,
         rawName: rawName
     };
@@ -2861,7 +2886,7 @@ function parseSwimmingEntry(rawName) {
 
 // Mots d'une épreuve en plus de sa distance : « 100m haies » → ['haies'],
 // « 100m Benjamins » → ['benjamins'], « 100m » → [] (minuscules, sans accents)
-var EVENT_NAME_STOPWORDS = ['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'm', 'metre', 'metres'];
+var EVENT_NAME_STOPWORDS = ['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'm', 'metre', 'metres', 'x', '×'];
 function normalizeEventWord(w) {
     return String(w || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -2894,7 +2919,7 @@ function matchEntryToEvent(entry, events) {
     if (!entry.stroke) {
         var sameDistance = events.filter(function(evt) {
             var inf = deriveSwimmingEventInfo(evt);
-            return inf && inf.distance === entry.distance;
+            return inf && inf.distance === entry.distance && (inf.relay || '') === (entry.relay || '');
         });
         if (sameDistance.length <= 1) return sameDistance[0] || null;
         // Plusieurs épreuves à cette distance (athlétisme : « 100m » et « 100m haies »,
@@ -2922,7 +2947,8 @@ function matchEntryToEvent(entry, events) {
     for (var k = 0; k < events.length; k++) {
         var info = deriveSwimmingEventInfo(events[k]);
         if (info && info.distance && info.stroke) {
-            if (info.distance === entry.distance && info.stroke === entry.stroke) return events[k];
+            if (info.distance === entry.distance && info.stroke === entry.stroke
+                && (info.relay || '') === (entry.relay || '')) return events[k];
         } else {
             legacyOnly.push(events[k]);
         }
@@ -2931,6 +2957,7 @@ function matchEntryToEvent(entry, events) {
     var aliases = SWIMMING_STROKE_ALIASES[entry.stroke] || [entry.stroke];
     events = legacyOnly;
     for (var i = 0; i < events.length; i++) {
+        if ((((deriveSwimmingEventInfo(events[i]) || {}).relay) || '') !== (entry.relay || '')) continue;
         var evtName = events[i].name.toLowerCase().replace(/\s+/g, ' ');
         var hasDistance = evtName.indexOf(entry.distance + 'm') !== -1 || evtName.indexOf(entry.distance + ' m') !== -1;
         if (!hasDistance) continue;
@@ -3565,13 +3592,15 @@ function readSwimmingColumnMapping() {
 function deriveSwimmingEventInfo(evt) {
     if (!evt) return null;
     var name = evt.name || '';
-    var dm = name.match(/\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i) || name.match(/(\d{2,4})/);
+    var relay = parseRelay(name);
+    var dm = relay ? null : (name.match(/\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i) || name.match(/(\d{2,4})/));
     var sm = name.match(SWIMMING_STROKE_REGEX);
     var stroke = sm ? normalizeSwimmingStroke(sm[1]) : (/\bNL\b/i.test(name) ? 'libre' : '');
     return {
         event: evt,
-        distance: dm ? parseInt(dm[1]) : (evt.distance || 0),
-        stroke: stroke
+        distance: relay ? relay.total : (dm ? parseInt(dm[1]) : (evt.distance || 0)),
+        stroke: stroke,
+        relay: relay ? relay.key : ''
     };
 }
 
@@ -3598,6 +3627,7 @@ function applySwimmingDefaultEvent(entry, def, raw) {
         swimmerName: entry.swimmerName || '',
         distance: distance,
         stroke: stroke,
+        relay: entry.relay || '',
         timeMs: entry.timeMs || 0,
         rawName: raw
     };
@@ -3612,10 +3642,12 @@ function buildSwimmingEntryFromColumns(cols, map, raw, def) {
     var club = map.club != null ? col(map.club) : '';
     var name = (map.name || []).map(col).filter(Boolean).join(' ').trim();
 
-    var distance = 0, stroke = '';
+    var distance = 0, stroke = '', relay = '';
     if (map.event != null) {
         var ev = col(map.event);
-        var dm = ev.match(/\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i) || ev.match(/(\d{2,4})/);
+        var rl = parseRelay(ev);
+        var dm = rl ? null : (ev.match(/\b(\d{2,4})\s*(?:m[eè]tres?|m)\b/i) || ev.match(/(\d{2,4})/));
+        if (rl) { distance = rl.total; relay = rl.key; }
         if (dm) distance = parseInt(dm[1]);
         var sm = ev.match(SWIMMING_STROKE_REGEX);
         if (sm) stroke = normalizeSwimmingStroke(sm[1]);
@@ -3634,7 +3666,7 @@ function buildSwimmingEntryFromColumns(cols, map, raw, def) {
     if (name) name = formatProperName(name);
 
     return applySwimmingDefaultEvent(
-        { club: club, swimmerName: name, distance: distance, stroke: stroke, timeMs: timeMs },
+        { club: club, swimmerName: name, distance: distance, stroke: stroke, relay: relay, timeMs: timeMs },
         def, raw
     );
 }
@@ -3780,7 +3812,7 @@ window.previewSwimmingImport = function(dayNumber) {
     if (unmatched.length > 0) {
         html += '<div style="margin:8px 0;padding:6px;background:#fff3cd;border-radius:4px;font-size:11px;">';
         html += '<strong>⚠️ Sans épreuve correspondante :</strong><br>';
-        html += unmatched.map(function(e) { return '• ' + e.swimmerName + ' (' + e.distance + 'm ' + e.stroke + ')'; }).join('<br>');
+        html += unmatched.map(function(e) { return '• ' + e.swimmerName + ' (' + entryEventLabel(e) + ')'; }).join('<br>');
         html += '</div>';
     }
 
@@ -3809,7 +3841,7 @@ window.confirmSwimmingImport = function(dayNumber) {
     if (result && result.totalSeries === 0) {
         var evNames = championship.days[targetDayNumber].chronoData.events.map(function(e) { return '« ' + e.name + ' »'; }).join(', ');
         var sample = result.unmatched.slice(0, 3).map(function(e) {
-            return '   ' + e.distance + 'm ' + (e.stroke || '(nage non précisée)') + ' – ' + (e.swimmerName || e.rawName);
+            return '   ' + entryEventLabel(e) + (e.stroke ? '' : ' (nage non précisée)') + ' – ' + (e.swimmerName || e.rawName);
         }).join('\n');
         alert('🏁 Aucune série créée : aucun participant ne correspond à une épreuve.\n\n'
             + 'Épreuves de la journée : ' + evNames + '\n'
