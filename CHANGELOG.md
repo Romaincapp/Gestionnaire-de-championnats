@@ -19,6 +19,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   d'engagement, avec le seul dossard — facile de se tromper de ligne).
 - **DNS / DISQ** se tapent directement dans le champ (`DNS`, `DISQ`, `DSQ`, `DQ`) ; un DNS ou
   DISQ existant est affiché tel quel et n'est plus ré-enregistré avec son ancien temps.
+- **Série terminée avec des DNS / DISQ** : une série où chacun a un temps ou est DNS/DISQ
+  est terminée (carte verte « ✅ 5/5 résultats (dont 1 DNS) »), y compris si tout le monde
+  est DNS/DISQ. Avant, un seul DNS laissait la carte à « 4/5 », en bleu.
 - **Corrections** :
   - la saisie **plantait** sur une série générée par « 🏁 Séries automatiques » (aucun temps
     enregistré) ;
