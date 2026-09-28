@@ -13,6 +13,15 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏁 « Séries natation » devient « Séries automatiques »
+- Le bouton et sa fenêtre s'appellent désormais **« 🏁 Séries automatiques »** : le même
+  générateur (séries par couloirs, au temps d'engagement) sert aussi à l'athlétisme. Textes
+  neutres (« participants » au lieu de « nageurs »), exemple d'athlétisme dans l'aide
+  (« Marie Leroy 200m 25.40 »). Case « Mode couloirs (un bouton d'arrêt par couloir) », séries « déjà disputées ».
+- Limite connue en athlétisme : deux épreuves de même distance le même jour (« 100m » et
+  « 100m haies ») sont ambiguës pour une ligne sans précision ; les séries générées sont
+  marquées « natation » (voir `MULTISPORT.md`).
+
 ### 🎯 Épreuves en masse
 - La fenêtre **« 🎯 Épreuve »** accepte **une épreuve par ligne** : collez la liste des
   épreuves (« 50m brasse », « 50m dos »…) pour toutes les créer d'un coup, avec la même date.

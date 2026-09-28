@@ -444,7 +444,7 @@
         html += '<button onclick="showImportPlayersModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer participants</button>';
         html += '<span id="chrono-quick-copy-buttons-' + dayNumber + '" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>';
         html += '<span style="color: #cbd5e1;">|</span>';
-        html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #1abc9c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🏊 Séries natation</button>';
+        html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #1abc9c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Répartir les participants en séries par couloirs, au temps d\'engagement (natation, athlétisme…)">🏁 Séries automatiques</button>';
         html += '<button onclick="printChronoCompetition(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🖨️ Imprimer séries</button>';
         html += '<span style="color: #cbd5e1;">|</span>';
         html += '<button onclick="exportChronoDataForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">💾 Exporter</button>';
@@ -792,7 +792,7 @@
         var msg = counts.added + ' participant(s) ajouté(s) à "' + serie.name + '"';
         if (counts.moved > 0) msg += ', ' + counts.moved + ' déplacé(s)';
         if (counts.present > 0) msg += ' (' + counts.present + ' déjà présent(s))';
-        if (counts.swum > 0) msg += ' — ' + counts.swum + ' non déplacé(s) : déjà nagé dans leur série';
+        if (counts.swum > 0) msg += ' — ' + counts.swum + ' non déplacé(s) : leur série est déjà disputée';
         showNotification(msg, counts.swum > 0 ? 'warning' : 'success');
     }
     global.bulkAddParticipantsToSerie = bulkAddParticipantsToSerie;
@@ -1078,7 +1078,7 @@
         var other = findOtherSerieOfEvent(chronoData, serie, participant.name);
         if (other) {
             if (hasSwumInSerie(other, findInSerieByName(other, participant.name))) {
-                showNotification(participant.name + ' a déjà nagé en « ' + other.name + ' » : déplacement impossible', 'warning');
+                showNotification(participant.name + ' a déjà disputé « ' + other.name + ' » : déplacement impossible', 'warning');
                 return;
             }
             if (!confirm('Déplacer « ' + participant.name + ' » de « ' + other.name + ' » vers « ' + serie.name + ' » ?')) return;
@@ -2626,7 +2626,7 @@
             '<input type="number" id="serieRelayDuration-' + dayNumber + '" value="' + d.relayDuration + '" min="5" style="width: 100%; padding: 10px; margin-top: 5px;">' +
             '</div>' +
             '<div style="margin: 15px 0;">' +
-            '<label><input type="checkbox" id="serieLaneMode-' + dayNumber + '"' + (d.laneMode ? ' checked' : '') + '> Mode couloirs (natation)</label>' +
+            '<label><input type="checkbox" id="serieLaneMode-' + dayNumber + '"' + (d.laneMode ? ' checked' : '') + '> Mode couloirs (un bouton d\'arrêt par couloir)</label>' +
             '</div>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeSerieModalForDay(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +

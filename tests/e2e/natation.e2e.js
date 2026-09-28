@@ -105,8 +105,8 @@ async function openFresh(browser) {
     const evNames = await state(page, () => championship.days[1].chronoData.events.map(e => e.name));
     check(JSON.stringify(evNames) === JSON.stringify(EVENTS), 'épreuves créées en un seul collage : ' + evNames.join(', '));
 
-    step('4. 🏊 Séries natation : aperçu puis génération (5 couloirs)');
-    await btn(page, '🏊 Séries natation');
+    step('4. 🏁 Séries automatiques : aperçu puis génération (5 couloirs)');
+    await btn(page, '🏁 Séries automatiques');
     await page.selectOption('#swimSourceDay', '1');
     await page.selectOption('#swimTargetDay', '1');
     await page.selectOption('#swimLanesPerSerie', '5');
@@ -115,7 +115,7 @@ async function openFresh(browser) {
     const nonParsed = preview.match(/Non parsées :(.*?)(⚠️|$)/);
     ok('aperçu : ' + preview.slice(0, 70) + '…' + (nonParsed ? ' | non parsées : ' + nonParsed[1].trim() : ''));
     await snap(page, 'apercu-import');
-    await btn(page, '🏊 Générer séries');
+    await btn(page, '🏁 Générer les séries');
     await page.waitForTimeout(500);
     const gen = await state(page, () => {
         const cd = championship.days[1].chronoData;
@@ -309,7 +309,7 @@ async function openFresh(browser) {
     await fresh.context.close();
 
     // ---------------------------------------------------------------
-    step('11. Sur place : ➕ Série dans « 50m brasse », 🏊 couloirs, course — sans relancer « Séries natation »');
+    step('11. Sur place : ➕ Série dans « 50m brasse », 🏊 couloirs, course — sans relancer « Séries automatiques »');
     const brasseId = await state(page, () => championship.days[1].chronoData.events.find(e => e.name === '50m brasse').id);
     const brasseSeries = (id) => state(page, (evId) => {
         const cd = championship.days[1].chronoData;
@@ -347,10 +347,10 @@ async function openFresh(browser) {
     await page.waitForTimeout(400);
     const addedDone = (await brasseSeries(brasseId)).pop();
     check((addedDone.results || []).length === 2, `« ${added.name} » nagée : ${(addedDone.results || []).length} temps enregistrés`);
-    await btn(page, '🏊 Séries natation');
+    await btn(page, '🏁 Séries automatiques');
     const warn = (await page.locator('#swimExistingWarning').innerText()).replace(/\s+/g, ' ');
-    check(/séries existantes seront remplacées/.test(warn) && /déjà nagées/.test(warn) && warn.includes('➕ Série'),
-        '« Séries natation » prévient avant de tout remplacer : ' + warn.slice(0, 110) + '…');
+    check(/séries existantes seront remplacées/.test(warn) && /déjà disputées/.test(warn) && warn.includes('➕ Série'),
+        '« Séries automatiques » prévient avant de tout remplacer : ' + warn.slice(0, 110) + '…');
     await page.locator('#swimmingImportModal').getByRole('button', { name: 'Annuler', exact: true }).click();
     await page.waitForTimeout(250);
     await snap(page, 'serie-ajoutee-sur-place');

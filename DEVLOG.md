@@ -33,6 +33,40 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-09-28 (suite 3) — « Séries natation » renommé « Séries automatiques »
+
+- **Contexte** : demande utilisateur : « la modal série natation, ça peut également servir
+  pour des séries d'athlétisme il me semble, on pourrait juste l'appeler séries
+  automatiques ? »
+- **Vérifié avant de renommer** (sonde jsdom avec 100m, 200m, 100m haies, 400m) : le
+  générateur marche pour l'athlétisme quand la distance est **unique** dans la journée (200m,
+  400m → séries par couloirs triées au temps). Limites : (1) « 100m » et « 100m haies » ont la
+  même distance → une ligne « Nom 100m 12.45 » n'est placée nulle part (ambigu, même règle
+  que « 50m » sans nage en natation) ; (2) les séries générées portent `sportType:
+  'swimming'` → classement par épreuve titré « Résultats natation » ; (3) un nom contenant un
+  mot de nage près de la distance (« Dos Santos ») peut être pris pour une nage (préexistant).
+  Non modifié ici : proposé à l'utilisateur.
+- **Fait** : libellés visibles uniquement (fonctions internes `generateSwimmingSeries`,
+  `showSwimmingImportModal`… inchangées) — bouton « 🏁 Séries automatiques » (journée Courses
+  `multisport.iife.js` et barre d'une journée Matchs `ui.iife.js`, avec info-bulle), titre de
+  la fenêtre, « Participants par série », « 🏁 Générer les séries », aperçu / notification /
+  alertes en « participants », exemple d'athlétisme dans l'aide ; case « Mode couloirs (un
+  bouton d'arrêt par couloir) » de la fenêtre ➕ Série ; « déjà nagée(s) » → « déjà
+  disputée(s) » dans l'avertissement et les messages de déplacement.
+- **Tests** : `autoSeries.test.js` (3 : libellés, fenêtre, athlétisme 200m/400m ; les 3
+  échouaient avant). `npm test` : 234/234. `npm run test:e2e` (libellés mis à jour) : 0
+  problème.
+- **Fichiers touchés** : `src/chrono.iife.js`, `src/multisport.iife.js`, `src/ui.iife.js`,
+  `tests/unit/autoSeries.test.js`, `tests/e2e/natation.e2e.js`, `MULTISPORT.md`,
+  `claude.md`, `CHANGELOG.md`, ce fichier.
+- **Commit(s)** : branche `claude/quirky-cori-mwceum` (ajouté à la PR #86, pas encore
+  mergée).
+- **Doc à jour ?** : CHANGELOG ✅ · MULTISPORT.md ✅ · claude.md ✅ · AGENTS.md (pas de
+  changement d'API) · tests ✅
+- **Suite possible** : épreuves de même distance départagées par les mots du nom (« haies ») ;
+  type de sport déduit de l'épreuve (athlétisme ≠ natation) avec un titre de classement
+  neutre.
+
 ### 2026-09-28 (suite 2) — Épreuves en masse (une par ligne)
 
 - **Contexte** : demande utilisateur : « ça serait bien de pouvoir ajouter des épreuves en

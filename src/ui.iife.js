@@ -256,7 +256,7 @@
                     <!-- Séparateur visuel -->
                     <span style="color: #cbd5e1;">|</span>
                     <button onclick="showSwimmingImportModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #1abc9c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                        🏊 Séries natation
+                        🏁 Séries automatiques
                     </button>
                     <!-- Séparateur visuel -->
                     <span style="color: #cbd5e1;">|</span>
