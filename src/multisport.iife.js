@@ -397,6 +397,8 @@
         
         participant.totalTime = time;
         
+        // Les séries générées (Séries automatiques) n'ont pas de tableau results
+        if (!Array.isArray(serie.results)) serie.results = [];
         // Ajouter aux résultats si pas déjà présent
         var existingResult = serie.results.find(function(r) { return r.bib === bib; });
         if (!existingResult) {
@@ -3298,14 +3300,46 @@
     }
     global.closeLaneAssignModal = closeLaneAssignModal;
 
+    // Course de cette série en train de tourner (chrono lancé) dans l'écran de course
+    function isSerieRaceRunning(dayNumber, serieId) {
+        var live = global.raceData && global.raceData.currentSerie;
+        return !!(live && live.id === serieId && live.dayNumber === dayNumber && live.isRunning);
+    }
+
+    // Retire du cache de course (raceData) l'entrée de cette série : une réouverture
+    // (▶️ Course) repart alors de la série de la journée, saisie manuelle comprise.
+    // Sinon la progression en cache (sans les temps saisis) reprenait le dessus et
+    // « Terminer » réécrivait les résultats.
+    function dropSerieFromRaceCache(dayNumber, serieId) {
+        var rd = global.raceData;
+        if (!rd) return;
+        if (rd.series) rd.series = rd.series.filter(function(s) { return !(s.id === serieId && s.dayNumber === dayNumber); });
+        (rd.events || []).forEach(function(e) {
+            if (e.dayNumber === dayNumber && e.series) e.series = e.series.filter(function(s) { return s.id !== serieId; });
+        });
+        if (rd.currentSerie && rd.currentSerie.id === serieId && rd.currentDayNumber === dayNumber) {
+            rd.currentSerie = null;
+            rd.currentSerieId = null;
+            rd.currentDayNumber = null;
+        }
+        if (typeof global.saveChronoToLocalStorage === 'function') global.saveChronoToLocalStorage();
+    }
+
     function enterSerieResults(dayNumber, serieId) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
         
         var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
-        
+
+        if (isSerieRaceRunning(dayNumber, serieId)) {
+            showNotification('Course en cours : arrêtez le chrono avant la saisie manuelle', 'warning');
+            return;
+        }
         if (document.getElementById('resultsModal-' + dayNumber)) return;
+
+        // Mêmes couloirs que la feuille imprimée et les boutons d'arrêt
+        if (serie.laneMode && ensureSerieLanes(serie)) saveToLocalStorage();
         
         var modal = document.createElement('div');
         modal.id = 'resultsModal-' + dayNumber;
@@ -3315,7 +3349,8 @@
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeResultsModal(' + dayNumber + ')">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>⏱️ Saisie des résultats - ' + serie.name + '</h3>' +
-            '<p style="color: #7f8c8d; font-size: 13px;">Format temps: mm:ss.ms ou secondes</p>' +
+            '<p style="color: #7f8c8d; font-size: 13px;">Temps (1:02.35, 62.35 ou 1\'02"35), ou DNS / DISQ. Champ vidé = temps retiré. Entrée : ligne suivante.' +
+            (serie.laneMode ? ' Lignes dans l\'ordre des couloirs, comme la feuille imprimée.' : '') + '</p>' +
             '<div id="resultsForm-' + dayNumber + '-' + serieId + '">' +
             renderResultsForm(dayNumber, serie) +
             '</div>' +
@@ -3327,21 +3362,39 @@
         document.body.appendChild(modal);
     }
 
+    // Valeur affichée dans le champ : statut DNS/DISQ, sinon le temps existant
+    function manualResultFieldValue(p) {
+        if (p.status === 'dns') return 'DNS';
+        if (p.status === 'disq') return 'DISQ';
+        var t = p.finishTime || p.totalTime;
+        return t > 0 ? formatTime(t) : '';
+    }
+
     function renderResultsForm(dayNumber, serie) {
         if (!serie.participants || serie.participants.length === 0) {
             return '<p style="color: #7f8c8d; text-align: center;">Aucun participant</p>';
         }
+
+        // Mode couloirs : colonne Couloir, lignes dans l'ordre du bassin (comme la feuille
+        // imprimée) ; sinon le dossard, dans l'ordre de la série
+        var laneMode = !!serie.laneMode;
+        var list = laneMode
+            ? serie.participants.slice().sort(function(a, b) { return (a.laneNumber || 99) - (b.laneNumber || 99); })
+            : serie.participants;
         
         var html = '<table style="width: 100%; border-collapse: collapse;">';
-        html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 10px;">Dossard</th><th style="padding: 10px;">Nom</th><th style="padding: 10px;">Temps</th></tr></thead><tbody>';
+        html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 10px;">' + (laneMode ? 'Couloir' : 'Dossard') + '</th><th style="padding: 10px;">Nom</th><th style="padding: 10px;">Temps</th></tr></thead><tbody>';
         
-        serie.participants.forEach(function(p) {
-            var existingTime = p.totalTime ? formatTime(p.totalTime) : '';
+        list.forEach(function(p) {
+            var value = manualResultFieldValue(p);
             html += '<tr style="border-bottom: 1px solid #ecf0f1;">';
-            html += '<td style="padding: 10px; text-align: center;">#' + p.bib + '</td>';
+            html += '<td style="padding: 10px; text-align: center; font-weight: bold;">' +
+                (laneMode ? (p.laneNumber != null ? p.laneNumber : '-') : '#' + p.bib) + '</td>';
             html += '<td style="padding: 10px;">' + p.name + '</td>';
             html += '<td style="padding: 10px;">';
-            html += '<input type="text" id="result-time-' + p.bib + '" value="' + existingTime + '" style="padding: 8px; width: 120px;" placeholder="00:00.00">';
+            html += '<input type="text" id="result-time-' + dayNumber + '-' + serie.id + '-' + p.id + '" value="' + value + '" ' +
+                'data-initial="' + value + '" onkeydown="manualResultNext(event, this)" ' +
+                'style="padding: 8px; width: 120px; border: 1px solid #cbd5e1; border-radius: 4px;" placeholder="1:02.35 / DNS">';
             html += '</td>';
             html += '</tr>';
         });
@@ -3350,28 +3403,95 @@
         return html;
     }
 
+    // Entrée dans un champ de temps : passer au champ de la ligne suivante
+    function manualResultNext(event, input) {
+        if (!event || event.key !== 'Enter') return;
+        event.preventDefault();
+        var row = input.closest('tr');
+        var next = row && row.nextElementSibling ? row.nextElementSibling.querySelector('input') : null;
+        if (next) { next.focus(); next.select(); }
+    }
+
+    // Temps saisi à la main, en millisecondes (null si illisible) :
+    // « 31.45 », « 31,45 », « 1:02.35 », « 1:02:35 » (h:mm:ss), « 1'02"35 »
     function parseTimeInput(input) {
-        if (!input || !input.trim()) return null;
-        
-        input = input.trim().replace(',', '.');
-        
-        // Format mm:ss.ms ou mm:ss
-        if (input.includes(':')) {
-            var parts = input.split(':');
-            var minutes = parseInt(parts[0]) || 0;
-            var secondsParts = parts[1] ? parts[1].split('.') : ['0'];
-            var seconds = parseInt(secondsParts[0]) || 0;
-            var ms = secondsParts[1] ? parseInt(secondsParts[1].padEnd(3, '0').substring(0, 3)) : 0;
-            return (minutes * 60 * 1000) + (seconds * 1000) + ms;
+        if (input == null) return null;
+        var s = String(input).trim().replace(/\s+/g, '');
+        if (!s) return null;
+        function fracMs(f) { return f ? parseInt(String(f).padEnd(3, '0').substring(0, 3), 10) : 0; }
+
+        // Notation natation : 1'02"35, 1'02''35, 1'02
+        var q = s.match(/^(\d+)['’](\d{1,2})(?:(?:"|''|”)(\d{1,3})?)?$/);
+        if (q) {
+            if (+q[2] >= 60) return null;
+            return (+q[1]) * 60000 + (+q[2]) * 1000 + fracMs(q[3]);
         }
-        
-        // Format secondes (avec ou sans décimales)
-        var floatVal = parseFloat(input);
-        if (!isNaN(floatVal)) {
-            return Math.round(floatVal * 1000);
+
+        s = s.replace(',', '.');
+        var parts = s.split(':');
+        if (parts.length > 3) return null;
+        // Seule la dernière partie peut avoir une décimale
+        for (var i = 0; i < parts.length; i++) {
+            var re = i === parts.length - 1 ? /^\d+(\.\d{1,3})?$/ : /^\d+$/;
+            if (!re.test(parts[i])) return null;
         }
-        
-        return null;
+        var last = parts[parts.length - 1].split('.');
+        var secMs = (+last[0]) * 1000 + fracMs(last[1]);
+        if (parts.length === 1) return secMs;
+        if (+last[0] >= 60) return null;
+        if (parts.length === 2) return (+parts[0]) * 60000 + secMs;
+        if (+parts[1] >= 60) return null;
+        return (+parts[0]) * 3600000 + (+parts[1]) * 60000 + secMs;
+    }
+
+    // Contenu d'un champ : vide, DNS, DISQ, un temps, ou illisible
+    function parseManualResult(text) {
+        var t = String(text || '').trim();
+        if (!t) return { kind: 'empty' };
+        var u = t.toUpperCase().replace(/[\s.]+/g, '');
+        if (u === 'DNS') return { kind: 'dns' };
+        if (u === 'DISQ' || u === 'DSQ' || u === 'DQ') return { kind: 'disq' };
+        var ms = parseTimeInput(t);
+        return ms > 0 ? { kind: 'time', ms: ms } : { kind: 'invalid' };
+    }
+
+    function removeSerieResultOf(serie, p) {
+        serie.results = (serie.results || []).filter(function(r) {
+            return !(r.name && p.name && r.name.toLowerCase() === p.name.toLowerCase());
+        });
+    }
+
+    // Applique une saisie manuelle à un participant. Un temps = une arrivée complète
+    // (statut, temps, distance, ligne de résultats avec club et catégorie) : la feuille
+    // imprimée, les classements et l'écran de course la voient comme une arrivée au chrono.
+    function applyManualResult(serie, p, r, counts) {
+        var hadResult = p.status === 'finished' || p.totalTime > 0 || p.finishTime > 0
+            || (serie.results || []).some(function(res) { return res.name && p.name && res.name.toLowerCase() === p.name.toLowerCase(); });
+        removeSerieResultOf(serie, p);
+        if (r.kind === 'time') {
+            p.status = 'finished';
+            p.totalTime = r.ms;
+            p.finishTime = r.ms;
+            if (!(p.totalDistance > 0)) p.totalDistance = serie.distance || 0;
+            serie.results.push({
+                bib: p.bib, name: p.name, club: p.club || '', category: p.category || '',
+                time: r.ms, totalDistance: p.totalDistance || 0
+            });
+            counts.saved++;
+        } else if (r.kind === 'dns' || r.kind === 'disq') {
+            p.status = r.kind;
+            // Un DISQ garde son temps éventuel (disqualification constatée après l'arrivée)
+            if (r.kind === 'dns') { p.totalTime = 0; p.finishTime = null; }
+            counts[r.kind]++;
+        } else {
+            if (hadResult || p.status === 'dns' || p.status === 'disq') counts.cleared++;
+            p.status = 'ready';
+            p.totalTime = 0;
+            p.finishTime = null;
+            p.totalDistance = 0;
+            p.laps = [];
+            p.bestLap = null;
+        }
     }
 
     function saveSerieResults(dayNumber, serieId) {
@@ -3380,22 +3500,53 @@
         
         var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
-        
-        var savedCount = 0;
-        serie.participants.forEach(function(p) {
-            var timeInput = document.getElementById('result-time-' + p.bib);
-            if (timeInput) {
-                var time = parseTimeInput(timeInput.value);
-                if (time !== null) {
-                    recordChronoResult(dayNumber, serieId, p.bib, time);
-                    savedCount++;
-                }
-            }
+
+        if (isSerieRaceRunning(dayNumber, serieId)) {
+            showNotification('Course en cours : arrêtez le chrono avant la saisie manuelle', 'warning');
+            return;
+        }
+
+        var rows = serie.participants.map(function(p) {
+            var el = document.getElementById('result-time-' + dayNumber + '-' + serieId + '-' + p.id);
+            return el ? { p: p, el: el, r: parseManualResult(el.value) } : null;
+        }).filter(Boolean);
+
+        // Une saisie illisible : on n'enregistre rien (plutôt que d'ignorer la ligne en silence)
+        var invalid = rows.filter(function(x) { return x.r.kind === 'invalid'; });
+        rows.forEach(function(x) { x.el.style.borderColor = x.r.kind === 'invalid' ? '#e74c3c' : ''; });
+        if (invalid.length > 0) {
+            showNotification(invalid.length + ' saisie(s) illisible(s) (ex. : 1:02.35, 62.35, DNS, DISQ) : rien n\'est enregistré', 'error');
+            invalid[0].el.focus();
+            return;
+        }
+
+        if (!Array.isArray(serie.results)) serie.results = [];
+        var counts = { saved: 0, cleared: 0, dns: 0, disq: 0 };
+        rows.forEach(function(x) {
+            // Champ inchangé : on ne réécrit pas (précision du chrono, tours), sauf un temps
+            // resté « à moitié » (ancienne saisie sans statut d'arrivée)
+            var unchanged = x.el.value.trim() === String(x.el.getAttribute('data-initial') || '').trim();
+            if (unchanged && !(x.r.kind === 'time' && x.p.status !== 'finished')) return;
+            applyManualResult(serie, x.p, x.r, counts);
         });
-        
+
+        var inRace = serie.participants.filter(function(p) { return p.status !== 'dns' && p.status !== 'disq'; });
+        if (inRace.length > 0 && inRace.every(function(p) { return p.status === 'finished'; })) {
+            serie.status = 'completed';
+        } else if (serie.status === 'completed') {
+            serie.status = 'ready';
+        }
+
+        dropSerieFromRaceCache(dayNumber, serieId);
+        saveToLocalStorage();
         closeResultsModal(dayNumber);
         refreshChronoDisplay(dayNumber);
-        showNotification(savedCount + ' résultat(s) enregistré(s)', 'success');
+
+        var parts = [counts.saved + ' temps enregistré(s)'];
+        if (counts.dns) parts.push(counts.dns + ' DNS');
+        if (counts.disq) parts.push(counts.disq + ' DISQ');
+        if (counts.cleared) parts.push(counts.cleared + ' temps effacé(s)');
+        showNotification(parts.join(', '), 'success');
     }
 
     function closeResultsModal(dayNumber) {
@@ -4182,6 +4333,8 @@
     global.addExistingParticipantToSerie = addExistingParticipantToSerie;
     global.enterSerieResults = enterSerieResults;
     global.saveSerieResults = saveSerieResults;
+    global.manualResultNext = manualResultNext;
+    global.parseTimeInput = parseTimeInput;
     global.closeResultsModal = closeResultsModal;
     global.showSerieRanking = showSerieRanking;
     global.closeRankingModal = closeRankingModal;
