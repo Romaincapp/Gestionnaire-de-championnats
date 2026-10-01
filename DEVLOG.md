@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-01 — Barre de recherche 🔍 dans la page (façon Ctrl+F)
+
+- **Contexte** : demande d'une petite recherche intégrée pour retrouver vite un nom dans l'écran affiché.
+- **Fait** : nouveau module `src/search.iife.js` + bouton 🔍 dans l'en-tête. Recherche limitée
+  à ce qui est visible, insensible casse/accents, compteur « 2 / 4 », Entrée / Maj+Entrée / Échap.
+  Surlignage par CSS Custom Highlight API (aucun `<mark>` injecté) + `MutationObserver` qui
+  re-surligne après chaque re-rendu : aucune fonction d'affichage existante modifiée.
+- **Fichiers/modules touchés** : `src/search.iife.js` (nouveau), `index.html`, `styles.css`,
+  `tests/helpers/loadApp.js`, `tests/unit/appSearch.test.js`
+- **Commit(s)** : voir branche `claude/clever-dijkstra-gsf1ab`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Suite possible** : le texte des champs `<input>` (scores, noms en édition) n'est pas trouvé.
+
 ### 2026-09-28 (suite 13) — Participants disponibles : infos d'inscription sur la ligne, liste agrandissable
 
 - **Contexte** : « quand j'ai ajouté des séries automatiques, ma liste de nageurs est

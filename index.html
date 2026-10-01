@@ -20,8 +20,19 @@
                         <span class="dark-mode-icon">🌙</span>
                     </span>
                 </label>
+                <button type="button" class="app-search-toggle" onclick="openAppSearch()" title="Rechercher dans la page">🔍</button>
             </div>
             <p>Planté !!! avec ❤️ par Romain testé avec style par Rachel</p>
+        </div>
+
+        <!-- RECHERCHE DANS LA PAGE (src/search.iife.js) -->
+        <div id="appSearchBar" class="app-search-bar" style="display: none;">
+            <input type="search" id="appSearchInput" placeholder="Rechercher…" autocomplete="off"
+                   oninput="onAppSearchInput(this.value)" onkeydown="onAppSearchKeydown(event)">
+            <span id="appSearchCount" class="app-search-count"></span>
+            <button type="button" onclick="appSearchPrev()" title="Précédent (Maj+Entrée)">▲</button>
+            <button type="button" onclick="appSearchNext()" title="Suivant (Entrée)">▼</button>
+            <button type="button" onclick="closeAppSearch()" title="Fermer (Échap)">✕</button>
         </div>
 
         <!-- ONGLETS -->
@@ -677,10 +688,13 @@
         <!-- 5. Chrono (indépendant du championship) -->
         <script src="src/chrono.iife.js"></script>
 
-        <!-- 6. Initialisation (dépend de tout) -->
+        <!-- 6. Recherche dans la page (barre 🔍) -->
+        <script src="src/search.iife.js"></script>
+
+        <!-- 7. Initialisation (dépend de tout) -->
         <script src="src/init.iife.js"></script>
 
-        <!-- 7. Bootstrap (dark mode uniquement) -->
+        <!-- 8. Bootstrap (dark mode uniquement) -->
         <script src="script.js"></script>
 
     </body>
