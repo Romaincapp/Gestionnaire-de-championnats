@@ -41,12 +41,13 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 │   ├── export-json.iife.js # Export/Import JSON du championnat
 │   ├── export-print.iife.js # Impression / PDF (feuilles de match, récaps)
 │   ├── chrono.iife.js      # Moteur de chronométrage live (raceData, timer, tours) — backend du mode CHRONO par journée, voir section 11
+│   ├── search.iife.js      # Barre de recherche 🔍 dans la page (façon Ctrl+F), voir section 13 bis
 │   └── init.iife.js        # Bootstrap de l'application, chargé en dernier
 └── json/                   # Données JSON d'exemple (si besoin)
 ```
 Ordre de chargement dans `index.html` : config, utils, notifications, state,
 clubs, multisport, players, ui, matches, pools, ranking, export-json,
-export-print, chrono, init. Un script chargé plus tard peut écraser un
+export-print, chrono, search, init. Un script chargé plus tard peut écraser un
 `window.x =` du même nom défini plus tôt — c'est ce qui rendait
 `export.iife.js` (supprimé, issue #64) mort : ses fonctions étaient
 écrasées par `export-json.iife.js`/`export-print.iife.js` chargés après.
@@ -296,6 +297,21 @@ deux fois par redondance) — contrairement aux vrais doublons de
 - `printSimpleScoreSheets()`, `generateSimpleScoreSheetHTML()` - feuilles de score simplifiées
 - `printRecapByCourt()`, `printRecapByPool()` - récapitulatifs
 
+### 13 bis. search.iife.js
+**Rôle** : barre de recherche dans la page, ouverte par le bouton 🔍 de l'en-tête
+(Ctrl+F natif volontairement non intercepté). Cherche dans ce qui est **affiché**
+(onglet actif, modale, écran de course), insensible à la casse et aux accents ;
+ignore les éléments `display:none`, les `<input>`/`<textarea>`/`<select>` et la barre.
+**Ne modifie jamais le DOM** : surlignage via la CSS Custom Highlight API
+(`::highlight(app-search)` / `app-search-current` dans `styles.css`), et un
+`MutationObserver` (actif seulement barre ouverte, throttle 200 ms) relance la
+recherche après chaque re-rendu `innerHTML` (`updateMatchesDisplay`,
+`updatePoolsDisplay`, `refreshChronoDisplay`, `displayRaceInterface`...). Aucune
+fonction d'affichage n'a donc besoin de connaître la recherche.
+- `openAppSearch()`, `closeAppSearch()`, `appSearchNext()`, `appSearchPrev()`
+- `onAppSearchInput(value)`, `onAppSearchKeydown(event)` (Entrée / Maj+Entrée / Échap)
+- `findAppSearchMatches(root, query)` (→ `Range[]`), `getAppSearchState()` — pour les tests
+
 ### 14. init.iife.js
 **Rôle** : Deux choses distinctes dans ce fichier, malgré son nom :
 1. **Bootstrap réel** : un handler `DOMContentLoaded` qui orchestre le
@@ -350,7 +366,7 @@ chargement réel (voir `<script>` dans `index.html`) :
 2. state, clubs
 3. multisport, players, ui
 4. matches, pools, ranking
-5. export-json, export-print, chrono
+5. export-json, export-print, chrono, search
 6. init (bootstrap, chargé en dernier)
 
 Un module chargé plus tard écrase silencieusement un `window.x =` du même

@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🔍 Recherche dans la page
+- Nouveau bouton **🔍** dans l'en-tête : une petite barre de recherche, comme le Ctrl+F du
+  navigateur, pour retrouver un joueur, un nageur ou un club dans l'écran affiché. Sans
+  tenir compte des majuscules ni des accents (« helene » trouve « Hélène »), compteur de
+  résultats, ▲/▼ ou Entrée / Maj+Entrée pour naviguer, Échap pour fermer. Le surlignage
+  suit les mises à jour de l'écran (score saisi, course en cours…).
+
 ### 👥 Participants disponibles : lisible après les séries automatiques
 - Après « 🏁 Séries automatiques », chaque fiche (une par inscription) affiche **sur la même
   ligne** son épreuve, son temps d'engagement, sa série et son couloir :

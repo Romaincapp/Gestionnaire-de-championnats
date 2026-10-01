@@ -2036,3 +2036,114 @@ body.dark-mode .day-type-selector {
 body.dark-mode .notification {
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
+
+/* ============================================
+   RECHERCHE DANS LA PAGE (src/search.iife.js)
+   ============================================ */
+.app-search-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.app-search-toggle:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.app-search-bar {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    align-items: center;
+    gap: 6px;
+    max-width: calc(100vw - 32px);
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.app-search-bar input {
+    width: 200px;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid #bbb;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.app-search-bar input.no-result {
+    background: #ffe5e5;
+    border-color: #e74c3c;
+}
+
+.app-search-count {
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    min-width: 40px;
+    text-align: center;
+}
+
+.app-search-bar button {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.app-search-bar button:hover {
+    background: #e0e0e0;
+}
+
+::highlight(app-search) {
+    background-color: #ffeb3b;
+    color: #000;
+}
+
+::highlight(app-search-current) {
+    background-color: #ff9800;
+    color: #000;
+}
+
+body.dark-mode .app-search-bar {
+    background: #2d2d2d;
+    border-color: #555;
+}
+
+body.dark-mode .app-search-bar input {
+    background: #1e1e1e;
+    color: #eee;
+    border-color: #555;
+}
+
+body.dark-mode .app-search-bar input.no-result {
+    background: #5a2323;
+}
+
+body.dark-mode .app-search-count {
+    color: #bbb;
+}
+
+body.dark-mode .app-search-bar button {
+    background: #3a3a3a;
+    color: #eee;
+    border-color: #555;
+}
+
+@media print {
+    .app-search-bar,
+    .app-search-toggle {
+        display: none !important;
+    }
+}
