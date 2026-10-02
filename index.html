@@ -305,6 +305,15 @@
                     📂 Importer plusieurs journées
                 </button>
             </div>
+            <div style="margin: 20px 0; padding: 15px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                <p style="margin: 0 0 10px 0; font-size: 13px; color: #15803d;">
+                    ➕ <strong>Ajouter à la suite :</strong> les journées du ou des fichiers sont ajoutées après celles déjà présentes, sans rien remplacer (une « Journée 1 » d'un autre projet devient la journée suivante). Matchs et Courses peuvent être mélangés.
+                </p>
+                <input type="file" id="appendDaysInput" accept=".json" multiple onchange="appendDaysFromFiles(event)" style="display: none;">
+                <button onclick="openAppendDaysPicker()" class="btn" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; width: 100%;">
+                    ➕ Ajouter à la suite du championnat
+                </button>
+            </div>
             <div class="modal-buttons">
                 <button class="btn btn-danger" onclick="closeImportModal()">Annuler</button>
                 <button class="btn btn-success" onclick="processImport()">Importer</button>

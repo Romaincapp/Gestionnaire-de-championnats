@@ -13,6 +13,44 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 📂 Courses : séries en accordéon
+- Un clic sur le nom d'une **série** affiche ou masque ses participants (couloir, dossard, nom,
+  club, catégorie, rang et temps, DNS/DISQ, « — » si pas encore nagé), dans l'ordre du bassin.
+- Un clic sur le nom d'une **épreuve** ouvre toutes ses séries d'un coup (ou les referme).
+- Bouton **📂 Tout déplier / 📁 Tout replier** dans la barre d'actions de la journée.
+- Vue de consultation uniquement ; l'état ouvert/fermé est conservé quand l'écran se met à jour.
+
+### 🏆 Classement d'une série (bouton 🏆) corrigé
+- Un nageur **DISQ ou DNS** n'est plus classé, même si une ancienne ligne de résultat existait
+  (il pouvait apparaître 1er) ; il est listé en bas, sans rang.
+- **Ex æquo au centième** : même rang (avant 1 puis 2 pour le même temps affiché).
+- **Relais à durée fixe** : classement à la distance parcourue, puis au temps (avant, au temps seul).
+- Ouvrir le classement d'une autre série remplace bien la fenêtre (avant, l'ancienne restait).
+- La colonne **Points** (20-17-15…) n'apparaît plus en natation ni en Multisport, où ce barème
+  ne s'applique pas ; colonnes Club et Distance ajoutées quand elles sont utiles ; temps au centième.
+- Retirer un participant d'une série retire aussi sa ligne de résultat.
+- Les points par série du classement général (Chrono) et le classement par épreuve suivent
+  exactement les mêmes règles (un nageur en double dans une série n'est plus compté deux fois).
+
+### 📂 Importer plusieurs journées : plus d'écrasement
+- Un fichier contenant plusieurs journées est maintenant renuméroté à la suite des autres
+  fichiers (avant, il gardait ses numéros et pouvait écraser la journée d'un autre fichier).
+- Même récapitulatif et mêmes précautions que « ➕ Ajouter à la suite » ; si rien n'est
+  importable, le championnat ouvert est conservé.
+
+### ➕ Import : ajouter des journées à la suite
+- Dans la fenêtre d'import, nouveau bouton **« ➕ Ajouter à la suite du championnat »** : les
+  journées du ou des fichiers choisis sont ajoutées **après** celles déjà présentes, sans rien
+  remplacer. Une « Journée 1 » refaite par erreur dans un autre projet devient la Journée 2
+  (plusieurs fichiers « J1 » : J2, J3… dans l'ordre des noms de fichiers). Journées Matchs et
+  Courses peuvent être mélangées.
+- Une journée vide en fin de championnat (ou la J1 vierge d'un nouveau projet) est réutilisée ;
+  les journées vides des fichiers sont ignorées.
+- Précautions : refusé pendant qu'une course tourne ; une série exportée chrono en marche est
+  mise en pause sur son temps ; le nombre de divisions est augmenté si besoin (jamais réduit) ;
+  le récapitulatif signale les noms écrits différemment d'un jour à l'autre (« jean dupont » /
+  « Jean Dupont »), qui compteraient comme deux personnes dans les classements.
+
 ### 🔍 Recherche dans la page
 - Nouveau bouton **🔍** dans l'en-tête : une petite barre de recherche, comme le Ctrl+F du
   navigateur, pour retrouver un joueur, un nageur ou un club dans l'écran affiché. Sans

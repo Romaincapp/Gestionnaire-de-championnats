@@ -754,272 +754,59 @@
     }
 
     /**
-     * Importe plusieurs fichiers JSON (un par journée)
-     * Chaque fichier devient une journée séparée (J1, J2, J3...)
+     * Importe plusieurs fichiers JSON (un par journée) en REMPLAÇANT le championnat.
+     * Même moteur que « ➕ Ajouter à la suite » (appendDaysToChampionship) appliqué
+     * à un championnat vidé : J1, J2, J3… dans l'ordre des noms de fichiers, un
+     * fichier multi-journées est pris en entier et renuméroté à la suite (avant, il
+     * gardait ses numéros d'origine et pouvait écraser la journée d'un autre fichier).
      */
     function importMultipleDayFiles(event) {
-        const files = Array.from(event.target.files);
-        if (!files || files.length === 0) return;
-        
-        // Trier les fichiers par nom pour un ordre cohérent
-        files.sort((a, b) => a.name.localeCompare(b.name));
-        
-        let processedCount = 0;
-        let importedDays = [];
-        let errors = [];
-        
-        // Vider le championnat actuel pour repartir à zéro
-        if (!confirm(`Vous allez importer ${files.length} fichier(s) comme journées séparées.\n\nCela créera J1, J2, J3... à partir de chaque fichier.\n\nLe championnat actuel sera remplacé. Continuer ?`)) {
-            event.target.value = '';
+        var input = event.target;
+        var files = Array.from(input.files || []);
+        if (files.length === 0) return;
+        files.sort(function(a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
+
+        if (!confirm('Vous allez importer ' + files.length + ' fichier(s) comme journées séparées.\n\nCela créera J1, J2, J3... à partir de chaque fichier.\n\nLe championnat actuel sera remplacé. Continuer ?')) {
+            input.value = '';
             return;
         }
-        
-        // Réinitialiser le championnat (en gardant la même référence pour les autres modules)
-        championship.currentDay = 1;
-        championship.config = { ...config };
-        championship.days = {};
-        
-        const numDivisions = config.numberOfDivisions || 3;
-        
-        // Traiter chaque fichier
-        const processFile = (file, dayIndex) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        const dayNumber = dayIndex + 1;
-                        
-                        // Extraire les données de la journée avec détection automatique du format
-                        let dayData = null;
-                        let detectedType = 'unknown';
-                        
-                        // Détection format 1: Export complet championnat (avec chronoData ou days)
-                        if (data.championship && data.championship.days) {
-                            const allDays = data.championship.days;
-                            const dayKeys = Object.keys(allDays);
 
-                            if (dayKeys.length > 1) {
-                                // Multi-journées: importer TOUTES les journées
-                                // Importer la config si présente
-                                if (data.championship.config) {
-                                    championship.config = { ...championship.config, ...data.championship.config };
-                                }
+        return readJsonFiles(files).then(function(read) {
+            input.value = '';
+            var before = { days: championship.days, config: championship.config, currentDay: championship.currentDay };
 
-                                dayKeys.forEach(function(dk) {
-                                    var importedDay = JSON.parse(JSON.stringify(allDays[dk]));
-                                    var dn = parseInt(dk);
+            saveToLocalStorage();
+            championship.days = {};
+            championship.config = Object.assign({}, championship.config);
+            championship.currentDay = 1;
+            var report = appendDaysToChampionship(read.sources);
+            report.errors = read.errors.concat(report.errors);
 
-                                    // S'assurer que les structures existent
-                                    if (!importedDay.players) importedDay.players = {};
-                                    if (!importedDay.matches) importedDay.matches = {};
-                                    if (!importedDay.dayType) importedDay.dayType = 'championship';
+            if (report.added.length === 0) {
+                // Rien d'importable (ou course en cours) : on remet le championnat tel quel
+                championship.days = before.days;
+                championship.config = before.config;
+                championship.currentDay = before.currentDay;
+                alert('Aucun fichier n\'a pu être importé.' +
+                    (report.errors.length ? '\n\nErreurs :\n' + report.errors.join('\n') : '') +
+                    (report.skipped.length ? '\n\nIgnoré :\n' + report.skipped.join('\n') : ''));
+                return report;
+            }
 
-                                    // Initialiser les divisions
-                                    for (var div = 1; div <= numDivisions; div++) {
-                                        if (!importedDay.players[div] || !Array.isArray(importedDay.players[div])) {
-                                            importedDay.players[div] = [];
-                                        }
-                                        if (!importedDay.matches[div] || !Array.isArray(importedDay.matches[div])) {
-                                            importedDay.matches[div] = [];
-                                        }
-                                    }
-
-                                    // Assurer que les journées existent
-                                    while (Object.keys(championship.days).length < dn) {
-                                        var newDayNum = Object.keys(championship.days).length + 1;
-                                        if (!championship.days[newDayNum]) {
-                                            championship.days[newDayNum] = { players: {}, matches: {}, dayType: 'championship' };
-                                            for (var d = 1; d <= numDivisions; d++) {
-                                                championship.days[newDayNum].players[d] = [];
-                                                championship.days[newDayNum].matches[d] = [];
-                                            }
-                                        }
-                                    }
-
-                                    championship.days[dn] = importedDay;
-                                    var typeLabel = importedDay.dayType === 'chrono' ? '⏱️' : '🏆';
-                                    importedDays.push('J' + dn + ' ' + typeLabel + ' (' + file.name + ')');
-                                    console.log('Jour ' + dn + ' importé: type=' + importedDay.dayType, importedDay.chronoData ? 'events=' + importedDay.chronoData.events.length : '');
-                                });
-
-                                processedCount++;
-                                resolve();
-                                return;
-                            }
-
-                            // Une seule journée
-                            const days = Object.values(allDays);
-                            if (days.length > 0) {
-                                dayData = JSON.parse(JSON.stringify(days[0]));
-                                detectedType = dayData.dayType || 'championship';
-                            }
-                        }
-                        // Détection format 2: Days direct (sans wrapper championship)
-                        else if (data.days && Object.keys(data.days).length > 0) {
-                            const days = Object.values(data.days);
-                            dayData = JSON.parse(JSON.stringify(days[0]));
-                            detectedType = dayData.dayType || 'championship';
-                        }
-                        // Détection format 3: Ancien format championship (players + matches direct)
-                        else if (data.players && data.matches) {
-                            dayData = {
-                                players: data.players,
-                                matches: data.matches,
-                                dayType: 'championship'
-                            };
-                            detectedType = 'championship';
-                        }
-                        // Détection format 4: Chrono direct (events/series au niveau root)
-                        // OU export depuis l'ancien système chrono global (raceData)
-                        else if (data.events || data.series || data.raceData || data.participants || (data.championship && data.championship.raceData)) {
-                            // Si c'est un export de l'ancien système chrono global
-                            const raceData = data.raceData || (data.championship && data.championship.raceData) || data;
-                            
-                            dayData = {
-                                dayType: 'chrono',
-                                chronoData: {
-                                    events: raceData.events || data.events || [],
-                                    series: raceData.series || data.series || [],
-                                    participants: raceData.participants || data.participants || [],
-                                    nextEventId: raceData.nextEventId || data.nextEventId || 1,
-                                    nextSerieId: raceData.nextSerieId || data.nextSerieId || 1,
-                                    nextParticipantId: raceData.nextParticipantId || data.nextParticipantId || 1
-                                },
-                                players: {},
-                                matches: {}
-                            };
-                            detectedType = 'chrono';
-                            console.log(`Jour ${dayNumber}: Format chrono détecté (events: ${dayData.chronoData.events.length}, series: ${dayData.chronoData.series.length})`);
-                        }
-                        // Détection format 5: Chrono avec chronoData imbriqué
-                        else if (data.chronoData || data.dayType === 'chrono') {
-                            dayData = {
-                                dayType: 'chrono',
-                                chronoData: data.chronoData || {
-                                    events: [],
-                                    series: [],
-                                    participants: [],
-                                    nextEventId: 1,
-                                    nextSerieId: 1,
-                                    nextParticipantId: 1
-                                },
-                                players: {},
-                                matches: {}
-                            };
-                            detectedType = 'chrono';
-                        }
-                        
-                        if (!dayData) {
-                            // Dernier essai: chercher n'importe quelle structure avec des données
-                            if (Object.keys(data).length > 0) {
-                                // Essayer de trouver des joueurs/participants n'importe où
-                                const foundPlayers = findPlayersInData(data);
-                                if (foundPlayers.length > 0) {
-                                    dayData = {
-                                        dayType: 'championship',
-                                        players: { 1: foundPlayers },
-                                        matches: { 1: [] }
-                                    };
-                                    detectedType = 'championship (auto-detect)';
-                                }
-                            }
-                        }
-                        
-                        if (!dayData) {
-                            errors.push(`${file.name}: Format non reconnu (types trouvés: ${Object.keys(data).join(', ')})`);
-                            resolve();
-                            return;
-                        }
-                        
-                        // S'assurer que les structures existent et sont complètes
-                        if (!dayData.players) dayData.players = {};
-                        if (!dayData.matches) dayData.matches = {};
-                        if (!dayData.dayType) dayData.dayType = 'championship';
-                        
-                        // Pour le mode chrono, s'assurer que chronoData existe
-                        if (dayData.dayType === 'chrono' && !dayData.chronoData) {
-                            dayData.chronoData = {
-                                events: [],
-                                series: [],
-                                participants: [],
-                                nextEventId: 1,
-                                nextSerieId: 1,
-                                nextParticipantId: 1
-                            };
-                        }
-                        
-                        // Initialiser TOUTES les divisions (même si players/matches existe mais est vide)
-                        for (let div = 1; div <= numDivisions; div++) {
-                            if (!dayData.players[div] || !Array.isArray(dayData.players[div])) {
-                                dayData.players[div] = [];
-                            }
-                            if (!dayData.matches[div] || !Array.isArray(dayData.matches[div])) {
-                                dayData.matches[div] = [];
-                            }
-                        }
-                        
-                        console.log(`Jour ${dayNumber} importé: type=${dayData.dayType}, chronoData=`, dayData.chronoData);
-                        
-                        // Ajouter au championnat
-                        championship.days[dayNumber] = dayData;
-                        const typeLabel = detectedType === 'chrono' ? '⏱️' : '🏆';
-                        importedDays.push(`J${dayNumber} ${typeLabel} (${file.name})`);
-                        processedCount++;
-                        
-                    } catch (error) {
-                        errors.push(`${file.name}: ${error.message}`);
-                    }
-                    resolve();
-                };
-                reader.readAsText(file);
-            });
-        };
-        
-        // Traiter tous les fichiers en séquence
-        Promise.all(files.map((file, index) => processFile(file, index)))
-            .then(() => {
-                if (processedCount > 0) {
-                    // Mettre à jour l'interface
-                    updateTabsDisplay();
-                    updateDaySelectors();
-                    initializeAllDaysContent();
-                    
-                    // IMPORTANT : Mettre à jour le type d'UI pour chaque journée importée
-                    Object.keys(championship.days).forEach(dayNum => {
-                        const dayData = championship.days[dayNum];
-                        if (dayData && typeof updateDayTypeUI === 'function') {
-                            updateDayTypeUI(parseInt(dayNum));
-                        }
-                    });
-                    
-                    switchTab(1);
-
-                    // Initialiser le sélecteur de type pour J1
-                    initializeDayTypeSelectorForDay1();
-
-                    saveToLocalStorage();
-
-                    // Fermer la modale d'import multi-journées
-                    closeMultiDayImportModal();
-
-                    let msg = `${processedCount} journée(s) importée(s) :\n${importedDays.join('\n')}`;
-                    if (errors.length > 0) {
-                        msg += `\n\nErreurs (${errors.length}):\n${errors.join('\n')}`;
-                    }
-                    alert(msg);
-                    showNotification(`${processedCount} journée(s) importée(s) avec succès !`, 'success');
-
-                    // Forcer l'affichage de J1 après fermeture de l'alert
-                    // (au cas où des opérations DOM asynchrones auraient modifié l'état)
-                    switchTab(1);
-                } else {
-                    alert('Aucun fichier n\'a pu être importé.\n\nErreurs:\n' + errors.join('\n'));
+            // Contenu des anciennes journées qui n'existent plus (la J1 est statique)
+            Object.keys(before.days).forEach(function(k) {
+                if (Number(k) !== 1 && !championship.days[k]) {
+                    var content = document.getElementById('day-' + k);
+                    if (content) content.remove();
                 }
-
-                // Vider l'input
-                event.target.value = '';
             });
+
+            refreshAfterDaysImport(1);
+            closeMultiDayImportModal();
+            alert(daysImportSummary(report, 'importée(s)'));
+            showNotification(report.added.length + ' journée(s) importée(s) avec succès !', 'success');
+            return report;
+        });
     }
     window.importMultipleDayFiles = importMultipleDayFiles;
 
@@ -1067,6 +854,436 @@
         modal.style.display = 'block';
     }
     window.showMultiDayImportModal = showMultiDayImportModal;
+
+    // ============================================
+    // AJOUTER À LA SUITE : importe les journées d'un ou plusieurs fichiers
+    // APRÈS celles du championnat ouvert, sans rien remplacer.
+    // Cas d'usage : une « Journée 1 » faite par erreur dans un autre projet
+    // devient la Journée 2 de celui-ci. Les numéros sont toujours recalculés
+    // (jamais repris du fichier), donc deux fichiers « J1 » ne s'écrasent pas.
+    // ============================================
+
+    function emptyChronoData() {
+        return { events: [], series: [], participants: [], nextEventId: 1, nextSerieId: 1, nextParticipantId: 1 };
+    }
+
+    /**
+     * Extrait la liste des journées d'un fichier JSON, quel que soit son format
+     * (export complet, days direct, ancien format players/matches, chrono brut).
+     * Les journées sont rendues dans l'ordre de leur numéro d'origine.
+     * @returns {{days: Object[], config: Object|null}}
+     */
+    function extractDaysFromImportData(data) {
+        if (!data || typeof data !== 'object') return { days: [], config: null };
+        var sortedValues = function(obj) {
+            return Object.keys(obj).sort(function(a, b) { return Number(a) - Number(b); }).map(function(k) { return obj[k]; });
+        };
+
+        if (data.championship && data.championship.days && Object.keys(data.championship.days).length > 0) {
+            return { days: sortedValues(data.championship.days), config: data.championship.config || null };
+        }
+        if (data.days && Object.keys(data.days).length > 0) {
+            return { days: sortedValues(data.days), config: data.config || null };
+        }
+        if (data.players && data.matches) {
+            return { days: [{ dayType: 'championship', players: data.players, matches: data.matches }], config: data.config || null };
+        }
+        if (data.events || data.series || data.raceData || data.participants || (data.championship && data.championship.raceData)) {
+            var rd = data.raceData || (data.championship && data.championship.raceData) || data;
+            return { days: [{
+                dayType: 'chrono',
+                players: {},
+                matches: {},
+                chronoData: {
+                    events: rd.events || [],
+                    series: rd.series || [],
+                    participants: rd.participants || [],
+                    nextEventId: rd.nextEventId || 1,
+                    nextSerieId: rd.nextSerieId || 1,
+                    nextParticipantId: rd.nextParticipantId || 1
+                }
+            }], config: null };
+        }
+        if (data.chronoData || data.dayType === 'chrono') {
+            return { days: [{ dayType: 'chrono', players: {}, matches: {}, chronoData: data.chronoData || emptyChronoData() }], config: null };
+        }
+        var found = findPlayersInData(data);
+        if (found.length > 0) {
+            return { days: [{ dayType: 'championship', players: { 1: found }, matches: { 1: [] } }], config: null };
+        }
+        return { days: [], config: null };
+    }
+
+    function hasItems(obj) {
+        if (!obj || typeof obj !== 'object') return false;
+        return Object.keys(obj).some(function(k) { return Array.isArray(obj[k]) && obj[k].length > 0; });
+    }
+
+    /** Vrai si la journée ne contient rien (ni joueur, ni match, ni poule, ni épreuve/série/participant chrono). */
+    function isDayEmpty(day) {
+        if (!day) return true;
+        if (hasItems(day.players) || hasItems(day.matches)) return false;
+        var pools = day.pools && day.pools.divisions;
+        if (pools && Object.keys(pools).some(function(k) {
+            var d = pools[k] || {};
+            return (d.pools && d.pools.length) || (d.matches && d.matches.length);
+        })) return false;
+        var cd = day.chronoData;
+        if (cd && ((cd.events && cd.events.length) || (cd.series && cd.series.length) || (cd.participants && cd.participants.length))) return false;
+        return true;
+    }
+
+    /** Plus haut numéro de division qui contient réellement des données dans la journée. */
+    function highestUsedDivision(day) {
+        var max = 0;
+        var scan = function(obj, test) {
+            if (!obj || typeof obj !== 'object') return;
+            Object.keys(obj).forEach(function(k) {
+                var n = parseInt(k, 10);
+                if (n > max && test(obj[k])) max = n;
+            });
+        };
+        var nonEmptyArray = function(v) { return Array.isArray(v) && v.length > 0; };
+        scan(day.players, nonEmptyArray);
+        scan(day.matches, nonEmptyArray);
+        if (day.pools) {
+            scan(day.pools.divisions, function(d) { return d && ((d.pools && d.pools.length) || (d.matches && d.matches.length)); });
+        }
+        return max;
+    }
+
+    /**
+     * Les matchs de poule (et quelques autres objets) mémorisent le numéro de
+     * leur journée : on le remplace par le nouveau numéro pour que rien ne
+     * pointe vers la journée d'origine du fichier.
+     */
+    function renumberDayReferences(value, newDayNumber, depth) {
+        if (!value || typeof value !== 'object' || depth > 12) return;
+        if (Array.isArray(value)) {
+            value.forEach(function(v) { renumberDayReferences(v, newDayNumber, depth + 1); });
+            return;
+        }
+        Object.keys(value).forEach(function(k) {
+            if (k === 'dayNumber' && typeof value[k] === 'number') value[k] = newDayNumber;
+            else renumberDayReferences(value[k], newDayNumber, depth + 1);
+        });
+    }
+
+    /**
+     * Une série exportée pendant que son chrono tournait garde isRunning=true et
+     * l'heure de départ d'origine : relancée telle quelle, elle afficherait des
+     * heures de course. On la met en pause sur le temps figé du fichier.
+     * @returns {string[]} noms des séries mises en pause
+     */
+    function pauseRunningSeries(chronoData) {
+        var paused = [];
+        if (!chronoData) return paused;
+        var visit = function(serie) {
+            if (serie && serie.isRunning) {
+                serie.isRunning = false;
+                delete serie.timerInterval;
+                paused.push(serie.name || ('Série ' + serie.id));
+            }
+        };
+        (chronoData.series || []).forEach(visit);
+        (chronoData.events || []).forEach(function(evt) { (evt.series || []).forEach(visit); });
+        return paused;
+    }
+
+    function normalizeName(name) {
+        return String(name || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    /** Noms (joueurs Matchs + participants Courses) d'une journée, avec leur club. */
+    function collectDayPeople(day) {
+        var people = [];
+        var add = function(p) {
+            var name = typeof p === 'string' ? p : (p && p.name);
+            if (name) people.push({ name: name, club: (p && typeof p === 'object' && p.club) || '' });
+        };
+        if (day.players) Object.keys(day.players).forEach(function(k) { (Array.isArray(day.players[k]) ? day.players[k] : []).forEach(add); });
+        var cd = day.chronoData;
+        if (cd) {
+            (cd.participants || []).forEach(add);
+            (cd.series || []).forEach(function(s) { (s.participants || []).forEach(add); });
+            (cd.events || []).forEach(function(e) { (e.series || []).forEach(function(s) { (s.participants || []).forEach(add); }); });
+        }
+        return people;
+    }
+
+    function setDivisionCount(n) {
+        championship.config = championship.config || {};
+        championship.config.numberOfDivisions = n;
+        championship.config.numDivisions = n;
+        if (global.config) global.config.numberOfDivisions = n;
+        var select = document.getElementById('divisionConfig');
+        if (select) select.value = n;
+    }
+
+    function setCourtCount(n) {
+        championship.config = championship.config || {};
+        championship.config.numberOfCourts = n;
+        championship.config.numCourts = n;
+        if (global.config) global.config.numberOfCourts = n;
+        var select = document.getElementById('courtConfig');
+        if (select) select.value = n;
+    }
+
+    /** Toutes les journées ont un tableau joueurs/matchs (et une entrée de poules) pour chaque division. */
+    function ensureDivisionStructures(numDivisions) {
+        Object.keys(championship.days).forEach(function(k) {
+            var day = championship.days[k];
+            if (!day.players) day.players = {};
+            if (!day.matches) day.matches = {};
+            for (var div = 1; div <= numDivisions; div++) {
+                if (!Array.isArray(day.players[div])) day.players[div] = [];
+                if (!Array.isArray(day.matches[div])) day.matches[div] = [];
+                if (day.pools && day.pools.divisions && !day.pools.divisions[div]) {
+                    day.pools.divisions[div] = { pools: [], matches: [] };
+                }
+            }
+        });
+    }
+
+    /**
+     * Cœur (sans fichiers ni DOM d'affichage) : ajoute les journées des sources
+     * données après le contenu du championnat ouvert.
+     * @param {{name: string, data: Object}[]} sources fichiers déjà lus et parsés, dans l'ordre voulu
+     * @returns {{added: Object[], skipped: string[], errors: string[], warnings: string[]}}
+     */
+    function appendDaysToChampionship(sources) {
+        var report = { added: [], skipped: [], errors: [], warnings: [] };
+
+        // Une course qui tourne vit dans raceData et son écran serait redessiné
+        // par le rafraîchissement d'après import : on refuse plutôt que de risquer
+        // de perdre des temps.
+        var live = global.raceData && global.raceData.currentSerie;
+        if (live && (live.isRunning || live.status === 'running')) {
+            report.errors.push('Une course est en cours (' + (live.name || 'série') + ') : terminez-la ou mettez-la en pause avant d\'ajouter des journées.');
+            return report;
+        }
+
+        // 1. Lire toutes les journées à ajouter
+        var incoming = [];
+        var fileConfig = null;
+        (sources || []).forEach(function(src) {
+            var extracted = extractDaysFromImportData(src.data);
+            if (extracted.days.length === 0) {
+                report.errors.push(src.name + ' : format non reconnu ou aucune journée');
+                return;
+            }
+            if (!fileConfig && extracted.config) fileConfig = extracted.config;
+            extracted.days.forEach(function(day, i) {
+                var label = src.name + (extracted.days.length > 1 ? ' (journée ' + (i + 1) + ' du fichier)' : '');
+                if (isDayEmpty(day)) {
+                    report.skipped.push(label + ' : journée vide');
+                    return;
+                }
+                incoming.push({ day: JSON.parse(JSON.stringify(day)), label: label });
+            });
+        });
+        if (incoming.length === 0) return report;
+
+        // 2. Où commencer : juste après la dernière journée qui contient des
+        // données. Les journées vides en fin de liste (créées par « + » sans être
+        // remplies, ou la J1 vierge d'un nouveau projet) sont réutilisées.
+        var existing = Object.keys(championship.days).map(Number).sort(function(a, b) { return a - b; });
+        var lastFilled = 0;
+        existing.forEach(function(n) { if (!isDayEmpty(championship.days[n])) lastFilled = n; });
+        var projectWasEmpty = lastFilled === 0;
+        existing.forEach(function(n) {
+            if (n > lastFilled) {
+                delete championship.days[n];
+                if (n !== 1) {
+                    var content = document.getElementById('day-' + n);
+                    if (content) content.remove();
+                }
+            }
+        });
+
+        // 3. Divisions/terrains. Projet vide : on reprend la configuration du
+        // fichier. Sinon on ne réduit jamais (on cacherait des joueurs existants) :
+        // on n'augmente le nombre de divisions que si une journée importée en
+        // utilise davantage, et on signale une différence de terrains.
+        var currentDivisions = getNumberOfDivisions();
+        var currentCourts = (championship.config && (championship.config.numberOfCourts || championship.config.numCourts)) ||
+            (global.config && global.config.numberOfCourts) || 4;
+        var fileDivisions = fileConfig && (fileConfig.numberOfDivisions || fileConfig.numDivisions);
+        var fileCourts = fileConfig && (fileConfig.numberOfCourts || fileConfig.numCourts);
+        var neededDivisions = projectWasEmpty && fileDivisions ? fileDivisions : currentDivisions;
+        incoming.forEach(function(item) { neededDivisions = Math.max(neededDivisions, highestUsedDivision(item.day)); });
+        if (neededDivisions !== currentDivisions) {
+            setDivisionCount(neededDivisions);
+            if (!projectWasEmpty) {
+                report.warnings.push('Nombre de divisions passé de ' + currentDivisions + ' à ' + neededDivisions +
+                    ' (une journée importée utilise la division ' + neededDivisions + ').');
+            }
+        }
+        if (fileCourts && fileCourts !== currentCourts) {
+            if (projectWasEmpty) {
+                setCourtCount(fileCourts);
+            } else {
+                report.warnings.push('Le fichier utilisait ' + fileCourts + ' terrain(s), ce championnat en a ' + currentCourts +
+                    ' : la configuration actuelle est conservée (à ajuster si besoin).');
+            }
+        }
+
+        // Noms déjà connus, pour repérer les variantes d'écriture qui couperaient
+        // un joueur en deux lignes dans les classements généraux (comparaison exacte).
+        var knownNames = {};
+        Object.keys(championship.days).forEach(function(k) {
+            collectDayPeople(championship.days[k]).forEach(function(p) { knownNames[normalizeName(p.name)] = p.name; });
+        });
+        var nameVariants = {};
+        var clubs = {};
+
+        // 4. Ajouter les journées une à une, numérotées à la suite
+        var nextNumber = lastFilled + 1;
+        incoming.forEach(function(item) {
+            var day = item.day;
+            var dayNumber = nextNumber++;
+
+            if (day.dayType !== 'chrono') day.dayType = 'championship';
+            if (!day.players) day.players = {};
+            if (!day.matches) day.matches = {};
+            if (!day.chronoData) day.chronoData = emptyChronoData();
+
+            renumberDayReferences(day, dayNumber, 0);
+            var paused = pauseRunningSeries(day.chronoData);
+            if (paused.length) {
+                report.warnings.push('J' + dayNumber + ' : série(s) exportée(s) chrono en marche, mises en pause : ' + paused.join(', ') + '. Vérifiez leurs temps.');
+            }
+
+            // Le cache du moteur de course est rangé par numéro de journée : une
+            // ancienne entrée pour ce numéro (journée supprimée puis recréée)
+            // ressortirait au prochain « ▶️ Course » avec d'autres nageurs.
+            if (typeof global.purgeRaceCacheForDay === 'function') global.purgeRaceCacheForDay(dayNumber);
+
+            championship.days[dayNumber] = day;
+            if (typeof global.initializePoolSystem === 'function') global.initializePoolSystem(dayNumber);
+
+            collectDayPeople(day).forEach(function(p) {
+                var key = normalizeName(p.name);
+                if (knownNames[key] && knownNames[key] !== p.name) nameVariants[p.name] = knownNames[key];
+                if (p.club) clubs[p.club] = true;
+            });
+
+            report.added.push({ dayNumber: dayNumber, dayType: day.dayType, label: item.label });
+        });
+
+        ensureDivisionStructures(getNumberOfDivisions());
+
+        if (global.clubsModule && typeof global.clubsModule.addClub === 'function') {
+            Object.keys(clubs).forEach(function(c) { global.clubsModule.addClub(c); });
+        }
+
+        var variants = Object.keys(nameVariants);
+        if (variants.length) {
+            report.warnings.push(variants.length + ' nom(s) écrit(s) différemment d\'un nom déjà présent (' +
+                variants.slice(0, 5).map(function(v) { return '« ' + v + ' » / « ' + nameVariants[v] + ' »'; }).join(', ') +
+                (variants.length > 5 ? '…' : '') + ') : ils compteraient comme deux personnes dans les classements. ' +
+                'Utilisez la vérification des noms du classement général pour les fusionner.');
+        }
+
+        // Une journée Courses ajoutée fait apparaître l'onglet Multisport : les
+        // points d'une journée Matchs et ceux d'une journée Courses s'additionnent
+        // par nom dans ce classement combiné.
+        var types = {};
+        Object.keys(championship.days).forEach(function(k) { types[championship.days[k].dayType || 'championship'] = true; });
+        if (types.chrono && types.championship && report.added.length) {
+            report.warnings.push('Le championnat mélange journées Matchs et Courses : le classement combiné (onglet 🏅 Multisport) additionne les points par nom.');
+        }
+
+        return report;
+    }
+    window.extractDaysFromImportData = extractDaysFromImportData;
+    window.appendDaysToChampionship = appendDaysToChampionship;
+
+    /** Lit et parse des fichiers JSON → { sources: [{name, data}], errors: [] } */
+    function readJsonFiles(files) {
+        return Promise.all(files.map(function(file) {
+            return new Promise(function(resolve) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        resolve({ name: file.name, data: JSON.parse(e.target.result) });
+                    } catch (err) {
+                        resolve({ name: file.name, error: err.message });
+                    }
+                };
+                reader.onerror = function() { resolve({ name: file.name, error: 'lecture impossible' }); };
+                reader.readAsText(file);
+            });
+        })).then(function(results) {
+            return {
+                sources: results.filter(function(r) { return !r.error; }),
+                errors: results.filter(function(r) { return r.error; }).map(function(r) { return r.name + ' : ' + r.error; })
+            };
+        });
+    }
+
+    /** Redessine onglets et journées après un import de journées, puis affiche showDay. */
+    function refreshAfterDaysImport(showDay) {
+        updateTabsDisplay();
+        updateDaySelectors();
+        initializeAllDaysContent();
+        Object.keys(championship.days).forEach(function(k) {
+            if (typeof global.updateDayTypeUI === 'function') global.updateDayTypeUI(parseInt(k, 10));
+        });
+        if (typeof global.initializeDayTypeSelectorForDay1 === 'function') global.initializeDayTypeSelectorForDay1();
+        if (typeof global.updateMultisportTabVisibility === 'function') global.updateMultisportTabVisibility();
+        if (typeof global.updateCourtAssignmentInfo === 'function') global.updateCourtAssignmentInfo();
+        saveToLocalStorage();
+        switchTab(showDay);
+    }
+
+    function daysImportSummary(report, verb) {
+        var msg = report.added.length + ' journée(s) ' + verb + ' :\n' + report.added.map(function(a) {
+            return 'J' + a.dayNumber + ' ' + (a.dayType === 'chrono' ? '⏱️ Courses' : '🏆 Matchs') + ' ← ' + a.label;
+        }).join('\n');
+        if (report.warnings.length) msg += '\n\n⚠️ À vérifier :\n- ' + report.warnings.join('\n- ');
+        if (report.skipped.length) msg += '\n\nIgnoré :\n' + report.skipped.join('\n');
+        if (report.errors.length) msg += '\n\nErreurs :\n' + report.errors.join('\n');
+        return msg;
+    }
+
+    /**
+     * Bouton « ➕ Ajouter à la suite » : lit les fichiers choisis (triés par nom),
+     * ajoute leurs journées après celles du championnat ouvert, puis rafraîchit l'UI.
+     */
+    function appendDaysFromFiles(event) {
+        var input = event.target;
+        var files = Array.from(input.files || []);
+        if (files.length === 0) return;
+        files.sort(function(a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
+
+        return readJsonFiles(files).then(function(read) {
+            input.value = '';
+            saveToLocalStorage();
+            var report = appendDaysToChampionship(read.sources);
+            report.errors = read.errors.concat(report.errors);
+
+            if (report.added.length === 0) {
+                alert('Aucune journée ajoutée.' +
+                    (report.errors.length ? '\n\nErreurs :\n' + report.errors.join('\n') : '') +
+                    (report.skipped.length ? '\n\nIgnoré :\n' + report.skipped.join('\n') : ''));
+                return report;
+            }
+
+            closeImportModal();
+            refreshAfterDaysImport(report.added[0].dayNumber);
+            alert(daysImportSummary(report, 'ajoutée(s)'));
+            showNotification(report.added.length + ' journée(s) ajoutée(s) à la suite', 'success');
+            return report;
+        });
+    }
+    window.appendDaysFromFiles = appendDaysFromFiles;
+
+    function openAppendDaysPicker() {
+        var input = document.getElementById('appendDaysInput');
+        if (input) input.click();
+    }
+    window.openAppendDaysPicker = openAppendDaysPicker;
 
     function closeMultiDayImportModal() {
         const modal = document.getElementById('multiDayImportModal');

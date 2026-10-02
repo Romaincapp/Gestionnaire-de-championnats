@@ -33,6 +33,57 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Accordéon des séries dans l'écran Courses
+
+- **Contexte** : voir les participants de chaque série sans ouvrir de fenêtre, par série,
+  par épreuve ou tout d'un coup (consultation seulement).
+- **Fait** : `renderSerieCard` ajoute un en-tête cliquable (chevron) et un bloc
+  `#serie-details-J-S` toujours rendu mais masqué (`renderSerieDetailsHTML`, rang/temps via
+  `rankSerieResults`). Ouvrir/fermer ne change qu'un `display` (pas de re-rendu) ; état en
+  mémoire (`openSerieDetails`, clé « jour-série ») relu à chaque rendu. Clic sur l'épreuve
+  (`toggleEventSeriesDetails`) et bouton de la barre d'actions (`toggleAllSeriesDetails`).
+- **Fichiers/modules touchés** : `src/multisport.iife.js`, `tests/unit/serieAccordion.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-02 — Bouton 🏆 de série fiabilisé, import multi-journées sur le moteur « à la suite »
+
+- **Contexte** : « le petit bouton voir le classement de chaque série se trompe parfois » ;
+  import multi-journées pouvant écraser une journée (fichier multi-journées + fichiers « J1 »).
+- **Fait** : nouveau `rankSerieResults(serie)` (multisport) = seule règle de classement d'une
+  série : DNS/DISQ exclus même avec ancienne ligne de résultat, une ligne par nom, distance
+  puis temps, ex æquo au centième. Utilisé par `showSerieRanking` (fenêtre remplacée si déjà
+  ouverte, Points seulement en Chrono pur hors natation, colonnes Club/Distance, DNS/DISQ en
+  bas), par `getChronoResultsForDay` (points par série) et `calculateEventRankings`.
+  `removeParticipantFromSerie` retire aussi la ligne de résultat. `importMultipleDayFiles` =
+  `appendDaysToChampionship` sur un championnat vidé (restauré si rien d'importable) ; helpers
+  communs `readJsonFiles`, `refreshAfterDaysImport`, `daysImportSummary` (non exposés).
+- **Fichiers/modules touchés** : `src/multisport.iife.js`, `src/export-json.iife.js`,
+  `tests/unit/serieRankingModal.test.js`, `tests/unit/importMultipleDays.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Tests** : `npm test` 332 ✅ · `npm run test:e2e` 0 problème
+
+### 2026-10-02 — Import « ➕ Ajouter à la suite » (journées d'un autre projet)
+
+- **Contexte** : une Journée 1 refaite par erreur dans un autre projet au lieu d'une Journée 2.
+  L'import existant remplace tout ; l'import multi-fichiers renumérote mais remplace aussi.
+- **Fait** : `appendDaysToChampionship(sources)` (cœur testable, sans fichiers) +
+  `appendDaysFromFiles(event)` (lecture des fichiers, rafraîchissement UI) +
+  `extractDaysFromImportData(data)` (tous les formats d'import → liste de journées). Numérotation
+  après la dernière journée non vide (journées vides de fin réutilisées). Matchs : divisions
+  augmentées si besoin (jamais réduites), structures complétées sur toutes les journées,
+  `dayNumber` des matchs de poule renuméroté, `initializePoolSystem`. Courses : refus si une
+  course tourne (`raceData.currentSerie`), séries `isRunning` du fichier mises en pause,
+  `purgeRaceCacheForDay` sur le nouveau numéro. Avertissements : noms à variante de casse/accents,
+  terrains différents, classement Multisport mixte. Clubs du fichier ajoutés à la liste.
+- **Fichiers/modules touchés** : `src/export-json.iife.js`, `index.html`, `tests/unit/appendDays.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Suite possible** : `importMultipleDayFiles` (mode « remplacer ») garde les numéros d'origine
+  des fichiers multi-journées et peut écraser une journée d'un autre fichier ; il pourrait
+  réutiliser `appendDaysToChampionship` sur un championnat vidé.
+
 ### 2026-10-01 — Barre de recherche 🔍 dans la page (façon Ctrl+F)
 
 - **Contexte** : demande d'une petite recherche intégrée pour retrouver vite un nom dans l'écran affiché.
