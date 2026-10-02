@@ -311,6 +311,55 @@
         `;
     }
 
+    /**
+     * Supprime la journée `removed` des DONNÉES et renumérote les suivantes pour garder
+     * une suite continue (J1, J2, J4, J5 → J1, J2, J3, J4). Décale tout ce qui porte un
+     * numéro de journée : clés de championship.days, champs dayNumber à l'intérieur des
+     * journées (matchs de poule), cache du moteur de course (raceData), état replié des
+     * hubs (localStorage collapseState), séries ouvertes de l'accordéon, journée courante.
+     * Ne touche pas au DOM (voir removeDay).
+     */
+    function renumberDaysAfterRemoval(removed) {
+        purgeRaceCacheForDay(removed);
+        delete championship.days[removed];
+
+        const later = Object.keys(championship.days).map(Number).filter(n => n > removed).sort((a, b) => a - b);
+        later.forEach(oldNum => {
+            const day = championship.days[oldNum];
+            delete championship.days[oldNum];
+            championship.days[oldNum - 1] = day;
+            if (typeof global.renumberDayReferences === 'function') global.renumberDayReferences(day, oldNum - 1);
+        });
+
+        const shift = n => (typeof n === 'number' && n > removed ? n - 1 : n);
+        if (typeof raceData !== 'undefined' && raceData) {
+            (raceData.events || []).forEach(e => { e.dayNumber = shift(e.dayNumber); });
+            (raceData.series || []).forEach(s => { s.dayNumber = shift(s.dayNumber); });
+            raceData.currentDayNumber = shift(raceData.currentDayNumber);
+            raceData._raceDayNumber = shift(raceData._raceDayNumber);
+            if (typeof saveChronoToLocalStorage === 'function') saveChronoToLocalStorage();
+        }
+
+        try {
+            const collapse = JSON.parse(localStorage.getItem('collapseState') || '{}');
+            const next = {};
+            Object.keys(collapse).forEach(key => {
+                const n = Number(key);
+                if (!Number.isInteger(n) || String(n) !== key) { next[key] = collapse[key]; return; }
+                if (n === removed) return;
+                next[shift(n)] = collapse[key];
+            });
+            localStorage.setItem('collapseState', JSON.stringify(next));
+        } catch (e) { /* navigation privée : état replié perdu, sans gravité */ }
+
+        if (typeof global.shiftSerieDetailsAfterDayRemoval === 'function') global.shiftSerieDetailsAfterDayRemoval(removed);
+
+        const remaining = Object.keys(championship.days).map(Number);
+        championship.currentDay = Math.min(removed, Math.max(...remaining));
+        return later.length;
+    }
+    window.renumberDaysAfterRemoval = renumberDaysAfterRemoval;
+
     function removeDay(dayNumber) {
         if (dayNumber === 1) {
             alert('⚠️ Impossible de supprimer la Journée 1 !\n\nLa Journée 1 est le Hub Central pour la gestion des joueurs.\nElle ne peut pas être supprimée.');
@@ -321,24 +370,37 @@
             alert('Vous ne pouvez pas supprimer la dernière journée !');
             return;
         }
-        
-        if (confirm(`Supprimer définitivement la Journée ${dayNumber} ?\n\nTous les joueurs, matchs et scores seront perdus !`)) {
-            delete championship.days[dayNumber];
-            
-            const tab = document.querySelector(`[data-day="${dayNumber}"]`);
-            if (tab) tab.remove();
-            
-            const dayContent = document.getElementById(`day-${dayNumber}`);
-            if (dayContent) dayContent.remove();
-            
-            const remainingDays = Object.keys(championship.days).map(Number);
-            switchTab(Math.min(...remainingDays));
 
-            updateDaySelectors();
-            if (typeof updateMultisportTabVisibility === 'function') updateMultisportTabVisibility();
-            saveToLocalStorage();
-            showNotification(`Journée ${dayNumber} supprimée`, 'warning');
+        // Une course en cours sur cette journée ou une suivante (qui va changer de
+        // numéro) : son écran et sa sauvegarde pointent sur l'ancien numéro
+        const live = typeof raceData !== 'undefined' && raceData && raceData.currentSerie;
+        if (live && (live.isRunning || live.status === 'running') && raceData.currentDayNumber >= dayNumber) {
+            alert('⏱️ Une course est en cours en Journée ' + raceData.currentDayNumber + '.\n\nTerminez-la ou mettez-la en pause avant de supprimer une journée.');
+            return;
         }
+
+        const last = Math.max(...Object.keys(championship.days).map(Number));
+        const renumberNote = dayNumber < last
+            ? `\n\nLes journées suivantes seront renumérotées (Journée ${dayNumber + 1} → Journée ${dayNumber}${last > dayNumber + 1 ? ', etc.' : ''}).`
+            : '';
+        if (!confirm(`Supprimer définitivement la Journée ${dayNumber} ?\n\nTous les joueurs, matchs et scores seront perdus !${renumberNote}`)) return;
+
+        // Contenus des journées qui disparaissent ou changent de numéro : recréés ci-dessous
+        Object.keys(championship.days).map(Number).filter(n => n >= dayNumber && n !== 1).forEach(n => {
+            const content = document.getElementById(`day-${n}`);
+            if (content) content.remove();
+        });
+
+        const renumbered = renumberDaysAfterRemoval(dayNumber);
+
+        updateTabsDisplay();
+        updateDaySelectors();
+        initializeAllDaysContent();
+        switchTab(championship.currentDay);
+        if (typeof updateMultisportTabVisibility === 'function') updateMultisportTabVisibility();
+        saveToLocalStorage();
+        setTimeout(() => { if (typeof restoreCollapseState === 'function') restoreCollapseState(); }, 100);
+        showNotification(`Journée ${dayNumber} supprimée` + (renumbered ? ' — journées suivantes renumérotées' : ''), 'warning');
     }
     window.removeDay = removeDay;
 

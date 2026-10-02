@@ -13,11 +13,10 @@
     // CONFIGURATION
     // ============================================
 
-    // Liste des clubs prédéfinis (peut être étendue)
-    var DEFAULT_CLUBS = [
-        'Club A', 'Club B', 'Club C', 'Club D', 'Club E',
-        'Club F', 'Club G', 'Club H', 'Club I', 'Club J'
-    ];
+    // Aucun club prédéfini : la liste ne sert qu'à proposer des clubs dans les menus
+    // « Club » (facultatif partout), elle se remplit avec ceux que l'on ajoute.
+    // (Avant : Club A … Club J, des noms factices qui encombraient les menus.)
+    var DEFAULT_CLUBS = [];
 
     // Clé pour stocker les clubs personnalisés
     var CLUBS_STORAGE_KEY = 'customClubsList';
@@ -404,11 +403,17 @@
     }
 
     // Le sélecteur « Club » de la section 👤 suit la liste, en gardant le club choisi
-    function refreshAddPlayerClubSelect() {
+    // (ou en sélectionnant `selected`), et le champ « Nom du nouveau club » est masqué
+    function refreshAddPlayerClubSelect(selected) {
         var select = document.getElementById('addPlayerClub');
         if (!select) return;
-        var current = select.value === '__custom__' ? '' : select.value;
+        var current = selected != null ? selected : (select.value === '__custom__' ? '' : select.value);
         select.innerHTML = generateClubOptions(current);
+        var custom = document.getElementById('addPlayerClubCustom');
+        if (custom && select.value !== '__custom__') {
+            custom.style.display = 'none';
+            custom.value = '';
+        }
     }
 
     function addClubFromAddPlayerModal() {
@@ -441,6 +446,7 @@
     }
 
     global.renderAddPlayerClubsPanel = renderAddPlayerClubsPanel;
+    global.refreshAddPlayerClubSelect = refreshAddPlayerClubSelect;
     global.addClubFromAddPlayerModal = addClubFromAddPlayerModal;
     global.removeClubFromAddPlayerModal = removeClubFromAddPlayerModal;
 

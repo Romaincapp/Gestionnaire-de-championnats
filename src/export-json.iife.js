@@ -1197,6 +1197,8 @@
         return report;
     }
     window.extractDaysFromImportData = extractDaysFromImportData;
+    // Aussi utilisée par removeDay (ui.iife.js) pour renuméroter les journées suivantes
+    window.renumberDayReferences = function(day, newDayNumber) { renumberDayReferences(day, newDayNumber, 0); };
     window.appendDaysToChampionship = appendDaysToChampionship;
 
     /** Lit et parse des fichiers JSON → { sources: [{name, data}], errors: [] } */

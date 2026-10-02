@@ -13,6 +13,21 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🔢 Journées renumérotées après une suppression
+- Supprimer une journée renumérote les suivantes : avec J1…J5, supprimer J2 puis J3 donne
+  **J1, J2, J3** (et non plus « J1, J4, J5 »). La confirmation l'annonce.
+- Tout suit le nouveau numéro : joueurs, matchs, poules, courses et leurs résultats, journées
+  repliées, séries ouvertes. Refusé pendant qu'une course tourne sur une journée concernée.
+
+### ➕ Ajouter des joueurs : tout fermé, plus de clubs factices
+- La fenêtre s'ouvre avec **toutes les sections fermées** : on choisit ce qu'on veut faire.
+- Un club créé en ajoutant un joueur (« + Ajouter un nouveau club… ») apparaît **tout de suite**
+  dans le menu « Club » (où il reste choisi pour le joueur suivant) et dans « 🏢 Gérer les clubs » ;
+  avant, il n'apparaissait qu'en rouvrant la fenêtre. Il n'est plus créé si le joueur est refusé.
+- Plus de clubs prédéfinis (« Club A » … « Club J ») : la liste des clubs démarre vide et se
+  remplit avec ceux que l'on ajoute. Le club reste facultatif partout. Une liste déjà
+  personnalisée dans le navigateur est conservée telle quelle.
+
 ### ➕ Fenêtre « Ajouter des joueurs » épurée
 - Trois sections dépliables, une seule ouverte à la fois : **👤 Ajouter un joueur** (ouverte par
   défaut), **📋 Ajouter plusieurs joueurs** (coller une liste ou importer un fichier CSV/Excel) et

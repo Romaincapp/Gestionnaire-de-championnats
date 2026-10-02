@@ -237,13 +237,13 @@
 
         if (typeof renderAddPlayerClubsPanel === 'function') renderAddPlayerClubsPanel();
         modal.style.display = 'block';
-        // Toujours rouvrir sur « 👤 Ajouter un joueur », le cas le plus courant
-        toggleAddPlayerSection('single', true);
+        // Toutes les sections fermées à l'ouverture : l'utilisateur choisit ce qu'il veut faire
+        document.querySelectorAll('#addPlayerModal .apm-section').forEach(section => section.classList.remove('open'));
     }
     window.showAddPlayerModal = showAddPlayerModal;
 
     // Accordéon de la fenêtre : une seule section ouverte à la fois. Un clic sur la
-    // section ouverte la referme ; forceOpen (ouverture de la fenêtre) l'ouvre toujours.
+    // section ouverte la referme ; forceOpen l'ouvre toujours.
     function toggleAddPlayerSection(name, forceOpen) {
         const target = document.getElementById('apm-section-' + name);
         if (!target) return;
@@ -275,13 +275,11 @@
         const clubSelect = document.getElementById('addPlayerClub');
         const clubCustom = document.getElementById('addPlayerClubCustom');
         
+        let isNewClub = false;
         if (clubSelect) {
             if (clubSelect.value === '__custom__' && clubCustom && clubCustom.value.trim()) {
                 club = clubCustom.value.trim();
-                // Ajouter le nouveau club à la liste
-                if (typeof clubsModule !== 'undefined' && clubsModule.addClub) {
-                    clubsModule.addClub(club);
-                }
+                isNewClub = true; // ajouté à la liste seulement si le joueur est accepté
             } else if (clubSelect.value && clubSelect.value !== '__custom__') {
                 club = clubSelect.value;
             }
@@ -326,6 +324,15 @@
         saveToLocalStorage();
         showNotification(`${name}${club ? ' (' + club + ')' : ''} ajouté à D${division}`, 'success');
         updatePlayersDisplay(dayNumber);
+
+        // Nouveau club saisi : l'ajouter à la liste et le montrer tout de suite dans la
+        // fenêtre (menu « Club », où il reste sélectionné pour le joueur suivant, et
+        // section 🏢). Avant, il n'apparaissait qu'en rouvrant la fenêtre.
+        if (isNewClub) {
+            if (typeof clubsModule !== 'undefined' && clubsModule.addClub) clubsModule.addClub(club);
+            if (typeof refreshAddPlayerClubSelect === 'function') refreshAddPlayerClubSelect(club);
+            if (typeof renderAddPlayerClubsPanel === 'function') renderAddPlayerClubsPanel();
+        }
 
         document.getElementById('addPlayerName').value = '';
         document.getElementById('addPlayerName').focus();
@@ -708,7 +715,7 @@
 
     function generateClubOptionsForEdit(selectedClub) {
         var clubs = (typeof clubsModule !== 'undefined' && clubsModule.getClubsList) ? 
-            clubsModule.getClubsList() : ['Club A', 'Club B', 'Club C'];
+            clubsModule.getClubsList() : [];
         var html = '<option value="">-- Aucun club --</option>';
         clubs.forEach(function(club) {
             var selected = club === selectedClub ? ' selected' : '';

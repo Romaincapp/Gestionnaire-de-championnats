@@ -33,6 +33,39 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Suppression d'une journée : renumérotation des suivantes
+
+- **Contexte** : J1…J5, supprimer J2 et J3 laissait « J1, J4, J5 ».
+- **Fait** : `renumberDaysAfterRemoval(removed)` (ui, exposée, sans DOM) supprime la journée et
+  décale les suivantes : clés de `championship.days`, champs `dayNumber` internes
+  (`renumberDayReferences`, export-json, désormais exposée), cache `raceData` (events/series,
+  `currentDayNumber`, `_raceDayNumber`), `collapseState` (localStorage), séries ouvertes de
+  l'accordéon (`shiftSerieDetailsAfterDayRemoval`, multisport), `currentDay`. `removeDay` retire
+  les contenus concernés puis reconstruit onglets/contenus (`updateTabsDisplay`,
+  `initializeAllDaysContent`) ; refus si une course tourne sur une journée ≥ supprimée ;
+  confirmation qui annonce la renumérotation.
+- **Fichiers/modules touchés** : `src/ui.iife.js`, `src/export-json.iife.js`, `src/multisport.iife.js`,
+  `tests/unit/removeDayRenumber.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-02 — Accordéon « Ajouter des joueurs » fermé par défaut, plus de clubs prédéfinis
+
+- **Contexte** : demande utilisateur — toutes les sections fermées à l'ouverture ; question « est-ce
+  grave de n'avoir aucun club par défaut ? » → non : la liste ne sert qu'aux menus de suggestion,
+  aucun calcul n'en dépend et le club est facultatif partout.
+- **Fait** : `showAddPlayerModal` ferme toutes les `.apm-section` ; `DEFAULT_CLUBS = []` (clubs) et
+  repli `[]` dans `generateClubOptionsForEdit` (players). Une liste `customClubsList` déjà en
+  localStorage n'est pas touchée.
+- **Bug corrigé dans la foulée** : un club créé via « + Ajouter un nouveau club… » en ajoutant un
+  joueur était bien enregistré mais la fenêtre (restée ouverte) n'était pas rafraîchie.
+  `addPlayerFromModal` ajoute le club seulement si le joueur est accepté, puis
+  `refreshAddPlayerClubSelect(club)` (clubs, exposée) le sélectionne et masque le champ, et
+  `renderAddPlayerClubsPanel()` met à jour la section 🏢.
+- **Fichiers/modules touchés** : `src/players.iife.js`, `src/clubs.iife.js`, `tests/unit/addPlayerModalAccordion.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-02 — Fenêtre « ➕ Ajouter des joueurs » en accordéon
 
 - **Contexte** : fenêtre jugée chargée pour un utilisateur non initié.

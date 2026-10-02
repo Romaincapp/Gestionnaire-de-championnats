@@ -24,17 +24,20 @@ beforeEach(() => {
 
 const openSections = () => [...document.querySelectorAll('#addPlayerModal .apm-section.open')].map((s) => s.id);
 
-test('s\'ouvre sur « Ajouter un joueur », une seule section ouverte à la fois', () => {
+test('toutes les sections fermées à l\'ouverture, une seule ouverte à la fois', () => {
     showAddPlayerModal(1);
+    expect(openSections()).toEqual([]);
+    toggleAddPlayerSection('single');
     expect(openSections()).toEqual(['apm-section-single']);
     toggleAddPlayerSection('bulk');
     expect(openSections()).toEqual(['apm-section-bulk']);
     toggleAddPlayerSection('bulk');
     expect(openSections()).toEqual([]);
-    // rouvrir la fenêtre revient toujours sur l'ajout individuel
+    // rouvrir la fenêtre referme tout, même si une section était restée ouverte
+    toggleAddPlayerSection('clubs');
     closeAddPlayerModal();
     showAddPlayerModal(1);
-    expect(openSections()).toEqual(['apm-section-single']);
+    expect(openSections()).toEqual([]);
 });
 
 test('ajout individuel toujours fonctionnel (mêmes champs)', () => {
@@ -58,4 +61,43 @@ test('clubs gérés dans la fenêtre : ajout et suppression mettent à jour la l
     removeClubFromAddPlayerModal(index);
     expect(clubsModule.getClubsList()).not.toContain("TT l'Envol");
     expect(optionValues()).not.toContain("TT l'Envol");
+});
+
+test('aucun club prédéfini : le menu « Club » ne propose que « + Ajouter un nouveau club… »', () => {
+    expect(clubsModule.getClubsList()).toEqual([]);
+    showAddPlayerModal(1);
+    const values = [...document.querySelectorAll('#addPlayerClub option')].map((o) => o.value);
+    expect(values).toEqual(['', '__custom__']);
+    expect(document.getElementById('addPlayerClubsPanel').textContent).toContain('Aucun club');
+    // un joueur sans club s'ajoute normalement
+    document.getElementById('addPlayerName').value = 'Sans Club';
+    addPlayerFromModal();
+    expect(championship.days[1].players[1].map((p) => [p.name, p.club])).toEqual([['Sans Club', '']]);
+});
+
+test('nouveau club saisi en ajoutant un joueur : visible tout de suite dans le menu et la section 🏢', () => {
+    showAddPlayerModal(1);
+    const select = document.getElementById('addPlayerClub');
+    const custom = document.getElementById('addPlayerClubCustom');
+    select.value = '__custom__';
+    handleClubSelectChange(select, 'addPlayerClubCustom');
+    custom.value = 'CTT Ciney';
+    document.getElementById('addPlayerName').value = 'Martin Paul';
+    addPlayerFromModal();
+
+    expect(championship.days[1].players[1]).toEqual([{ name: 'Martin Paul', club: 'CTT Ciney' }]);
+    expect([...select.options].map((o) => o.value)).toContain('CTT Ciney');
+    expect(select.value).toBe('CTT Ciney'); // reste choisi pour le joueur suivant
+    expect(custom.style.display).toBe('none');
+    expect(document.getElementById('addPlayerClubsPanel').textContent).toContain('CTT Ciney');
+});
+
+test('joueur refusé (nom vide) : le nouveau club n\'est pas créé', () => {
+    showAddPlayerModal(1);
+    const select = document.getElementById('addPlayerClub');
+    select.value = '__custom__';
+    document.getElementById('addPlayerClubCustom').value = 'Club Fantôme';
+    document.getElementById('addPlayerName').value = '';
+    addPlayerFromModal();
+    expect(clubsModule.getClubsList()).not.toContain('Club Fantôme');
 });

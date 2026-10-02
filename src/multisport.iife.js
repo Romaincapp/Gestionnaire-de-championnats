@@ -1553,6 +1553,19 @@
         all.forEach(function(s) { setSerieDetailsOpen(dayNumber, s.id, open); });
         updateAccordionControls(dayNumber);
     }
+    // Journée supprimée : l'état ouvert/fermé de ses séries disparaît et celui des
+    // journées suivantes suit leur nouveau numéro (J5 → J4…)
+    function shiftSerieDetailsAfterDayRemoval(removedDay) {
+        var next = {};
+        Object.keys(openSerieDetails).forEach(function(key) {
+            var parts = key.split('-');
+            var day = Number(parts[0]);
+            if (day === removedDay) return;
+            next[(day > removedDay ? day - 1 : day) + '-' + parts.slice(1).join('-')] = true;
+        });
+        openSerieDetails = next;
+    }
+    global.shiftSerieDetailsAfterDayRemoval = shiftSerieDetailsAfterDayRemoval;
     global.toggleSerieDetails = toggleSerieDetails;
     global.toggleEventSeriesDetails = toggleEventSeriesDetails;
     global.toggleAllSeriesDetails = toggleAllSeriesDetails;
