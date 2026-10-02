@@ -176,3 +176,35 @@ test('fichier illisible ou vide : erreur, championnat inchangé', () => {
     expect(report.errors).toHaveLength(1);
     expect(JSON.stringify(championship.days)).toBe(before);
 });
+
+test('Courses + Courses : deux « J1 » chrono aux mêmes ids (épreuve 1, série 1) restent séparées, y compris en course', () => {
+    document.body.innerHTML = '<div id="chrono-content-1"></div><div id="chrono-content-2"></div>';
+    championship.days = {};
+    const fileA = exportFile({ 1: chronoDay() });
+    const dayB = chronoDay({ status: 'ready', results: [], participants: [{ id: 1, name: 'Hugo Blanc', bib: 1, club: 'Nage Club', status: 'ready' }] });
+    dayB.chronoData.participants = [{ id: 1, name: 'Hugo Blanc', bib: 1, club: 'Nage Club' }];
+
+    const r1 = appendDaysToChampionship([{ name: 'projetA.json', data: fileA }]);
+    const r2 = appendDaysToChampionship([{ name: 'projetB.json', data: exportFile({ 1: dayB }) }]);
+    expect(r1.added[0].dayNumber).toBe(1);
+    expect(r2.added[0].dayNumber).toBe(2);
+    expect(championship.days[1].chronoData.series[0].id).toBe(championship.days[2].chronoData.series[0].id);
+
+    // Course de la J2 : ses nageurs, pas ceux de la J1 (même id de série)
+    startChronoRaceForDay(2, 1);
+    expect(raceData.currentSerie.dayNumber).toBe(2);
+    expect(raceData.currentSerie.participants.map((p) => p.name)).toEqual(['Hugo Blanc']);
+    // Puis la J1 : retrouve les siens, résultats intacts
+    startChronoRaceForDay(1, 1);
+    expect(raceData.currentSerie.dayNumber).toBe(1);
+    expect(raceData.currentSerie.participants.map((p) => p.name)).toEqual(['Léa Martin']);
+    expect(championship.days[1].chronoData.series[0].results).toHaveLength(1);
+
+    // Classement par épreuve : une entrée par journée, une fois la J2 nagée
+    const serieB = championship.days[2].chronoData.series[0];
+    Object.assign(serieB.participants[0], { status: 'finished', finishTime: 65000 });
+    serieB.results = [{ bib: 1, name: 'Hugo Blanc', club: 'Nage Club', time: 65000 }];
+    serieB.status = 'completed';
+    const events = calculateEventRankings();
+    expect(events.map((e) => e.dayNumber)).toEqual([1, 2]);
+});
