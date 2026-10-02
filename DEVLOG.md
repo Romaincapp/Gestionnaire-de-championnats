@@ -33,6 +33,16 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Boutons de copie rapide « 📋 J1, J2… » retirés (journées Matchs)
+
+- **Contexte** : doublon de « 📥 Reprendre d'une autre journée » (fenêtre « ➕ Joueurs »), place dans la barre.
+- **Fait** : span `#quick-copy-buttons-N` retiré du gabarit (`generateDayContentHTML`, ui) ;
+  `generateQuickCopyButtons` et `quickCopyFromDay` supprimées (ui) avec leurs 5 appels (ui, init).
+  Les boutons équivalents de l'écran Courses (`generateChronoQuickCopyButtons`, multisport) restent.
+- **Fichiers/modules touchés** : `src/ui.iife.js`, `src/init.iife.js`, `tests/unit/addPlayerModalAccordion.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-02 — « 📥 Importer joueurs » déplacé dans la fenêtre « ➕ Joueurs »
 
 - **Contexte** : faire de la place dans la barre d'actions des journées Matchs.

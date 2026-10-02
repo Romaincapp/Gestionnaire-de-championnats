@@ -76,13 +76,6 @@
             restoreCollapseState();
         }, 100);
 
-        // Mettre à jour les boutons de copie rapide pour toutes les journées
-        setTimeout(() => {
-            Object.keys(championship.days).forEach(dayNum => {
-                generateQuickCopyButtons(parseInt(dayNum));
-            });
-        }, 50);
-
         saveToLocalStorage();
 
         showNotification(`Journée ${newDayNumber} créée !`, 'success');
@@ -152,7 +145,6 @@
             tempDiv.innerHTML = generateDayContentHTML(dayNumber);
             existingDayContent.innerHTML = tempDiv.innerHTML;
             initializeDivisionsDisplay(dayNumber);
-            setTimeout(() => generateQuickCopyButtons(dayNumber), 0);
             
             // S'assurer que le sélecteur a la bonne valeur et mettre à jour l'affichage
             setTimeout(() => {
@@ -196,7 +188,6 @@
 
         content.insertBefore(dayContent, generalRanking);
         initializeDivisionsDisplay(dayNumber);
-        setTimeout(() => generateQuickCopyButtons(dayNumber), 0);
     }
 
     function generateDayContentHTML(dayNumber) {
@@ -233,8 +224,8 @@
                         ➕ Joueurs
                     </button>
                     <!-- « 📥 Importer joueurs » est dans la fenêtre « ➕ Joueurs » (section 📥) -->
-                    <!-- Boutons copie rapide -->
-                    <span id="quick-copy-buttons-${dayNumber}" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>
+                    <!-- Plus de boutons « 📋 J1, J2… » : copier les joueurs d'une journée précédente
+                         se fait dans « ➕ Joueurs » → « 📥 Reprendre d'une autre journée » -->
                     <!-- Actions matchs -->
                     <button onclick="showMatchGenerationModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🎯 Matchs
@@ -867,8 +858,6 @@
                 }
             }
             
-            // Générer les boutons de copie rapide
-            setTimeout(() => generateQuickCopyButtons(dayNum), 100);
             //nouveau pour les pools
             initializePoolsForDay(dayNum);
         });
@@ -1307,124 +1296,6 @@
         saveToLocalStorage();
     }
     window.saveRaceResultsToDay = saveRaceResultsToDay;
-
-    /**
-     * Génère les boutons de copie rapide "Copier J1", "Copier J2" etc.
-     * pour une journée donnée
-     */
-    function generateQuickCopyButtons(dayNumber) {
-        const container = document.getElementById(`quick-copy-buttons-${dayNumber}`);
-        if (!container) return;
-        
-        // Vider le conteneur
-        container.innerHTML = '';
-        
-        // Générer un bouton pour chaque journée précédente
-        const allDays = Object.keys(championship.days).map(Number).sort((a, b) => a - b);
-        const previousDays = allDays.filter(d => d < dayNumber);
-        
-        if (previousDays.length === 0) return;
-        
-        // Ajouter un séparateur visuel si nécessaire
-        if (previousDays.length > 0) {
-            const sep = document.createElement('span');
-            sep.style.color = '#cbd5e1';
-            sep.textContent = '|';
-            container.appendChild(sep);
-        }
-        
-        previousDays.forEach(prevDay => {
-            const btn = document.createElement('button');
-            btn.onclick = function() { quickCopyFromDay(dayNumber, prevDay); };
-            btn.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 11px; background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; border-radius: 6px; cursor: pointer; font-weight: 500;';
-            btn.title = `Copier tous les joueurs de la Journée ${prevDay}`;
-            btn.innerHTML = `📋 J${prevDay}`;
-            container.appendChild(btn);
-        });
-    }
-    window.generateQuickCopyButtons = generateQuickCopyButtons;
-
-    /**
-     * Copie rapide des joueurs d'une journée à une autre
-     */
-    function quickCopyFromDay(targetDayNumber, sourceDayNumber) {
-        const sourceDay = championship.days[sourceDayNumber];
-        const targetDay = championship.days[targetDayNumber];
-        
-        if (!sourceDay || !targetDay) {
-            showNotification('Journée source ou cible introuvable', 'error');
-            return;
-        }
-        
-        // Compter les joueurs à copier
-        let playersToCopy = 0;
-        const numDivisions = championship.config?.numberOfDivisions || 3;
-        for (let div = 1; div <= numDivisions; div++) {
-            playersToCopy += (sourceDay.players[div] || []).length;
-        }
-        
-        if (playersToCopy === 0) {
-            showNotification(`La Journée ${sourceDayNumber} n'a pas de joueurs`, 'warning');
-            return;
-        }
-        
-        // Confirmer si joueurs existent déjà
-        let existingCount = 0;
-        for (let div = 1; div <= numDivisions; div++) {
-            existingCount += (targetDay.players[div] || []).length;
-        }
-        
-        let confirmMsg = `Copier ${playersToCopy} joueur(s) de J${sourceDayNumber} vers J${targetDayNumber} ?`;
-        if (existingCount > 0) {
-            confirmMsg += `\n\n⚠️ Attention : La Journée ${targetDayNumber} a déjà ${existingCount} joueur(s).\nLes doublons seront ignorés.`;
-        }
-        
-        if (!confirm(confirmMsg)) return;
-        
-        // Effectuer la copie
-        let copied = 0;
-        let skipped = 0;
-        
-        for (let div = 1; div <= numDivisions; div++) {
-            const sourcePlayers = sourceDay.players[div] || [];
-            const targetPlayers = targetDay.players[div] || [];
-            
-            sourcePlayers.forEach(player => {
-                const playerName = typeof player === 'object' ? player.name : player;
-                const playerClub = typeof player === 'object' ? (player.club || '') : '';
-                
-                // Vérifier si déjà présent
-                const exists = targetPlayers.some(p => {
-                    const pName = typeof p === 'object' ? p.name : p;
-                    return pName.toLowerCase() === playerName.toLowerCase();
-                });
-                
-                if (!exists) {
-                    targetPlayers.push({
-                        name: playerName,
-                        club: playerClub
-                    });
-                    copied++;
-                } else {
-                    skipped++;
-                }
-            });
-            
-            targetDay.players[div] = targetPlayers;
-        }
-        
-        saveToLocalStorage();
-        
-        // Rafraîchir l'affichage
-        if (typeof updatePlayersDisplay === 'function') {
-            updatePlayersDisplay(targetDayNumber);
-        }
-        
-        let msg = `${copied} joueur(s) copié(s) de J${sourceDayNumber}`;
-        if (skipped > 0) msg += ` (${skipped} doublon(s) ignoré(s))`;
-        showNotification(msg, 'success');
-    }
-    window.quickCopyFromDay = quickCopyFromDay;
 
     function clearDayData(dayNumber) {
         const dayData = championship.days[dayNumber];

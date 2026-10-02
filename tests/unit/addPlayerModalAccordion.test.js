@@ -126,3 +126,16 @@ test('section 📥 : ouvre la fenêtre d\'import de la journée et ferme celle-c
     expect(modal).not.toBeNull();
     expect(modal.textContent).toContain('Journée 2');
 });
+
+test('plus de petits boutons « 📋 J1, J2… » de copie rapide dans la barre des journées Matchs', () => {
+    championship.days[2] = { dayType: 'championship', players: { 1: [], 2: [] }, matches: { 1: [], 2: [] } };
+    championship.days[3] = { dayType: 'championship', players: { 1: [], 2: [] }, matches: { 1: [], 2: [] } };
+    jest.useFakeTimers();
+    initializeAllDaysContent();
+    jest.runAllTimers();
+    jest.useRealTimers();
+    expect(document.querySelectorAll('[id^="quick-copy-buttons-"]')).toHaveLength(0);
+    const bar = document.getElementById('day-hub-content-3').textContent;
+    expect(bar).not.toMatch(/📋 J\d/);
+    expect(typeof window.quickCopyFromDay).toBe('undefined');
+});
