@@ -13,6 +13,19 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ➕ Import : ajouter des journées à la suite
+- Dans la fenêtre d'import, nouveau bouton **« ➕ Ajouter à la suite du championnat »** : les
+  journées du ou des fichiers choisis sont ajoutées **après** celles déjà présentes, sans rien
+  remplacer. Une « Journée 1 » refaite par erreur dans un autre projet devient la Journée 2
+  (plusieurs fichiers « J1 » : J2, J3… dans l'ordre des noms de fichiers). Journées Matchs et
+  Courses peuvent être mélangées.
+- Une journée vide en fin de championnat (ou la J1 vierge d'un nouveau projet) est réutilisée ;
+  les journées vides des fichiers sont ignorées.
+- Précautions : refusé pendant qu'une course tourne ; une série exportée chrono en marche est
+  mise en pause sur son temps ; le nombre de divisions est augmenté si besoin (jamais réduit) ;
+  le récapitulatif signale les noms écrits différemment d'un jour à l'autre (« jean dupont » /
+  « Jean Dupont »), qui compteraient comme deux personnes dans les classements.
+
 ### 🔍 Recherche dans la page
 - Nouveau bouton **🔍** dans l'en-tête : une petite barre de recherche, comme le Ctrl+F du
   navigateur, pour retrouver un joueur, un nageur ou un club dans l'écran affiché. Sans

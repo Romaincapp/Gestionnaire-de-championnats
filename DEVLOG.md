@@ -33,6 +33,26 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Import « ➕ Ajouter à la suite » (journées d'un autre projet)
+
+- **Contexte** : une Journée 1 refaite par erreur dans un autre projet au lieu d'une Journée 2.
+  L'import existant remplace tout ; l'import multi-fichiers renumérote mais remplace aussi.
+- **Fait** : `appendDaysToChampionship(sources)` (cœur testable, sans fichiers) +
+  `appendDaysFromFiles(event)` (lecture des fichiers, rafraîchissement UI) +
+  `extractDaysFromImportData(data)` (tous les formats d'import → liste de journées). Numérotation
+  après la dernière journée non vide (journées vides de fin réutilisées). Matchs : divisions
+  augmentées si besoin (jamais réduites), structures complétées sur toutes les journées,
+  `dayNumber` des matchs de poule renuméroté, `initializePoolSystem`. Courses : refus si une
+  course tourne (`raceData.currentSerie`), séries `isRunning` du fichier mises en pause,
+  `purgeRaceCacheForDay` sur le nouveau numéro. Avertissements : noms à variante de casse/accents,
+  terrains différents, classement Multisport mixte. Clubs du fichier ajoutés à la liste.
+- **Fichiers/modules touchés** : `src/export-json.iife.js`, `index.html`, `tests/unit/appendDays.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Suite possible** : `importMultipleDayFiles` (mode « remplacer ») garde les numéros d'origine
+  des fichiers multi-journées et peut écraser une journée d'un autre fichier ; il pourrait
+  réutiliser `appendDaysToChampionship` sur un championnat vidé.
+
 ### 2026-10-01 — Barre de recherche 🔍 dans la page (façon Ctrl+F)
 
 - **Contexte** : demande d'une petite recherche intégrée pour retrouver vite un nom dans l'écran affiché.

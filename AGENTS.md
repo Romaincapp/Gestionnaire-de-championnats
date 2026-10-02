@@ -279,12 +279,13 @@ fichier documenté ici) a été supprimé (issue #64 sur GitHub, 2026-09) : ses
 5 fonctions étaient entièrement écrasées par ces deux modules-ci, chargés
 après lui — c'était du code mort.
 
-**export-json.iife.js** (14 fonctions/variables exposées, liste complète) :
+**export-json.iife.js** (18 fonctions/variables exposées, liste complète) :
 - `exportChampionship()`, `confirmExportChampionship()` - Export JSON (avec choix du nom de fichier)
 - `showImportModal()`, `closeImportModal()`, `showImportConfigModal()`, `closeImportConfigModal()`, `applyImportConfig()` - Import JSON, configuration divisions/terrains avant import
 - `handleChampionshipImport(event)`, `processImport()` - Traitement du fichier importé (remplace tout le championnat)
 - `importMultipleDayFiles()`, `showMultiDayImportModal()`, `closeMultiDayImportModal()` - Import multi-fichiers (un par journée)
 - `clearAllData()` - Efface tout (championnat + chrono + localStorage)
+- `appendDaysFromFiles(event)`, `openAppendDaysPicker()`, `appendDaysToChampionship(sources)`, `extractDaysFromImportData(data)` - « ➕ Ajouter à la suite » : ajoute les journées de fichiers **après** celles du championnat ouvert, renumérotées (une J1 d'un autre projet → J2), sans rien remplacer. `appendDaysToChampionship([{name, data}])` est le cœur testable (rapport `{added, skipped, errors, warnings}`) : refus si une course tourne, séries `isRunning` mises en pause, `purgeRaceCacheForDay` sur le nouveau numéro, divisions augmentées jamais réduites, `dayNumber` des matchs de poule renuméroté, journées vides ignorées/réutilisées
 - `importedChampionshipData` (variable, réassignée à 3 endroits différents du fichier - normal, pas un bug)
 
 **export-print.iife.js** (22 fonctions exposées). `generateMatchSheetHTML` et
