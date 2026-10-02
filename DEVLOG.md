@@ -33,6 +33,18 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Accordéon « Ajouter des joueurs » fermé par défaut, plus de clubs prédéfinis
+
+- **Contexte** : demande utilisateur — toutes les sections fermées à l'ouverture ; question « est-ce
+  grave de n'avoir aucun club par défaut ? » → non : la liste ne sert qu'aux menus de suggestion,
+  aucun calcul n'en dépend et le club est facultatif partout.
+- **Fait** : `showAddPlayerModal` ferme toutes les `.apm-section` ; `DEFAULT_CLUBS = []` (clubs) et
+  repli `[]` dans `generateClubOptionsForEdit` (players). Une liste `customClubsList` déjà en
+  localStorage n'est pas touchée.
+- **Fichiers/modules touchés** : `src/players.iife.js`, `src/clubs.iife.js`, `tests/unit/addPlayerModalAccordion.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-02 — Fenêtre « ➕ Ajouter des joueurs » en accordéon
 
 - **Contexte** : fenêtre jugée chargée pour un utilisateur non initié.

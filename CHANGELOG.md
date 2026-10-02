@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ➕ Ajouter des joueurs : tout fermé, plus de clubs factices
+- La fenêtre s'ouvre avec **toutes les sections fermées** : on choisit ce qu'on veut faire.
+- Plus de clubs prédéfinis (« Club A » … « Club J ») : la liste des clubs démarre vide et se
+  remplit avec ceux que l'on ajoute. Le club reste facultatif partout. Une liste déjà
+  personnalisée dans le navigateur est conservée telle quelle.
+
 ### ➕ Fenêtre « Ajouter des joueurs » épurée
 - Trois sections dépliables, une seule ouverte à la fois : **👤 Ajouter un joueur** (ouverte par
   défaut), **📋 Ajouter plusieurs joueurs** (coller une liste ou importer un fichier CSV/Excel) et

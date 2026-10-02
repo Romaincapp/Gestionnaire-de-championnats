@@ -111,7 +111,7 @@ objet `clubsModule` regroupant 15 méthodes (pas des fonctions séparées) :
 
 **Fonctions directes** :
 - `showClubManagementModal()`, `closeClubManagementModal()`, `addNewClubFromModal()`, `removeClubFromModal()`, `handleClubSelectChange(select, inputId)`
-- `renderAddPlayerClubsPanel()`, `addClubFromAddPlayerModal()`, `removeClubFromAddPlayerModal(index)` - section « 🏢 Gérer les clubs » intégrée à la fenêtre « ➕ Ajouter des joueurs » (le sélecteur `#addPlayerClub` suit la liste). `showClubManagementModal()` n'a plus de bouton depuis 2026-10-02
+- `renderAddPlayerClubsPanel()`, `addClubFromAddPlayerModal()`, `removeClubFromAddPlayerModal(index)` - section « 🏢 Gérer les clubs » intégrée à la fenêtre « ➕ Ajouter des joueurs » (le sélecteur `#addPlayerClub` suit la liste). `showClubManagementModal()` n'a plus de bouton depuis 2026-10-02. Aucun club prédéfini (`DEFAULT_CLUBS = []`) : la liste (localStorage `customClubsList`) ne sert qu'aux menus de suggestion
 
 **`window.clubsModule` (objet, méthodes)** :
 - `getClubsList`, `addClub`, `removeClub`, `generateClubOptions`, `generateClubInputHtml`, `migratePlayerData`, `createPlayerObject`, `getPlayerName`, `getPlayerClub`, `getPlayerFullDisplay`, `getPlayerDisplayName`, `findPlayerByName`, `playerExists`, `getClubsStats`, `getPlayerClubByName`
@@ -157,7 +157,7 @@ Un sous-ensemble représentatif :
 **Rôle** : Gestion des joueurs (journées Championship). ~19 fonctions exposées,
 dont notamment :
 - `addPlayer()`, `addPlayerToDay(dayNumber)`, `removePlayer(dayNumber, division, index)`, `editPlayer(dayNumber, division, index)`, `playerHasByeMatch(dayNumber, division, playerName)`, `addBulkPlayers()`
-- `showAddPlayerModal(dayNumber)`, `toggleAddPlayerSection(name, forceOpen)` (accordéon `single` / `bulk` / `clubs`, une section ouverte à la fois), `closeAddPlayerModal()`, `addPlayerFromModal()`, `showBulkInput()`, `closeBulkModal()`, `showEditPlayerModal()`, `saveEditedPlayer()`, `updatePlayersDisplay()`
+- `showAddPlayerModal(dayNumber)`, `toggleAddPlayerSection(name, forceOpen)` (accordéon `single` / `bulk` / `clubs`, une section ouverte à la fois, toutes fermées à l'ouverture de la fenêtre), `closeAddPlayerModal()`, `addPlayerFromModal()`, `showBulkInput()`, `closeBulkModal()`, `showEditPlayerModal()`, `saveEditedPlayer()`, `updatePlayersDisplay()`
 
 **Correction** : `copyPlayersFromPreviousDay()` et `updatePlayerCount()` sont
 en réalité dans `ui.iife.js`, pas ici (attribution corrigée le 2026-09,
