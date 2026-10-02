@@ -232,3 +232,64 @@ describe('participants de la journée', () => {
             .toEqual(['Eva Roy 100m dos 1:10.00', 'Jean Dupont']);
     });
 });
+
+describe('un seul dossard par nageur', () => {
+    // Avant : un dossard par inscription (Alice #1 au libre, #3 à la brasse)
+    const bibOf = (eventIndex, name) => championship.days[1].chronoData.events[eventIndex].series
+        .flatMap(s => s.participants).find(p => p.name === name).bib;
+
+    test('un nageur inscrit à deux nages garde le même dossard', () => {
+        setupDays(['Alice Durand 50m libre 35.00', 'Bruno Leroy 50m libre 34.00',
+            'Alice Durand 50m brasse 45.00', 'Chloé Morel 50m brasse 44.00'], ['50m Nage Libre', '50m Brasse']);
+        importFrom(2);
+        expect(bibOf(0, 'Alice Durand')).toBe(bibOf(1, 'Alice Durand'));
+        // 3 nageurs → 3 dossards distincts
+        const all = championship.days[1].chronoData.participants.map(p => p.bib);
+        expect(new Set(all).size).toBe(3);
+        // les fiches par inscription restent (une par épreuve), même numéro
+        expect(championship.days[1].chronoData.participants.filter(p => p.name === 'Alice Durand')).toHaveLength(2);
+    });
+
+    test('reconnu sans tenir compte des majuscules ni des accents', () => {
+        setupDays(['Hélène Roux 50m libre 35.00', 'helene roux 50m brasse 45.00'], ['50m Nage Libre', '50m Brasse']);
+        importFrom(2);
+        const parts = championship.days[1].chronoData.events.flatMap(e => e.series).flatMap(s => s.participants);
+        expect(parts.map(p => p.bib)).toEqual([1, 1]);
+    });
+
+    test('même nom mais autre club : autre nageur, autre dossard', () => {
+        setupDays(['Alice Durand 50m libre 35.00'], ['50m Nage Libre'],
+            { existing: [{ id: 1, name: 'Alice Durand', club: 'CN Liège', bib: 42 }] });
+        importFrom(2);
+        expect(bibOf(0, 'Alice Durand')).toBe(43);
+    });
+
+    test('un participant ajouté à la main garde son dossard dans ses nages', () => {
+        setupDays(['Alice Durand 50m libre 35.00', 'Alice Durand 50m brasse 45.00', 'Bruno Leroy 50m libre 34.00'],
+            ['50m Nage Libre', '50m Brasse'], { existing: [{ id: 1, name: 'Alice Durand', club: '', bib: 42 }] });
+        importFrom(2);
+        expect(bibOf(0, 'Alice Durand')).toBe(42);
+        expect(bibOf(1, 'Alice Durand')).toBe(42);
+        expect(bibOf(0, 'Bruno Leroy')).toBe(43);
+    });
+
+    test('une régénération ne renumérote pas les nageurs', () => {
+        setupDays(['Alice Durand 50m libre 35.00', 'Bruno Leroy 50m libre 34.00', 'Alice Durand 50m brasse 45.00'],
+            ['50m Nage Libre', '50m Brasse']);
+        importFrom(2);
+        const before = { alice: bibOf(0, 'Alice Durand'), bruno: bibOf(0, 'Bruno Leroy') };
+        championship.days[2].players[1].unshift({ name: 'Zoé Petit 50m libre 30.00', club: '' });
+        importFrom(2);
+        expect(bibOf(0, 'Alice Durand')).toBe(before.alice);
+        expect(bibOf(1, 'Alice Durand')).toBe(before.alice);
+        expect(bibOf(0, 'Bruno Leroy')).toBe(before.bruno);
+        expect(bibOf(0, 'Zoé Petit')).toBe(3);
+    });
+
+    test('inscrit deux fois à la même épreuve : dossards distincts dans l\'épreuve (le moteur de course identifie par dossard)', () => {
+        setupDays(['Alice Durand 50m libre 35.00', 'Alice Durand 50m libre 36.00'], ['50m Nage Libre']);
+        importFrom(2);
+        const bibs = championship.days[1].chronoData.events[0].series.flatMap(s => s.participants.map(p => p.bib));
+        expect(new Set(bibs).size).toBe(2);
+    });
+});
