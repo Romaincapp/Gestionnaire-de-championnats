@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎽 Un seul dossard par nageur
+- Avec « 🏁 Séries automatiques », un nageur inscrit à plusieurs nages reçoit maintenant
+  **le même dossard** dans toutes ses séries (avant : un dossard par inscription). Le nageur est
+  reconnu par son nom et son club, sans tenir compte des majuscules ni des accents.
+- Un participant déjà présent (ajouté à la main) garde son dossard ; régénérer les séries ne
+  renumérote pas les nageurs déjà là ; les nouveaux prennent les numéros suivants.
+
 ### 📂 Courses : séries en accordéon
 - Un clic sur le nom d'une **série** affiche ou masque ses participants (couloir, dossard, nom,
   club, catégorie, rang et temps, DNS/DISQ, « — » si pas encore nagé), dans l'ordre du bassin.

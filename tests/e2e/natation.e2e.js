@@ -123,6 +123,19 @@ async function openFresh(browser) {
         return { series, placed: series.reduce((t, s) => t + s.n, 0) };
     });
     ok(`${gen.series.length} séries générées, ${gen.placed}/${LINES.length} nageurs placés (1 ligne sans distance dans les données)`);
+    const bibs = await state(page, () => {
+        const key = p => p.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() + '|' + (p.club || '').toLowerCase().trim();
+        const bibsOf = {}, namesOf = {};
+        championship.days[1].chronoData.events.flatMap(e => e.series || []).flatMap(s => s.participants).forEach(p => {
+            (bibsOf[key(p)] = bibsOf[key(p)] || new Set()).add(p.bib);
+            (namesOf[p.bib] = namesOf[p.bib] || new Set()).add(key(p));
+        });
+        const multi = Object.keys(bibsOf).filter(k => championship.days[1].chronoData.events.flatMap(e => e.series || []).flatMap(s => s.participants).filter(p => key(p) === k).length > 1);
+        return { swimmers: Object.keys(bibsOf).length, multi: multi.length,
+            oneBibEach: Object.values(bibsOf).every(s => s.size === 1), oneSwimmerPerBib: Object.values(namesOf).every(s => s.size === 1) };
+    });
+    check(bibs.oneBibEach && bibs.oneSwimmerPerBib,
+        `un seul dossard par nageur : ${bibs.swimmers} nageurs, dont ${bibs.multi} inscrits à plusieurs nages (même dossard), aucun dossard partagé`);
     check(gen.series.every(s => new Set(s.lanes).size === s.lanes.length && s.lanes.every(Boolean)), 'chaque nageur a un couloir distinct dans sa série');
     check(gen.series.every(s => s.distance === parseInt(s.ev, 10)), 'distance de chaque série = distance de l\'épreuve (25 / 50 m)');
     await snap(page, 'series-generees');

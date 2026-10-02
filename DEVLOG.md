@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Séries automatiques : un seul dossard par nageur
+
+- **Contexte** : un nageur faisant deux nages recevait deux dossards (un par inscription).
+- **Fait** : `generateSwimmingSeries` (chrono) attribue le dossard par nageur (clé nom + club
+  normalisés) : dossard d'un participant conservé, sinon celui de la génération précédente
+  (1re passe, s'il est libre), sinon nouveau numéro après le plus grand pris. Un nageur inscrit
+  deux fois à la même épreuve reçoit deux dossards (le moteur de course identifie par dossard
+  dans une série). Fiches « une par inscription » inchangées, avec le même numéro.
+- **Fichiers/modules touchés** : `src/chrono.iife.js`, `tests/unit/swimmingImport.test.js`,
+  `tests/e2e/natation.e2e.js` (contrôle sur les données réelles : 107 nageurs dont 42 multi-nages)
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-02 — Accordéon des séries dans l'écran Courses
 
 - **Contexte** : voir les participants de chaque série sans ouvrir de fenêtre, par série,

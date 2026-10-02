@@ -3078,12 +3078,61 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
     var allParticipants = [];
     var totalSeries = 0;
 
-    // Compteur de dossards continu : repartir du plus grand dossard déjà attribué
-    // pour éviter les collisions entre épreuves/journées lors des régénérations.
-    var bibCounter = 1;
+    // UN dossard par nageur dans la journée, quel que soit son nombre de nages : le
+    // nageur est reconnu par nom + club (sans casse ni accents). Avant, chaque
+    // inscription recevait un dossard (Alice #4 au 50m libre, #17 au 50m brasse).
+    // Ordre de priorité : dossard d'un participant conservé (ajouté à la main), puis
+    // celui qu'il avait à la génération précédente (une régénération ne renumérote
+    // pas), puis un nouveau numéro après le plus grand déjà pris.
+    var swimmerKey = function(name, club) {
+        var norm = function(v) {
+            return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+        };
+        var n = norm(name);
+        return n ? n + '|' + norm(club) : '';
+    };
+    var bibOfKey = {};
+    var takenBibs = {};
     keptParticipants.forEach(function(p) {
-        if (typeof p.bib === 'number' && p.bib >= bibCounter) bibCounter = p.bib + 1;
+        if (typeof p.bib !== 'number') return;
+        takenBibs[p.bib] = true;
+        var key = swimmerKey(p.name, p.club);
+        if (key && !bibOfKey[key]) bibOfKey[key] = p.bib;
     });
+    var previousBibOfKey = {};
+    (dayData.chronoData.participants || [])
+        .filter(function(p) { return p && p.swimImport && typeof p.bib === 'number'; })
+        .sort(function(a, b) { return a.bib - b.bib; })
+        .forEach(function(p) {
+            var key = swimmerKey(p.name, p.club);
+            if (key && !previousBibOfKey[key]) previousBibOfKey[key] = p.bib;
+        });
+    // 1re passe : nageurs nommés qui retrouvent leur ancien dossard (s'il est libre)
+    events.forEach(function(evt) {
+        (eventGroups[evt.id] || []).forEach(function(entry) {
+            var key = swimmerKey(entry.swimmerName, entry.club);
+            var prev = key && !bibOfKey[key] ? previousBibOfKey[key] : null;
+            if (prev && !takenBibs[prev]) {
+                bibOfKey[key] = prev;
+                takenBibs[prev] = true;
+            }
+        });
+    });
+    var bibCounter = 1;
+    Object.keys(takenBibs).forEach(function(b) { if (Number(b) >= bibCounter) bibCounter = Number(b) + 1; });
+    // Dossard d'une inscription ; usedInEvent évite qu'un nageur inscrit deux fois à
+    // la même épreuve partage un dossard dans une série (le moteur de course
+    // identifie les nageurs par dossard)
+    var bibForEntry = function(entry, usedInEvent) {
+        var key = swimmerKey(entry.swimmerName, entry.club);
+        var bib = key ? bibOfKey[key] : null;
+        if (!bib || usedInEvent[bib]) {
+            bib = bibCounter++;
+            if (key && !bibOfKey[key]) bibOfKey[key] = bib;
+        }
+        usedInEvent[bib] = true;
+        return bib;
+    };
 
     events.forEach(function(evt) {
         var entries = eventGroups[evt.id];
@@ -3116,6 +3165,8 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
         var serieSport = evt.sportType || ((evtInfo && evtInfo.stroke) || entries.some(function(e) { return e.stroke; })
             ? 'swimming' : 'running');
 
+        var usedInEvent = {};
+
         // Créer les séries
         for (var i = 0; i < sorted.length; i += lanesPerSerie) {
             var batch = sorted.slice(i, i + lanesPerSerie);
@@ -3123,7 +3174,7 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
 
             var participants = batch.map(function(entry, idx) {
                 var pid = nextParticipantId++;
-                var bib = bibCounter++;
+                var bib = bibForEntry(entry, usedInEvent);
                 var lane = idx < laneOrder.length ? laneOrder[idx] : (idx + 1);
                 // Nom de repli si la donnée est absente (listes sans noms)
                 var displayName = (entry.swimmerName && entry.swimmerName.trim())
