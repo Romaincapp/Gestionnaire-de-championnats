@@ -1329,8 +1329,10 @@
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
         html += '<div style="display: flex; align-items: center; gap: 8px;">';
         var eventOpen = eventSeries.length > 0 && eventSeries.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
-        html += '<h4 onclick="toggleEventSeriesDetails(' + dayNumber + ', ' + event.id + ')" style="margin: 0; color: #2c3e50; font-size: 14px; cursor: pointer;" title="Afficher / masquer les participants de toutes les séries">' +
-            '<span id="event-chevron-' + dayNumber + '-' + event.id + '" style="display: inline-block; width: 14px; color: #64748b; font-size: 11px;">' + (eventOpen ? '▼' : '▶') + '</span>🎯 ' + event.name + '</h4>';
+        // Chevron hors du <h4> : le titre garde son texte exact « 🎯 nom » (repéré tel quel par le test e2e)
+        html += '<span onclick="toggleEventSeriesDetails(' + dayNumber + ', ' + event.id + ')" style="display: inline-flex; align-items: center; cursor: pointer;" title="Afficher / masquer les participants de toutes les séries">' +
+            '<span id="event-chevron-' + dayNumber + '-' + event.id + '" style="display: inline-block; width: 14px; color: #64748b; font-size: 11px;">' + (eventOpen ? '▼' : '▶') + '</span>' +
+            '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">🎯 ' + event.name + '</h4></span>';
         if (event.fun) html += funEventBadgeHTML();
         html += '<button onclick="editEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
         html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
