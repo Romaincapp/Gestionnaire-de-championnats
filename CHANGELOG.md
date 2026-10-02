@@ -13,6 +13,24 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏆 Classement d'une série (bouton 🏆) corrigé
+- Un nageur **DISQ ou DNS** n'est plus classé, même si une ancienne ligne de résultat existait
+  (il pouvait apparaître 1er) ; il est listé en bas, sans rang.
+- **Ex æquo au centième** : même rang (avant 1 puis 2 pour le même temps affiché).
+- **Relais à durée fixe** : classement à la distance parcourue, puis au temps (avant, au temps seul).
+- Ouvrir le classement d'une autre série remplace bien la fenêtre (avant, l'ancienne restait).
+- La colonne **Points** (20-17-15…) n'apparaît plus en natation ni en Multisport, où ce barème
+  ne s'applique pas ; colonnes Club et Distance ajoutées quand elles sont utiles ; temps au centième.
+- Retirer un participant d'une série retire aussi sa ligne de résultat.
+- Les points par série du classement général (Chrono) et le classement par épreuve suivent
+  exactement les mêmes règles (un nageur en double dans une série n'est plus compté deux fois).
+
+### 📂 Importer plusieurs journées : plus d'écrasement
+- Un fichier contenant plusieurs journées est maintenant renuméroté à la suite des autres
+  fichiers (avant, il gardait ses numéros et pouvait écraser la journée d'un autre fichier).
+- Même récapitulatif et mêmes précautions que « ➕ Ajouter à la suite » ; si rien n'est
+  importable, le championnat ouvert est conservé.
+
 ### ➕ Import : ajouter des journées à la suite
 - Dans la fenêtre d'import, nouveau bouton **« ➕ Ajouter à la suite du championnat »** : les
   journées du ou des fichiers choisis sont ajoutées **après** celles déjà présentes, sans rien

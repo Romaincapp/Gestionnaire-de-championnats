@@ -1498,6 +1498,53 @@
             });
     }
 
+    // Classement d'UNE série, seule source pour la fenêtre 🏆 de la série et les points
+    // par série du classement général (Chrono pur). Mêmes règles que le classement par
+    // épreuve : DNS/DISQ jamais classés même si une ancienne ligne de résultat existe,
+    // une ligne par nageur (nom sans casse), distance décroissante (relais à durée
+    // fixe) puis temps, ex æquo au centième = même rang (1, 2, 2, 4).
+    // → { entries: [{rank, name, club, category, time, distance}], outOfRace: [{name, club, status}] }
+    function rankSerieResults(serie) {
+        var partByName = {};
+        var outOfRace = [];
+        (serie.participants || []).forEach(function(p) {
+            if (!p || !p.name) return;
+            partByName[p.name.toLowerCase()] = p;
+            if (p.status === 'dns' || p.status === 'disq') {
+                outOfRace.push({ name: p.name, club: p.club || '', status: p.status });
+            }
+        });
+        var seen = {};
+        var entries = [];
+        (serie.results || []).forEach(function(r) {
+            if (!r || !r.name || !(r.time > 0)) return;
+            var key = r.name.toLowerCase();
+            if (seen[key]) return;
+            var p = partByName[key] || {};
+            if (p.status === 'dns' || p.status === 'disq') return;
+            seen[key] = true;
+            entries.push({
+                name: r.name,
+                club: p.club || r.club || '',
+                category: r.category || p.category || '',
+                time: r.time,
+                distance: (p.totalDistance > 0 ? p.totalDistance : (r.totalDistance || serie.distance || 0))
+            });
+        });
+        entries.sort(function(a, b) {
+            if (b.distance !== a.distance) return b.distance - a.distance;
+            return a.time - b.time;
+        });
+        var prev = null;
+        entries.forEach(function(e, i) {
+            var cs = Math.round(e.time / 10);
+            e.rank = (prev && prev.distance === e.distance && Math.round(prev.time / 10) === cs) ? prev.rank : i + 1;
+            prev = e;
+        });
+        return { entries: entries, outOfRace: outOfRace };
+    }
+    global.rankSerieResults = rankSerieResults;
+
     function getChronoResultsForDay(dayNumber) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return {};
@@ -1536,12 +1583,11 @@
         allSeries.forEach(function(serie) {
             if (!serie.results || serie.results.length === 0) return;
 
-            // Positions (et donc points) calculées sur les temps des résultats.
-            var sorted = serie.results.slice().sort(function(a, b) {
-                return a.time - b.time;
-            });
+            // Positions (et donc points) : même classement que la fenêtre 🏆 de la
+            // série (DNS/DISQ exclus, relais à la distance, ex æquo au centième).
+            var sorted = rankSerieResults(serie).entries;
             var posByName = {};
-            sorted.forEach(function(r, i) { posByName[r.name] = i + 1; });
+            sorted.forEach(function(r) { posByName[r.name] = r.rank; });
 
             // Index des participants de la série par nom : ils portent les VRAIS
             // totaux (distance et temps cumulés tour par tour).
@@ -1809,21 +1855,14 @@
                 (cd.events || []).forEach(function(evt) {
                     var entries = [], outOfRace = [];
                     getEventSeries(cd, evt).forEach(function(s) {
-                        var partByName = {};
-                        (s.participants || []).forEach(function(p) {
-                            if (p && p.name) partByName[p.name.toLowerCase()] = p;
-                            if (p && (p.status === 'dns' || p.status === 'disq')) {
-                                outOfRace.push({ name: p.name, club: p.club || '', serieName: s.name, status: p.status });
-                            }
+                        // Mêmes règles que le bouton 🏆 de la série (rankSerieResults) :
+                        // DNS/DISQ exclus, une seule ligne par nageur et par série
+                        var ranked = rankSerieResults(s);
+                        ranked.outOfRace.forEach(function(o) {
+                            outOfRace.push({ name: o.name, club: o.club, serieName: s.name, status: o.status });
                         });
-                        (s.results || []).forEach(function(r) {
-                            if (!(r.time > 0)) return;
-                            var p = partByName[(r.name || '').toLowerCase()] || {};
-                            if (p.status === 'dns' || p.status === 'disq') return;
-                            entries.push({
-                                name: r.name, club: p.club || r.club || '', category: r.category || p.category || '',
-                                serieName: s.name, time: r.time
-                            });
+                        ranked.entries.forEach(function(e) {
+                            entries.push({ name: e.name, club: e.club, category: e.category, serieName: s.name, time: e.time });
                         });
                     });
                     if (entries.length === 0 && outOfRace.length === 0) return;
@@ -3214,6 +3253,8 @@
         if (!confirm('Retirer "' + participant.name + '" de cette série ?')) return;
 
         serie.participants = serie.participants.filter(function(p) { return p.id !== participantId; });
+        // Sa ligne de résultat partirait sinon avec lui dans les classements de la série
+        removeSerieResultOf(serie, participant);
 
         saveToLocalStorage();
 
@@ -3818,41 +3859,63 @@
         var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
         
-        if (document.getElementById('rankingModal-' + dayNumber)) return;
-        
+        // Une fenêtre déjà ouverte (autre série) est remplacée : avant, le clic ne
+        // faisait rien et l'ancien classement restait affiché.
+        closeRankingModal(dayNumber);
+
+        var ranking = rankSerieResults(serie);
+        var sorted = assignCategoryRanks(ranking.entries);
+        var showCategory = sorted.hasMultipleCategories;
+        var showClub = sorted.some(function(r) { return r.club; });
+        // Relais à durée fixe (ou distances différentes) : la distance départage
+        var showDistance = serie.raceType === 'relay' || sorted.some(function(r) { return sorted.length && r.distance !== sorted[0].distance; });
+        // Points de série = barème du classement général en Chrono pur seulement ;
+        // en natation (classement par épreuve) ou en Multisport (barème par journée),
+        // des points par série seraient faux.
+        var showPoints = !isMultisportMode() && !isSwimmingOnlyCompetition();
+        var esc = escapeLaneHtml;
+        var th = 'padding: 10px;';
+
         var html = '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeRankingModal(' + dayNumber + ')">' +
-            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
-            '<h3>🏆 Classement - ' + serie.name + '</h3>';
+            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 640px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
+            '<h3>🏆 Classement - ' + esc(serie.name) + '</h3>';
         
-        if (!serie.results || serie.results.length === 0) {
+        if (sorted.length === 0 && ranking.outOfRace.length === 0) {
             html += '<p style="color: #7f8c8d; text-align: center;">Aucun résultat</p>';
         } else {
-            // Trier par temps
-            var sorted = serie.results.slice().sort(function(a, b) {
-                return a.time - b.time;
-            });
-            assignCategoryRanks(sorted);
-            var showCategory = sorted.hasMultipleCategories;
-
             html += '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
-            html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 10px;">' + (showCategory ? 'Pos. Scratch' : 'Pos') + '</th><th style="padding: 10px;">Nom</th>' +
-                (showCategory ? '<th style="padding: 10px;">Catégorie</th>' : '') +
-                '<th style="padding: 10px;">Temps</th><th style="padding: 10px;">Points</th></tr></thead><tbody>';
+            html += '<thead><tr style="background: #f8f9fa;"><th style="' + th + '">' + (showCategory ? 'Pos. Scratch' : 'Pos') + '</th><th style="' + th + '">Nom</th>' +
+                (showClub ? '<th style="' + th + '">Club</th>' : '') +
+                (showCategory ? '<th style="' + th + '">Catégorie</th>' : '') +
+                (showDistance ? '<th style="' + th + '">Distance</th>' : '') +
+                '<th style="' + th + '">Temps</th>' +
+                (showPoints ? '<th style="' + th + '">Points</th>' : '') + '</tr></thead><tbody>';
 
-            sorted.forEach(function(result, index) {
-                var points = calculateChronoPoints(index + 1, sorted.length);
-                var rankStyle = index < 3 ? 'font-weight: bold; color: ' + (index === 0 ? '#f1c40f' : index === 1 ? '#95a5a6' : '#cd7f32') + ';' : '';
+            sorted.forEach(function(result) {
+                var rank = result.rank;
+                var rankStyle = rank <= 3 ? 'font-weight: bold; color: ' + (rank === 1 ? '#f1c40f' : rank === 2 ? '#95a5a6' : '#cd7f32') + ';' : '';
                 html += '<tr style="border-bottom: 1px solid #ecf0f1;">';
-                html += '<td style="padding: 10px; text-align: center; ' + rankStyle + '">' + (index + 1) + '</td>';
-                html += '<td style="padding: 10px; ' + rankStyle + '">' + result.name + '</td>';
+                html += '<td style="padding: 10px; text-align: center; ' + rankStyle + '">' + rank + '</td>';
+                html += '<td style="padding: 10px; ' + rankStyle + '">' + esc(result.name) + '</td>';
+                if (showClub) html += '<td style="padding: 10px;">' + esc(result.club || '-') + '</td>';
                 if (showCategory) {
-                    html += '<td style="padding: 10px;">' + (result.category || '-') + (result.category ? ' (' + result.catRank + 'e/' + result.catTotal + ')' : '') + '</td>';
+                    html += '<td style="padding: 10px;">' + esc(result.category || '-') + (result.category ? ' (' + result.catRank + 'e/' + result.catTotal + ')' : '') + '</td>';
                 }
-                html += '<td style="padding: 10px; font-family: monospace;">' + formatTime(result.time) + '</td>';
-                html += '<td style="padding: 10px; text-align: center; font-weight: bold; color: #27ae60;">+' + points + '</td>';
+                if (showDistance) html += '<td style="padding: 10px; text-align: center;">' + formatDistance(result.distance) + '</td>';
+                html += '<td style="padding: 10px; font-family: monospace;">' + formatDurationHMS(result.time) + '</td>';
+                if (showPoints) html += '<td style="padding: 10px; text-align: center; font-weight: bold; color: #27ae60;">+' + calculateChronoPoints(rank) + '</td>';
                 html += '</tr>';
+            });
+
+            ranking.outOfRace.forEach(function(o) {
+                var cols = 3 + (showClub ? 1 : 0) + (showCategory ? 1 : 0) + (showDistance ? 1 : 0) + (showPoints ? 1 : 0);
+                html += '<tr style="border-bottom: 1px solid #ecf0f1; color: #95a5a6;">' +
+                    '<td style="padding: 10px; text-align: center;">' + (o.status === 'disq' ? 'DISQ' : 'DNS') + '</td>' +
+                    '<td style="padding: 10px;">' + esc(o.name) + '</td>' +
+                    (showClub ? '<td style="padding: 10px;">' + esc(o.club || '-') + '</td>' : '') +
+                    '<td colspan="' + (cols - 2 - (showClub ? 1 : 0)) + '"></td></tr>';
             });
 
             html += '</tbody></table>';

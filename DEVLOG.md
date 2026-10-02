@@ -33,6 +33,24 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Bouton 🏆 de série fiabilisé, import multi-journées sur le moteur « à la suite »
+
+- **Contexte** : « le petit bouton voir le classement de chaque série se trompe parfois » ;
+  import multi-journées pouvant écraser une journée (fichier multi-journées + fichiers « J1 »).
+- **Fait** : nouveau `rankSerieResults(serie)` (multisport) = seule règle de classement d'une
+  série : DNS/DISQ exclus même avec ancienne ligne de résultat, une ligne par nom, distance
+  puis temps, ex æquo au centième. Utilisé par `showSerieRanking` (fenêtre remplacée si déjà
+  ouverte, Points seulement en Chrono pur hors natation, colonnes Club/Distance, DNS/DISQ en
+  bas), par `getChronoResultsForDay` (points par série) et `calculateEventRankings`.
+  `removeParticipantFromSerie` retire aussi la ligne de résultat. `importMultipleDayFiles` =
+  `appendDaysToChampionship` sur un championnat vidé (restauré si rien d'importable) ; helpers
+  communs `readJsonFiles`, `refreshAfterDaysImport`, `daysImportSummary` (non exposés).
+- **Fichiers/modules touchés** : `src/multisport.iife.js`, `src/export-json.iife.js`,
+  `tests/unit/serieRankingModal.test.js`, `tests/unit/importMultipleDays.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Tests** : `npm test` 332 ✅ · `npm run test:e2e` 0 problème
+
 ### 2026-10-02 — Import « ➕ Ajouter à la suite » (journées d'un autre projet)
 
 - **Contexte** : une Journée 1 refaite par erreur dans un autre projet au lieu d'une Journée 2.
