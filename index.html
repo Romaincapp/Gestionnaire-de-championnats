@@ -323,44 +323,65 @@
 
     <!-- Modal Ajout Joueurs -->
     <div id="addPlayerModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 480px;">
             <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">➕ Ajouter des joueurs <span id="addPlayerDayLabel" style="font-size: 14px; color: #64748b;"></span></h3>
 
-            <!-- Ajout individuel -->
-            <div style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px;">
-                <div style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500;">Ajout individuel</div>
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <input type="text" id="addPlayerName" placeholder="Nom du joueur" style="flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" onkeypress="if(event.key==='Enter')addPlayerFromModal()">
-                    <select id="addPlayerClub" onchange="handleClubSelectChange(this, 'addPlayerClubCustom')" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; min-width: 150px;">
-                        <option value="">-- Club --</option>
-                    </select>
-                    <select id="addPlayerDivision" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;"></select>
-                    <button onclick="addPlayerFromModal()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px;">Ajouter</button>
-                </div>
-                <input type="text" id="addPlayerClubCustom" placeholder="Nouveau club..." style="display: none; width: 100%; margin-top: 8px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-            </div>
-
-            <!-- Import en masse -->
-            <div style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px;">
-                <div style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500;">Import en masse</div>
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <div class="file-input-wrapper" style="display: inline-block;">
-                        <input type="file" id="modalFileInput" accept=".xlsx,.xls,.csv" onchange="handleModalFileInput(event)">
-                        <label for="modalFileInput" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                            📁 CSV/Excel
-                        </label>
+            <!-- Accordéon : une seule section ouverte à la fois (toggleAddPlayerSection) -->
+            <div class="apm-section" id="apm-section-single">
+                <button type="button" class="apm-header" onclick="toggleAddPlayerSection('single')">
+                    <span class="apm-icon">👤</span>
+                    <span class="apm-titles"><span class="apm-title">Ajouter un joueur</span><span class="apm-sub">Un joueur à la fois</span></span>
+                    <span class="apm-chevron">▶</span>
+                </button>
+                <div class="apm-body">
+                    <label class="apm-label" for="addPlayerName">Nom du joueur</label>
+                    <input type="text" id="addPlayerName" class="apm-field" placeholder="Ex. : Dupont Jean" onkeypress="if(event.key==='Enter')addPlayerFromModal()">
+                    <div class="apm-row">
+                        <div style="flex: 1; min-width: 140px;">
+                            <label class="apm-label" for="addPlayerClub">Club <span style="font-weight: 400;">(facultatif)</span></label>
+                            <select id="addPlayerClub" class="apm-field" onchange="handleClubSelectChange(this, 'addPlayerClubCustom')">
+                                <option value="">-- Club --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="apm-label" for="addPlayerDivision">Division</label>
+                            <select id="addPlayerDivision" class="apm-field"></select>
+                        </div>
                     </div>
-                    <span style="color: #94a3b8; font-size: 11px;">A=Nom, B=Division</span>
-                    <span style="color: #cbd5e1;">|</span>
-                    <select id="modalBulkDivision" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;"></select>
-                    <button onclick="showBulkFromModal()" style="padding: 8px 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 12px;">
-                        📋 Coller liste
-                    </button>
+                    <input type="text" id="addPlayerClubCustom" class="apm-field" placeholder="Nom du nouveau club" style="display: none;">
+                    <button onclick="addPlayerFromModal()" class="apm-primary" style="background: #10b981;">➕ Ajouter le joueur</button>
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid #e2e8f0;">
-                <button onclick="showClubManagementModal()" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🏢 Gérer les clubs</button>
+            <div class="apm-section" id="apm-section-bulk">
+                <button type="button" class="apm-header" onclick="toggleAddPlayerSection('bulk')">
+                    <span class="apm-icon">📋</span>
+                    <span class="apm-titles"><span class="apm-title">Ajouter plusieurs joueurs</span><span class="apm-sub">Coller une liste ou importer un fichier</span></span>
+                    <span class="apm-chevron">▶</span>
+                </button>
+                <div class="apm-body">
+                    <label class="apm-label" for="modalBulkDivision">Division des joueurs collés</label>
+                    <select id="modalBulkDivision" class="apm-field"></select>
+                    <button onclick="showBulkFromModal()" class="apm-primary" style="background: #8b5cf6;">📋 Coller une liste de noms</button>
+                    <div class="apm-or">ou</div>
+                    <div class="file-input-wrapper" style="display: block;">
+                        <input type="file" id="modalFileInput" accept=".xlsx,.xls,.csv" onchange="handleModalFileInput(event)">
+                        <label for="modalFileInput" class="apm-primary" style="background: #3b82f6; display: block; text-align: center;">📁 Importer un fichier CSV / Excel</label>
+                    </div>
+                    <p class="apm-hint">Fichier : colonne A = nom, colonne B = division.</p>
+                </div>
+            </div>
+
+            <div class="apm-section" id="apm-section-clubs">
+                <button type="button" class="apm-header" onclick="toggleAddPlayerSection('clubs')">
+                    <span class="apm-icon">🏢</span>
+                    <span class="apm-titles"><span class="apm-title">Gérer les clubs</span><span class="apm-sub">Ajouter ou supprimer un club de la liste</span></span>
+                    <span class="apm-chevron">▶</span>
+                </button>
+                <div class="apm-body" id="addPlayerClubsPanel"></div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; padding-top: 12px;">
                 <button onclick="closeAddPlayerModal()" style="padding: 8px 16px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">Fermer</button>
             </div>
         </div>

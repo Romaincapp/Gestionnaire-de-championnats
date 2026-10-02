@@ -235,10 +235,27 @@
             clubCustom.value = '';
         }
 
+        if (typeof renderAddPlayerClubsPanel === 'function') renderAddPlayerClubsPanel();
         modal.style.display = 'block';
-        document.getElementById('addPlayerName').focus();
+        // Toujours rouvrir sur « 👤 Ajouter un joueur », le cas le plus courant
+        toggleAddPlayerSection('single', true);
     }
     window.showAddPlayerModal = showAddPlayerModal;
+
+    // Accordéon de la fenêtre : une seule section ouverte à la fois. Un clic sur la
+    // section ouverte la referme ; forceOpen (ouverture de la fenêtre) l'ouvre toujours.
+    function toggleAddPlayerSection(name, forceOpen) {
+        const target = document.getElementById('apm-section-' + name);
+        if (!target) return;
+        const open = forceOpen || !target.classList.contains('open');
+        document.querySelectorAll('#addPlayerModal .apm-section').forEach(section => section.classList.remove('open'));
+        if (!open) return;
+        target.classList.add('open');
+        const focusId = { single: 'addPlayerName', clubs: 'apmNewClubName' }[name];
+        const field = focusId && document.getElementById(focusId);
+        if (field) field.focus();
+    }
+    window.toggleAddPlayerSection = toggleAddPlayerSection;
 
     // Fermer le modal
     function closeAddPlayerModal() {
