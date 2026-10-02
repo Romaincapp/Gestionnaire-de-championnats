@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Bouton « 🏁 Séries automatiques » retiré de l'écran Matchs
+
+- **Contexte** : le bouton s'affichait aussi en mode championnat (Matchs), où il n'a pas de sens.
+- **Fait** : retiré de la barre d'actions générée par `generateDayContentHTML` (`ui.iife.js`) ;
+  celui de l'écran Courses (`renderChronoInterfaceForDay`, multisport) est inchangé.
+- **Fichiers/modules touchés** : `src/ui.iife.js`, `tests/unit/autoSeriesButtonChronoOnly.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ❌ (aucune fonction exposée modifiée) · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-02 — Séries automatiques : un seul dossard par nageur
 
 - **Contexte** : un nageur faisant deux nages recevait deux dossards (un par inscription).

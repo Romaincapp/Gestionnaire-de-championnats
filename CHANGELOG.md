@@ -13,6 +13,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🧹 « 🏁 Séries automatiques » seulement en Courses
+- Le bouton n'apparaît plus dans la barre d'actions d'une journée **Matchs** (championnat), où il
+  ne servait à rien ; il reste dans l'écran **Courses**.
+
 ### 🎽 Un seul dossard par nageur
 - Avec « 🏁 Séries automatiques », un nageur inscrit à plusieurs nages reçoit maintenant
   **le même dossard** dans toutes ses séries (avant : un dossard par inscription). Le nageur est
