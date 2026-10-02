@@ -232,9 +232,7 @@
                     <button onclick="showAddPlayerModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
                         ➕ Joueurs
                     </button>
-                    <button onclick="showImportPlayersModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                        📥 Importer joueurs
-                    </button>
+                    <!-- « 📥 Importer joueurs » est dans la fenêtre « ➕ Joueurs » (section 📥) -->
                     <!-- Boutons copie rapide -->
                     <span id="quick-copy-buttons-${dayNumber}" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>
                     <!-- Actions matchs -->

@@ -157,7 +157,7 @@ Un sous-ensemble représentatif :
 **Rôle** : Gestion des joueurs (journées Championship). ~19 fonctions exposées,
 dont notamment :
 - `addPlayer()`, `addPlayerToDay(dayNumber)`, `removePlayer(dayNumber, division, index)`, `editPlayer(dayNumber, division, index)`, `playerHasByeMatch(dayNumber, division, playerName)`, `addBulkPlayers()`
-- `showAddPlayerModal(dayNumber)`, `toggleAddPlayerSection(name, forceOpen)` (accordéon `single` / `bulk` / `clubs`, une section ouverte à la fois, toutes fermées à l'ouverture de la fenêtre), `closeAddPlayerModal()`, `addPlayerFromModal()`, `showBulkInput()`, `closeBulkModal()`, `showEditPlayerModal()`, `saveEditedPlayer()`, `updatePlayersDisplay()`
+- `showAddPlayerModal(dayNumber)`, `toggleAddPlayerSection(name, forceOpen)` (accordéon `single` / `bulk` / `import` / `clubs`, une section ouverte à la fois, toutes fermées à l'ouverture de la fenêtre), `importPlayersFromAddPlayerModal()` (section 📥 : ferme la fenêtre et ouvre `showImportPlayersModal(jour)` ; le bouton « 📥 Importer joueurs » n'est plus dans la barre d'actions des journées Matchs), `closeAddPlayerModal()`, `addPlayerFromModal()`, `showBulkInput()`, `closeBulkModal()`, `showEditPlayerModal()`, `saveEditedPlayer()`, `updatePlayersDisplay()`
 
 **Correction** : `copyPlayersFromPreviousDay()` et `updatePlayerCount()` sont
 en réalité dans `ui.iife.js`, pas ici (attribution corrigée le 2026-09,
