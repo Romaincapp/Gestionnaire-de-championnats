@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — « 📥 Importer joueurs » déplacé dans la fenêtre « ➕ Joueurs »
+
+- **Contexte** : faire de la place dans la barre d'actions des journées Matchs.
+- **Fait** : bouton retiré de la barre de J1 (écrite en dur, `index.html`) et des journées générées
+  (`generateDayContentHTML`, ui) ; 4e section `#apm-section-import` dans `#addPlayerModal`, dont le
+  bouton appelle `importPlayersFromAddPlayerModal()` (players, exposée) : ferme la fenêtre puis
+  ouvre `showImportPlayersModal(jour)` (multisport, inchangée). Le bouton « 📥 Importer participants »
+  de l'écran Courses est inchangé.
+- **Fichiers/modules touchés** : `index.html`, `src/ui.iife.js`, `src/players.iife.js`,
+  `tests/unit/addPlayerModalAccordion.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-02 — Suppression d'une journée : renumérotation des suivantes
 
 - **Contexte** : J1…J5, supprimer J2 et J3 laissait « J1, J4, J5 ».

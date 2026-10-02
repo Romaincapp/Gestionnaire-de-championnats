@@ -101,3 +101,28 @@ test('joueur refusé (nom vide) : le nouveau club n\'est pas créé', () => {
     addPlayerFromModal();
     expect(clubsModule.getClubsList()).not.toContain('Club Fantôme');
 });
+
+test('« 📥 Importer joueurs » déplacé dans la fenêtre : plus dans la barre des journées Matchs', () => {
+    // J1 (écrite en dur dans index.html) et journées générées
+    expect(document.querySelectorAll('#day-hub-content-1 button[onclick^="showImportPlayersModal"]')).toHaveLength(0);
+    championship.days[2] = { dayType: 'championship', players: { 1: [], 2: [] }, matches: { 1: [], 2: [] } };
+    jest.useFakeTimers();
+    initializeAllDaysContent();
+    jest.runAllTimers();
+    jest.useRealTimers();
+    expect(document.querySelectorAll('[id^="championship-section-"] button[onclick^="showImportPlayersModal"]')).toHaveLength(0);
+    expect(document.querySelectorAll('#addPlayerModal #apm-section-import')).toHaveLength(1);
+});
+
+test('section 📥 : ouvre la fenêtre d\'import de la journée et ferme celle-ci', () => {
+    championship.days[2] = { dayType: 'championship', players: { 1: [{ name: 'Ancien', club: '' }], 2: [] }, matches: { 1: [], 2: [] } };
+    championship.days[3] = { dayType: 'championship', players: { 1: [], 2: [] }, matches: { 1: [], 2: [] } };
+    localStorage.setItem('tennisTableChampionship', JSON.stringify(championship));
+    showAddPlayerModal(3);
+    toggleAddPlayerSection('import');
+    importPlayersFromAddPlayerModal();
+    expect(document.getElementById('addPlayerModal').style.display).toBe('none');
+    const modal = document.getElementById('importPlayersModal-3');
+    expect(modal).not.toBeNull();
+    expect(modal.textContent).toContain('Journée 2');
+});

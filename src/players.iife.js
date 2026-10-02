@@ -257,6 +257,15 @@
     }
     window.toggleAddPlayerSection = toggleAddPlayerSection;
 
+    // Section « 📥 Reprendre d'une autre journée » : ouvre la fenêtre d'import entre
+    // journées (showImportPlayersModal, multisport) à la place de celle-ci
+    function importPlayersFromAddPlayerModal() {
+        const dayNumber = addPlayerModalDayNumber;
+        closeAddPlayerModal();
+        if (typeof showImportPlayersModal === 'function') showImportPlayersModal(dayNumber);
+    }
+    window.importPlayersFromAddPlayerModal = importPlayersFromAddPlayerModal;
+
     // Fermer le modal
     function closeAddPlayerModal() {
         document.getElementById('addPlayerModal').style.display = 'none';

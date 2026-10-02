@@ -114,9 +114,6 @@
                         <button onclick="showAddPlayerModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
                             ➕ Joueurs
                         </button>
-                        <button onclick="showImportPlayersModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                            📥 Importer
-                        </button>
                         <!-- Actions matchs -->
                         <button onclick="showMatchGenerationModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             🎯 Matchs
@@ -369,6 +366,18 @@
                         <label for="modalFileInput" class="apm-primary" style="background: #3b82f6; display: block; text-align: center;">📁 Importer un fichier CSV / Excel</label>
                     </div>
                     <p class="apm-hint">Fichier : colonne A = nom, colonne B = division.</p>
+                </div>
+            </div>
+
+            <div class="apm-section" id="apm-section-import">
+                <button type="button" class="apm-header" onclick="toggleAddPlayerSection('import')">
+                    <span class="apm-icon">📥</span>
+                    <span class="apm-titles"><span class="apm-title">Reprendre d'une autre journée</span><span class="apm-sub">Les joueurs d'une journée précédente</span></span>
+                    <span class="apm-chevron">▶</span>
+                </button>
+                <div class="apm-body">
+                    <p class="apm-hint" style="margin: 0 0 10px;">Copie les joueurs (ou participants Courses) d'une journée précédente dans celle-ci.</p>
+                    <button onclick="importPlayersFromAddPlayerModal()" class="apm-primary" style="background: #0ea5e9;">📥 Choisir la journée à reprendre</button>
                 </div>
             </div>
 

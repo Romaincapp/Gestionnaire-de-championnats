@@ -13,6 +13,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 📥 « Importer joueurs » rangé dans la fenêtre « ➕ Joueurs »
+- Le bouton quitte la barre d'actions des journées Matchs (plus de place) et devient la section
+  **📥 Reprendre d'une autre journée** de la fenêtre « ➕ Joueurs » : même fenêtre d'import
+  qu'avant (joueurs ou participants Courses d'une journée précédente).
+
 ### 🔢 Journées renumérotées après une suppression
 - Supprimer une journée renumérote les suivantes : avec J1…J5, supprimer J2 puis J3 donne
   **J1, J2, J3** (et non plus « J1, J4, J5 »). La confirmation l'annonce.
