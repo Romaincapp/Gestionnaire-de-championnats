@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ➕ Fenêtre « Ajouter des joueurs » épurée
+- Trois sections dépliables, une seule ouverte à la fois : **👤 Ajouter un joueur** (ouverte par
+  défaut), **📋 Ajouter plusieurs joueurs** (coller une liste ou importer un fichier CSV/Excel) et
+  **🏢 Gérer les clubs**.
+- Champs avec des libellés clairs et de grands boutons ; la gestion des clubs se fait directement
+  dans la fenêtre (plus de seconde fenêtre), et le choix du club se met à jour aussitôt.
+
 ### 🧹 « 🏁 Séries automatiques » seulement en Courses
 - Le bouton n'apparaît plus dans la barre d'actions d'une journée **Matchs** (championnat), où il
   ne servait à rien ; il reste dans l'écran **Courses**.

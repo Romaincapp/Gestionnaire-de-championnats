@@ -374,6 +374,76 @@
     // EXPOSITION SUR WINDOW
     // ============================================
 
+    // ============================================
+    // GESTION DES CLUBS INTÉGRÉE À « ➕ Ajouter des joueurs » (section 🏢)
+    // ============================================
+    // Même liste que la fenêtre « 🏢 Gestion des Clubs », mais dans l'accordéon de la
+    // fenêtre d'ajout : pas de seconde fenêtre par-dessus. Boutons par index (pas par
+    // nom dans l'onclick : un nom avec apostrophe cassait l'attribut).
+    function renderAddPlayerClubsPanel() {
+        var panel = document.getElementById('addPlayerClubsPanel');
+        if (!panel) return;
+        var clubs = getClubsList();
+        var html = '<label class="apm-label" for="apmNewClubName">Nouveau club</label>' +
+            '<div style="display: flex; gap: 8px;">' +
+            '<input type="text" id="apmNewClubName" class="apm-field" style="margin-bottom: 0;" placeholder="Nom du club" ' +
+            'onkeypress="if(event.key===\'Enter\')addClubFromAddPlayerModal()">' +
+            '<button onclick="addClubFromAddPlayerModal()" class="apm-primary" style="width: auto; background: #6366f1; white-space: nowrap;">+ Ajouter</button>' +
+            '</div>';
+        if (clubs.length === 0) {
+            html += '<p class="apm-hint" style="text-align: center; margin-top: 12px;">Aucun club pour l\'instant</p>';
+        } else {
+            html += '<ul class="apm-club-list">';
+            clubs.forEach(function(club, i) {
+                html += '<li><span>' + escapeHtml(club) + '</span>' +
+                    '<button onclick="removeClubFromAddPlayerModal(' + i + ')" title="Supprimer ce club">🗑️</button></li>';
+            });
+            html += '</ul>';
+        }
+        panel.innerHTML = html;
+    }
+
+    // Le sélecteur « Club » de la section 👤 suit la liste, en gardant le club choisi
+    function refreshAddPlayerClubSelect() {
+        var select = document.getElementById('addPlayerClub');
+        if (!select) return;
+        var current = select.value === '__custom__' ? '' : select.value;
+        select.innerHTML = generateClubOptions(current);
+    }
+
+    function addClubFromAddPlayerModal() {
+        var input = document.getElementById('apmNewClubName');
+        var name = input ? input.value.trim() : '';
+        if (!name) {
+            showNotification('Veuillez entrer un nom de club', 'warning');
+            return;
+        }
+        if (!addClub(name)) {
+            showNotification('Ce club existe déjà', 'warning');
+            return;
+        }
+        showNotification('Club ajouté !', 'success');
+        renderAddPlayerClubsPanel();
+        refreshAddPlayerClubSelect();
+        var fresh = document.getElementById('apmNewClubName');
+        if (fresh) fresh.focus();
+    }
+
+    function removeClubFromAddPlayerModal(index) {
+        var club = getClubsList()[index];
+        if (club == null) return;
+        if (!confirm('Supprimer le club "' + club + '" ?\n\nLes joueurs déjà assignés à ce club conserveront leur affiliation.')) return;
+        if (removeClub(club)) {
+            showNotification('Club supprimé', 'info');
+            renderAddPlayerClubsPanel();
+            refreshAddPlayerClubSelect();
+        }
+    }
+
+    global.renderAddPlayerClubsPanel = renderAddPlayerClubsPanel;
+    global.addClubFromAddPlayerModal = addClubFromAddPlayerModal;
+    global.removeClubFromAddPlayerModal = removeClubFromAddPlayerModal;
+
     global.clubsModule = {
         getClubsList: getClubsList,
         addClub: addClub,

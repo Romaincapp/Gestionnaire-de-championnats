@@ -33,6 +33,21 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Fenêtre « ➕ Ajouter des joueurs » en accordéon
+
+- **Contexte** : fenêtre jugée chargée pour un utilisateur non initié.
+- **Fait** : `#addPlayerModal` (index.html) en 3 sections `.apm-section` (styles `apm-*` dans
+  `styles.css`, mode sombre compris) ; `toggleAddPlayerSection(name, forceOpen)` (players) ouvre une
+  section et ferme les autres, `showAddPlayerModal` rouvre toujours sur « 👤 Ajouter un joueur ».
+  Gestion des clubs intégrée : `renderAddPlayerClubsPanel`, `addClubFromAddPlayerModal`,
+  `removeClubFromAddPlayerModal(index)` (clubs ; boutons par index, un nom avec apostrophe ne casse
+  plus l'onclick) et le sélecteur de club suit la liste. Ids des champs inchangés.
+  `showClubManagementModal` n'a plus de bouton (fonction gardée, exposée).
+- **Fichiers/modules touchés** : `index.html`, `styles.css`, `src/players.iife.js`, `src/clubs.iife.js`,
+  `tests/unit/addPlayerModalAccordion.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-02 — Bouton « 🏁 Séries automatiques » retiré de l'écran Matchs
 
 - **Contexte** : le bouton s'affichait aussi en mode championnat (Matchs), où il n'a pas de sens.

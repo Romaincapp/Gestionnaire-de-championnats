@@ -2147,3 +2147,76 @@ body.dark-mode .app-search-bar button {
         display: none !important;
     }
 }
+
+/* ============================================
+   Fenêtre « ➕ Ajouter des joueurs » : accordéon
+   (une section ouverte à la fois, voir toggleAddPlayerSection)
+   ============================================ */
+.apm-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+.apm-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: #1e293b;
+}
+.apm-header:hover { background: #f1f5f9; }
+.apm-icon { font-size: 22px; line-height: 1; }
+.apm-titles { display: flex; flex-direction: column; flex: 1; }
+.apm-title { font-size: 15px; font-weight: 600; }
+.apm-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+.apm-chevron { color: #94a3b8; font-size: 12px; transition: transform 0.2s ease; }
+.apm-section.open .apm-chevron { transform: rotate(90deg); }
+.apm-section.open .apm-header { background: #eef2ff; }
+.apm-body { display: none; padding: 14px; }
+.apm-section.open .apm-body { display: block; }
+.apm-label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin: 0 0 4px; }
+.apm-field {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+.apm-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.apm-primary {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+.apm-or { text-align: center; color: #94a3b8; font-size: 12px; margin: 10px 0; }
+.apm-hint { font-size: 12px; color: #64748b; margin: 6px 0 0; }
+.apm-club-list { list-style: none; padding: 0; margin: 10px 0 0; max-height: 220px; overflow-y: auto; }
+.apm-club-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; border-bottom: 1px solid #eef2f7; font-size: 14px; }
+.apm-club-list button { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; padding: 3px 8px; }
+
+body.dark-mode .apm-section { background: #1e1e2e; border-color: #333; }
+body.dark-mode .apm-header { background: #252538; color: #e0e0e0; }
+body.dark-mode .apm-header:hover,
+body.dark-mode .apm-section.open .apm-header { background: #2d2d44; }
+body.dark-mode .apm-label { color: #ccc; }
+body.dark-mode .apm-field { background: #252538; color: #e0e0e0; border-color: #444; }
+body.dark-mode .apm-club-list li { border-bottom-color: #333; }
