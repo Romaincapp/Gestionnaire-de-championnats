@@ -41,6 +41,11 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 - **Fait** : `showAddPlayerModal` ferme toutes les `.apm-section` ; `DEFAULT_CLUBS = []` (clubs) et
   repli `[]` dans `generateClubOptionsForEdit` (players). Une liste `customClubsList` déjà en
   localStorage n'est pas touchée.
+- **Bug corrigé dans la foulée** : un club créé via « + Ajouter un nouveau club… » en ajoutant un
+  joueur était bien enregistré mais la fenêtre (restée ouverte) n'était pas rafraîchie.
+  `addPlayerFromModal` ajoute le club seulement si le joueur est accepté, puis
+  `refreshAddPlayerClubSelect(club)` (clubs, exposée) le sélectionne et masque le champ, et
+  `renderAddPlayerClubsPanel()` met à jour la section 🏢.
 - **Fichiers/modules touchés** : `src/players.iife.js`, `src/clubs.iife.js`, `tests/unit/addPlayerModalAccordion.test.js`
 - **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
 - **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)

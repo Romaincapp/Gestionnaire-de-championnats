@@ -111,7 +111,7 @@ objet `clubsModule` regroupant 15 méthodes (pas des fonctions séparées) :
 
 **Fonctions directes** :
 - `showClubManagementModal()`, `closeClubManagementModal()`, `addNewClubFromModal()`, `removeClubFromModal()`, `handleClubSelectChange(select, inputId)`
-- `renderAddPlayerClubsPanel()`, `addClubFromAddPlayerModal()`, `removeClubFromAddPlayerModal(index)` - section « 🏢 Gérer les clubs » intégrée à la fenêtre « ➕ Ajouter des joueurs » (le sélecteur `#addPlayerClub` suit la liste). `showClubManagementModal()` n'a plus de bouton depuis 2026-10-02. Aucun club prédéfini (`DEFAULT_CLUBS = []`) : la liste (localStorage `customClubsList`) ne sert qu'aux menus de suggestion
+- `renderAddPlayerClubsPanel()`, `refreshAddPlayerClubSelect(selected)`, `addClubFromAddPlayerModal()`, `removeClubFromAddPlayerModal(index)` - section « 🏢 Gérer les clubs » intégrée à la fenêtre « ➕ Ajouter des joueurs » (le sélecteur `#addPlayerClub` suit la liste). `showClubManagementModal()` n'a plus de bouton depuis 2026-10-02. Aucun club prédéfini (`DEFAULT_CLUBS = []`) : la liste (localStorage `customClubsList`) ne sert qu'aux menus de suggestion
 
 **`window.clubsModule` (objet, méthodes)** :
 - `getClubsList`, `addClub`, `removeClub`, `generateClubOptions`, `generateClubInputHtml`, `migratePlayerData`, `createPlayerObject`, `getPlayerName`, `getPlayerClub`, `getPlayerFullDisplay`, `getPlayerDisplayName`, `findPlayerByName`, `playerExists`, `getClubsStats`, `getPlayerClubByName`

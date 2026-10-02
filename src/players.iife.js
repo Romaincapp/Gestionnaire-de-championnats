@@ -275,13 +275,11 @@
         const clubSelect = document.getElementById('addPlayerClub');
         const clubCustom = document.getElementById('addPlayerClubCustom');
         
+        let isNewClub = false;
         if (clubSelect) {
             if (clubSelect.value === '__custom__' && clubCustom && clubCustom.value.trim()) {
                 club = clubCustom.value.trim();
-                // Ajouter le nouveau club à la liste
-                if (typeof clubsModule !== 'undefined' && clubsModule.addClub) {
-                    clubsModule.addClub(club);
-                }
+                isNewClub = true; // ajouté à la liste seulement si le joueur est accepté
             } else if (clubSelect.value && clubSelect.value !== '__custom__') {
                 club = clubSelect.value;
             }
@@ -326,6 +324,15 @@
         saveToLocalStorage();
         showNotification(`${name}${club ? ' (' + club + ')' : ''} ajouté à D${division}`, 'success');
         updatePlayersDisplay(dayNumber);
+
+        // Nouveau club saisi : l'ajouter à la liste et le montrer tout de suite dans la
+        // fenêtre (menu « Club », où il reste sélectionné pour le joueur suivant, et
+        // section 🏢). Avant, il n'apparaissait qu'en rouvrant la fenêtre.
+        if (isNewClub) {
+            if (typeof clubsModule !== 'undefined' && clubsModule.addClub) clubsModule.addClub(club);
+            if (typeof refreshAddPlayerClubSelect === 'function') refreshAddPlayerClubSelect(club);
+            if (typeof renderAddPlayerClubsPanel === 'function') renderAddPlayerClubsPanel();
+        }
 
         document.getElementById('addPlayerName').value = '';
         document.getElementById('addPlayerName').focus();

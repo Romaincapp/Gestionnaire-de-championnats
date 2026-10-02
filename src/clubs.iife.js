@@ -403,11 +403,17 @@
     }
 
     // Le sélecteur « Club » de la section 👤 suit la liste, en gardant le club choisi
-    function refreshAddPlayerClubSelect() {
+    // (ou en sélectionnant `selected`), et le champ « Nom du nouveau club » est masqué
+    function refreshAddPlayerClubSelect(selected) {
         var select = document.getElementById('addPlayerClub');
         if (!select) return;
-        var current = select.value === '__custom__' ? '' : select.value;
+        var current = selected != null ? selected : (select.value === '__custom__' ? '' : select.value);
         select.innerHTML = generateClubOptions(current);
+        var custom = document.getElementById('addPlayerClubCustom');
+        if (custom && select.value !== '__custom__') {
+            custom.style.display = 'none';
+            custom.value = '';
+        }
     }
 
     function addClubFromAddPlayerModal() {
@@ -440,6 +446,7 @@
     }
 
     global.renderAddPlayerClubsPanel = renderAddPlayerClubsPanel;
+    global.refreshAddPlayerClubSelect = refreshAddPlayerClubSelect;
     global.addClubFromAddPlayerModal = addClubFromAddPlayerModal;
     global.removeClubFromAddPlayerModal = removeClubFromAddPlayerModal;
 

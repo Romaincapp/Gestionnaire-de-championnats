@@ -15,6 +15,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ### ➕ Ajouter des joueurs : tout fermé, plus de clubs factices
 - La fenêtre s'ouvre avec **toutes les sections fermées** : on choisit ce qu'on veut faire.
+- Un club créé en ajoutant un joueur (« + Ajouter un nouveau club… ») apparaît **tout de suite**
+  dans le menu « Club » (où il reste choisi pour le joueur suivant) et dans « 🏢 Gérer les clubs » ;
+  avant, il n'apparaissait qu'en rouvrant la fenêtre. Il n'est plus créé si le joueur est refusé.
 - Plus de clubs prédéfinis (« Club A » … « Club J ») : la liste des clubs démarre vide et se
   remplit avec ceux que l'on ajoute. Le club reste facultatif partout. Une liste déjà
   personnalisée dans le navigateur est conservée telle quelle.
