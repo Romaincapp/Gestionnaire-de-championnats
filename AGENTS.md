@@ -167,7 +167,7 @@ vérifiée par grep). `closePlayerModal()` est en réalité dans `ranking.iife.j
 **Rôle** : Onglets/journées, pont Chrono↔raceData. ~23 fonctions exposées,
 dont notamment :
 - `addNewDay()`, `removeDay(dayNumber)` (renumérote les journées suivantes via `renumberDaysAfterRemoval(removed)`, exposée, qui décale aussi les `dayNumber` internes, le cache `raceData`, `collapseState` et l'accordéon des séries), `clearDayData(dayNumber)`, `switchTab(dayNumber)`, `switchToGeneralRanking()`, `updateDaySelectors()`, `updateTabsDisplay()`
-- `copyPlayersFromPreviousDay(dayNumber)`, `updatePlayerCount(dayNumber)`, `quickCopyFromDay(...)`, `generateQuickCopyButtons(dayNumber)`
+- `copyPlayersFromPreviousDay(dayNumber)`, `updatePlayerCount(dayNumber)` (`quickCopyFromDay`/`generateQuickCopyButtons`, les boutons « 📋 J1, J2… » des journées Matchs, ont été supprimées le 2026-10-02)
 - `handleDayTypeChange(dayNumber, type)`, `initializeDayTypeSelectorForDay1()` - intégration avec le sélecteur de type par journée (`multisport.iife.js`)
 - `startChronoRaceForDay(dayNumber, serieId)`, `saveRaceResultsToDay()` - pont vers le moteur de course (`chrono.iife.js`), voir `claude.md`
 - `updateMultisportRanking()`, `openMultisportRankingInNewWindow()`, `exportMultisportRanking()`, `toggleMultisportHub()`, `switchToMultisportRanking()`

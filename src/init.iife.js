@@ -1606,13 +1606,7 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
             initializeAllDaysContent();
             restoreCollapseState();
             switchTab(championship.currentDay);
-            
-            // Générer les boutons de copie rapide pour toutes les journées
-            setTimeout(() => {
-                Object.keys(championship.days).forEach(dayNum => {
-                    generateQuickCopyButtons(parseInt(dayNum));
-                });
-            }, 100);
+
         } else {
             // Pas de données sauvegardées - initialiser la structure par défaut
             if (typeof initMultisport === 'function') {

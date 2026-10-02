@@ -13,6 +13,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🧹 Barre des journées Matchs : plus de boutons « 📋 J1, J2… »
+- Les petits boutons de copie rapide des joueurs d'une journée précédente sont retirés. Pour
+  reprendre les joueurs d'une autre journée : « ➕ Joueurs » → « 📥 Reprendre d'une autre journée ».
+
 ### 📥 « Importer joueurs » rangé dans la fenêtre « ➕ Joueurs »
 - Le bouton quitte la barre d'actions des journées Matchs (plus de place) et devient la section
   **📥 Reprendre d'une autre journée** de la fenêtre « ➕ Joueurs » : même fenêtre d'import
