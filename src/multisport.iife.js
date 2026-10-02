@@ -444,6 +444,10 @@
         html += '<button onclick="showAddEventModalForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #e67e22; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🎯 Épreuve</button>';
         // Pas de bouton « Série » ici : une série se crée dans son épreuve (➕ Série de la
         // carte). Créée d'ici, elle n'avait pas d'épreuve : ni imprimée ni classée par épreuve.
+        var allSeries = [];
+        getDaySerieGroups(chronoData).forEach(function(g) { allSeries = allSeries.concat(g.series); });
+        var allOpen = allSeries.length > 0 && allSeries.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
+        html += '<button id="toggle-all-series-' + dayNumber + '" onclick="toggleAllSeriesDetails(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Afficher / masquer les participants de toutes les séries">' + (allOpen ? '📁 Tout replier' : '📂 Tout déplier') + '</button>';
         html += '<span style="color: #cbd5e1;">|</span>';
         html += '<button onclick="showImportPlayersModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer participants</button>';
         html += '<span id="chrono-quick-copy-buttons-' + dayNumber + '" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>';
@@ -1324,7 +1328,9 @@
         var html = '<div class="chrono-event-card" style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">';
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
         html += '<div style="display: flex; align-items: center; gap: 8px;">';
-        html += '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">🎯 ' + event.name + '</h4>';
+        var eventOpen = eventSeries.length > 0 && eventSeries.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
+        html += '<h4 onclick="toggleEventSeriesDetails(' + dayNumber + ', ' + event.id + ')" style="margin: 0; color: #2c3e50; font-size: 14px; cursor: pointer;" title="Afficher / masquer les participants de toutes les séries">' +
+            '<span id="event-chevron-' + dayNumber + '-' + event.id + '" style="display: inline-block; width: 14px; color: #64748b; font-size: 11px;">' + (eventOpen ? '▼' : '▶') + '</span>🎯 ' + event.name + '</h4>';
         if (event.fun) html += funEventBadgeHTML();
         html += '<button onclick="editEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
         html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
@@ -1383,8 +1389,11 @@
         if (progress.disq) outOfRace.push(progress.disq + ' DISQ');
 
         var html = '<div class="chrono-serie-card" style="background: #f8f9fa; border-radius: 8px; padding: ' + (compact ? '8px 10px' : '10px 12px') + '; border-left: 4px solid ' + (complete ? '#27ae60' : '#3498db') + '; margin-bottom: 8px;">';
+        var open = isSerieDetailsOpen(dayNumber, serie.id);
         html += '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">';
-        html += '<div>';
+        // Accordéon : un clic sur le nom de la série affiche / masque ses participants
+        html += '<div onclick="toggleSerieDetails(' + dayNumber + ', ' + serie.id + ')" style="cursor: pointer; flex: 1; min-width: 160px;" title="Afficher / masquer les participants">';
+        html += '<span id="serie-chevron-' + dayNumber + '-' + serie.id + '" style="display: inline-block; width: 14px; color: #64748b; font-size: 11px;">' + (open ? '▼' : '▶') + '</span>';
         html += '<strong style="color: #2c3e50; font-size: 13px;">🏃 ' + serie.name + '</strong>';
         html += '<span style="color: #7f8c8d; font-size: 11px; margin-left: 8px;">' + (complete ? '✅ ' : '') + completedCount + '/' + totalCount + ' résultats' +
             (outOfRace.length ? ' (dont ' + outOfRace.join(', ') + ')' : '') + '</span>';
@@ -1410,10 +1419,141 @@
             });
             html += '</select></div>';
         }
+        html += '<div id="serie-details-' + dayNumber + '-' + serie.id + '" class="chrono-serie-details" style="display: ' + (open ? 'block' : 'none') + '; margin-top: 8px;">' +
+            renderSerieDetailsHTML(serie) + '</div>';
         html += '</div>';
         
         return html;
     }
+
+    // ============================================
+    // ACCORDÉON DES SÉRIES (vue détaillée, lecture seule)
+    // ============================================
+    // État ouvert/fermé gardé en mémoire (clé « jour-série ») pour survivre aux
+    // re-rendus de refreshChronoDisplay ; les détails sont toujours dans le DOM,
+    // masqués : ouvrir/fermer ne fait que changer un display, sans tout redessiner.
+    var openSerieDetails = {};
+
+    function isSerieDetailsOpen(dayNumber, serieId) {
+        return !!openSerieDetails[dayNumber + '-' + serieId];
+    }
+
+    // Participants de la série dans l'ordre du bassin (couloir), sinon du dossard,
+    // avec leur résultat : rang et temps, DNS / DISQ, ou « — » pas encore nagé.
+    function renderSerieDetailsHTML(serie) {
+        var participants = (serie.participants || []).slice();
+        if (participants.length === 0) {
+            return '<p style="margin: 0; padding: 6px 4px; color: #95a5a6; font-size: 12px;">Aucun participant</p>';
+        }
+        var esc = escapeLaneHtml;
+        var ranked = rankSerieResults(serie).entries;
+        var resultByName = {};
+        ranked.forEach(function(e) { resultByName[e.name.toLowerCase()] = e; });
+        var hasLanes = participants.some(function(p) { return p.laneNumber; });
+        var hasClub = participants.some(function(p) { return p.club; });
+        var hasCategory = participants.some(function(p) { return p.category; });
+        participants.sort(function(a, b) {
+            if (hasLanes) return (a.laneNumber || 99) - (b.laneNumber || 99);
+            return (a.bib || 0) - (b.bib || 0);
+        });
+
+        var td = 'padding: 4px 8px; border-bottom: 1px solid #eef2f7;';
+        var html = '<table style="width: 100%; border-collapse: collapse; font-size: 12px; background: white; border-radius: 6px;">';
+        html += '<thead><tr style="color: #64748b; text-align: left;">' +
+            (hasLanes ? '<th style="' + td + '">Couloir</th>' : '') +
+            '<th style="' + td + '">Dossard</th><th style="' + td + '">Nom</th>' +
+            (hasClub ? '<th style="' + td + '">Club</th>' : '') +
+            (hasCategory ? '<th style="' + td + '">Catégorie</th>' : '') +
+            '<th style="' + td + ' text-align: center;">Rang</th><th style="' + td + '">Temps</th></tr></thead><tbody>';
+        participants.forEach(function(p) {
+            var r = resultByName[(p.name || '').toLowerCase()];
+            var rank = '', time = '<span style="color: #95a5a6;">—</span>';
+            if (p.status === 'dns' || p.status === 'disq') {
+                time = '<span style="color: #e74c3c; font-weight: bold;">' + (p.status === 'dns' ? 'DNS' : 'DISQ') + '</span>';
+            } else if (r) {
+                rank = r.rank;
+                time = '<span style="font-family: monospace;">' + formatDurationHMS(r.time) + '</span>';
+            } else if (p.status === 'running') {
+                time = '<span style="color: #e67e22;">en course</span>';
+            }
+            html += '<tr>' +
+                (hasLanes ? '<td style="' + td + '">' + (p.laneNumber || '') + '</td>' : '') +
+                '<td style="' + td + ' color: #e67e22; font-weight: bold;">' + (p.bib != null ? '#' + p.bib : '') + '</td>' +
+                '<td style="' + td + '">' + esc(p.name) + '</td>' +
+                (hasClub ? '<td style="' + td + '">' + esc(p.club || '') + '</td>' : '') +
+                (hasCategory ? '<td style="' + td + '">' + esc(p.category || '') + '</td>' : '') +
+                '<td style="' + td + ' text-align: center; font-weight: bold;">' + rank + '</td>' +
+                '<td style="' + td + '">' + time + '</td></tr>';
+        });
+        return html + '</tbody></table>';
+    }
+
+    // Applique l'état ouvert/fermé d'une série au DOM, sans re-rendu
+    function setSerieDetailsOpen(dayNumber, serieId, open) {
+        var key = dayNumber + '-' + serieId;
+        if (open) openSerieDetails[key] = true; else delete openSerieDetails[key];
+        var details = document.getElementById('serie-details-' + key);
+        if (details) details.style.display = open ? 'block' : 'none';
+        var chevron = document.getElementById('serie-chevron-' + key);
+        if (chevron) chevron.textContent = open ? '▼' : '▶';
+    }
+
+    // Séries de chaque épreuve (et séries indépendantes) d'une journée
+    function getDaySerieGroups(chronoData) {
+        var groups = (chronoData.events || []).map(function(evt) {
+            return { eventId: evt.id, series: getEventSeries(chronoData, evt) };
+        });
+        groups.push({ eventId: null, series: (chronoData.series || []).filter(function(s) { return !s.eventId; }) });
+        return groups;
+    }
+
+    // Libellés : chevron de chaque épreuve, bouton « tout » de la journée
+    function updateAccordionControls(dayNumber) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var allOpen = true, any = false;
+        getDaySerieGroups(chronoData).forEach(function(g) {
+            var groupOpen = g.series.length > 0 && g.series.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
+            if (g.series.length) { any = true; if (!groupOpen) allOpen = false; }
+            if (g.eventId != null) {
+                var chevron = document.getElementById('event-chevron-' + dayNumber + '-' + g.eventId);
+                if (chevron) chevron.textContent = groupOpen ? '▼' : '▶';
+            }
+        });
+        var btn = document.getElementById('toggle-all-series-' + dayNumber);
+        if (btn) btn.textContent = any && allOpen ? '📁 Tout replier' : '📂 Tout déplier';
+    }
+
+    function toggleSerieDetails(dayNumber, serieId) {
+        setSerieDetailsOpen(dayNumber, serieId, !isSerieDetailsOpen(dayNumber, serieId));
+        updateAccordionControls(dayNumber);
+    }
+
+    // Clic sur une épreuve : ouvre toutes ses séries, ou les ferme si elles l'étaient toutes
+    function toggleEventSeriesDetails(dayNumber, eventId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var evt = (chronoData.events || []).find(function(e) { return e.id === eventId; });
+        if (!evt) return;
+        var series = getEventSeries(chronoData, evt);
+        var open = !series.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
+        series.forEach(function(s) { setSerieDetailsOpen(dayNumber, s.id, open); });
+        updateAccordionControls(dayNumber);
+    }
+
+    // Bouton de la barre d'actions : tout ouvrir, ou tout fermer si tout est ouvert
+    function toggleAllSeriesDetails(dayNumber) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var all = [];
+        getDaySerieGroups(chronoData).forEach(function(g) { all = all.concat(g.series); });
+        var open = !all.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
+        all.forEach(function(s) { setSerieDetailsOpen(dayNumber, s.id, open); });
+        updateAccordionControls(dayNumber);
+    }
+    global.toggleSerieDetails = toggleSerieDetails;
+    global.toggleEventSeriesDetails = toggleEventSeriesDetails;
+    global.toggleAllSeriesDetails = toggleAllSeriesDetails;
 
     // ============================================
     // CALCUL DES POINTS MULTISPORT

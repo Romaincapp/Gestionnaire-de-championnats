@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 📂 Courses : séries en accordéon
+- Un clic sur le nom d'une **série** affiche ou masque ses participants (couloir, dossard, nom,
+  club, catégorie, rang et temps, DNS/DISQ, « — » si pas encore nagé), dans l'ordre du bassin.
+- Un clic sur le nom d'une **épreuve** ouvre toutes ses séries d'un coup (ou les referme).
+- Bouton **📂 Tout déplier / 📁 Tout replier** dans la barre d'actions de la journée.
+- Vue de consultation uniquement ; l'état ouvert/fermé est conservé quand l'écran se met à jour.
+
 ### 🏆 Classement d'une série (bouton 🏆) corrigé
 - Un nageur **DISQ ou DNS** n'est plus classé, même si une ancienne ligne de résultat existait
   (il pouvait apparaître 1er) ; il est listé en bas, sans rang.

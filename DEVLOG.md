@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-02 — Accordéon des séries dans l'écran Courses
+
+- **Contexte** : voir les participants de chaque série sans ouvrir de fenêtre, par série,
+  par épreuve ou tout d'un coup (consultation seulement).
+- **Fait** : `renderSerieCard` ajoute un en-tête cliquable (chevron) et un bloc
+  `#serie-details-J-S` toujours rendu mais masqué (`renderSerieDetailsHTML`, rang/temps via
+  `rankSerieResults`). Ouvrir/fermer ne change qu'un `display` (pas de re-rendu) ; état en
+  mémoire (`openSerieDetails`, clé « jour-série ») relu à chaque rendu. Clic sur l'épreuve
+  (`toggleEventSeriesDetails`) et bouton de la barre d'actions (`toggleAllSeriesDetails`).
+- **Fichiers/modules touchés** : `src/multisport.iife.js`, `tests/unit/serieAccordion.test.js`
+- **Commit(s)** : voir branche `claude/exciting-dirac-j151ws`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-02 — Bouton 🏆 de série fiabilisé, import multi-journées sur le moteur « à la suite »
 
 - **Contexte** : « le petit bouton voir le classement de chaque série se trompe parfois » ;
