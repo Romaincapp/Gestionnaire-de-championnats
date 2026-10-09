@@ -199,6 +199,7 @@ le 2026-09).
 - `toggleMatchCollapse(element)` - Replie/déplie un match
 - `deleteMatch(dayNumber, division, matchIndex)` - Supprime un match
 - `organizeMatchesInTours(matches)` - Organise les matchs en tours
+- `editMatchPlayerName(day, div, index, field, name)` (match ordinaire), `editPoolMatchPlayerName(day, div, matchId, field, name)` (match de poule, **par id** : avant, par position, d'abord cherchée dans les matchs ordinaires), `editFinalMatchPlayerName(day, div, matchId, field, name)` (phase finale) - champ nom d'un match en mode « 🔓 Modifier les matchs ». Si l'ancien nom est un vrai joueur (listing, poule ou autres matchs), fenêtre de choix `#renamePlayerChoiceModal` : **✏️ Renommer partout** (remplace l'ancien nom partout dans la division de la journée : matchs, poules, matchs de poule, phase finale — vainqueur, qualifiés, champion… — et l'entrée du listing, club conservé, fusionnée si le nouveau nom existe) ou **➕ Nouveau joueur** (ce match seulement ; ajouté au listing et à la poule de l'ancien). Annuler remet l'ancien nom. Cœur testable : `renamePlayerInMatch(day, div, match, field, name, 'all'|'single')` ; `resolveRenamePlayerChoice(scope)` répond à la fenêtre
 
 ### 10. pools.iife.js (Mode POOL)
 **Rôle** : Gestion des poules et phase finale. ~62 fonctions exposées —

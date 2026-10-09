@@ -1666,154 +1666,240 @@
     }
     window.declareForfait = declareForfait;
 
-    // Fonction pour éditer le nom d'un joueur dans un match de phase finale manuelle
-    function editFinalMatchPlayerName(dayNumber, division, matchId, playerField, newName) {
-        if (!dayNumber || !championship.days[dayNumber]) return;
-        
-        const dayData = championship.days[dayNumber];
-        const manualFinalPhase = dayData.pools?.manualFinalPhase?.divisions[division];
-        
-        if (!manualFinalPhase || !manualFinalPhase.rounds) return;
-        
-        let match = null;
-        Object.values(manualFinalPhase.rounds).forEach(function(round) {
-            if (round.matches) {
-                const foundMatch = round.matches.find(function(m) { return m.id === matchId; });
-                if (foundMatch) match = foundMatch;
-            }
+    // ============================================
+    // RENOMMER UN JOUEUR DANS UN MATCH (mode « 🔓 Modifier les matchs »)
+    // ============================================
+    // Corriger un nom dans un match pose une question : est-ce le même joueur mal
+    // orthographié (« Renommer partout ») ou un autre joueur qui prend sa place dans
+    // ce match (« Nouveau joueur ») ? Avant, seul ce match changeait alors que le
+    // listing était renommé : les autres matchs gardaient l'ancien nom, qui revenait
+    // au listing comme un joueur de plus au verrouillage.
+    //   scope 'all'    : l'ancien nom est remplacé dans toute la division de la journée
+    //                    (matchs, poules, matchs de poule, phase finale, listing).
+    //   scope 'single' : seul ce match change ; l'ancien joueur garde ses autres matchs
+    //                    et sa place au listing, le nouveau y est ajouté (et dans la
+    //                    poule de l'ancien pour un match de poule).
+
+    function isByeName(name) {
+        return !name || String(name).trim().toUpperCase().indexOf('BYE') === 0;
+    }
+
+    // Structures de la division pour la journée, où un nom de joueur peut apparaître
+    function divisionStructures(dayData, division) {
+        const list = [];
+        if (dayData.matches && dayData.matches[division]) list.push(dayData.matches[division]);
+        const pools = dayData.pools || {};
+        if (pools.divisions && pools.divisions[division]) list.push(pools.divisions[division]);
+        if (pools.manualFinalPhase && pools.manualFinalPhase.divisions && pools.manualFinalPhase.divisions[division]) {
+            list.push(pools.manualFinalPhase.divisions[division]);
+        }
+        return list;
+    }
+
+    // Remplace toute valeur égale à oldName (chaîne, champ d'objet, élément de tableau)
+    function deepRename(node, oldName, newName, seen) {
+        if (!node || typeof node !== 'object' || seen.has(node)) return 0;
+        seen.add(node);
+        let count = 0;
+        Object.keys(node).forEach(function(key) {
+            if (key.charAt(0) === '_') return;                  // champs techniques (_matchIndex...)
+            const value = node[key];
+            if (value === oldName) { node[key] = newName; count++; }
+            else if (value && typeof value === 'object') count += deepRename(value, oldName, newName, seen);
         });
-        
-        if (!match) return;
-        
+        return count;
+    }
+
+    // Nombre de places de match occupées par `name` dans la division, hors `exceptMatch`
+    function countMatchSlots(dayData, division, name, exceptMatch) {
+        let count = 0;
+        function scan(matches) {
+            (matches || []).forEach(function(m) {
+                if (!m || m === exceptMatch) return;
+                if (m.player1 === name) count++;
+                if (m.player2 === name) count++;
+            });
+        }
+        scan(dayData.matches && dayData.matches[division]);
+        const pools = dayData.pools || {};
+        if (pools.divisions && pools.divisions[division]) scan(pools.divisions[division].matches);
+        const fp = pools.manualFinalPhase && pools.manualFinalPhase.divisions && pools.manualFinalPhase.divisions[division];
+        if (fp && fp.rounds) Object.keys(fp.rounds).forEach(function(r) { scan(fp.rounds[r] && fp.rounds[r].matches); });
+        return count;
+    }
+
+    function listingIndex(dayData, division, name) {
+        const players = (dayData.players && dayData.players[division]) || [];
+        return players.findIndex(function(p) { return getPlayerName(p) === name; });
+    }
+
+    // Applique le renommage (données seulement). Retourne { scope, renamed, added }.
+    function renamePlayerInMatch(dayNumber, division, match, playerField, newName, scope) {
+        const dayData = championship.days[dayNumber];
         const oldName = match[playerField];
-        newName = newName.trim();
-        
-        if (!newName || newName === oldName) return;
-        
-        // Mettre à jour le nom dans le match
+        newName = String(newName || '').trim();
+        const result = { scope: scope, renamed: 0, added: false };
+        if (!dayData || !newName || newName === oldName) return result;
+        if (!dayData.players) dayData.players = {};
+        if (!dayData.players[division]) dayData.players[division] = [];
+        const players = dayData.players[division];
+
+        if (scope === 'all') {
+            const seen = new Set();
+            divisionStructures(dayData, division).forEach(function(node) {
+                result.renamed += deepRename(node, oldName, newName, seen);
+            });
+            // Listing : renommer l'entrée (club conservé), ou la fusionner si le nouveau nom existe déjà
+            const oldIdx = listingIndex(dayData, division, oldName);
+            const newIdx = listingIndex(dayData, division, newName);
+            if (oldIdx !== -1) {
+                if (newIdx !== -1) players.splice(oldIdx, 1);
+                else if (typeof players[oldIdx] === 'object' && players[oldIdx] !== null) players[oldIdx].name = newName;
+                else players[oldIdx] = newName;
+            } else if (newIdx === -1 && !isByeName(newName)) {
+                players.push({ name: newName, club: '' });
+                result.added = true;
+            }
+            return result;
+        }
+
+        // 'single' : ce match seulement
         match[playerField] = newName;
-        
-        // Mettre à jour le winner si nécessaire
-        if (match.winner === oldName) {
-            match.winner = newName;
+        if (match.winner === oldName) match.winner = newName;
+        if (match.loser === oldName) match.loser = newName;
+        result.renamed = 1;
+        if (!isByeName(newName) && listingIndex(dayData, division, newName) === -1) {
+            players.push({ name: newName, club: '' });
+            result.added = true;
         }
-        
-        saveToLocalStorage();
-        
-        // Rafraîchir l'affichage
-        if (typeof global.updateManualFinalPhaseDisplay === 'function') {
-            global.updateManualFinalPhaseDisplay(dayNumber);
+        // Match de poule : le nouveau joueur rejoint la poule de l'ancien
+        const poolDiv = dayData.pools && dayData.pools.divisions && dayData.pools.divisions[division];
+        if (poolDiv && Array.isArray(poolDiv.pools) && (poolDiv.matches || []).indexOf(match) !== -1) {
+            const pool = poolDiv.pools.find(function(p) { return Array.isArray(p) && p.indexOf(oldName) !== -1; });
+            if (pool && pool.indexOf(newName) === -1) pool.push(newName);
         }
-        
-        if (typeof global.showNotification === 'function') {
-            global.showNotification(`Joueur renommé : "${oldName}" → "${newName}"`, 'success');
+        return result;
+    }
+
+    // Faut-il demander ? Oui dès que l'ancien nom désigne un vrai joueur, présent au
+    // listing, dans une poule ou dans d'autres matchs : sinon il n'y a rien d'autre à renommer.
+    function renameNeedsChoice(dayData, division, match, playerField, newName) {
+        const oldName = match[playerField];
+        if (isByeName(oldName) || isByeName(newName)) return false;
+        const poolDiv = dayData.pools && dayData.pools.divisions && dayData.pools.divisions[division];
+        const inPool = !!(poolDiv && Array.isArray(poolDiv.pools) &&
+            poolDiv.pools.some(function(p) { return Array.isArray(p) && p.indexOf(oldName) !== -1; }));
+        return inPool || listingIndex(dayData, division, oldName) !== -1 || countMatchSlots(dayData, division, oldName, match) > 0;
+    }
+
+    let pendingRename = null;
+
+    function showRenamePlayerChoice(oldName, newName, otherMatches, onChoice) {
+        closeRenamePlayerChoice();
+        pendingRename = onChoice;
+        const esc = function(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+        const others = otherMatches > 0
+            ? `apparaît dans ${otherMatches} autre${otherMatches > 1 ? 's' : ''} match${otherMatches > 1 ? 's' : ''} de cette division`
+            : 'est inscrit dans cette division';
+        const html = `
+            <div id="renamePlayerChoiceModal" onclick="if (event.target === this) resolveRenamePlayerChoice(null)" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10001; padding: 16px;">
+                <div style="background: white; border-radius: 12px; padding: 22px; max-width: 440px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                    <h3 style="margin: 0 0 8px; color: #2c3e50;">✏️ Renommer « ${esc(oldName)} » en « ${esc(newName)} »</h3>
+                    <p style="margin: 0 0 16px; color: #64748b; font-size: 14px;">« ${esc(oldName)} » ${others}.</p>
+                    <button id="renameChoiceAll" onclick="resolveRenamePlayerChoice('all')" style="display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 10px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                        <strong>✏️ Renommer partout</strong><br><span style="font-size: 12px; opacity: 0.9;">Même joueur (faute de frappe…) : « ${esc(newName)} » remplace « ${esc(oldName)} » dans tous les matchs et au listing de la journée</span>
+                    </button>
+                    <button id="renameChoiceSingle" onclick="resolveRenamePlayerChoice('single')" style="display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 14px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                        <strong>➕ Nouveau joueur</strong><br><span style="font-size: 12px; opacity: 0.9;">Autre joueur : « ${esc(newName)} » remplace « ${esc(oldName)} » dans ce match seulement et rejoint le listing</span>
+                    </button>
+                    <div style="text-align: right;"><button onclick="resolveRenamePlayerChoice(null)" class="btn btn-secondary">Annuler</button></div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    function closeRenamePlayerChoice() {
+        const modal = document.getElementById('renamePlayerChoiceModal');
+        if (modal) modal.remove();
+    }
+
+    function resolveRenamePlayerChoice(scope) {
+        const callback = pendingRename;
+        pendingRename = null;
+        closeRenamePlayerChoice();
+        if (callback) callback(scope);
+    }
+    window.resolveRenamePlayerChoice = resolveRenamePlayerChoice;
+
+    // Point d'entrée commun aux trois types de matchs. `refresh` redessine l'écran du
+    // match (et remet l'ancien nom dans le champ si l'utilisateur annule).
+    function editPlayerNameInMatch(dayNumber, division, match, playerField, newName, refresh) {
+        const dayData = championship.days[dayNumber];
+        if (!dayData || !match) return;
+        const oldName = match[playerField];
+        newName = String(newName || '').trim();
+        if (!newName || newName === oldName) { refresh(); return; }
+
+        function apply(scope) {
+            if (!scope) { refresh(); return; }               // annulé : on remet l'ancien nom
+            const result = renamePlayerInMatch(dayNumber, division, match, playerField, newName, scope);
+            saveToLocalStorage();
+            refresh();
+            if (typeof global.updatePlayersDisplay === 'function') global.updatePlayersDisplay(dayNumber);
+            if (typeof global.showNotification === 'function') {
+                if (scope === 'all') {
+                    global.showNotification(`« ${oldName} » renommé en « ${newName} » partout (${result.renamed} occurrence${result.renamed > 1 ? 's' : ''})`, 'success');
+                } else {
+                    global.showNotification(`« ${newName} » remplace « ${oldName} » dans ce match` + (result.added ? ' — ajouté au listing' : ''), 'success');
+                }
+            }
         }
+
+        if (renameNeedsChoice(dayData, division, match, playerField, newName)) {
+            showRenamePlayerChoice(oldName, newName, countMatchSlots(dayData, division, oldName, match), apply);
+        } else {
+            apply('single');
+        }
+    }
+
+    // Match de phase finale manuelle
+    function editFinalMatchPlayerName(dayNumber, division, matchId, playerField, newName) {
+        const dayData = championship.days[dayNumber];
+        const fp = dayData && dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions
+            ? dayData.pools.manualFinalPhase.divisions[division] : null;
+        if (!fp || !fp.rounds) return;
+        let match = null;
+        Object.keys(fp.rounds).forEach(function(r) {
+            const found = ((fp.rounds[r] && fp.rounds[r].matches) || []).find(function(m) { return m.id === matchId; });
+            if (found) match = found;
+        });
+        editPlayerNameInMatch(dayNumber, division, match, playerField, newName, function() {
+            if (typeof global.updateManualFinalPhaseDisplay === 'function') global.updateManualFinalPhaseDisplay(dayNumber);
+        });
     }
     window.editFinalMatchPlayerName = editFinalMatchPlayerName;
 
-    // Fonction pour éditer le nom d'un joueur dans un match
-    function editMatchPlayerName(dayNumber, division, matchIndex, playerField, newName) {
-        if (!dayNumber || !championship.days[dayNumber]) return;
-        
+    // Match de poule, retrouvé par son id (avant : par sa position, d'abord cherchée
+    // dans les matchs ordinaires de la journée → mauvais match si les deux existaient)
+    function editPoolMatchPlayerName(dayNumber, division, matchId, playerField, newName) {
         const dayData = championship.days[dayNumber];
-        let match = null;
-        let isPoolMatch = false;
-        
-        // Essayer de trouver le match dans les matchs réguliers
-        if (dayData.matches && dayData.matches[division]) {
-            match = dayData.matches[division][matchIndex];
-        }
-        
-        // Si pas trouvé, chercher dans les matchs de poules
-        if (!match && dayData.pools && dayData.pools.divisions && dayData.pools.divisions[division]) {
-            const poolMatches = dayData.pools.divisions[division].matches;
-            if (poolMatches && poolMatches[matchIndex]) {
-                match = poolMatches[matchIndex];
-                isPoolMatch = true;
-            }
-        }
-        
-        if (!match) return;
-        
-        const oldName = match[playerField];
-        newName = newName.trim();
-        
-        if (!newName || newName === oldName) return;
-        
-        // Mettre à jour le nom dans le match
-        match[playerField] = newName;
-        
-        // Mettre à jour le winner si nécessaire
-        if (match.winner === oldName) {
-            match.winner = newName;
-        }
-        
-        // Mettre à jour la liste des joueurs de la division.
-        // - Si l'ancien nom y figure : on le renomme (en conservant le format string/objet).
-        // - Sinon : il s'agit d'un nouveau joueur saisi directement dans le match,
-        //   on l'ajoute d'office pour qu'il apparaisse au classement.
-        if (!dayData.players[division]) dayData.players[division] = [];
-        const divisionPlayers = dayData.players[division];
-        const oldIndex = divisionPlayers.findIndex(function(p) { return getPlayerName(p) === oldName; });
-        const alreadyListed = divisionPlayers.some(function(p) { return getPlayerName(p) === newName; });
-        let playerAdded = false;
-
-        if (oldIndex !== -1) {
-            const existing = divisionPlayers[oldIndex];
-            if (alreadyListed) {
-                // newName existe déjà ailleurs : on supprime l'ancienne entrée pour éviter un doublon
-                divisionPlayers.splice(oldIndex, 1);
-            } else if (typeof existing === 'object' && existing !== null) {
-                existing.name = newName;
-            } else {
-                divisionPlayers[oldIndex] = newName;
-            }
-        } else if (!alreadyListed && newName.toUpperCase() !== 'BYE') {
-            // Nouveau joueur ajouté directement via l'édition du match
-            divisionPlayers.push({ name: newName, club: '' });
-            playerAdded = true;
-        }
-        
-        // Mettre à jour aussi dans les poules si c'est un match de poule
-        if (isPoolMatch && dayData.pools && dayData.pools.divisions && dayData.pools.divisions[division]) {
-            const pools = dayData.pools.divisions[division].pools;
-            if (pools) {
-                pools.forEach(function(pool) {
-                    if (pool.players) {
-                        const poolPlayerIndex = pool.players.findIndex(function(p) { return getPlayerName(p) === oldName; });
-                        if (poolPlayerIndex !== -1) {
-                            const existing = pool.players[poolPlayerIndex];
-                            if (typeof existing === 'object' && existing !== null) {
-                                existing.name = newName;
-                            } else {
-                                pool.players[poolPlayerIndex] = newName;
-                            }
-                        }
-                    }
-                });
-            }
-        }
-        
-        saveToLocalStorage();
-        
-        // Rafraîchir l'affichage approprié
-        if (isPoolMatch) {
+        const poolDiv = dayData && dayData.pools && dayData.pools.divisions ? dayData.pools.divisions[division] : null;
+        const match = poolDiv ? (poolDiv.matches || []).find(function(m) { return m.id === matchId; }) : null;
+        editPlayerNameInMatch(dayNumber, division, match, playerField, newName, function() {
             if (typeof global.updatePoolsDisplay === 'function') global.updatePoolsDisplay(dayNumber);
-        } else {
-            updateMatchesDisplay(dayNumber);
-        }
-
-        // Rafraîchir la liste des joueurs pour refléter un éventuel ajout/renommage
-        if (typeof global.updatePlayersDisplay === 'function') global.updatePlayersDisplay(dayNumber);
-
-        if (typeof global.showNotification === 'function') {
-            if (playerAdded) {
-                global.showNotification(`Nouveau joueur ajouté au listing : "${newName}"`, 'success');
-            } else {
-                global.showNotification(`Joueur renommé : "${oldName}" → "${newName}"`, 'success');
-            }
-        }
+        });
     }
+    window.editPoolMatchPlayerName = editPoolMatchPlayerName;
+
+    // Match ordinaire (tours)
+    function editMatchPlayerName(dayNumber, division, matchIndex, playerField, newName) {
+        const dayData = championship.days[dayNumber];
+        const match = dayData && dayData.matches && dayData.matches[division] ? dayData.matches[division][matchIndex] : null;
+        editPlayerNameInMatch(dayNumber, division, match, playerField, newName, function() {
+            updateMatchesDisplay(dayNumber);
+        });
+    }
+    window.renamePlayerInMatch = renamePlayerInMatch;
     // Réconcilie la liste des joueurs avec les noms réellement présents dans les
     // matchs : tout joueur figurant dans un match (régulier ou de poule) mais absent
     // du listing de sa division y est ajouté. Permet de rattraper les joueurs saisis

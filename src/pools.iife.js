@@ -2205,7 +2205,7 @@ function generatePoolMatchHTML(match, dayNumber) {
             <div class="score-container">
                 ${window.showForfaitButtons ? 
                     `<input type="text" value="${match.player1}" 
-                            onchange="editMatchPlayerName(${dayNumber}, ${match.division}, ${match._matchIndex || 0}, 'player1', this.value)"
+                            onchange="editPoolMatchPlayerName(${dayNumber}, ${match.division}, '${match.id}', 'player1', this.value)"
                             style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white; cursor: text;">`
                     : `<span class="player-name-left" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player1)}')"
                           style="cursor: pointer; text-decoration: underline dotted;"
@@ -2229,7 +2229,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                 </div>
                 ${window.showForfaitButtons ? 
                     `<input type="text" value="${match.player2}" 
-                            onchange="editMatchPlayerName(${dayNumber}, ${match.division}, ${match._matchIndex || 0}, 'player2', this.value)"
+                            onchange="editPoolMatchPlayerName(${dayNumber}, ${match.division}, '${match.id}', 'player2', this.value)"
                             style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white; cursor: text;">`
                     : `<span class="player-name-right" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player2)}')"
                           style="cursor: pointer; text-decoration: underline dotted;"

@@ -13,6 +13,15 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🐛 Renommer un joueur dans un match : vous choisissez
+- En « 🔓 Modifier les matchs », changer le nom d'un joueur dans un match propose désormais :
+  - **✏️ Renommer partout** : c'est le même joueur (faute de frappe) → corrigé dans tous les matchs de la
+    journée (poules et phase finale comprises) et au listing, club conservé ;
+  - **➕ Nouveau joueur** : un autre joueur prend sa place dans ce match seulement → il est ajouté au
+    listing (et à la poule), l'ancien garde ses autres matchs.
+- Avant, seul ce match changeait alors que le listing était renommé, et l'ancien nom revenait ensuite au
+  listing comme un joueur de plus.
+
 ### 🧭 Boutons affichés au bon moment
 - Les barres d'actions n'affichent que ce qui sert déjà ; les boutons apparaissent au fur et à mesure :
   - **Journées Matchs** : 🎯 Matchs, 🏊 Poules et 👋 BYE dès qu'il y a des joueurs ; 🏆 Classements et
