@@ -2291,3 +2291,7 @@ html.dm-measuring *, html.dm-measuring *::before, html.dm-measuring *::after { t
         max-width: 100%;
     }
 }
+
+/* Boutons en cascade (refreshDayActionButtons, state.iife.js) : masqués tant
+   qu'ils n'ont pas de sens. !important car les boutons ont un display inline. */
+[data-needs][hidden] { display: none !important; }

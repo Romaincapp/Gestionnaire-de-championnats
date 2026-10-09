@@ -13,6 +13,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🧭 Boutons affichés au bon moment
+- Les barres d'actions n'affichent que ce qui sert déjà ; les boutons apparaissent au fur et à mesure :
+  - **Journées Matchs** : 🎯 Matchs, 🏊 Poules et 👋 BYE dès qu'il y a des joueurs ; 🏆 Classements et
+    🔓 Modifier les matchs dès qu'il y a des matchs. 🖨️ reste toujours là (feuilles Boccia vierges).
+  - **Journées Courses** : 💾 Exporter et 🗑️ Vider dès qu'il y a un participant ou une épreuve ;
+    🏁 Séries automatiques dès qu'il y a une épreuve ; 📂 Tout déplier et 🖨️ Imprimer séries dès qu'il y a
+    une série.
+
 ### ✏️ « ⚠️ Actions » devient « 🔓 Modifier les matchs »
 - Le bouton des journées Matchs qui affiche la suppression des matchs (×), les noms de joueurs
   modifiables et les forfaits (F1/F2) s'appelle désormais **🔓 Modifier les matchs** ; une fois activé il

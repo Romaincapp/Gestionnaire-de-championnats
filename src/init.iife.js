@@ -1630,6 +1630,9 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
         // Charger et restaurer les données chrono (y compris les chronos en cours)
         loadChronoFromLocalStorage();
         restoreRunningTimers();
+
+        // Boutons en cascade : la barre de J1 est écrite en dur dans index.html
+        if (typeof refreshDayActionButtons === 'function') refreshDayActionButtons();
     });
 
 })(window);

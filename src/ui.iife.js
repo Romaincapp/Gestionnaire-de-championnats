@@ -227,19 +227,19 @@
                     <!-- Plus de boutons « 📋 J1, J2… » : copier les joueurs d'une journée précédente
                          se fait dans « ➕ Joueurs » → « 📥 Reprendre d'une autre journée » -->
                     <!-- Actions matchs -->
-                    <button onclick="showMatchGenerationModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="showMatchGenerationModal(${dayNumber})" ${dayActionAttrs(dayNumber, 'players')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🎯 Matchs
                     </button>
-                    <button onclick="togglePoolSection(${dayNumber})" id="show-pool-btn-${dayNumber}" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="togglePoolSection(${dayNumber})" id="show-pool-btn-${dayNumber}" ${dayActionAttrs(dayNumber, 'players|poolsOn')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🏊 Poules
                     </button>
-                    <button onclick="updateRankingsForDay(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="updateRankingsForDay(${dayNumber})" ${dayActionAttrs(dayNumber, 'matches')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🏆 Classements
                     </button>
-                    <button onclick="showByeManagementModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="showByeManagementModal(${dayNumber})" ${dayActionAttrs(dayNumber, 'players')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         👋 BYE
                     </button>
-                    <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-${dayNumber}" title="${forfaitToggleButtonState(window.showForfaitButtons).title}" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: ${forfaitToggleButtonState(window.showForfaitButtons).background}; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-${dayNumber}" ${dayActionAttrs(dayNumber, 'matches|unlocked')} title="${forfaitToggleButtonState(window.showForfaitButtons).title}" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: ${forfaitToggleButtonState(window.showForfaitButtons).background}; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         ${forfaitToggleButtonState(window.showForfaitButtons).label}
                     </button>
                     <!-- Pas de « 🏁 Séries automatiques » ici : il ne sert qu'aux journées
