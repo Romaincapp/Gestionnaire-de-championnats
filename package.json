@@ -7,7 +7,8 @@
     "check:duplicates": "node scripts/check-duplicate-functions.js",
     "test": "jest",
     "test:e2e": "node tests/e2e/natation.e2e.js",
-    "test:darkmode": "node tests/e2e/darkmode.e2e.js"
+    "test:darkmode": "node tests/e2e/darkmode.e2e.js",
+    "test:darkmode:mobile": "node tests/e2e/darkmode.e2e.js --mobile"
   },
   "devDependencies": {
     "jest": "^30.5.1",

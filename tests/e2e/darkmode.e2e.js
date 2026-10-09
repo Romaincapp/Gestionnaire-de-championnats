@@ -3,6 +3,7 @@
 //
 //   npm run test:darkmode            (navigateur invisible)
 //   HEADED=1 npm run test:darkmode   (fenêtre visible)
+//   npm run test:darkmode:mobile     (même audit sur un téléphone)
 //
 // Charge des données réelles (jsondetest/ : journée Matchs en poules, journée
 // natation avec résultats, journée Matchs « classique » avec scores), active le
@@ -23,7 +24,14 @@ const { pathToFileURL } = require('url');
 
 const ROOT = path.join(__dirname, '..', '..');
 const APP = pathToFileURL(path.join(ROOT, 'index.html')).href;
-const OUT = path.join(__dirname, 'output-darkmode');
+// --mobile : téléphone (390×844, tactile, user-agent mobile) → les règles
+// @media (max-width: 768px) et les mises en page mobiles sont auditées.
+const MOBILE = process.argv.includes('--mobile') || !!process.env.MOBILE;
+const OUT = path.join(__dirname, MOBILE ? 'output-darkmode-mobile' : 'output-darkmode');
+const CONTEXT = MOBILE
+    ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
+        userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36' }
+    : { viewport: { width: 1400, height: 1000 } };
 const HEADED = !!process.env.HEADED;
 const load = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'jsondetest', f), 'utf8'));
 
@@ -119,6 +127,9 @@ function auditInPage() {
         const rect = el.getBoundingClientRect();
         // 1) Champs
         if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) {
+            // Contrôles natifs (calendrier, cases à cocher, liste déroulante du
+            // téléphone) dessinés par le système : clairs sans color-scheme: dark.
+            if (el.type !== 'hidden' && !/dark/.test(cs.colorScheme)) push('contrôle natif clair', el, 'color-scheme: ' + cs.colorScheme);
             if (['checkbox', 'radio', 'range', 'color', 'file', 'hidden', 'button', 'submit'].includes(el.type)) continue;
             const bg = effectiveBg(el), fg = parse(cs.color);
             if (lum(bg) > 0.6) push('champ clair', el, 'fond ' + hex(bg));
@@ -158,7 +169,7 @@ async function main() {
     fs.mkdirSync(OUT, { recursive: true });
     fs.readdirSync(OUT).forEach(f => fs.unlinkSync(path.join(OUT, f)));
     const browser = await chromium.launch(launchOptions());
-    const context = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+    const context = await browser.newContext(CONTEXT);
     const page = await context.newPage();
     const jsErrors = [];
     page.on('pageerror', e => jsErrors.push(e.message));

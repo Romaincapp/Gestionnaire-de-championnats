@@ -336,7 +336,8 @@ les `:hover` clairs des feuilles de style ne sont pas détectables → ajouter u
 règle `body.dark-mode …:hover` dans `styles.css`. Pour une nouvelle fenêtre, rien
 à faire : les couleurs inline sont prises en charge automatiquement.
 - `refreshDarkModeColors()` (retraite toute la page), `darkModeColorRules` (règles pures, pour les tests)
-- Audit complet en vrai navigateur : `npm run test:darkmode` (voir 🧪 Tests)
+- `body.dark-mode` porte aussi `color-scheme: dark` (contrôles natifs sombres) ; `script.js` accorde `<meta name="theme-color">` (barre d'adresse du téléphone)
+- Audit complet en vrai navigateur : `npm run test:darkmode` et `npm run test:darkmode:mobile` (voir 🧪 Tests)
 
 ### 14. init.iife.js
 **Rôle** : Deux choses distinctes dans ce fichier, malgré son nom :
@@ -413,6 +414,7 @@ npm test                    # Suite Jest (tests/unit/), 180+ tests
 npm run check:duplicates    # Détection de doublons en CLI seule (déjà incluse dans npm test)
 npm run test:e2e            # Journée natation complète dans un vrai navigateur (HEADED=1 pour regarder)
 npm run test:darkmode       # Audit du mode sombre : contraste de ~50 écrans/fenêtres dans un vrai navigateur
+npm run test:darkmode:mobile # Même audit sur un téléphone (390×844, tactile, règles @media mobiles)
 ```
 
 La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR et
@@ -428,8 +430,10 @@ modification du flux Courses/natation/classements. Captures et rapport dans
 natation avec résultats, matchs), active le mode sombre par l'interrupteur et ouvre un à un
 les onglets, classements, l'écran de course et ~40 fenêtres (statiques et dynamiques). Sur
 chacun, il mesure les couleurs réellement affichées : texte moins lisible qu'en mode clair
-(seuil 3:1), champ resté clair, grand panneau clair. Code de sortie 1 au moindre défaut ;
-captures et rapport dans `tests/e2e/output-darkmode/`. À lancer après toute modification
+(seuil 3:1), champ resté clair, grand panneau clair, contrôle natif clair (calendrier, cases à
+cocher, listes du téléphone : `color-scheme: dark` sur `body.dark-mode`). Code de sortie 1 au
+moindre défaut ; captures et rapport dans `tests/e2e/output-darkmode/` (`-mobile/` avec
+`npm run test:darkmode:mobile`). À lancer après toute modification
 d'affichage, et ajouter une ligne à `screens` pour toute nouvelle fenêtre.
 
 Quand tu corriges un bug, ajoute un test de non-régression dans `tests/unit/` (voir `clearDayData.test.js` ou `interclubRanking.test.js`). Quand tu supprimes du code que tu penses mort, lance `npm test` avant ET après — une suite verte avant qui reste verte après est la vraie preuve que la suppression est sûre, pas juste le grep qui l'a justifiée. Voir `CONTRIBUTING.md` et `tests/helpers/loadApp.js` pour le détail.
