@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ➕ Courses : ajouter des participants prend moins de place
+- Le formulaire « Nom / Club / Ajouter » toujours affiché et le bouton « ➕ Ajouter » (qui ouvrait une
+  fenêtre) sont remplacés par un seul bouton **+** à côté de « Participants disponibles ».
+- Il déplie un champ où l'on tape un participant par ligne : plusieurs d'un coup, ou un seul. Formats :
+  « Nom », « Nom, Club », « Dossard + Nom » ; catégorie optionnelle pour tous ; Ctrl+Entrée pour valider.
+
 ### 🐛 Renommer un joueur dans un match : vous choisissez
 - En « 🔓 Modifier les matchs », changer le nom d'un joueur dans un match propose désormais :
   - **✏️ Renommer partout** : c'est le même joueur (faute de frappe) → corrigé dans tous les matchs de la

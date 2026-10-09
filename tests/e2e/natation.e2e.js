@@ -92,7 +92,8 @@ async function openFresh(browser) {
     check(await state(page, () => championship.days[1].dayType === 'chrono'), 'J1 en mode Courses');
 
     step(`2. Ajouter les ${LINES.length} nageurs (➕ Ajouter, collage des lignes brutes)`);
-    await btn(page, '➕ Ajouter');
+    await page.click('#add-participants-btn-1');   // « + » des Participants disponibles
+    await page.waitForTimeout(250);
     await page.fill('#bulk-participants-1', LINES.join('\n'));
     await btn(page, '💾 Ajouter');
     const nPart = await state(page, () => championship.days[1].chronoData.participants.length);
@@ -503,8 +504,9 @@ async function openFresh(browser) {
     step('12. « + » des Participants disponibles vers une série générée (retardataire, puis déplacement)');
     const notSwum = (await brasseSeries(brasseId)).filter(s => s.id !== added.id && s.status !== 'completed' && !(s.results || []).length);
     const target = notSwum[notSwum.length - 1];
-    await page.fill('#quick-participant-name-1', 'Nageur Retardataire');
-    await page.click('button[onclick="quickAddParticipantToDay(1)"]');
+    await page.click('#add-participants-btn-1');   // un seul participant : une ligne suffit
+    await page.fill('#bulk-participants-1', 'Nageur Retardataire');
+    await page.click('#save-participants-btn-1');
     await page.waitForTimeout(300);
     const poolId = (name) => state(page, (n) => championship.days[1].chronoData.participants.find(p => p.name === n).id, name);
     const lateId = await poolId('Nageur Retardataire');

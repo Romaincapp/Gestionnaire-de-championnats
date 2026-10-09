@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-09 — Courses : ajout de participants regroupé dans un bouton « + »
+
+- **Contexte** : l'ajout de participants prenait trop de place (formulaire Nom/Club toujours affiché +
+  bouton « ➕ Ajouter » ouvrant une fenêtre).
+- **Fait** : un seul bouton « + » (en-tête des Participants disponibles) déplie un champ multi-lignes dans
+  la section (`renderAddParticipantsPanel`, multisport), une ligne suffit pour un seul participant ; même
+  analyse des lignes que l'ancienne fenêtre (`saveBulkParticipantsForDay` inchangée). `quickAddParticipantToDay`
+  supprimée ; `showAddParticipantManualModal` / `closeAddParticipantsModal` gardent leur nom et pilotent le
+  panneau. E2E natation adapté (ajout en masse + retardataire via « + »).
+- **Fichiers/modules touchés** : `src/multisport.iife.js`, `tests/unit/addParticipantsPanel.test.js`, `tests/e2e/natation.e2e.js`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-09 — Renommer un joueur dans un match : « partout » ou « nouveau joueur »
 
 - **Contexte** : bug rapporté — renommer un joueur dans un match ne proposait aucun choix.

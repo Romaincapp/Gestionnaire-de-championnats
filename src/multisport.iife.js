@@ -502,18 +502,15 @@
         var html = '<div class="chrono-participants-section" style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">';
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
         html += '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">👥 Participants disponibles (' + participants.length + ')</h4>';
-        html += '<button onclick="showAddParticipantManualModal(' + dayNumber + ')" style="padding: 5px 10px; font-size: 12px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">➕ Ajouter</button>';
+        html += '<button id="add-participants-btn-' + dayNumber + '" onclick="toggleAddParticipantsPanel(' + dayNumber + ')" title="Ajouter des participants (un ou plusieurs)" aria-label="Ajouter des participants" style="width: 34px; height: 30px; font-size: 22px; font-weight: 700; line-height: 1; padding: 0; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">' + (addParticipantsOpen[dayNumber] ? '×' : '+') + '</button>';
         html += '</div>';
-        
-        // Formulaire rapide d'ajout (toujours visible)
-        html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 10px; background: #f0f9ff; border-radius: 6px;">';
-        html += '<input type="text" id="quick-participant-name-' + dayNumber + '" placeholder="Nom du participant" style="flex: 1; min-width: 150px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
-        html += '<input type="text" id="quick-participant-club-' + dayNumber + '" placeholder="Club (optionnel)" style="width: 120px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
-        html += '<button onclick="quickAddParticipantToDay(' + dayNumber + ')" style="padding: 8px 15px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">Ajouter</button>';
-        html += '</div>';
-        
+
+        // « + » : un seul champ, replié par défaut, pour un ou plusieurs participants
+        // (avant : un formulaire Nom/Club toujours affiché + une fenêtre « ➕ Ajouter »)
+        html += renderAddParticipantsPanel(dayNumber);
+
         if (participants.length === 0) {
-            html += '<p style="color: #95a5a6; font-size: 12px; text-align: center; margin: 0; padding: 15px;">Aucun participant encore. Ajoutez-en avec le formulaire ci-dessus, ou importez depuis une autre journée avec 📥 Importer.</p>';
+            html += '<p style="color: #95a5a6; font-size: 12px; text-align: center; margin: 0; padding: 15px;">Aucun participant encore. Ajoutez-en avec +, ou importez depuis une autre journée avec 📥 Importer participants.</p>';
         } else {
             // Barre d'affectation de club aux participants cochés
             var clubSet = {};
@@ -651,55 +648,6 @@
         try { localStorage.setItem('chronoParticipantsListHeight', String(h)); } catch (e) { /* navigation privée */ }
     }
     global.saveParticipantsListHeight = saveParticipantsListHeight;
-
-    /**
-     * Ajoute rapidement un participant à la journée
-     */
-    function quickAddParticipantToDay(dayNumber) {
-        var nameInput = document.getElementById('quick-participant-name-' + dayNumber);
-        var clubInput = document.getElementById('quick-participant-club-' + dayNumber);
-        
-        if (!nameInput || !nameInput.value.trim()) {
-            showNotification('Veuillez entrer un nom', 'warning');
-            return;
-        }
-        
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        
-        var name = nameInput.value.trim();
-        var club = clubInput ? clubInput.value.trim() : '';
-        
-        // Vérifier si déjà existe
-        var exists = chronoData.participants.some(function(p) {
-            return p.name.toLowerCase() === name.toLowerCase();
-        });
-        
-        if (exists) {
-            showNotification('Ce participant existe déjà', 'warning');
-            return;
-        }
-        
-        var participant = {
-            id: chronoData.nextParticipantId++,
-            name: name,
-            club: club,
-            bib: chronoData.participants.length + 1,
-            totalTime: null,
-            laps: 0
-        };
-        
-        chronoData.participants.push(participant);
-        saveToLocalStorage();
-        
-        // Vider les champs
-        nameInput.value = '';
-        if (clubInput) clubInput.value = '';
-        nameInput.focus();
-        
-        refreshChronoDisplay(dayNumber);
-        showNotification('Participant ajouté : ' + name, 'success');
-    }
 
     /**
      * Affecte un club à tous les participants cochés (et propage dans les séries).
@@ -1014,46 +962,62 @@
         }, changes);
     }
 
-    /**
-     * Affiche une modal pour ajouter plusieurs participants (bulk)
-     */
-    function showAddParticipantManualModal(dayNumber) {
-        if (document.getElementById('addParticipantsModal-' + dayNumber)) return;
-        
-        var modal = document.createElement('div');
-        modal.id = 'addParticipantsModal-' + dayNumber;
-        modal.innerHTML = 
-            '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
-            'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
-            'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeAddParticipantsModal(' + dayNumber + ')">' +
-            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
-            '<h3>➕ Ajouter des participants - Journée ' + dayNumber + '</h3>' +
-            '<p style="color: #7f8c8d; font-size: 13px;">Entrez les noms (un par ligne). Formats acceptés : Nom · Nom, Club · Dossard + Nom (séparés par tabulation ou virgule, colonnes en trop ignorées)</p>' +
-            '<div style="margin: 15px 0;">' +
-            '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\n1\tGringos 1\n2\tGringos 2\n..."></textarea>' +
-            '</div>' +
-            '<div style="margin-bottom: 15px;">' +
-            '<label style="font-size: 12px; color: #555; display: block; margin-bottom: 4px;">Catégorie (optionnel — appliquée à tous les participants ci-dessus)</label>' +
-            '<input type="text" id="bulk-participants-category-' + dayNumber + '" list="categoryList-' + dayNumber + '" placeholder="ex: Solo, Équipe..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">' +
+    // ============================================
+    // AJOUT DE PARTICIPANTS : panneau « + » des Participants disponibles
+    // ============================================
+    // Un champ, une ligne par participant (une seule ligne suffit). Formats : Nom ·
+    // Nom, Club · Dossard + Nom. Replié par défaut ; état ouvert gardé en mémoire
+    // pour survivre aux rafraîchissements de l'écran. Remplace le formulaire
+    // Nom/Club toujours affiché et la fenêtre « ➕ Ajouter ».
+    var addParticipantsOpen = {};
+
+    function renderAddParticipantsPanel(dayNumber) {
+        var open = !!addParticipantsOpen[dayNumber];
+        return '<div id="add-participants-panel-' + dayNumber + '" style="display: ' + (open ? 'block' : 'none') + '; margin-bottom: 12px; padding: 10px; background: #f0f9ff; border-radius: 6px;">' +
+            '<textarea id="bulk-participants-' + dayNumber + '" rows="4" ' +
+            'onkeydown="if ((event.ctrlKey || event.metaKey) && event.key === \'Enter\') { event.preventDefault(); saveBulkParticipantsForDay(' + dayNumber + '); }" ' +
+            'style="width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-family: inherit; font-size: 13px; resize: vertical;" ' +
+            'placeholder="Un participant par ligne (un seul, c\'est bien aussi) :&#10;Dupont Jean&#10;Martin Pierre, Club ABC&#10;7&#9;Gringos 1"></textarea>' +
+            '<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px;">' +
+            '<input type="text" id="bulk-participants-category-' + dayNumber + '" list="categoryList-' + dayNumber + '" placeholder="Catégorie (optionnel, pour tous)" style="flex: 1; min-width: 150px; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">' +
             buildCategoryDatalist(dayNumber) +
+            '<button onclick="closeAddParticipantsModal(' + dayNumber + ')" style="padding: 7px 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer; font-size: 13px;">Annuler</button>' +
+            '<button id="save-participants-btn-' + dayNumber + '" onclick="saveBulkParticipantsForDay(' + dayNumber + ')" style="padding: 7px 14px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px;">💾 Ajouter</button>' +
             '</div>' +
-            '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
-            '<button onclick="closeAddParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
-            '<button onclick="saveBulkParticipantsForDay(' + dayNumber + ')" class="btn btn-primary">💾 Ajouter</button>' +
-            '</div></div></div>';
-        
-        document.body.appendChild(modal);
-        
-        // Focus sur le textarea
-        setTimeout(function() {
+            '<div style="font-size: 11px; color: #64748b; margin-top: 6px;">Formats : Nom · Nom, Club · Dossard + Nom (tabulation ou virgule). Ctrl+Entrée pour valider.</div>' +
+            '</div>';
+    }
+
+    function setAddParticipantsOpen(dayNumber, open) {
+        addParticipantsOpen[dayNumber] = open;
+        var panel = document.getElementById('add-participants-panel-' + dayNumber);
+        if (!panel && open) {
+            refreshChronoDisplay(dayNumber);
+            panel = document.getElementById('add-participants-panel-' + dayNumber);
+        }
+        if (panel) panel.style.display = open ? 'block' : 'none';
+        var btn = document.getElementById('add-participants-btn-' + dayNumber);
+        if (btn) btn.textContent = open ? '×' : '+';
+        if (open) {
             var textarea = document.getElementById('bulk-participants-' + dayNumber);
             if (textarea) textarea.focus();
-        }, 100);
+        }
+    }
+
+    function toggleAddParticipantsPanel(dayNumber) {
+        setAddParticipantsOpen(dayNumber, !addParticipantsOpen[dayNumber]);
+    }
+
+    // Noms historiques conservés (appelés ailleurs et par les tests) : ouvrent /
+    // ferment désormais le panneau au lieu d'une fenêtre.
+    function showAddParticipantManualModal(dayNumber) {
+        setAddParticipantsOpen(dayNumber, true);
     }
 
     function closeAddParticipantsModal(dayNumber) {
-        var modal = document.getElementById('addParticipantsModal-' + dayNumber);
-        if (modal) modal.remove();
+        var textarea = document.getElementById('bulk-participants-' + dayNumber);
+        if (textarea) textarea.value = '';
+        setAddParticipantsOpen(dayNumber, false);
     }
 
     function saveBulkParticipantsForDay(dayNumber) {
@@ -4806,7 +4770,7 @@
     global.closeParticipantsModal = closeParticipantsModal;
     global.removeParticipantFromSerie = removeParticipantFromSerie;
     global.renderParticipantsSection = renderParticipantsSection;
-    global.quickAddParticipantToDay = quickAddParticipantToDay;
+    global.toggleAddParticipantsPanel = toggleAddParticipantsPanel;
     global.showAddParticipantManualModal = showAddParticipantManualModal;
     global.closeAddParticipantsModal = closeAddParticipantsModal;
     global.saveBulkParticipantsForDay = saveBulkParticipantsForDay;
