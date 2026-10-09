@@ -16,7 +16,7 @@ const SRC_DIR = path.join(__dirname, '..', '..', 'src');
 const DEFAULT_ORDER = [
     'config', 'utils', 'notifications', 'state', 'clubs', 'multisport',
     'players', 'ui', 'matches', 'pools', 'ranking',
-    'export-json', 'export-print', 'chrono', 'search',
+    'export-json', 'export-print', 'chrono', 'search', 'darkmode',
 ];
 
 /**

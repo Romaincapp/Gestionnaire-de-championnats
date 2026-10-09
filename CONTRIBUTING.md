@@ -7,9 +7,9 @@ Merci de contribuer à ce projet ! Voici les bonnes pratiques à suivre.
 ### Modules IIFE
 
 Tout le code doit être organisé en modules IIFE (Immediately Invoked Function Expression)
-dans le dossier `src/`. Le projet compte aujourd'hui 15 modules (config, utils,
+dans le dossier `src/`. Le projet compte aujourd'hui 17 modules (config, utils,
 notifications, state, clubs, players, ui, init, matches, pools, chrono, multisport, ranking,
-export-json, export-print) — voir `AGENTS.md` pour le rôle de chacun. `script.js`
+export-json, export-print, search, darkmode) — voir `AGENTS.md` pour le rôle de chacun. `script.js`
 ne gère plus que le mode sombre (~37 lignes), la migration est terminée : ne pas y écrire de code.
 
 ```javascript

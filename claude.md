@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A third, read-only **Multisport tab** appears automatically whenever the championship contains at least one day of each type (or at least one Chrono day) — it shows a combined ranking across both day types. There is no longer a global mode toggle.
 
-Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in 15 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
+Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in 17 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
 
 ## Running the Application
 
@@ -450,7 +450,7 @@ order).
 ├── index.html              # Complete UI (~1000 lines after dead-code cleanup)
 ├── script.js               # Legacy bootstrap — dark mode only (37 lines), NOT the app logic
 ├── styles.css               # Styling
-├── src/                     # All application logic (15 IIFE modules, ~30k lines total)
+├── src/                     # All application logic (17 IIFE modules, ~30k lines total)
 │   ├── config.iife.js       # Global config (divisions, courts)
 │   ├── utils.iife.js        # Pure helper functions
 │   ├── notifications.iife.js # Toast notifications
@@ -465,6 +465,8 @@ order).
 │   ├── export-json.iife.js  # Championship JSON export/import
 │   ├── export-print.iife.js # Print/PDF (match sheets, recaps)
 │   ├── chrono.iife.js       # Live race timing engine (raceData, displayRaceInterface, timer/laps) — used as backend by multisport.iife.js's per-day Chrono UI; its old standalone global menu was removed, see issue #65 on GitHub
+│   ├── search.iife.js       # In-page 🔍 search bar (CSS Custom Highlight API, never touches the DOM)
+│   ├── darkmode.iife.js     # Dark mode adapter: marks light inline colours (data-dm-bg/fg/bd) so styles.css darkens them — no display function needs to know about dark mode
 │   └── init.iife.js         # App bootstrap, loaded last
 └── claude.md                 # This file
 ```

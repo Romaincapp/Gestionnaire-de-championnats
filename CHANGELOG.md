@@ -13,6 +13,18 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🌙 Mode sombre lisible partout
+- Toutes les fenêtres (ajout de joueurs, BYE, impression, poules, épreuves, séries, saisie des
+  résultats, participants, séries automatiques…), les champs, les boutons, les classements
+  (journée, général, Multisport, natation) et l'écran de course passent correctement en sombre :
+  plus de panneaux blancs ni de textes gris foncé illisibles.
+- Le podium du classement Multisport garde ses couleurs or / argent / bronze, en version sombre.
+- Les feuilles imprimées et le second écran « 📺 Afficher » restent clairs.
+
+### 🐛 « ➕ Match » d'une poule
+- La fenêtre d'ajout manuel d'un match de poule présélectionne de nouveau un 2e joueur différent
+  du 1er (une erreur JavaScript l'en empêchait).
+
 ### 🧹 Barre des journées Matchs : plus de boutons « 📋 J1, J2… »
 - Les petits boutons de copie rapide des joueurs d'une journée précédente sont retirés. Pour
   reprendre les joueurs d'une autre journée : « ➕ Joueurs » → « 📥 Reprendre d'une autre journée ».

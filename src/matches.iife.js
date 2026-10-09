@@ -1336,7 +1336,7 @@
 
         // Sélectionner le 2ème joueur par défaut pour éviter le même joueur
         const select2 = document.getElementById('add-match-player2');
-        if (select2 && poolPlayers.length > 1) {
+        if (select2 && realPlayers.length > 1) {
             select2.selectedIndex = 1;
         }
     }
