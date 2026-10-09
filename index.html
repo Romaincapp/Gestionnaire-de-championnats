@@ -128,8 +128,8 @@
                         <button onclick="showByeManagementModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             👋 BYE
                         </button>
-                        <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-1" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                            ⚠️ Actions
+                        <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-1" title="Supprimer un match, corriger le nom d'un joueur dans un match, déclarer un forfait" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            🔓 Modifier les matchs
                         </button>
                         <!-- Séparateur visuel -->
                         <span style="color: #cbd5e1;">|</span>
@@ -731,6 +731,7 @@
         <!-- 6. Recherche dans la page (barre 🔍) -->
         <script src="src/search.iife.js"></script>
         <script src="src/darkmode.iife.js"></script>
+        <script src="src/mobile.iife.js"></script>
 
         <!-- 7. Initialisation (dépend de tout) -->
         <script src="src/init.iife.js"></script>

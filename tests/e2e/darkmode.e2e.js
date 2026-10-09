@@ -44,7 +44,7 @@ function launchOptions() {
 
 // ---------------------------------------------------------------
 // Audit exécuté dans la page : renvoie la liste des défauts visibles.
-function auditInPage() {
+function auditInPage(checkOverflow) {
     function parse(c) {
         const m = c && c.match(/rgba?\(([^)]+)\)/);
         if (!m) return null;
@@ -161,6 +161,48 @@ function auditInPage() {
     });
     document.body.classList.add('dark-mode');
     textCandidates.forEach((c, k) => { if (c.r < lightRatios[k] - 0.1) push('texte peu lisible', c.el, c.msg + ' — mode clair ' + lightRatios[k].toFixed(2) + ':1'); });
+
+    // Sur téléphone : contenu qui dépasse de l'écran sans pouvoir défiler
+    // (tableau coupé, page qui glisse de côté). Un élément dans un conteneur à
+    // défilement horizontal (overflow-x: auto) est accessible : pas un défaut.
+    if (checkOverflow) {
+        const vw = document.documentElement.clientWidth;
+        if (document.documentElement.scrollWidth > vw + 1) {
+            push('débordement', document.documentElement, 'la page défile horizontalement (' + document.documentElement.scrollWidth + 'px pour ' + vw + 'px)');
+        }
+        const clippedBy = (el) => {
+            for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+                if (getComputedStyle(e).position === 'fixed') return null;   // panneau fixe : borné par l'écran
+                const ox = getComputedStyle(e).overflowX;
+                if (ox !== 'visible') return { el: e, scrolls: ox === 'auto' || ox === 'scroll' };
+            }
+            return null;
+        };
+        for (const el of all) {
+            if (el.closest('.notification, .app-search-bar') || !visible(el)) continue;
+            const rect = el.getBoundingClientRect();
+            if (rect.width < 2 || rect.height < 2 || rect.right < 0) continue;   // caché hors écran exprès
+            const clip = getComputedStyle(el).position === 'fixed' ? null : clippedBy(el);
+            const box = clip ? clip.el.getBoundingClientRect() : { left: 0, right: vw };
+            if (clip && clip.scrolls) continue;
+            const out = rect.right > Math.min(box.right, vw) + 2 || rect.left < Math.max(box.left, 0) - 2;
+            if (!out) continue;
+            // ne garder que l'élément le plus haut qui déborde (pas tous ses enfants)
+            const parent = el.parentElement;
+            const pr = parent && parent.getBoundingClientRect();
+            if (pr && parent !== root && (pr.right > Math.min(box.right, vw) + 2 || pr.left < Math.max(box.left, 0) - 2)) continue;
+            // coupable : l'élément le plus profond qui dépasse encore
+            const limit = Math.min(box.right, vw) + 2;
+            let culprit = el;
+            for (;;) {
+                const next = [...culprit.children].find(c => visible(c) && c.getBoundingClientRect().right > limit);
+                if (!next) break;
+                culprit = next;
+            }
+            push(clip ? 'contenu coupé' : 'débordement', el, Math.round(rect.left) + '→' + Math.round(rect.right) + 'px (écran ' + vw + 'px)'
+                + (culprit !== el ? ' — à cause de ' + describe(culprit) + ' (' + Math.round(culprit.getBoundingClientRect().width) + 'px, « ' + culprit.textContent.replace(/\s+/g, ' ').trim().slice(0, 60) + ' »)' : ''));
+        }
+    }
     return issues;
 }
 
@@ -311,7 +353,7 @@ async function main() {
         let issues;
         try {
             await run();
-            issues = await page.evaluate(auditInPage);
+            issues = await page.evaluate(auditInPage, MOBILE);
         } catch (e) {
             report.push(`## ${name}\n  ⚠️ écran non ouvert : ${e.message.split('\n')[0]}`);
             console.log(`⚠️  ${name} : ${e.message.split('\n')[0]}`);

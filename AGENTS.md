@@ -26,7 +26,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 ├── script.js               # Legacy — dark mode uniquement (37 lignes), PAS la logique de l'app
 ├── AGENTS.md               # Cette documentation
 ├── claude.md                # Guide d'architecture pour agents IA (structure de données, patterns critiques)
-├── src/                    # Toute la logique applicative (17 modules IIFE, ~30k lignes)
+├── src/                    # Toute la logique applicative (18 modules IIFE, ~30k lignes)
 │   ├── config.iife.js      # Configuration (divisions, terrains)
 │   ├── utils.iife.js       # Fonctions utilitaires
 │   ├── notifications.iife.js # Système de notifications
@@ -43,12 +43,13 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 │   ├── chrono.iife.js      # Moteur de chronométrage live (raceData, timer, tours) — backend du mode CHRONO par journée, voir section 11
 │   ├── search.iife.js      # Barre de recherche 🔍 dans la page (façon Ctrl+F), voir section 13 bis
 │   ├── darkmode.iife.js    # Mode sombre : assombrit les couleurs inline claires, voir section 13 ter
+│   ├── mobile.iife.js      # Téléphone : tableaux trop larges défilables, voir section 13 quater
 │   └── init.iife.js        # Bootstrap de l'application, chargé en dernier
 └── json/                   # Données JSON d'exemple (si besoin)
 ```
 Ordre de chargement dans `index.html` : config, utils, notifications, state,
 clubs, multisport, players, ui, matches, pools, ranking, export-json,
-export-print, chrono, search, darkmode, init (puis `script.js`). Un script chargé plus tard peut écraser un
+export-print, chrono, search, darkmode, mobile, init (puis `script.js`). Un script chargé plus tard peut écraser un
 `window.x =` du même nom défini plus tôt — c'est ce qui rendait
 `export.iife.js` (supprimé, issue #64) mort : ses fonctions étaient
 écrasées par `export-json.iife.js`/`export-print.iife.js` chargés après.
@@ -104,7 +105,8 @@ export-print, chrono, search, darkmode, init (puis `script.js`). Un script charg
 **Fonctions exposées** :
 - `saveToLocalStorage()` - Sauvegarde dans le localStorage
 - `loadFromLocalStorage()` - Charge depuis le localStorage
-- `toggleForfaitButtons()` - Bascule l'affichage des boutons forfait
+- `toggleForfaitButtons()` - Bouton des journées Matchs « 🔓 Modifier les matchs » / « 🔒 Verrouiller » (anciennement « ⚠️ Actions ON/OFF ») : déverrouillé, chaque match (normal, poule, phase finale) montre × (supprimer), des noms de joueurs modifiables et F1/F2 (forfait) ; au verrouillage, les joueurs saisis dans un match sont ajoutés au listing. Non mémorisé : verrouillé au chargement
+- `forfaitToggleButtonState(unlocked)` - `{label, background, title}` du bouton, utilisé par `toggleForfaitButtons` et le gabarit des journées (`ui.iife.js`)
 
 ### 5. clubs.iife.js
 **Rôle** : Gestion des clubs. 6 assignations directes sur `window`, dont un
@@ -339,6 +341,22 @@ règle `body.dark-mode …:hover` dans `styles.css`. Pour une nouvelle fenêtre,
 - `body.dark-mode` porte aussi `color-scheme: dark` (contrôles natifs sombres) ; `script.js` accorde `<meta name="theme-color">` (barre d'adresse du téléphone)
 - Audit complet en vrai navigateur : `npm run test:darkmode` et `npm run test:darkmode:mobile` (voir 🧪 Tests)
 
+### 13 quater. mobile.iife.js
+**Rôle** : sur écran étroit (`max-width: 768px`) seulement, repère les `<table>` plus
+larges que leur place (dernières colonnes coupées : Rang, Temps, Total…) et leur pose
+la classe `table-scroll-x` (`styles.css`, section « TÉLÉPHONE ») : `display: block;
+overflow-x: auto; width: 0; min-width: 100%` → le tableau défile au doigt sans étirer
+son parent. Les tableaux qui tiennent et tout l'affichage ordinateur restent intacts.
+`MutationObserver` (rendus, fenêtres) + `resize` (rotation), mesures groupées dans un
+`requestAnimationFrame`, classe changée seulement si nécessaire (le chrono redessine
+10×/s). Rien à faire pour un nouveau tableau.
+- `fitTablesToScreen()` (exposée, pour les tests)
+- Autres règles téléphone : colonne `.divisions` en `minmax(0, 1fr)` (une colonne `1fr`
+  ne rétrécit pas sous son contenu), grilles inline en `minmax(min(300px, 100%), 1fr)`,
+  rangées flex en `flex-wrap: wrap`. Contrôle : `npm run test:darkmode:mobile` signale
+  tout contenu qui dépasse de l'écran (« débordement » / « contenu coupé ») avec l'élément
+  responsable
+
 ### 14. init.iife.js
 **Rôle** : Deux choses distinctes dans ce fichier, malgré son nom :
 1. **Bootstrap réel** : un handler `DOMContentLoaded` qui orchestre le
@@ -393,7 +411,7 @@ chargement réel (voir `<script>` dans `index.html`) :
 2. state, clubs
 3. multisport, players, ui
 4. matches, pools, ranking
-5. export-json, export-print, chrono, search, darkmode
+5. export-json, export-print, chrono, search, darkmode, mobile
 6. init (bootstrap), puis `script.js` (interrupteur du mode sombre)
 
 Un module chargé plus tard écrase silencieusement un `window.x =` du même
@@ -414,7 +432,7 @@ npm test                    # Suite Jest (tests/unit/), 180+ tests
 npm run check:duplicates    # Détection de doublons en CLI seule (déjà incluse dans npm test)
 npm run test:e2e            # Journée natation complète dans un vrai navigateur (HEADED=1 pour regarder)
 npm run test:darkmode       # Audit du mode sombre : contraste de ~50 écrans/fenêtres dans un vrai navigateur
-npm run test:darkmode:mobile # Même audit sur un téléphone (390×844, tactile, règles @media mobiles)
+npm run test:darkmode:mobile # Même audit sur un téléphone (390×844, tactile) + contenu qui déborde de l'écran
 ```
 
 La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR et

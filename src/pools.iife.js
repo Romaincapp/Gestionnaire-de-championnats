@@ -4725,7 +4725,7 @@ function generateRoundsHTML(dayNumber, division, rounds, currentRound) {
                 
                 <div class="round-matches" style="
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
                     gap: 15px;
                     margin-bottom: 20px;
                 ">

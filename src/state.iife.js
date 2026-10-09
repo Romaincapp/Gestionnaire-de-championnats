@@ -67,19 +67,31 @@
         return false;
     }
 
+    // Bouton « 🔓 Modifier les matchs » / « 🔒 Verrouiller » des journées Matchs
+    // (anciennement « ⚠️ Actions ON/OFF ») : déverrouillé, chaque match montre ×
+    // (supprimer), ses noms de joueurs modifiables et F1/F2 (forfait).
+    var FORFAIT_TOGGLE_TITLE = 'Supprimer un match, corriger le nom d\'un joueur dans un match, déclarer un forfait';
+    function forfaitToggleButtonState(unlocked) {
+        return unlocked
+            ? { label: '🔒 Verrouiller', background: '#e74c3c', title: 'Masquer à nouveau suppression, noms modifiables et forfaits' }
+            : { label: '🔓 Modifier les matchs', background: '#64748b', title: FORFAIT_TOGGLE_TITLE };
+    }
+
     function toggleForfaitButtons() {
         showForfaitButtons = !showForfaitButtons;
         global.showForfaitButtons = showForfaitButtons;
 
         // Mettre à jour tous les boutons toggle (pour toutes les journées)
+        var state = forfaitToggleButtonState(showForfaitButtons);
         document.querySelectorAll('[id^="forfait-toggle-btn-"]').forEach(function(btn) {
-            btn.style.background = showForfaitButtons ? '#e74c3c' : '#95a5a6';
-            btn.innerHTML = showForfaitButtons ? '⚠️ Actions ON' : '⚠️ Actions OFF';
+            btn.style.background = state.background;
+            btn.innerHTML = state.label;
+            btn.title = state.title;
         });
 
         var currentDay = championship.currentDay;
 
-        // À la fermeture du mode Actions : vérifier que tous les joueurs présents dans
+        // Au verrouillage : vérifier que tous les joueurs présents dans
         // les matchs figurent bien au listing (rattrape les joueurs saisis directement
         // dans un match), même sans édition explicite.
         var reconciled = 0;
@@ -98,7 +110,7 @@
 
         if (typeof global.showNotification === 'function') {
             global.showNotification(
-                showForfaitButtons ? 'Actions dangereuses activées (forfaits + suppressions)' : 'Actions dangereuses masquées',
+                showForfaitButtons ? 'Matchs déverrouillés : suppression (×), noms modifiables et forfaits (F1/F2)' : 'Matchs verrouillés',
                 showForfaitButtons ? 'warning' : 'info'
             );
             if (reconciled > 0) {
@@ -117,5 +129,6 @@
     global.saveToLocalStorage = saveToLocalStorage;
     global.loadFromLocalStorage = loadFromLocalStorage;
     global.toggleForfaitButtons = toggleForfaitButtons;
+    global.forfaitToggleButtonState = forfaitToggleButtonState;
 
 })(window);

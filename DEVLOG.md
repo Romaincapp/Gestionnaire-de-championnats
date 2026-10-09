@@ -33,6 +33,34 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-09 — Bouton « ⚠️ Actions » renommé « 🔓 Modifier les matchs »
+
+- **Contexte** : « Actions ON/OFF » ne disait pas ce que le bouton active.
+- **Fait** : verrouillé « 🔓 Modifier les matchs » (gris), déverrouillé « 🔒 Verrouiller » (rouge), infobulle
+  détaillant suppression / noms modifiables / forfaits, notification explicite. Libellé centralisé dans
+  `forfaitToggleButtonState` (state, exposée) ; le gabarit des journées (ui) reflète l'état courant (une
+  journée créée pendant le déverrouillage affichait « ⚠️ Actions »). Comportement inchangé.
+- **Fichiers/modules touchés** : `src/state.iife.js`, `src/ui.iife.js`, `index.html`, `tests/unit/matchEditToggle.test.js`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-09 — Téléphone : plus de tableaux ni de contenus coupés
+
+- **Contexte** : sur téléphone, des tableaux larges (séries, classements) avaient leurs dernières
+  colonnes coupées.
+- **Fait** : l'audit `--mobile` signale maintenant tout contenu qui dépasse de l'écran, avec l'élément
+  responsable (26 défauts trouvés). Nouveau module `src/mobile.iife.js` : sur écran étroit, un tableau
+  trop large reçoit `table-scroll-x` (défilement horizontal, sans étirer son parent). Rangée « Ajouter un
+  participant » (multisport) en `flex-wrap`, `.divisions` en `minmax(0, 1fr)` sur téléphone (la J1 en
+  poules débordait, et décalait la page en phase finale), manches de phase finale en
+  `minmax(min(300px, 100%), 1fr)` (pools), en-tête des journées de la fiche joueur en `flex-wrap`
+  (ranking). Audit téléphone et ordinateur : 0 défaut.
+- **Fichiers/modules touchés** : `src/mobile.iife.js` (nouveau), `index.html`, `styles.css`,
+  `src/multisport.iife.js`, `src/pools.iife.js`, `src/ranking.iife.js`, `tests/e2e/darkmode.e2e.js`,
+  `tests/unit/mobileTables.test.js`, `tests/helpers/loadApp.js`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ✅ · CONTRIBUTING.md ✅
+
 ### 2026-10-09 — Import depuis une autre journée : divisions respectées
 
 - **Contexte** : bug rapporté — « 📥 Reprendre d'une autre journée » importait bien les joueurs mais
