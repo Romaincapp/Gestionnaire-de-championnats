@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 📱 Téléphone : plus rien de coupé
+- Les tableaux trop larges pour l'écran (séries, classements, statistiques…) se font défiler au doigt
+  au lieu d'avoir leurs dernières colonnes (Rang, Temps, Total…) coupées.
+- La ligne « Ajouter un participant », les divisions d'une journée en poules, la phase finale et la
+  fiche d'un joueur tiennent dans l'écran.
+
 ### 🐛 « Reprendre d'une autre journée » : divisions respectées
 - Les joueurs repris d'une journée Matchs gardent leur division (ils arrivaient tous en Division 1).
 - Un joueur déjà inscrit dans la journée, quelle que soit sa division, n'est plus ajouté une

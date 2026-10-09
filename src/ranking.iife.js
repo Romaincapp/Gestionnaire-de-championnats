@@ -1136,6 +1136,8 @@ generalRanking.divisions[division].forEach((player, index) => {
                 }
                 .day-header { 
                     display: flex; 
+                    flex-wrap: wrap; 
+                    gap: 6px; 
                     justify-content: space-between; 
                     align-items: center; 
                     padding: 10px 12px; 
@@ -1144,6 +1146,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                 }
                 .day-header:hover { background: #e9ecef; }
                 .day-header-left { display: flex; align-items: center; gap: 10px; }
+                .day-header > div:last-child { flex-wrap: wrap; justify-content: flex-end; }
                 .day-toggle { 
                     width: 20px; 
                     height: 20px; 

@@ -506,8 +506,8 @@
         html += '</div>';
         
         // Formulaire rapide d'ajout (toujours visible)
-        html += '<div style="display: flex; gap: 8px; margin-bottom: 12px; padding: 10px; background: #f0f9ff; border-radius: 6px;">';
-        html += '<input type="text" id="quick-participant-name-' + dayNumber + '" placeholder="Nom du participant" style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
+        html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 10px; background: #f0f9ff; border-radius: 6px;">';
+        html += '<input type="text" id="quick-participant-name-' + dayNumber + '" placeholder="Nom du participant" style="flex: 1; min-width: 150px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
         html += '<input type="text" id="quick-participant-club-' + dayNumber + '" placeholder="Club (optionnel)" style="width: 120px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
         html += '<button onclick="quickAddParticipantToDay(' + dayNumber + ')" style="padding: 8px 15px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">Ajouter</button>';
         html += '</div>';
