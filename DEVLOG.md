@@ -33,6 +33,24 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-09 — Renommer un joueur dans un match : « partout » ou « nouveau joueur »
+
+- **Contexte** : bug rapporté — renommer un joueur dans un match ne proposait aucun choix.
+- **Fait** : `editMatchPlayerName` ne changeait que ce match mais renommait le listing : les autres matchs
+  gardaient l'ancien nom, ré-ajouté au listing au verrouillage (deux joueurs mélangés). La phase finale ne
+  touchait pas le listing ; les poules (tableaux de noms) n'étaient jamais renommées (`pool.players`
+  n'existe pas) ; un match de poule était retrouvé par position dans les matchs ordinaires d'abord.
+  Nouveau cœur commun (matches) : fenêtre « ✏️ Renommer partout » / « ➕ Nouveau joueur » dès que
+  l'ancien nom est un vrai joueur, `renamePlayerInMatch` (scope `all` : toute la division de la journée,
+  phase finale comprise ; `single` : ce match + listing + poule), `editPoolMatchPlayerName` par id.
+  Vérifié par vrais clics (choix, annulation, verrouillage) et en mode sombre.
+- **Fichiers/modules touchés** : `src/matches.iife.js`, `src/pools.iife.js`, `tests/unit/renamePlayerInMatch.test.js`,
+  `tests/e2e/darkmode.e2e.js`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Suite possible** : « Renommer partout » couvre la journée ; pour les autres journées, « Vérifier les
+  noms » (classement général) fusionne les variantes.
+
 ### 2026-10-09 — Boutons en cascade dans les barres d'actions
 
 - **Contexte** : n'afficher que les boutons qui ont un sens (pas 🎯 Matchs sans joueur, pas 🏁 Séries
