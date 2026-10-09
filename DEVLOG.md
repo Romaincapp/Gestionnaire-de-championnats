@@ -33,6 +33,20 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-09 — Boutons en cascade dans les barres d'actions
+
+- **Contexte** : n'afficher que les boutons qui ont un sens (pas 🎯 Matchs sans joueur, pas 🏁 Séries
+  automatiques sans épreuve…).
+- **Fait** : `dayActionFlags` / `dayActionAttrs` / `refreshDayActionButtons` (state, exposées) ; boutons
+  marqués `data-day` + `data-needs` (index.html pour J1, gabarit ui, barre Courses multisport), masqués
+  par `hidden`. Rafraîchi après chaque `saveToLocalStorage()`, au (dé)verrouillage des matchs et au
+  démarrage (init). 🖨️ des journées Matchs laissé toujours visible (feuilles Boccia vierges). Vérifié par
+  vrais clics de J1 vide jusqu'à une série créée en Courses.
+- **Fichiers/modules touchés** : `src/state.iife.js`, `src/ui.iife.js`, `src/multisport.iife.js`,
+  `src/init.iife.js`, `index.html`, `styles.css`, `tests/unit/dayActionButtons.test.js`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-09 — Bouton « ⚠️ Actions » renommé « 🔓 Modifier les matchs »
 
 - **Contexte** : « Actions ON/OFF » ne disait pas ce que le bouton active.
