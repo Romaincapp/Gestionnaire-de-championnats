@@ -13,6 +13,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🐛 « Reprendre d'une autre journée » : divisions respectées
+- Les joueurs repris d'une journée Matchs gardent leur division (ils arrivaient tous en Division 1).
+- Un joueur déjà inscrit dans la journée, quelle que soit sa division, n'est plus ajouté une
+  seconde fois.
+
 ### 🌙 Mode sombre lisible partout
 - Toutes les fenêtres (ajout de joueurs, BYE, impression, poules, épreuves, séries, saisie des
   résultats, participants, séries automatiques…), les champs, les boutons, les classements
@@ -20,6 +25,8 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   plus de panneaux blancs ni de textes gris foncé illisibles.
 - Le podium du classement Multisport garde ses couleurs or / argent / bronze, en version sombre.
 - Les feuilles imprimées et le second écran « 📺 Afficher » restent clairs.
+- Sur téléphone : calendrier des dates, cases à cocher et listes déroulantes passent aussi en
+  sombre, et la barre d'adresse du navigateur suit le thème.
 
 ### 🐛 « ➕ Match » d'une poule
 - La fenêtre d'ajout manuel d'un match de poule présélectionne de nouveau un 2e joueur différent

@@ -4255,7 +4255,7 @@
         
         if (targetType === 'championship') {
             // Importer vers mode Championship
-            var targetDivision = 1; // Par défaut, mettre en division 1
+            var targetDivision = 1; // Courses -> Matchs : pas de division connue, D1 par défaut
             
             // S'assurer que la structure players existe
             if (!targetDay.players) {
@@ -4263,21 +4263,27 @@
             }
             
             if (sourceType === 'championship') {
-                // Championship -> Championship : copier directement
-                for (var div = 1; div <= (global.config?.numberOfDivisions || 3); div++) {
+                // Championship -> Championship : chaque joueur garde sa division
+                // (avant : tout le monde atterrissait en D1)
+                Object.keys(sourceDay.players || {}).forEach(function(div) {
                     var sourcePlayers = sourceDay.players[div] || [];
+                    if (!Array.isArray(sourcePlayers)) return;
+                    if (!Array.isArray(targetDay.players[div])) targetDay.players[div] = [];
                     sourcePlayers.forEach(function(player) {
                         var playerName = typeof player === 'object' ? player.name : player;
                         var playerClub = typeof player === 'object' ? (player.club || '') : '';
-                        
-                        // Vérifier si le joueur existe déjà
-                        var exists = targetDay.players[targetDivision].some(function(p) {
-                            var pName = typeof p === 'object' ? p.name : p;
-                            return pName.toLowerCase() === playerName.toLowerCase();
+                        if (!playerName) return;
+
+                        // Déjà inscrit dans la journée cible, quelle que soit sa division ?
+                        var exists = Object.keys(targetDay.players).some(function(targetDiv) {
+                            return (targetDay.players[targetDiv] || []).some(function(p) {
+                                var pName = typeof p === 'object' ? p.name : p;
+                                return pName && pName.toLowerCase() === playerName.toLowerCase();
+                            });
                         });
-                        
+
                         if (!exists) {
-                            targetDay.players[targetDivision].push({
+                            targetDay.players[div].push({
                                 name: playerName,
                                 club: playerClub
                             });
@@ -4286,7 +4292,7 @@
                             skippedCount++;
                         }
                     });
-                }
+                });
             } else {
                 // Chrono -> Championship : convertir les participants
                 if (sourceDay.chronoData) {
@@ -4296,10 +4302,12 @@
                             if (!uniqueNames[p.name]) {
                                 uniqueNames[p.name] = true;
                                 
-                                // Vérifier si le joueur existe déjà
-                                var exists = targetDay.players[targetDivision].some(function(existing) {
-                                    var existingName = typeof existing === 'object' ? existing.name : existing;
-                                    return existingName.toLowerCase() === p.name.toLowerCase();
+                                // Déjà inscrit dans la journée cible, quelle que soit sa division ?
+                                var exists = Object.keys(targetDay.players).some(function(targetDiv) {
+                                    return (targetDay.players[targetDiv] || []).some(function(existing) {
+                                        var existingName = typeof existing === 'object' ? existing.name : existing;
+                                        return existingName && existingName.toLowerCase() === p.name.toLowerCase();
+                                    });
                                 });
                                 
                                 if (!exists) {

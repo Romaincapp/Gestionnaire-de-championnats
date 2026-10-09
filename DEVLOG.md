@@ -33,6 +33,34 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-09 — Import depuis une autre journée : divisions respectées
+
+- **Contexte** : bug rapporté — « 📥 Reprendre d'une autre journée » importait bien les joueurs mais
+  tous dans la même division.
+- **Fait** : `importPlayersFromDay` (multisport) forçait `targetDivision = 1` pour Matchs → Matchs ;
+  chaque joueur va maintenant dans sa division d'origine (club conservé). La détection des doublons
+  regarde toutes les divisions de la journée cible (avant : D1 seule, d'où des doublons possibles),
+  aussi pour Courses → Matchs (qui reste en D1, faute de division connue). Vérifié aussi par vrais clics
+  (« ➕ Joueurs » → « 📥 Reprendre d'une autre journée »).
+- **Fichiers/modules touchés** : `src/multisport.iife.js`, `tests/unit/importPlayersDivisions.test.js`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ❌ (n/a, aucune fonction exposée modifiée) · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-09 — Mode sombre vérifié sur téléphone
+
+- **Contexte** : suite de la PR #104, vérifier le mode sombre sur mobile.
+- **Fait** : `tests/e2e/darkmode.e2e.js --mobile` (`npm run test:darkmode:mobile`, 390×844 tactile) :
+  les ~50 écrans passent sans défaut de couleur. Trouvé : les contrôles natifs (icône calendrier noire
+  sur fond sombre, cases à cocher blanches, listes déroulantes du téléphone) restaient clairs →
+  `color-scheme: dark` sur `body.dark-mode` (162 défauts → 0, nouveau contrôle « contrôle natif clair »
+  dans l'audit) ; `<meta name="theme-color">` ajouté et accordé par `script.js` (barre d'adresse).
+- **Fichiers/modules touchés** : `styles.css`, `index.html`, `script.js`, `tests/e2e/darkmode.e2e.js`,
+  `tests/unit/darkModeThemeColor.test.js`, `package.json`, `.gitignore`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Suite possible** : sur téléphone, quelques tableaux larges débordent (classements, course live) —
+  mise en page, identique en mode clair, hors périmètre.
+
 ### 2026-10-09 — Mode sombre : toutes les fenêtres, champs, boutons et classements lisibles
 
 - **Contexte** : « le dark mode fonctionne pas top ». Un audit en vrai navigateur (nouveau

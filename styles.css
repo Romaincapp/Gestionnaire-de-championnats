@@ -1650,6 +1650,9 @@ body   * {
 body.dark-mode {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     color: #e0e0e0;
+    /* Contrôles natifs sombres : calendrier des dates, cases à cocher, listes
+       déroulantes du téléphone, barres de défilement */
+    color-scheme: dark;
 }
 
 body.dark-mode .container {
