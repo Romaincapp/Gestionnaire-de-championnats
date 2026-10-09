@@ -105,7 +105,8 @@ export-print, chrono, search, darkmode, mobile, init (puis `script.js`). Un scri
 **Fonctions exposées** :
 - `saveToLocalStorage()` - Sauvegarde dans le localStorage
 - `loadFromLocalStorage()` - Charge depuis le localStorage
-- `toggleForfaitButtons()` - Bascule l'affichage des boutons forfait
+- `toggleForfaitButtons()` - Bouton des journées Matchs « 🔓 Modifier les matchs » / « 🔒 Verrouiller » (anciennement « ⚠️ Actions ON/OFF ») : déverrouillé, chaque match (normal, poule, phase finale) montre × (supprimer), des noms de joueurs modifiables et F1/F2 (forfait) ; au verrouillage, les joueurs saisis dans un match sont ajoutés au listing. Non mémorisé : verrouillé au chargement
+- `forfaitToggleButtonState(unlocked)` - `{label, background, title}` du bouton, utilisé par `toggleForfaitButtons` et le gabarit des journées (`ui.iife.js`)
 
 ### 5. clubs.iife.js
 **Rôle** : Gestion des clubs. 6 assignations directes sur `window`, dont un

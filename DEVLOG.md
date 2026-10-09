@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-09 — Bouton « ⚠️ Actions » renommé « 🔓 Modifier les matchs »
+
+- **Contexte** : « Actions ON/OFF » ne disait pas ce que le bouton active.
+- **Fait** : verrouillé « 🔓 Modifier les matchs » (gris), déverrouillé « 🔒 Verrouiller » (rouge), infobulle
+  détaillant suppression / noms modifiables / forfaits, notification explicite. Libellé centralisé dans
+  `forfaitToggleButtonState` (state, exposée) ; le gabarit des journées (ui) reflète l'état courant (une
+  journée créée pendant le déverrouillage affichait « ⚠️ Actions »). Comportement inchangé.
+- **Fichiers/modules touchés** : `src/state.iife.js`, `src/ui.iife.js`, `index.html`, `tests/unit/matchEditToggle.test.js`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-09 — Téléphone : plus de tableaux ni de contenus coupés
 
 - **Contexte** : sur téléphone, des tableaux larges (séries, classements) avaient leurs dernières

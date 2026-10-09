@@ -239,8 +239,8 @@
                     <button onclick="showByeManagementModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         👋 BYE
                     </button>
-                    <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-${dayNumber}" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                        ⚠️ Actions
+                    <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-${dayNumber}" title="${forfaitToggleButtonState(window.showForfaitButtons).title}" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: ${forfaitToggleButtonState(window.showForfaitButtons).background}; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        ${forfaitToggleButtonState(window.showForfaitButtons).label}
                     </button>
                     <!-- Pas de « 🏁 Séries automatiques » ici : il ne sert qu'aux journées
                          Courses (barre d'actions de l'écran Courses) -->

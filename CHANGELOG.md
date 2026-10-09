@@ -13,6 +13,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ✏️ « ⚠️ Actions » devient « 🔓 Modifier les matchs »
+- Le bouton des journées Matchs qui affiche la suppression des matchs (×), les noms de joueurs
+  modifiables et les forfaits (F1/F2) s'appelle désormais **🔓 Modifier les matchs** ; une fois activé il
+  devient **🔒 Verrouiller** (au lieu de « Actions ON / OFF »). Fonctionnement inchangé.
+
 ### 📱 Téléphone : plus rien de coupé
 - Les tableaux trop larges pour l'écran (séries, classements, statistiques…) se font défiler au doigt
   au lieu d'avoir leurs dernières colonnes (Rang, Temps, Total…) coupées.
