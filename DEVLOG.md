@@ -33,6 +33,28 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-09 — Mode sombre : toutes les fenêtres, champs, boutons et classements lisibles
+
+- **Contexte** : « le dark mode fonctionne pas top ». Un audit en vrai navigateur (nouveau
+  `tests/e2e/darkmode.e2e.js`, ~50 écrans/fenêtres avec données réelles) relevait **~3 100 défauts** :
+  panneaux blancs, textes foncés sur fond sombre, champs blancs. Cause : plusieurs centaines de
+  couleurs inline claires dans les gabarits JS, hors de portée des règles `body.dark-mode`.
+- **Fait** : nouveau module `src/darkmode.iife.js` (chargé avant init) : lit les couleurs calculées
+  et pose `data-dm-bg` / `data-dm-fg` / `data-dm-bd`, traduits par `styles.css` (section « MODE SOMBRE
+  AUTO ») ; MutationObserver sur chaque rendu, changement de `display` seul ignoré, transitions coupées
+  pendant la mesure, style inline jamais modifié. Règles CSS ajoutées pour les survols clairs non
+  détectables et le podium du classement Multisport (or/argent/bronze assombris). Audit : **0 défaut**.
+  Au passage : `showAddPoolMatchModal` (« ➕ Match » d'une poule) levait une ReferenceError
+  (`poolPlayers` inexistant) → `realPlayers`, test ajouté.
+- **Fichiers/modules touchés** : `src/darkmode.iife.js` (nouveau), `styles.css`, `index.html`,
+  `src/matches.iife.js`, `tests/e2e/darkmode.e2e.js` (nouveau, `npm run test:darkmode`),
+  `tests/unit/darkModeAdapter.test.js`, `tests/unit/addPoolMatchModal.test.js`, `tests/helpers/loadApp.js`,
+  `package.json`, `.gitignore`
+- **Commit(s)** : voir branche `claude/affectionate-euler-418ejm`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ✅ · CONTRIBUTING.md ✅
+- **Suite possible** : les fenêtres `window.open` (impression, second écran) restent claires
+  volontairement ; un `:hover` clair ajouté dans une feuille de style demande sa règle sombre.
+
 ### 2026-10-02 — Boutons de copie rapide « 📋 J1, J2… » retirés (journées Matchs)
 
 - **Contexte** : doublon de « 📥 Reprendre d'une autre journée » (fenêtre « ➕ Joueurs »), place dans la barre.

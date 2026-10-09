@@ -26,7 +26,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 ├── script.js               # Legacy — dark mode uniquement (37 lignes), PAS la logique de l'app
 ├── AGENTS.md               # Cette documentation
 ├── claude.md                # Guide d'architecture pour agents IA (structure de données, patterns critiques)
-├── src/                    # Toute la logique applicative (15 modules IIFE, ~30k lignes)
+├── src/                    # Toute la logique applicative (17 modules IIFE, ~30k lignes)
 │   ├── config.iife.js      # Configuration (divisions, terrains)
 │   ├── utils.iife.js       # Fonctions utilitaires
 │   ├── notifications.iife.js # Système de notifications
@@ -42,12 +42,13 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 │   ├── export-print.iife.js # Impression / PDF (feuilles de match, récaps)
 │   ├── chrono.iife.js      # Moteur de chronométrage live (raceData, timer, tours) — backend du mode CHRONO par journée, voir section 11
 │   ├── search.iife.js      # Barre de recherche 🔍 dans la page (façon Ctrl+F), voir section 13 bis
+│   ├── darkmode.iife.js    # Mode sombre : assombrit les couleurs inline claires, voir section 13 ter
 │   └── init.iife.js        # Bootstrap de l'application, chargé en dernier
 └── json/                   # Données JSON d'exemple (si besoin)
 ```
 Ordre de chargement dans `index.html` : config, utils, notifications, state,
 clubs, multisport, players, ui, matches, pools, ranking, export-json,
-export-print, chrono, search, init. Un script chargé plus tard peut écraser un
+export-print, chrono, search, darkmode, init (puis `script.js`). Un script chargé plus tard peut écraser un
 `window.x =` du même nom défini plus tôt — c'est ce qui rendait
 `export.iife.js` (supprimé, issue #64) mort : ses fonctions étaient
 écrasées par `export-json.iife.js`/`export-print.iife.js` chargés après.
@@ -316,6 +317,27 @@ fonction d'affichage n'a donc besoin de connaître la recherche.
 - `onAppSearchInput(value)`, `onAppSearchKeydown(event)` (Entrée / Maj+Entrée / Échap)
 - `findAppSearchMatches(root, query)` (→ `Range[]`), `getAppSearchState()` — pour les tests
 
+### 13 ter. darkmode.iife.js
+**Rôle** : rendre lisible en mode sombre tout ce qui est généré en JS avec des
+couleurs inline claires (« background: white », « color: #2c3e50 »… plusieurs
+centaines dans les modules). `script.js` ne fait que poser/retirer la classe
+`body.dark-mode` ; ce module lit les couleurs **calculées** par le navigateur et
+pose, en mode sombre seulement, des attributs que `styles.css` (section
+« MODE SOMBRE AUTO ») traduit en couleurs sombres :
+- `data-dm-bg` (`w` blanc, `n` gris, `g`/`y`/`r`/`b`/`p`/`o` teintes pâles) : fond clair → surface sombre de même teinte. Les fonds saturés (boutons, or) ne bougent pas
+- `data-dm-fg` : texte foncé devenu illisible → version claire de même teinte (`k` : texte clair sur fond resté clair → texte sombre). Seulement si le remplacement est plus lisible
+- `data-dm-bd` (`t`/`r`/`b`/`l`) : bordures claires → `#44445a`
+
+Un `MutationObserver` traite chaque rendu (`innerHTML`, fenêtre créée, `style`
+modifié) avant affichage ; un changement de `display` seul est ignoré (les
+éléments masqués sont déjà traités). Le style inline n'est jamais modifié. Les
+fenêtres `window.open` (impression, second écran) restent claires. **Limite** :
+les `:hover` clairs des feuilles de style ne sont pas détectables → ajouter une
+règle `body.dark-mode …:hover` dans `styles.css`. Pour une nouvelle fenêtre, rien
+à faire : les couleurs inline sont prises en charge automatiquement.
+- `refreshDarkModeColors()` (retraite toute la page), `darkModeColorRules` (règles pures, pour les tests)
+- Audit complet en vrai navigateur : `npm run test:darkmode` (voir 🧪 Tests)
+
 ### 14. init.iife.js
 **Rôle** : Deux choses distinctes dans ce fichier, malgré son nom :
 1. **Bootstrap réel** : un handler `DOMContentLoaded` qui orchestre le
@@ -370,8 +392,8 @@ chargement réel (voir `<script>` dans `index.html`) :
 2. state, clubs
 3. multisport, players, ui
 4. matches, pools, ranking
-5. export-json, export-print, chrono, search
-6. init (bootstrap, chargé en dernier)
+5. export-json, export-print, chrono, search, darkmode
+6. init (bootstrap), puis `script.js` (interrupteur du mode sombre)
 
 Un module chargé plus tard écrase silencieusement un `window.x =` du même
 nom défini par un module plus tôt — vérifier l'ordre réel avant de supposer
@@ -390,6 +412,7 @@ qu'une fonction "gagne".
 npm test                    # Suite Jest (tests/unit/), 180+ tests
 npm run check:duplicates    # Détection de doublons en CLI seule (déjà incluse dans npm test)
 npm run test:e2e            # Journée natation complète dans un vrai navigateur (HEADED=1 pour regarder)
+npm run test:darkmode       # Audit du mode sombre : contraste de ~50 écrans/fenêtres dans un vrai navigateur
 ```
 
 La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR et
@@ -400,6 +423,14 @@ natation complète avec les 150 lignes réelles de `jsondetest/natation test 2.j
 pas lancé en CI (il faut un navigateur) : à lancer avant chaque compétition et après toute
 modification du flux Courses/natation/classements. Captures et rapport dans
 `tests/e2e/output/`.
+
+`npm run test:darkmode` (`tests/e2e/darkmode.e2e.js`) charge des données réelles (poules,
+natation avec résultats, matchs), active le mode sombre par l'interrupteur et ouvre un à un
+les onglets, classements, l'écran de course et ~40 fenêtres (statiques et dynamiques). Sur
+chacun, il mesure les couleurs réellement affichées : texte moins lisible qu'en mode clair
+(seuil 3:1), champ resté clair, grand panneau clair. Code de sortie 1 au moindre défaut ;
+captures et rapport dans `tests/e2e/output-darkmode/`. À lancer après toute modification
+d'affichage, et ajouter une ligne à `screens` pour toute nouvelle fenêtre.
 
 Quand tu corriges un bug, ajoute un test de non-régression dans `tests/unit/` (voir `clearDayData.test.js` ou `interclubRanking.test.js`). Quand tu supprimes du code que tu penses mort, lance `npm test` avant ET après — une suite verte avant qui reste verte après est la vraie preuve que la suppression est sûre, pas juste le grep qui l'a justifiée. Voir `CONTRIBUTING.md` et `tests/helpers/loadApp.js` pour le détail.
 

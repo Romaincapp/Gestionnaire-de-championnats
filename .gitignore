@@ -2,3 +2,4 @@ node_modules/
 coverage/
 *.log
 tests/e2e/output/
+tests/e2e/output-darkmode/

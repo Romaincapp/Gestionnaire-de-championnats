@@ -1953,6 +1953,13 @@ body.dark-mode .toggle-btn.active {
 }
 
 /* Multisport */
+body.dark-mode .multisport-ranking tr.rank-1 { background: linear-gradient(135deg, #7a6510, #9c8318) !important; }
+body.dark-mode .multisport-ranking tr.rank-2 { background: linear-gradient(135deg, #555a62, #70767e) !important; }
+body.dark-mode .multisport-ranking tr.rank-3 { background: linear-gradient(135deg, #7a4a1e, #8f6420) !important; }
+body.dark-mode .multisport-ranking tr.rank-1 td,
+body.dark-mode .multisport-ranking tr.rank-2 td,
+body.dark-mode .multisport-ranking tr.rank-3 td { color: #fff !important; }
+
 body.dark-mode .multisport-ranking-section {
     background: #252538;
 }
@@ -2220,3 +2227,46 @@ body.dark-mode .apm-section.open .apm-header { background: #2d2d44; }
 body.dark-mode .apm-label { color: #ccc; }
 body.dark-mode .apm-field { background: #252538; color: #e0e0e0; border-color: #444; }
 body.dark-mode .apm-club-list li { border-bottom-color: #333; }
+
+/* ============================================
+   MODE SOMBRE AUTO (src/darkmode.iife.js)
+   Couleurs posées en mode sombre sur les éléments dont le style inline
+   (généré en JS) est clair : data-dm-bg = fond, data-dm-fg = texte,
+   data-dm-bd = côtés de bordure. Les fonds doivent rester identiques
+   à la table BG de darkmode.iife.js.
+   ============================================ */
+:root body.dark-mode [data-dm-bg="w"] { background: #2a2a3d !important; }
+:root body.dark-mode [data-dm-bg="n"] { background: #232335 !important; }
+:root body.dark-mode [data-dm-bg="g"] { background: #1d3a2c !important; }
+:root body.dark-mode [data-dm-bg="y"] { background: #3d3420 !important; }
+:root body.dark-mode [data-dm-bg="r"] { background: #432427 !important; }
+:root body.dark-mode [data-dm-bg="b"] { background: #1f3147 !important; }
+:root body.dark-mode [data-dm-bg="p"] { background: #33284a !important; }
+:root body.dark-mode [data-dm-bg="o"] { background: #42301f !important; }
+
+:root body.dark-mode [data-dm-fg="n"] { color: #e4e4ee !important; }
+:root body.dark-mode [data-dm-fg="m"] { color: #a9adc1 !important; }
+:root body.dark-mode [data-dm-fg="g"] { color: #7ee2a8 !important; }
+:root body.dark-mode [data-dm-fg="y"] { color: #f5d76e !important; }
+:root body.dark-mode [data-dm-fg="r"] { color: #ff9a9a !important; }
+:root body.dark-mode [data-dm-fg="b"] { color: #8cc8f5 !important; }
+:root body.dark-mode [data-dm-fg="p"] { color: #c9a6f5 !important; }
+:root body.dark-mode [data-dm-fg="o"] { color: #ffb86b !important; }
+:root body.dark-mode [data-dm-fg="k"] { color: #1e1e2e !important; }
+
+:root body.dark-mode [data-dm-bd*="t"] { border-top-color: #44445a !important; }
+:root body.dark-mode [data-dm-bd*="r"] { border-right-color: #44445a !important; }
+:root body.dark-mode [data-dm-bd*="b"] { border-bottom-color: #44445a !important; }
+:root body.dark-mode [data-dm-bd*="l"] { border-left-color: #44445a !important; }
+
+/* Survols clairs (non détectables à l'affichage par darkmode.iife.js) */
+body.dark-mode #participantsTableBody tr:hover,
+body.dark-mode .day-header:hover { background: #333350 !important; }
+body.dark-mode .day-type-selector select:hover { background: #333350 !important; }
+body.dark-mode .app-search-bar button:hover { background: #4a4a4a; }
+body.dark-mode .multisport-ranking tr.rank-1 small,
+body.dark-mode .multisport-ranking tr.rank-2 small,
+body.dark-mode .multisport-ranking tr.rank-3 small { color: rgba(255, 255, 255, 0.85) !important; }
+
+/* Mesure des couleurs d'origine par darkmode.iife.js : transitions coupées */
+html.dm-measuring *, html.dm-measuring *::before, html.dm-measuring *::after { transition: none !important; }
