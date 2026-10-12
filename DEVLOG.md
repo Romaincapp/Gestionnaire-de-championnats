@@ -33,6 +33,18 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles pétanque : textes agrandis pour les arbitres
+
+- **Contexte** : des arbitres trouvent titres, terrain et équipes trop petits.
+- **Fait** : `generatePetanqueSheetHTML` — titre 11→15 px, ligne journée 8→12 px avec le
+  terrain en 16 px gras (`.match-court`), identifiant du match 9→13 px, noms d'équipe 10→17 px,
+  libellés 7-8→10-11 px. Cases de score : `aspect-ratio: 1` remplacé par une hauteur de 7 mm
+  (cases moins hautes) pour garder la mise en page. Aucune carte ne déborde (contrôle Chromium
+  avec des noms d'équipe longs), 1 page HTML = 1 feuille A4.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ❌ (n/a) · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-12 — Feuilles Boccia vierges : un coin de page par tour (recto verso)
 
 - **Contexte** : même disposition que les feuilles avec noms (PR #109), pour les feuilles

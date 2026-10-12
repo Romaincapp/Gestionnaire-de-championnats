@@ -1621,19 +1621,26 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                     margin-bottom: 2mm;
                 }
 
+                /* Titres, terrain et équipes en grand (lisibles par les arbitres) */
                 .match-title {
-                    font-size: 11px;
+                    font-size: 15px;
                     font-weight: bold;
                     margin-bottom: 1mm;
                 }
 
                 .match-info {
-                    font-size: 8px;
-                    color: #666;
+                    font-size: 12px;
+                    color: #333;
+                }
+
+                .match-court {
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #000;
                 }
 
                 .match-id {
-                    font-size: 9px;
+                    font-size: 13px;
                     font-weight: bold;
                     background: #e8f5e9;
                     padding: 1mm;
@@ -1653,7 +1660,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
 
                 .player-label {
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 11px;
                     width: 22mm;
                 }
 
@@ -1661,7 +1668,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                     flex: 1;
                     border: 1px solid #000;
                     padding: 1.5mm;
-                    font-size: 10px;
+                    font-size: 17px;
                     font-weight: bold;
                     background: #f8f8f8;
                 }
@@ -1680,15 +1687,15 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                     margin-bottom: 2mm;
                 }
 
+                /* Cases plus basses que larges : la place va aux textes */
                 .score-cell {
-                    aspect-ratio: 1;
                     border: 1px solid #999;
                     background: white;
-                    min-height: 6mm;
+                    height: 7mm;
                 }
 
                 .grid-label {
-                    font-size: 7px;
+                    font-size: 10px;
                     font-weight: bold;
                     text-align: center;
                     margin-bottom: 1mm;
@@ -1708,7 +1715,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                 }
 
                 .result-label {
-                    font-size: 7px;
+                    font-size: 10px;
                     font-weight: bold;
                     margin-right: 2mm;
                 }
@@ -1759,7 +1766,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
 
 function generatePetanqueMatchCard(match, dayNumber, pointsLimit) {
     // Afficher le numéro de terrain si disponible
-    const terrainInfo = match.court ? ` • Terrain <strong>${match.court}</strong>` : '';
+    const terrainInfo = match.court ? ` • <span class="match-court">Terrain ${match.court}</span>` : '';
 
     // Générer les cellules de score pour chaque joueur
     const generateScoreRow = (label) => {
