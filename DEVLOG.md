@@ -33,6 +33,18 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles Boccia vierges : un coin de page par tour (recto verso)
+
+- **Contexte** : même disposition que les feuilles avec noms (PR #109), pour les feuilles
+  Boccia vierges. Les récapitulatifs restent inchangés (demande explicite de l'utilisateur).
+- **Fait** : chaque page porte un match de chaque tour, coin pré-imprimé « Tour N • Match N° k »
+  (HG T1, HD T3, BG T2, BD T4). La question devient « Combien de matchs par tour ? » (= nombre
+  de pages, 4 feuilles chacune) au lieu d'un nombre total de feuilles. `generateBlankBocciaHTML(numPages)`
+  (signature changée, exposée pour les tests). Page ramenée à 190×276 mm, vérifié en PDF.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/tourCornerSheets.test.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-12 — Feuilles de match classiques : 4 coins par page, un par tour (recto verso)
 
 - **Contexte** : même demande que pétanque/Boccia/2 scores, pour « 📋 Feuilles de match ».

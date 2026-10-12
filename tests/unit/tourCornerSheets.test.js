@@ -185,3 +185,15 @@ describe('feuilles de match classiques', () => {
         ]);
     });
 });
+
+describe('Boccia vierges', () => {
+    test('chaque page : T1 HG, T3 HD, T2 BG, T4 BD, une page par match de tour', () => {
+        const doc = new DOMParser().parseFromString(generateBlankBocciaHTML(2), 'text/html');
+        const pages = [...doc.querySelectorAll('.page')].map(page =>
+            [...page.children].map(c => c.querySelector('.match-id').textContent.trim()));
+        expect(pages).toEqual([
+            ['Tour 1 • Match N° 1', 'Tour 3 • Match N° 1', 'Tour 2 • Match N° 1', 'Tour 4 • Match N° 1'],
+            ['Tour 1 • Match N° 2', 'Tour 3 • Match N° 2', 'Tour 2 • Match N° 2', 'Tour 4 • Match N° 2'],
+        ]);
+    });
+});
