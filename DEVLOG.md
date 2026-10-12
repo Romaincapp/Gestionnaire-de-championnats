@@ -33,6 +33,60 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles de match classiques : 4 coins par page, un par tour (recto verso)
+
+- **Contexte** : même demande que pétanque/Boccia/2 scores, pour « 📋 Feuilles de match ».
+- **Fait** : `printMatchSheets` passe de 5 bandes empilées par page à une grille 2×2 via
+  `buildTourCornerPages` (HG T1, HD T3, BG T2, BD T4, coin vide sinon ; poules dans l'ordre),
+  division par division sur un recto. Page ramenée à 194×280 mm (marges 8 mm, le `padding`
+  du `body` qui s'y ajoutait est retiré), vérifié en PDF. `groupMatchesIntoPages` (plus
+  aucun appelant) supprimée.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/tourCornerSheets.test.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-12 — Feuilles 2 scores : 4 coins par page, un par tour (recto verso)
+
+- **Contexte** : même demande que pétanque/Boccia, pour les feuilles « 📝 2 scores ».
+- **Fait** : `printSimpleScoreSheets` passe de 5 bandes empilées par page à une grille 2×2 :
+  matchs à tours sur leur coin (HG T1, HD T3, BG T2, BD T4, coin vide sinon), division par
+  division sur un recto. Poules et phases finales (ancienne et manuelle, dont le `tour` est
+  un numéro/nom de manche) n'ont pas de coin réservé : remplissage dans l'ordre (marqueur
+  interne `hasCornerTour`). `buildTourCornerPages` prend un 3e paramètre `getTour`. Page
+  ramenée à 200×286 mm (zone imprimable, marges 5 mm), vérifié en PDF.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/tourCornerSheets.test.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-12 — Feuilles Boccia : un coin de page par tour (recto verso)
+
+- **Contexte** : même demande que pour la pétanque, appliquée aux feuilles Boccia.
+- **Fait** : `buildPetanquePages` renommée `buildTourCornerPages(matches, pages)` (partagée) ;
+  nouvelle `generateBocciaPages(dayData, dayNumber)` : coins HG T1 / HD T3 / BG T2 / BD T4,
+  division par division, chaque division commençant sur un recto (page blanche ajoutée si la
+  précédente a un nombre impair de pages). `reorganizeMatchesByTour` (seul appelant : Boccia)
+  supprimée. Même correctif de taille de page que la pétanque (190×276 mm, vérifié en PDF).
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/tourCornerSheets.test.js`
+  (ex-`petanqueSheetLayout.test.js`)
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-12 — Feuilles pétanque : un coin de page par tour (recto verso)
+
+- **Contexte** : demande utilisateur — imprimer les feuilles pétanque en recto verso puis
+  découper la page en 4, avec le tour 3 au dos du tour 1 et le tour 4 au dos du tour 2.
+- **Fait** : `buildPetanquePages(matches)` (nouvelle, exposée) remplace
+  `reorganizeMatchesForPetanque` + `groupMatchesIntoPages` : chaque coin est réservé à un tour
+  (HG = T1, HD = T3, BG = T2, BD = T4 ; tours 5-8 sur les mêmes coins, bloc démarrant sur un
+  recto) ; un tour sans match laisse son coin **vide** (`.match-slot-empty`, sans cadre) au
+  lieu de décaler les autres. Matchs sans tour (poules) : remplissage dans l'ordre. La page
+  HTML faisait 210×297 mm dans une zone imprimable de 190×277 mm (marges 10 mm) : ramenée à
+  190×276 mm, contrôlé par PDF Chromium (1 page HTML = 1 feuille, condition du recto verso).
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/petanqueSheetLayout.test.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Suite possible** : même logique pour les feuilles Boccia / simples si souhaité.
+
 ### 2026-10-09 — Renommer un joueur dans un match : « partout » ou « nouveau joueur »
 
 - **Contexte** : bug rapporté — renommer un joueur dans un match ne proposait aucun choix.

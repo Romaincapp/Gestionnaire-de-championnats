@@ -25,14 +25,18 @@ function printMatchSheets(dayNumber) {
     }
     
     // Collecter tous les matchs de toutes les divisions
+    // Pages de 4 coins réservés par tour (T1 HG, T3 HD, T2 BG, T4 BD),
+    // division par division, chaque division commençant sur un recto
     let allMatches = [];
     let hasMatches = false;
+    const matchPages = [];
     
     const numDivisions = getNumberOfDivisions();
     for (let division = 1; division <= numDivisions; division++) {
         const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
         if (divisionMatches.length > 0) {
             allMatches.push(...divisionMatches);
+            buildTourCornerPages(divisionMatches, matchPages);
             hasMatches = true;
         }
     }
@@ -41,9 +45,6 @@ function printMatchSheets(dayNumber) {
         alert('⚠️ Aucun match généré pour cette journée !\n\nVeuillez d\'abord générer les matchs ou les poules.');
         return;
     }
-    
-    // Grouper les matchs par pages (5 matchs par page A4)
-    const matchPages = groupMatchesIntoPages(allMatches, 5);
     
     // Générer le HTML d'impression
     const printHTML = generateMatchSheetHTML(dayNumber, matchPages);
@@ -96,91 +97,59 @@ function getDivisionMatches(dayData, division, dayNumber) {
     return matches;
 }
 
-// Grouper les matchs en pages
-function groupMatchesIntoPages(matches, matchesPerPage) {
-    const pages = [];
+// Feuilles classiques, 2 scores, Pétanque et Boccia : chaque coin de la page A4 est réservé à un tour précis, pour une
+// impression recto verso puis découpe en 4 :
+//   haut gauche = tour 1   haut droite = tour 3
+//   bas gauche  = tour 2   bas droite  = tour 4
+// Le tour 3 tombe ainsi au dos du tour 1 et le tour 4 au dos du tour 2.
+// Un coin dont le tour n'a plus de match reste vide (null), sans décaler les
+// autres. Tours 5 à 8 : mêmes coins (5, 7 / 6, 8) sur les pages suivantes.
+// Les matchs sans tour (poules) remplissent les pages dans l'ordre.
+// Retourne des pages de 4 emplacements (match ou null), ajoutées à `pages`
+// si fourni (Boccia, 2 scores : une division après l'autre). `getTour` choisit
+// le tour d'un match (null = pas de coin réservé, ex. phase finale).
+const TOUR_CORNER_SLOTS = [0, 2, 1, 3]; // tour 1, 2, 3, 4 → coin (0 HG, 1 HD, 2 BG, 3 BD)
 
-    for (let i = 0; i < matches.length; i += matchesPerPage) {
-        pages.push(matches.slice(i, i + matchesPerPage));
+function buildTourCornerPages(matches, pages = [], getTour = match => match.tour) {
+    // Chaque bloc commence sur un recto : on complète le bloc précédent
+    // d'une page vide s'il en a un nombre impair
+    const startOnRecto = () => {
+        if (pages.length % 2 === 1) pages.push([null, null, null, null]);
+    };
+
+    const byGroup = {};
+    const withoutTour = [];
+    matches.forEach(match => {
+        const tour = parseInt(getTour(match), 10);
+        if (!tour || tour < 1) {
+            withoutTour.push(match);
+            return;
+        }
+        const group = Math.floor((tour - 1) / 4);
+        const slot = TOUR_CORNER_SLOTS[(tour - 1) % 4];
+        if (!byGroup[group]) byGroup[group] = [[], [], [], []];
+        byGroup[group][slot].push(match);
+    });
+
+    Object.keys(byGroup).map(Number).sort((a, b) => a - b).forEach(group => {
+        startOnRecto();
+        const slots = byGroup[group];
+        const count = Math.max(...slots.map(list => list.length));
+        for (let i = 0; i < count; i++) {
+            pages.push(slots.map(list => list[i] || null));
+        }
+    });
+
+    if (withoutTour.length > 0) {
+        startOnRecto();
+        for (let i = 0; i < withoutTour.length; i += 4) {
+            const page = withoutTour.slice(i, i + 4);
+            while (page.length < 4) page.push(null);
+            pages.push(page);
+        }
     }
 
     return pages;
-}
-
-// Réorganiser les matchs pour alterner les tours sur chaque page
-// Pour Boccia: sur chaque page de 4 matchs, on veut 1 match de chaque tour (T1, T2, T3, T4)
-function reorganizeMatchesByTour(matches) {
-    // Grouper les matchs par tour
-    const matchesByTour = {};
-
-    matches.forEach(match => {
-        const tour = match.tour || 0;
-        if (!matchesByTour[tour]) {
-            matchesByTour[tour] = [];
-        }
-        matchesByTour[tour].push(match);
-    });
-
-    // Obtenir les tours disponibles triés
-    const tours = Object.keys(matchesByTour).map(Number).sort((a, b) => a - b);
-
-    // Si pas de tours ou un seul tour, retourner les matchs tels quels
-    if (tours.length <= 1) {
-        return matches;
-    }
-
-    // Réorganiser en alternant les tours
-    const reorganized = [];
-    let maxLength = Math.max(...tours.map(t => matchesByTour[t].length));
-
-    for (let i = 0; i < maxLength; i++) {
-        tours.forEach(tour => {
-            if (matchesByTour[tour][i]) {
-                reorganized.push(matchesByTour[tour][i]);
-            }
-        });
-    }
-
-    return reorganized;
-}
-
-// Réorganiser les matchs pour pétanque : un match de chaque tour par page (4 matchs par page)
-function reorganizeMatchesForPetanque(matches) {
-    // Grouper les matchs par tour
-    const matchesByTour = {};
-
-    matches.forEach(match => {
-        const tour = match.tour || 0;
-        if (!matchesByTour[tour]) {
-            matchesByTour[tour] = [];
-        }
-        matchesByTour[tour].push(match);
-    });
-
-    // Obtenir les tours disponibles triés
-    const tours = Object.keys(matchesByTour).map(Number).sort((a, b) => a - b);
-
-    // Si pas de tours ou un seul tour, retourner les matchs tels quels groupés par 4
-    if (tours.length <= 1) {
-        return matches;
-    }
-
-    // Réorganiser : un match de chaque tour par page
-    // On veut : [Match1-Tour1, Match1-Tour2, Match1-Tour3, Match1-Tour4, Match2-Tour1, Match2-Tour2, ...]
-    const reorganized = [];
-    const maxLength = Math.max(...tours.map(t => matchesByTour[t].length));
-
-    // Pour chaque index de match (1er match, 2ème match, etc.)
-    for (let i = 0; i < maxLength; i++) {
-        // Ajouter le match numéro i de chaque tour
-        tours.forEach(tour => {
-            if (matchesByTour[tour][i]) {
-                reorganized.push(matchesByTour[tour][i]);
-            }
-        });
-    }
-
-    return reorganized;
 }
 
 // Remplacez seulement cette fonction dans votre code existant :
@@ -213,13 +182,35 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
                     line-height: 1.2;
                     color: #000;
                     background: white;
-                    padding: 8mm;
                 }
                 
+                /* Exactement la zone imprimable (A4 moins les marges de 8 mm) :
+                   une page HTML = une feuille, sinon le recto verso se décale */
                 .page {
-                    width: 100%;
+                    width: 194mm;
+                    height: 280mm;
+                    padding: 3mm;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
                     page-break-after: always;
+                    break-after: page;
                     background: white;
+                }
+                
+                /* 4 coins : HG, HD, BG, BD (T1, T3, T2, T4) */
+                .matches-container {
+                    flex: 1;
+                    min-height: 0;
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    grid-template-rows: repeat(2, minmax(0, 1fr));
+                    gap: 5mm;
+                }
+                
+                /* Coin réservé à un tour sans match : laissé blanc */
+                .match-slot-empty {
+                    min-height: 0;
                 }
                 
                 .page:last-child {
@@ -228,8 +219,8 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
                 
                 .page-header {
                     text-align: center;
-                    margin-bottom: 8mm;
-                    padding-bottom: 3mm;
+                    margin-bottom: 4mm;
+                    padding-bottom: 2mm;
                     border-bottom: 2px solid #000;
                 }
                 
@@ -246,14 +237,19 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
                 
                 .match-sheet {
                     border: 1.5px solid #000;
-                    margin-bottom: 4mm;
                     padding: 3mm;
+                    min-height: 0;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
                     page-break-inside: avoid;
                     background: white;
                 }
                 
                 .match-header {
                     display: flex;
+                    flex-wrap: wrap;
+                    gap: 1mm;
                     justify-content: space-between;
                     margin-bottom: 2mm;
                     font-weight: bold;
@@ -289,6 +285,9 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
                 }
                 
                 .score-section {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
                     margin-bottom: 2mm;
                 }
                 
@@ -311,7 +310,7 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
                     padding: 2mm;
                     text-align: center;
                     border: 1px solid #000;
-                    height: 8mm;
+                    height: 14mm;
                 }
                 
                 .player-col {
@@ -356,20 +355,13 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
                 
                 @media print {
                     body {
-                        padding: 5mm;
                         background: white !important;
                         -webkit-print-color-adjust: exact;
                         color-adjust: exact;
                     }
                     
-                    .page {
-                        margin: 0;
-                        width: 100%;
-                    }
-                    
                     .match-sheet {
                         border: 1.5px solid #000 !important;
-                        margin-bottom: 3mm;
                     }
                     
                     .score-table th {
@@ -407,16 +399,20 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
             <div class="page">
                 <div class="page-header">
                     <div class="page-title">🏓 FEUILLES DE MATCH - JOURNÉE ${dayNumber}</div>
-                    <div class="page-info">${currentDate} • Page ${pageIndex + 1}/${matchPages.length} • ${pageMatches.length} matchs</div>
+                    <div class="page-info">${currentDate} • Page ${pageIndex + 1}/${matchPages.length} • ${pageMatches.filter(Boolean).length} matchs</div>
                 </div>
+                <div class="matches-container">
         `;
         
-        // Générer chaque match de la page
-        pageMatches.forEach(match => {
-            htmlContent += generateCompactMatchSheet(match);
-        });
+        // 4 coins dans l'ordre HG, HD, BG, BD ; un coin sans match reste vide
+        for (let slot = 0; slot < 4; slot++) {
+            const match = pageMatches[slot];
+            htmlContent += match
+                ? generateCompactMatchSheet(match)
+                : `<div class="match-slot-empty"></div>`;
+        }
         
-        htmlContent += `</div>`;
+        htmlContent += `</div></div>`;
     });
     
     htmlContent += `
@@ -566,9 +562,14 @@ function printSimpleScoreSheets(dayNumber) {
     const numDivisions = championship.config?.numberOfDivisions || 3;
     let allMatches = [];
     let matchCounter = 1;
+    // Pages de 4 coins : les matchs à tours ont leur coin réservé (T1 HG,
+    // T3 HD, T2 BG, T4 BD), poules et phases finales remplissent dans l'ordre ;
+    // chaque division commence sur un recto
+    const matchPages = [];
 
     // Collecter tous les matchs
     for (let division = 1; division <= numDivisions; division++) {
+        const divisionStart = allMatches.length;
         // Matchs de poules si activés
         if (dayData.pools?.enabled && dayData.pools.divisions?.[division]?.matches) {
             const poolMatches = dayData.pools.divisions[division].matches;
@@ -594,7 +595,8 @@ function printSimpleScoreSheets(dayNumber) {
                     division,
                     matchId: matchCounter++,
                     type: 'Match',
-                    tour: match.tour || 1
+                    tour: match.tour || 1,
+                    hasCornerTour: true
                 });
             }
         });
@@ -634,17 +636,14 @@ function printSimpleScoreSheets(dayNumber) {
                 }
             });
         }
+
+        buildTourCornerPages(allMatches.slice(divisionStart), matchPages,
+            match => (match.hasCornerTour ? match.tour : null));
     }
 
     if (allMatches.length === 0) {
         showNotification('Aucun match à imprimer', 'warning');
         return;
-    }
-
-    // Grouper par pages de 5
-    const matchPages = [];
-    for (let i = 0; i < allMatches.length; i += 5) {
-        matchPages.push(allMatches.slice(i, i + 5));
     }
 
     const printHTML = generateSimpleScoreSheetHTML(dayNumber, matchPages);
@@ -664,13 +663,19 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body { font-family: Arial, sans-serif; }
 
-                @page { size: A4; margin: 5mm; }
+                @page { size: A4 portrait; margin: 5mm; }
 
+                /* Exactement la zone imprimable (A4 moins les marges de 5 mm) :
+                   une page HTML = une feuille, sinon le recto verso se décale */
                 .page {
                     width: 200mm;
-                    height: 287mm;
+                    height: 286mm;
                     padding: 3mm;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
                     page-break-after: always;
+                    break-after: page;
                     page-break-inside: avoid;
                 }
                 .page:last-child { page-break-after: avoid; }
@@ -686,16 +691,28 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     height: 8mm;
                 }
 
+                /* 4 coins : HG, HD, BG, BD (T1, T3, T2, T4) */
                 .matches-container {
-                    height: 274mm;
+                    flex: 1;
+                    min-height: 0;
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    grid-template-rows: repeat(2, minmax(0, 1fr));
+                    gap: 5mm;
+                }
+
+                /* Coin réservé à un tour sans match : laissé blanc */
+                .match-slot-empty {
+                    min-height: 0;
                 }
 
                 .match-sheet {
                     border: 2px solid #9b59b6;
                     border-radius: 3px;
-                    padding: 2mm 3mm;
-                    height: 54mm;
-                    margin-bottom: 1mm;
+                    padding: 3mm;
+                    min-height: 0;
+                    display: flex;
+                    flex-direction: column;
                     background: white;
                     overflow: hidden;
                     page-break-inside: avoid;
@@ -708,7 +725,8 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     color: #666;
                     padding-bottom: 1mm;
                     border-bottom: 1px dashed #ccc;
-                    height: 6mm;
+                    flex-wrap: wrap;
+                    gap: 1mm;
                 }
 
                 .match-id {
@@ -720,11 +738,11 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    height: 10mm;
+                    min-height: 14mm;
                 }
 
                 .player-name {
-                    font-size: 12px;
+                    font-size: 13px;
                     font-weight: bold;
                     color: #2c3e50;
                     flex: 1;
@@ -739,7 +757,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                 }
 
                 .score-section {
-                    height: 26mm;
+                    flex: 1;
                     display: flex;
                     align-items: center;
                 }
@@ -763,7 +781,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     border: 1px solid #ddd;
                     padding: 1.5mm;
                     text-align: center;
-                    height: 10mm;
+                    height: 18mm;
                 }
 
                 .player-col {
@@ -783,8 +801,8 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     gap: 3mm;
                     padding-top: 1mm;
                     border-top: 1px dashed #ccc;
-                    height: 8mm;
-                    align-items: center;
+                    min-height: 10mm;
+                    align-items: flex-end;
                 }
 
                 .result-box {
@@ -824,9 +842,13 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                 <div class="matches-container">
         `;
 
-        pageMatches.forEach(match => {
-            htmlContent += generateSimpleScoreSheet(match);
-        });
+        // 4 coins dans l'ordre HG, HD, BG, BD ; un coin sans match reste vide
+        for (let slot = 0; slot < 4; slot++) {
+            const match = pageMatches[slot];
+            htmlContent += match
+                ? generateSimpleScoreSheet(match)
+                : `<div class="match-slot-empty"></div>`;
+        }
 
         htmlContent += `
                 </div>
@@ -1107,6 +1129,17 @@ function addPrintMatchesButton() {
 // FEUILLES DE MATCH BOCCIA (4 par page A4)
 // ===============================================
 
+// Pages Boccia : coins réservés par tour (comme la pétanque), division par
+// division ; chaque division commence sur un recto pour garder le recto verso
+function generateBocciaPages(dayData, dayNumber) {
+    const pages = [];
+    const numDivisions = getNumberOfDivisions();
+    for (let division = 1; division <= numDivisions; division++) {
+        buildTourCornerPages(getDivisionMatches(dayData, division, dayNumber), pages);
+    }
+    return pages;
+}
+
 function printBocciaMatchSheets(dayNumber) {
     if (!dayNumber) dayNumber = championship.currentDay;
 
@@ -1116,25 +1149,13 @@ function printBocciaMatchSheets(dayNumber) {
         return;
     }
 
-    // Collecter tous les matchs division par division
-    // Pour chaque division, réorganiser par tour AVANT de passer à la suivante
-    let allMatches = [];
-    const numDivisions = getNumberOfDivisions();
+    const matchPages = generateBocciaPages(dayData, dayNumber);
+    const allMatchesCount = matchPages.reduce((n, page) => n + page.filter(Boolean).length, 0);
 
-    for (let division = 1; division <= numDivisions; division++) {
-        const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
-        // Réorganiser les matchs de cette division par tour (T1, T2, T3, T4 alternés)
-        const reorganizedDivisionMatches = reorganizeMatchesByTour(divisionMatches);
-        allMatches.push(...reorganizedDivisionMatches);
-    }
-
-    if (allMatches.length === 0) {
+    if (allMatchesCount === 0) {
         alert('⚠️ Aucun match généré pour cette journée !');
         return;
     }
-
-    // Grouper les matchs par pages (4 matchs par page A4)
-    const matchPages = groupMatchesIntoPages(allMatches, 4);
 
     // Générer le HTML d'impression Boccia
     const printHTML = generateBocciaSheetHTML(dayNumber, matchPages);
@@ -1142,7 +1163,7 @@ function printBocciaMatchSheets(dayNumber) {
     // Ouvrir dans une nouvelle fenêtre pour impression
     openPrintWindow(printHTML, `Feuilles_Boccia_J${dayNumber}`);
 
-    showNotification(`🎾 ${allMatches.length} feuilles de match Boccia générées !`, 'success');
+    showNotification(`🎾 ${allMatchesCount} feuilles de match Boccia générées !`, 'success');
 }
 
 function generateBocciaSheetHTML(dayNumber, matchPages) {
@@ -1179,22 +1200,33 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     background: white;
                 }
 
+                /* Exactement la zone imprimable (A4 moins les marges de 10 mm) :
+                   une page HTML = une feuille, sinon le recto verso se décale */
                 .page {
-                    width: 210mm;
-                    height: 297mm;
+                    width: 190mm;
+                    height: 276mm;
                     page-break-after: always;
+                    break-after: page;
+                    overflow: hidden;
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    grid-template-rows: 1fr 1fr;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    grid-template-rows: repeat(2, minmax(0, 1fr));
                     gap: 5mm;
-                    padding: 5mm;
+                    padding: 3mm;
                 }
 
                 .page:last-child {
                     page-break-after: avoid;
                 }
 
+                /* Coin réservé à un tour sans match : laissé blanc */
+                .match-slot-empty {
+                    min-height: 0;
+                }
+
                 .match-card {
+                    overflow: hidden;
+                    min-height: 0;
                     border: 2px solid #000;
                     padding: 3mm;
                     background: white;
@@ -1355,19 +1387,13 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
     matchPages.forEach((pageMatches, pageIndex) => {
         htmlContent += `<div class="page">`;
 
-        // Compléter avec des cartes vides si moins de 4 matchs
-        const matchesToDisplay = [...pageMatches];
-        while (matchesToDisplay.length < 4) {
-            matchesToDisplay.push(null);
+        // 4 coins dans l'ordre HG, HD, BG, BD ; un coin sans match reste vide
+        for (let slot = 0; slot < 4; slot++) {
+            const match = pageMatches[slot];
+            htmlContent += match
+                ? generateBocciaMatchCard(match, dayNumber)
+                : `<div class="match-slot-empty"></div>`;
         }
-
-        matchesToDisplay.forEach((match, index) => {
-            if (match) {
-                htmlContent += generateBocciaMatchCard(match, dayNumber);
-            } else {
-                htmlContent += `<div class="match-card" style="border-style: dashed; opacity: 0.3;"></div>`;
-            }
-        });
 
         htmlContent += `</div>`;
     });
@@ -1505,11 +1531,9 @@ function printPetanqueMatchSheets(dayNumber) {
         return;
     }
 
-    // Réorganiser les matchs : un match de chaque tour par page
-    const reorganizedMatches = reorganizeMatchesForPetanque(allMatches);
-
-    // Grouper les matchs par pages (4 matchs par page)
-    const matchPages = groupMatchesIntoPages(reorganizedMatches, 4);
+    // Pages de 4 coins réservés : T1 haut gauche, T3 haut droite,
+    // T2 bas gauche, T4 bas droite (recto verso : T3 au dos de T1, T4 de T2)
+    const matchPages = buildTourCornerPages(allMatches);
 
     // Générer le HTML d'impression Pétanque
     const printHTML = generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit);
@@ -1554,22 +1578,35 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                     background: white;
                 }
 
+                /* Exactement la zone imprimable (A4 moins les marges de 10 mm) :
+                   une page HTML = une feuille, sinon le recto verso se décale.
+                   Coins de taille fixe et centrés : la découpe tombe au même
+                   endroit au recto et au verso. */
                 .page {
-                    width: 210mm;
-                    height: 297mm;
+                    width: 190mm;
+                    height: 276mm;
                     page-break-after: always;
+                    break-after: page;
+                    overflow: hidden;
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    grid-template-rows: 1fr 1fr;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    grid-template-rows: repeat(2, minmax(0, 1fr));
                     gap: 5mm;
-                    padding: 5mm;
+                    padding: 3mm;
                 }
 
                 .page:last-child {
                     page-break-after: avoid;
                 }
 
+                /* Coin réservé à un tour sans match : laissé blanc */
+                .match-slot-empty {
+                    min-height: 0;
+                }
+
                 .match-card {
+                    overflow: hidden;
+                    min-height: 0;
                     border: 2px solid #000;
                     padding: 3mm;
                     background: white;
@@ -1701,19 +1738,13 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
     matchPages.forEach((pageMatches, pageIndex) => {
         htmlContent += `<div class="page">`;
 
-        // Compléter avec des cartes vides si moins de 4 matchs
-        const matchesToDisplay = [...pageMatches];
-        while (matchesToDisplay.length < 4) {
-            matchesToDisplay.push(null);
+        // 4 coins dans l'ordre HG, HD, BG, BD ; un coin sans match reste vide
+        for (let slot = 0; slot < 4; slot++) {
+            const match = pageMatches[slot];
+            htmlContent += match
+                ? generatePetanqueMatchCard(match, dayNumber, pointsLimit)
+                : `<div class="match-slot-empty"></div>`;
         }
-
-        matchesToDisplay.forEach((match, index) => {
-            if (match) {
-                htmlContent += generatePetanqueMatchCard(match, dayNumber, pointsLimit);
-            } else {
-                htmlContent += `<div class="match-card" style="border-style: dashed; opacity: 0.3;"></div>`;
-            }
-        });
 
         htmlContent += `</div>`;
     });
@@ -2944,8 +2975,9 @@ window.generateRecapByPoolHTML = generateRecapByPoolHTML;
 window.showPrintOptionsModal = showPrintOptionsModal;
 window.addPrintMatchesButton = addPrintMatchesButton;
 window.getDivisionMatches = getDivisionMatches;
-window.groupMatchesIntoPages = groupMatchesIntoPages;
-window.reorganizeMatchesByTour = reorganizeMatchesByTour;
+window.buildTourCornerPages = buildTourCornerPages;
+window.generateBocciaPages = generateBocciaPages;
+window.generatePetanqueSheetHTML = generatePetanqueSheetHTML;
 window.generateMatchSheetHTML = generateMatchSheetHTML;
 window.generateCompactMatchSheet = generateCompactMatchSheet;
 window.generateBocciaSheetHTML = generateBocciaSheetHTML;

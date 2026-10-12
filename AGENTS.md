@@ -302,9 +302,11 @@ après lui — c'était du code mort.
 deux fois par redondance) — contrairement aux vrais doublons de
 `pools.iife.js`/`chrono.iife.js`, ce n'est pas un bug fonctionnel.
 - `showPrintOptionsModal(dayNumber)`, `printMatchSheets(dayNumber)`, `printRecapSheets(dayNumber)` - gère mode Pool vs Terrain
-- `printBocciaMatchSheets()`, `generateBocciaSheetHTML()`, `generateBocciaMatchCard()` - feuilles spécifiques au mode Boccia
-- `printSimpleScoreSheets()`, `generateSimpleScoreSheetHTML()` - feuilles de score simplifiées
+- **Feuilles de match (classiques `printMatchSheets`, 2 scores, Boccia, pétanque)** : toutes 4 par page A4 en grille 2×2 via `buildTourCornerPages` — coin HG T1, HD T3, BG T2, BD T4 (recto verso bord long : T3 au dos de T1, T4 au dos de T2), coin vide si le tour n'a plus de match, chaque division (et chaque bloc de tours 5-8) commence sur un recto ; chaque `.page` fait exactement la zone imprimable (sinon le recto verso se décale)
+- `printBocciaMatchSheets()`, `generateBocciaPages(dayData, day)`, `generateBocciaSheetHTML()`, `generateBocciaMatchCard()` - feuilles spécifiques au mode Boccia : mêmes coins par tour que la pétanque, division par division, chaque division sur un nouveau recto
+- `printSimpleScoreSheets()`, `generateSimpleScoreSheetHTML()` - feuilles « 2 scores », 4 par page en coins (mêmes coins par tour que la pétanque, division par division) ; poules et phases finales sans coin réservé, dans l'ordre
 - `printRecapByCourt()`, `printRecapByPool()` - récapitulatifs
+- `printPetanqueMatchSheets(dayNumber)`, `buildTourCornerPages(matches, pages?, getTour?)` (partagée avec Boccia et 2 scores), `generatePetanqueSheetHTML(day, pages, points)` - feuilles pétanque 4 par page A4, **un coin par tour** (HG T1, HD T3, BG T2, BD T4 → recto verso : T3 au dos de T1, T4 au dos de T2) ; coin vide (`null`) si le tour n'a plus de match, jamais de décalage ; tours 5-8 mêmes coins sur un nouveau recto ; matchs sans tour (poules) dans l'ordre
 
 ### 13 bis. search.iife.js
 **Rôle** : barre de recherche dans la page, ouverte par le bouton 🔍 de l'en-tête

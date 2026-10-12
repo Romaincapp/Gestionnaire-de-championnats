@@ -13,6 +13,18 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🖨️ Feuilles de match (classiques, 2 scores, Boccia, pétanque) prêtes pour le recto verso et la découpe
+- Chaque coin de la page A4 est réservé à un tour : **tour 1 en haut à gauche, tour 3 en haut
+  à droite, tour 2 en bas à gauche, tour 4 en bas à droite**. En recto verso, le tour 3 tombe
+  au dos du tour 1 et le tour 4 au dos du tour 2.
+- S'il manque un match dans un tour, son coin reste blanc : les autres tours ne se décalent pas.
+- Chaque page tient exactement sur une feuille A4 (elle débordait légèrement avant).
+- Boccia : même disposition, division par division ; chaque division commence sur une
+  nouvelle feuille (une page blanche est ajoutée si besoin pour garder le recto verso aligné).
+- Feuilles 2 scores : 4 par page (au lieu de 5 en bandes) avec la même disposition, division
+  par division. Les matchs de poule et de phase finale, sans tour, se suivent dans l'ordre.
+- Feuilles de match classiques : idem, 4 par page (au lieu de 5 en bandes), division par division.
+
 ### 🐛 Renommer un joueur dans un match : vous choisissez
 - En « 🔓 Modifier les matchs », changer le nom d'un joueur dans un match propose désormais :
   - **✏️ Renommer partout** : c'est le même joueur (faute de frappe) → corrigé dans tous les matchs de la
