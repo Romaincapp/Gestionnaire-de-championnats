@@ -116,10 +116,11 @@ function groupMatchesIntoPages(matches, matchesPerPage) {
 // autres. Tours 5 à 8 : mêmes coins (5, 7 / 6, 8) sur les pages suivantes.
 // Les matchs sans tour (poules) remplissent les pages dans l'ordre.
 // Retourne des pages de 4 emplacements (match ou null), ajoutées à `pages`
-// si fourni (Boccia : une division après l'autre).
+// si fourni (Boccia, 2 scores : une division après l'autre). `getTour` choisit
+// le tour d'un match (null = pas de coin réservé, ex. phase finale).
 const TOUR_CORNER_SLOTS = [0, 2, 1, 3]; // tour 1, 2, 3, 4 → coin (0 HG, 1 HD, 2 BG, 3 BD)
 
-function buildTourCornerPages(matches, pages = []) {
+function buildTourCornerPages(matches, pages = [], getTour = match => match.tour) {
     // Chaque bloc commence sur un recto : on complète le bloc précédent
     // d'une page vide s'il en a un nombre impair
     const startOnRecto = () => {
@@ -129,7 +130,7 @@ function buildTourCornerPages(matches, pages = []) {
     const byGroup = {};
     const withoutTour = [];
     matches.forEach(match => {
-        const tour = parseInt(match.tour, 10);
+        const tour = parseInt(getTour(match), 10);
         if (!tour || tour < 1) {
             withoutTour.push(match);
             return;
@@ -544,9 +545,14 @@ function printSimpleScoreSheets(dayNumber) {
     const numDivisions = championship.config?.numberOfDivisions || 3;
     let allMatches = [];
     let matchCounter = 1;
+    // Pages de 4 coins : les matchs à tours ont leur coin réservé (T1 HG,
+    // T3 HD, T2 BG, T4 BD), poules et phases finales remplissent dans l'ordre ;
+    // chaque division commence sur un recto
+    const matchPages = [];
 
     // Collecter tous les matchs
     for (let division = 1; division <= numDivisions; division++) {
+        const divisionStart = allMatches.length;
         // Matchs de poules si activés
         if (dayData.pools?.enabled && dayData.pools.divisions?.[division]?.matches) {
             const poolMatches = dayData.pools.divisions[division].matches;
@@ -572,7 +578,8 @@ function printSimpleScoreSheets(dayNumber) {
                     division,
                     matchId: matchCounter++,
                     type: 'Match',
-                    tour: match.tour || 1
+                    tour: match.tour || 1,
+                    hasCornerTour: true
                 });
             }
         });
@@ -612,17 +619,14 @@ function printSimpleScoreSheets(dayNumber) {
                 }
             });
         }
+
+        buildTourCornerPages(allMatches.slice(divisionStart), matchPages,
+            match => (match.hasCornerTour ? match.tour : null));
     }
 
     if (allMatches.length === 0) {
         showNotification('Aucun match à imprimer', 'warning');
         return;
-    }
-
-    // Grouper par pages de 5
-    const matchPages = [];
-    for (let i = 0; i < allMatches.length; i += 5) {
-        matchPages.push(allMatches.slice(i, i + 5));
     }
 
     const printHTML = generateSimpleScoreSheetHTML(dayNumber, matchPages);
@@ -642,13 +646,19 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body { font-family: Arial, sans-serif; }
 
-                @page { size: A4; margin: 5mm; }
+                @page { size: A4 portrait; margin: 5mm; }
 
+                /* Exactement la zone imprimable (A4 moins les marges de 5 mm) :
+                   une page HTML = une feuille, sinon le recto verso se décale */
                 .page {
                     width: 200mm;
-                    height: 287mm;
+                    height: 286mm;
                     padding: 3mm;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
                     page-break-after: always;
+                    break-after: page;
                     page-break-inside: avoid;
                 }
                 .page:last-child { page-break-after: avoid; }
@@ -664,16 +674,28 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     height: 8mm;
                 }
 
+                /* 4 coins : HG, HD, BG, BD (T1, T3, T2, T4) */
                 .matches-container {
-                    height: 274mm;
+                    flex: 1;
+                    min-height: 0;
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    grid-template-rows: repeat(2, minmax(0, 1fr));
+                    gap: 5mm;
+                }
+
+                /* Coin réservé à un tour sans match : laissé blanc */
+                .match-slot-empty {
+                    min-height: 0;
                 }
 
                 .match-sheet {
                     border: 2px solid #9b59b6;
                     border-radius: 3px;
-                    padding: 2mm 3mm;
-                    height: 54mm;
-                    margin-bottom: 1mm;
+                    padding: 3mm;
+                    min-height: 0;
+                    display: flex;
+                    flex-direction: column;
                     background: white;
                     overflow: hidden;
                     page-break-inside: avoid;
@@ -686,7 +708,8 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     color: #666;
                     padding-bottom: 1mm;
                     border-bottom: 1px dashed #ccc;
-                    height: 6mm;
+                    flex-wrap: wrap;
+                    gap: 1mm;
                 }
 
                 .match-id {
@@ -698,11 +721,11 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    height: 10mm;
+                    min-height: 14mm;
                 }
 
                 .player-name {
-                    font-size: 12px;
+                    font-size: 13px;
                     font-weight: bold;
                     color: #2c3e50;
                     flex: 1;
@@ -717,7 +740,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                 }
 
                 .score-section {
-                    height: 26mm;
+                    flex: 1;
                     display: flex;
                     align-items: center;
                 }
@@ -741,7 +764,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     border: 1px solid #ddd;
                     padding: 1.5mm;
                     text-align: center;
-                    height: 10mm;
+                    height: 18mm;
                 }
 
                 .player-col {
@@ -761,8 +784,8 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     gap: 3mm;
                     padding-top: 1mm;
                     border-top: 1px dashed #ccc;
-                    height: 8mm;
-                    align-items: center;
+                    min-height: 10mm;
+                    align-items: flex-end;
                 }
 
                 .result-box {
@@ -802,9 +825,13 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                 <div class="matches-container">
         `;
 
-        pageMatches.forEach(match => {
-            htmlContent += generateSimpleScoreSheet(match);
-        });
+        // 4 coins dans l'ordre HG, HD, BG, BD ; un coin sans match reste vide
+        for (let slot = 0; slot < 4; slot++) {
+            const match = pageMatches[slot];
+            htmlContent += match
+                ? generateSimpleScoreSheet(match)
+                : `<div class="match-slot-empty"></div>`;
+        }
 
         htmlContent += `
                 </div>

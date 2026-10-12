@@ -100,3 +100,56 @@ describe('Boccia', () => {
         expect(second.map(c => c.className)).toEqual(['match-card', 'match-slot-empty', 'match-card', 'match-card']);
     });
 });
+
+describe('2 scores', () => {
+    const rr = (tour, n) => ({ player1: `A${tour}${n}`, player2: `B${tour}${n}`, tour });
+
+    function printedCorners(day) {
+        championship.days = { 1: day };
+        championship.config = { numberOfDivisions: 2 };
+        let written = '';
+        const win = { document: { write: html => { written += html; }, close() {} } };
+        const spy = jest.spyOn(window, 'open').mockReturnValue(win);
+        jest.useFakeTimers();
+        printSimpleScoreSheets(1);
+        jest.useRealTimers();
+        spy.mockRestore();
+        const doc = new DOMParser().parseFromString(written, 'text/html');
+        return [...doc.querySelectorAll('.page')].map(page =>
+            [...page.querySelector('.matches-container').children].map(c =>
+                (c.className === 'match-slot-empty' ? null : c.querySelector('.player-name').textContent)));
+    }
+
+    test('coins réservés par tour, division par division sur un recto', () => {
+        const pages = printedCorners({
+            matches: {
+                1: [rr(1, 1), rr(1, 2), rr(2, 1), rr(2, 2), rr(3, 1), rr(4, 1), rr(4, 2)],
+                2: [rr(1, 1), rr(2, 1)],
+            },
+        });
+        expect(pages).toEqual([
+            ['A11', 'A31', 'A21', 'A41'],
+            ['A12', null, 'A22', 'A42'],
+            ['A11', null, 'A21', null],
+        ]);
+    });
+
+    test('poules et phase finale : dans l\'ordre, sans coin réservé', () => {
+        const pages = printedCorners({
+            matches: { 1: [], 2: [] },
+            pools: {
+                enabled: true,
+                divisions: {
+                    1: {
+                        matches: [1, 2, 3].map(n => ({ player1: `P${n}`, player2: 'X', poolIndex: 0 })),
+                        finalPhase: [{ player1: 'F1', player2: 'Y', round: 1 }, { player1: 'F2', player2: 'Z', round: 2 }],
+                    },
+                },
+            },
+        });
+        expect(pages).toEqual([
+            ['P1', 'P2', 'P3', 'F1'],
+            ['F2', null, null, null],
+        ]);
+    });
+});

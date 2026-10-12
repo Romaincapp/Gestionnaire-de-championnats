@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles 2 scores : 4 coins par page, un par tour (recto verso)
+
+- **Contexte** : même demande que pétanque/Boccia, pour les feuilles « 📝 2 scores ».
+- **Fait** : `printSimpleScoreSheets` passe de 5 bandes empilées par page à une grille 2×2 :
+  matchs à tours sur leur coin (HG T1, HD T3, BG T2, BD T4, coin vide sinon), division par
+  division sur un recto. Poules et phases finales (ancienne et manuelle, dont le `tour` est
+  un numéro/nom de manche) n'ont pas de coin réservé : remplissage dans l'ordre (marqueur
+  interne `hasCornerTour`). `buildTourCornerPages` prend un 3e paramètre `getTour`. Page
+  ramenée à 200×286 mm (zone imprimable, marges 5 mm), vérifié en PDF.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/tourCornerSheets.test.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-12 — Feuilles Boccia : un coin de page par tour (recto verso)
 
 - **Contexte** : même demande que pour la pétanque, appliquée aux feuilles Boccia.
