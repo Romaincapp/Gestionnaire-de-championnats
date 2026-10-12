@@ -107,44 +107,7 @@ function groupMatchesIntoPages(matches, matchesPerPage) {
     return pages;
 }
 
-// Réorganiser les matchs pour alterner les tours sur chaque page
-// Pour Boccia: sur chaque page de 4 matchs, on veut 1 match de chaque tour (T1, T2, T3, T4)
-function reorganizeMatchesByTour(matches) {
-    // Grouper les matchs par tour
-    const matchesByTour = {};
-
-    matches.forEach(match => {
-        const tour = match.tour || 0;
-        if (!matchesByTour[tour]) {
-            matchesByTour[tour] = [];
-        }
-        matchesByTour[tour].push(match);
-    });
-
-    // Obtenir les tours disponibles triés
-    const tours = Object.keys(matchesByTour).map(Number).sort((a, b) => a - b);
-
-    // Si pas de tours ou un seul tour, retourner les matchs tels quels
-    if (tours.length <= 1) {
-        return matches;
-    }
-
-    // Réorganiser en alternant les tours
-    const reorganized = [];
-    let maxLength = Math.max(...tours.map(t => matchesByTour[t].length));
-
-    for (let i = 0; i < maxLength; i++) {
-        tours.forEach(tour => {
-            if (matchesByTour[tour][i]) {
-                reorganized.push(matchesByTour[tour][i]);
-            }
-        });
-    }
-
-    return reorganized;
-}
-
-// Pétanque : chaque coin de la page A4 est réservé à un tour précis, pour une
+// Pétanque et Boccia : chaque coin de la page A4 est réservé à un tour précis, pour une
 // impression recto verso puis découpe en 4 :
 //   haut gauche = tour 1   haut droite = tour 3
 //   bas gauche  = tour 2   bas droite  = tour 4
@@ -152,11 +115,11 @@ function reorganizeMatchesByTour(matches) {
 // Un coin dont le tour n'a plus de match reste vide (null), sans décaler les
 // autres. Tours 5 à 8 : mêmes coins (5, 7 / 6, 8) sur les pages suivantes.
 // Les matchs sans tour (poules) remplissent les pages dans l'ordre.
-// Retourne des pages de 4 emplacements (match ou null).
-const PETANQUE_TOUR_SLOTS = [0, 2, 1, 3]; // tour 1, 2, 3, 4 → coin (0 HG, 1 HD, 2 BG, 3 BD)
+// Retourne des pages de 4 emplacements (match ou null), ajoutées à `pages`
+// si fourni (Boccia : une division après l'autre).
+const TOUR_CORNER_SLOTS = [0, 2, 1, 3]; // tour 1, 2, 3, 4 → coin (0 HG, 1 HD, 2 BG, 3 BD)
 
-function buildPetanquePages(matches) {
-    const pages = [];
+function buildTourCornerPages(matches, pages = []) {
     // Chaque bloc commence sur un recto : on complète le bloc précédent
     // d'une page vide s'il en a un nombre impair
     const startOnRecto = () => {
@@ -172,7 +135,7 @@ function buildPetanquePages(matches) {
             return;
         }
         const group = Math.floor((tour - 1) / 4);
-        const slot = PETANQUE_TOUR_SLOTS[(tour - 1) % 4];
+        const slot = TOUR_CORNER_SLOTS[(tour - 1) % 4];
         if (!byGroup[group]) byGroup[group] = [[], [], [], []];
         byGroup[group][slot].push(match);
     });
@@ -1122,6 +1085,17 @@ function addPrintMatchesButton() {
 // FEUILLES DE MATCH BOCCIA (4 par page A4)
 // ===============================================
 
+// Pages Boccia : coins réservés par tour (comme la pétanque), division par
+// division ; chaque division commence sur un recto pour garder le recto verso
+function generateBocciaPages(dayData, dayNumber) {
+    const pages = [];
+    const numDivisions = getNumberOfDivisions();
+    for (let division = 1; division <= numDivisions; division++) {
+        buildTourCornerPages(getDivisionMatches(dayData, division, dayNumber), pages);
+    }
+    return pages;
+}
+
 function printBocciaMatchSheets(dayNumber) {
     if (!dayNumber) dayNumber = championship.currentDay;
 
@@ -1131,25 +1105,13 @@ function printBocciaMatchSheets(dayNumber) {
         return;
     }
 
-    // Collecter tous les matchs division par division
-    // Pour chaque division, réorganiser par tour AVANT de passer à la suivante
-    let allMatches = [];
-    const numDivisions = getNumberOfDivisions();
+    const matchPages = generateBocciaPages(dayData, dayNumber);
+    const allMatchesCount = matchPages.reduce((n, page) => n + page.filter(Boolean).length, 0);
 
-    for (let division = 1; division <= numDivisions; division++) {
-        const divisionMatches = getDivisionMatches(dayData, division, dayNumber);
-        // Réorganiser les matchs de cette division par tour (T1, T2, T3, T4 alternés)
-        const reorganizedDivisionMatches = reorganizeMatchesByTour(divisionMatches);
-        allMatches.push(...reorganizedDivisionMatches);
-    }
-
-    if (allMatches.length === 0) {
+    if (allMatchesCount === 0) {
         alert('⚠️ Aucun match généré pour cette journée !');
         return;
     }
-
-    // Grouper les matchs par pages (4 matchs par page A4)
-    const matchPages = groupMatchesIntoPages(allMatches, 4);
 
     // Générer le HTML d'impression Boccia
     const printHTML = generateBocciaSheetHTML(dayNumber, matchPages);
@@ -1157,7 +1119,7 @@ function printBocciaMatchSheets(dayNumber) {
     // Ouvrir dans une nouvelle fenêtre pour impression
     openPrintWindow(printHTML, `Feuilles_Boccia_J${dayNumber}`);
 
-    showNotification(`🎾 ${allMatches.length} feuilles de match Boccia générées !`, 'success');
+    showNotification(`🎾 ${allMatchesCount} feuilles de match Boccia générées !`, 'success');
 }
 
 function generateBocciaSheetHTML(dayNumber, matchPages) {
@@ -1194,22 +1156,33 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     background: white;
                 }
 
+                /* Exactement la zone imprimable (A4 moins les marges de 10 mm) :
+                   une page HTML = une feuille, sinon le recto verso se décale */
                 .page {
-                    width: 210mm;
-                    height: 297mm;
+                    width: 190mm;
+                    height: 276mm;
                     page-break-after: always;
+                    break-after: page;
+                    overflow: hidden;
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    grid-template-rows: 1fr 1fr;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    grid-template-rows: repeat(2, minmax(0, 1fr));
                     gap: 5mm;
-                    padding: 5mm;
+                    padding: 3mm;
                 }
 
                 .page:last-child {
                     page-break-after: avoid;
                 }
 
+                /* Coin réservé à un tour sans match : laissé blanc */
+                .match-slot-empty {
+                    min-height: 0;
+                }
+
                 .match-card {
+                    overflow: hidden;
+                    min-height: 0;
                     border: 2px solid #000;
                     padding: 3mm;
                     background: white;
@@ -1370,19 +1343,13 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
     matchPages.forEach((pageMatches, pageIndex) => {
         htmlContent += `<div class="page">`;
 
-        // Compléter avec des cartes vides si moins de 4 matchs
-        const matchesToDisplay = [...pageMatches];
-        while (matchesToDisplay.length < 4) {
-            matchesToDisplay.push(null);
+        // 4 coins dans l'ordre HG, HD, BG, BD ; un coin sans match reste vide
+        for (let slot = 0; slot < 4; slot++) {
+            const match = pageMatches[slot];
+            htmlContent += match
+                ? generateBocciaMatchCard(match, dayNumber)
+                : `<div class="match-slot-empty"></div>`;
         }
-
-        matchesToDisplay.forEach((match, index) => {
-            if (match) {
-                htmlContent += generateBocciaMatchCard(match, dayNumber);
-            } else {
-                htmlContent += `<div class="match-card" style="border-style: dashed; opacity: 0.3;"></div>`;
-            }
-        });
 
         htmlContent += `</div>`;
     });
@@ -1522,7 +1489,7 @@ function printPetanqueMatchSheets(dayNumber) {
 
     // Pages de 4 coins réservés : T1 haut gauche, T3 haut droite,
     // T2 bas gauche, T4 bas droite (recto verso : T3 au dos de T1, T4 de T2)
-    const matchPages = buildPetanquePages(allMatches);
+    const matchPages = buildTourCornerPages(allMatches);
 
     // Générer le HTML d'impression Pétanque
     const printHTML = generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit);
@@ -2965,8 +2932,8 @@ window.showPrintOptionsModal = showPrintOptionsModal;
 window.addPrintMatchesButton = addPrintMatchesButton;
 window.getDivisionMatches = getDivisionMatches;
 window.groupMatchesIntoPages = groupMatchesIntoPages;
-window.reorganizeMatchesByTour = reorganizeMatchesByTour;
-window.buildPetanquePages = buildPetanquePages;
+window.buildTourCornerPages = buildTourCornerPages;
+window.generateBocciaPages = generateBocciaPages;
 window.generatePetanqueSheetHTML = generatePetanqueSheetHTML;
 window.generateMatchSheetHTML = generateMatchSheetHTML;
 window.generateCompactMatchSheet = generateCompactMatchSheet;

@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles Boccia : un coin de page par tour (recto verso)
+
+- **Contexte** : même demande que pour la pétanque, appliquée aux feuilles Boccia.
+- **Fait** : `buildPetanquePages` renommée `buildTourCornerPages(matches, pages)` (partagée) ;
+  nouvelle `generateBocciaPages(dayData, dayNumber)` : coins HG T1 / HD T3 / BG T2 / BD T4,
+  division par division, chaque division commençant sur un recto (page blanche ajoutée si la
+  précédente a un nombre impair de pages). `reorganizeMatchesByTour` (seul appelant : Boccia)
+  supprimée. Même correctif de taille de page que la pétanque (190×276 mm, vérifié en PDF).
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/tourCornerSheets.test.js`
+  (ex-`petanqueSheetLayout.test.js`)
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-12 — Feuilles pétanque : un coin de page par tour (recto verso)
 
 - **Contexte** : demande utilisateur — imprimer les feuilles pétanque en recto verso puis
