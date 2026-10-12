@@ -153,3 +153,35 @@ describe('2 scores', () => {
         ]);
     });
 });
+
+describe('feuilles de match classiques', () => {
+    const rr = (tour, n) => ({ player1: `A${tour}${n}`, player2: `B${tour}${n}`, tour });
+
+    test('coins réservés par tour, division par division sur un recto', () => {
+        championship.days = {
+            1: {
+                matches: {
+                    1: [rr(1, 1), rr(1, 2), rr(2, 1), rr(2, 2), rr(3, 1), rr(4, 1), rr(4, 2)],
+                    2: [rr(1, 1), rr(2, 1)],
+                    3: [],
+                },
+            },
+        };
+        let written = '';
+        const win = { document: { write: html => { written += html; }, close() {} } };
+        const spy = jest.spyOn(window, 'open').mockReturnValue(win);
+        jest.useFakeTimers();
+        printMatchSheets(1);
+        jest.useRealTimers();
+        spy.mockRestore();
+        const doc = new DOMParser().parseFromString(written, 'text/html');
+        const pages = [...doc.querySelectorAll('.page')].map(page =>
+            [...page.querySelector('.matches-container').children].map(c =>
+                (c.className === 'match-slot-empty' ? null : c.querySelector('.player-name').textContent)));
+        expect(pages).toEqual([
+            ['A11', 'A31', 'A21', 'A41'],
+            ['A12', null, 'A22', 'A42'],
+            ['A11', null, 'A21', null],
+        ]);
+    });
+});

@@ -33,6 +33,18 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles de match classiques : 4 coins par page, un par tour (recto verso)
+
+- **Contexte** : même demande que pétanque/Boccia/2 scores, pour « 📋 Feuilles de match ».
+- **Fait** : `printMatchSheets` passe de 5 bandes empilées par page à une grille 2×2 via
+  `buildTourCornerPages` (HG T1, HD T3, BG T2, BD T4, coin vide sinon ; poules dans l'ordre),
+  division par division sur un recto. Page ramenée à 194×280 mm (marges 8 mm, le `padding`
+  du `body` qui s'y ajoutait est retiré), vérifié en PDF. `groupMatchesIntoPages` (plus
+  aucun appelant) supprimée.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/tourCornerSheets.test.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-12 — Feuilles 2 scores : 4 coins par page, un par tour (recto verso)
 
 - **Contexte** : même demande que pétanque/Boccia, pour les feuilles « 📝 2 scores ».
