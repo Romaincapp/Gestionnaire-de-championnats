@@ -33,6 +33,22 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles pétanque : un coin de page par tour (recto verso)
+
+- **Contexte** : demande utilisateur — imprimer les feuilles pétanque en recto verso puis
+  découper la page en 4, avec le tour 3 au dos du tour 1 et le tour 4 au dos du tour 2.
+- **Fait** : `buildPetanquePages(matches)` (nouvelle, exposée) remplace
+  `reorganizeMatchesForPetanque` + `groupMatchesIntoPages` : chaque coin est réservé à un tour
+  (HG = T1, HD = T3, BG = T2, BD = T4 ; tours 5-8 sur les mêmes coins, bloc démarrant sur un
+  recto) ; un tour sans match laisse son coin **vide** (`.match-slot-empty`, sans cadre) au
+  lieu de décaler les autres. Matchs sans tour (poules) : remplissage dans l'ordre. La page
+  HTML faisait 210×297 mm dans une zone imprimable de 190×277 mm (marges 10 mm) : ramenée à
+  190×276 mm, contrôlé par PDF Chromium (1 page HTML = 1 feuille, condition du recto verso).
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/petanqueSheetLayout.test.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Suite possible** : même logique pour les feuilles Boccia / simples si souhaité.
+
 ### 2026-10-09 — Renommer un joueur dans un match : « partout » ou « nouveau joueur »
 
 - **Contexte** : bug rapporté — renommer un joueur dans un match ne proposait aucun choix.

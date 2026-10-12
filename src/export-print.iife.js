@@ -144,43 +144,58 @@ function reorganizeMatchesByTour(matches) {
     return reorganized;
 }
 
-// Réorganiser les matchs pour pétanque : un match de chaque tour par page (4 matchs par page)
-function reorganizeMatchesForPetanque(matches) {
-    // Grouper les matchs par tour
-    const matchesByTour = {};
+// Pétanque : chaque coin de la page A4 est réservé à un tour précis, pour une
+// impression recto verso puis découpe en 4 :
+//   haut gauche = tour 1   haut droite = tour 3
+//   bas gauche  = tour 2   bas droite  = tour 4
+// Le tour 3 tombe ainsi au dos du tour 1 et le tour 4 au dos du tour 2.
+// Un coin dont le tour n'a plus de match reste vide (null), sans décaler les
+// autres. Tours 5 à 8 : mêmes coins (5, 7 / 6, 8) sur les pages suivantes.
+// Les matchs sans tour (poules) remplissent les pages dans l'ordre.
+// Retourne des pages de 4 emplacements (match ou null).
+const PETANQUE_TOUR_SLOTS = [0, 2, 1, 3]; // tour 1, 2, 3, 4 → coin (0 HG, 1 HD, 2 BG, 3 BD)
 
+function buildPetanquePages(matches) {
+    const pages = [];
+    // Chaque bloc commence sur un recto : on complète le bloc précédent
+    // d'une page vide s'il en a un nombre impair
+    const startOnRecto = () => {
+        if (pages.length % 2 === 1) pages.push([null, null, null, null]);
+    };
+
+    const byGroup = {};
+    const withoutTour = [];
     matches.forEach(match => {
-        const tour = match.tour || 0;
-        if (!matchesByTour[tour]) {
-            matchesByTour[tour] = [];
+        const tour = parseInt(match.tour, 10);
+        if (!tour || tour < 1) {
+            withoutTour.push(match);
+            return;
         }
-        matchesByTour[tour].push(match);
+        const group = Math.floor((tour - 1) / 4);
+        const slot = PETANQUE_TOUR_SLOTS[(tour - 1) % 4];
+        if (!byGroup[group]) byGroup[group] = [[], [], [], []];
+        byGroup[group][slot].push(match);
     });
 
-    // Obtenir les tours disponibles triés
-    const tours = Object.keys(matchesByTour).map(Number).sort((a, b) => a - b);
+    Object.keys(byGroup).map(Number).sort((a, b) => a - b).forEach(group => {
+        startOnRecto();
+        const slots = byGroup[group];
+        const count = Math.max(...slots.map(list => list.length));
+        for (let i = 0; i < count; i++) {
+            pages.push(slots.map(list => list[i] || null));
+        }
+    });
 
-    // Si pas de tours ou un seul tour, retourner les matchs tels quels groupés par 4
-    if (tours.length <= 1) {
-        return matches;
+    if (withoutTour.length > 0) {
+        startOnRecto();
+        for (let i = 0; i < withoutTour.length; i += 4) {
+            const page = withoutTour.slice(i, i + 4);
+            while (page.length < 4) page.push(null);
+            pages.push(page);
+        }
     }
 
-    // Réorganiser : un match de chaque tour par page
-    // On veut : [Match1-Tour1, Match1-Tour2, Match1-Tour3, Match1-Tour4, Match2-Tour1, Match2-Tour2, ...]
-    const reorganized = [];
-    const maxLength = Math.max(...tours.map(t => matchesByTour[t].length));
-
-    // Pour chaque index de match (1er match, 2ème match, etc.)
-    for (let i = 0; i < maxLength; i++) {
-        // Ajouter le match numéro i de chaque tour
-        tours.forEach(tour => {
-            if (matchesByTour[tour][i]) {
-                reorganized.push(matchesByTour[tour][i]);
-            }
-        });
-    }
-
-    return reorganized;
+    return pages;
 }
 
 // Remplacez seulement cette fonction dans votre code existant :
@@ -1505,11 +1520,9 @@ function printPetanqueMatchSheets(dayNumber) {
         return;
     }
 
-    // Réorganiser les matchs : un match de chaque tour par page
-    const reorganizedMatches = reorganizeMatchesForPetanque(allMatches);
-
-    // Grouper les matchs par pages (4 matchs par page)
-    const matchPages = groupMatchesIntoPages(reorganizedMatches, 4);
+    // Pages de 4 coins réservés : T1 haut gauche, T3 haut droite,
+    // T2 bas gauche, T4 bas droite (recto verso : T3 au dos de T1, T4 de T2)
+    const matchPages = buildPetanquePages(allMatches);
 
     // Générer le HTML d'impression Pétanque
     const printHTML = generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit);
@@ -1554,22 +1567,35 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                     background: white;
                 }
 
+                /* Exactement la zone imprimable (A4 moins les marges de 10 mm) :
+                   une page HTML = une feuille, sinon le recto verso se décale.
+                   Coins de taille fixe et centrés : la découpe tombe au même
+                   endroit au recto et au verso. */
                 .page {
-                    width: 210mm;
-                    height: 297mm;
+                    width: 190mm;
+                    height: 276mm;
                     page-break-after: always;
+                    break-after: page;
+                    overflow: hidden;
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    grid-template-rows: 1fr 1fr;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    grid-template-rows: repeat(2, minmax(0, 1fr));
                     gap: 5mm;
-                    padding: 5mm;
+                    padding: 3mm;
                 }
 
                 .page:last-child {
                     page-break-after: avoid;
                 }
 
+                /* Coin réservé à un tour sans match : laissé blanc */
+                .match-slot-empty {
+                    min-height: 0;
+                }
+
                 .match-card {
+                    overflow: hidden;
+                    min-height: 0;
                     border: 2px solid #000;
                     padding: 3mm;
                     background: white;
@@ -1701,19 +1727,13 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
     matchPages.forEach((pageMatches, pageIndex) => {
         htmlContent += `<div class="page">`;
 
-        // Compléter avec des cartes vides si moins de 4 matchs
-        const matchesToDisplay = [...pageMatches];
-        while (matchesToDisplay.length < 4) {
-            matchesToDisplay.push(null);
+        // 4 coins dans l'ordre HG, HD, BG, BD ; un coin sans match reste vide
+        for (let slot = 0; slot < 4; slot++) {
+            const match = pageMatches[slot];
+            htmlContent += match
+                ? generatePetanqueMatchCard(match, dayNumber, pointsLimit)
+                : `<div class="match-slot-empty"></div>`;
         }
-
-        matchesToDisplay.forEach((match, index) => {
-            if (match) {
-                htmlContent += generatePetanqueMatchCard(match, dayNumber, pointsLimit);
-            } else {
-                htmlContent += `<div class="match-card" style="border-style: dashed; opacity: 0.3;"></div>`;
-            }
-        });
 
         htmlContent += `</div>`;
     });
@@ -2946,6 +2966,8 @@ window.addPrintMatchesButton = addPrintMatchesButton;
 window.getDivisionMatches = getDivisionMatches;
 window.groupMatchesIntoPages = groupMatchesIntoPages;
 window.reorganizeMatchesByTour = reorganizeMatchesByTour;
+window.buildPetanquePages = buildPetanquePages;
+window.generatePetanqueSheetHTML = generatePetanqueSheetHTML;
 window.generateMatchSheetHTML = generateMatchSheetHTML;
 window.generateCompactMatchSheet = generateCompactMatchSheet;
 window.generateBocciaSheetHTML = generateBocciaSheetHTML;
