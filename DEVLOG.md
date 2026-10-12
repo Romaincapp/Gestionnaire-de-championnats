@@ -33,6 +33,20 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Nettoyage du dépôt public et anonymisation des données
+
+- **Contexte** : le dépôt est mis en avant sur le portfolio de Romain ; les exports JSON
+  contenaient de vrais noms de participants (natation, course, badminton).
+- **Fait** : noms de personnes remplacés par des noms fictifs, mot par mot (clubs, nages,
+  distances et temps conservés, donc les formats de lignes réels restent testés) ;
+  `jsondetest/*.json` → `tests/fixtures/`, `json/` + `testjoueurs.txt` → `examples/`,
+  scripts Python/Node de la racine et de `jsondetest/` → `scripts/` (chemins mis à jour) ;
+  `.claude/settings.local.json` retiré du suivi. Les anciennes versions restent dans l'historique git.
+- **Fichiers/modules touchés** : `tests/fixtures/`, `examples/`, `scripts/`, `tests/e2e/*.e2e.js`,
+  `tests/unit/swimmingResultsIntegrity.test.js`, `AGENTS.md`, `claude.md`, `.gitignore`
+- **Commit(s)** : branche `claude/repo-cleanup`
+- **Doc à jour ?** : CHANGELOG ❌ (pas de changement fonctionnel) · AGENTS.md ✅ · TODO.md ❌ · claude.md ✅
+
 ### 2026-10-12 — Feuilles Boccia (avec noms et vierges) : textes agrandis
 
 - **Contexte** : même demande des arbitres que pour la pétanque.

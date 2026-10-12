@@ -45,7 +45,9 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 │   ├── darkmode.iife.js    # Mode sombre : assombrit les couleurs inline claires, voir section 13 ter
 │   ├── mobile.iife.js      # Téléphone : tableaux trop larges défilables, voir section 13 quater
 │   └── init.iife.js        # Bootstrap de l'application, chargé en dernier
-└── json/                   # Données JSON d'exemple (si besoin)
+├── examples/               # Exports JSON d'exemple (noms anonymisés)
+├── scripts/                # Scripts utilitaires (fusion, extraction de clubs, fixtures)
+└── tests/fixtures/         # Données de test (noms anonymisés)
 ```
 Ordre de chargement dans `index.html` : config, utils, notifications, state,
 clubs, multisport, players, ui, matches, pools, ranking, export-json,
@@ -444,7 +446,7 @@ La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR 
 chaque push vers `main` : un check rouge est une vraie régression.
 
 `npm run test:e2e` (`tests/e2e/natation.e2e.js`) rejoue par de vrais clics une journée
-natation complète avec les 150 lignes réelles de `jsondetest/natation test 2.json`. Il n'est
+natation complète avec les 150 lignes au format réel de `tests/fixtures/natation test 2.json` (noms anonymisés). Il n'est
 pas lancé en CI (il faut un navigateur) : à lancer avant chaque compétition et après toute
 modification du flux Courses/natation/classements. Captures et rapport dans
 `tests/e2e/output/`.

@@ -5,7 +5,7 @@
 //   HEADED=1 npm run test:darkmode   (fenêtre visible)
 //   npm run test:darkmode:mobile     (même audit sur un téléphone)
 //
-// Charge des données réelles (jsondetest/ : journée Matchs en poules, journée
+// Charge des données réelles anonymisées (tests/fixtures/ : journée Matchs en poules, journée
 // natation avec résultats, journée Matchs « classique » avec scores), active le
 // mode sombre puis ouvre un à un les écrans, onglets, classements et fenêtres
 // (statiques et créées dynamiquement). Sur chaque écran, mesure dans le DOM :
@@ -33,7 +33,7 @@ const CONTEXT = MOBILE
         userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36' }
     : { viewport: { width: 1400, height: 1000 } };
 const HEADED = !!process.env.HEADED;
-const load = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'jsondetest', f), 'utf8'));
+const load = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', f), 'utf8'));
 
 function launchOptions() {
     const base = { headless: !HEADED };

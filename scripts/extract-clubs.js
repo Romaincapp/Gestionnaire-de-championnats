@@ -1,8 +1,11 @@
 const fs = require('fs');
 
 // Lire le fichier JSON
-const inputFile = 'competition-chrono-2025-12-11 (1).json';
-const outputFile = 'competition-chrono-2025-12-11-with-clubs.json';
+const path = require('path');
+
+// Fichiers d'exemple dans examples/ (lancer : node scripts/extract-clubs.js)
+const inputFile = path.join(__dirname, '..', 'examples', 'competition-chrono-2025-12-11 (1).json');
+const outputFile = path.join(__dirname, '..', 'examples', 'competition-chrono-2025-12-11-with-clubs.json');
 
 console.log(`📖 Lecture du fichier ${inputFile}...`);
 const data = JSON.parse(fs.readFileSync(inputFile, 'utf8'));

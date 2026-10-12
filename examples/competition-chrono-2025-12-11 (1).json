@@ -20,7 +20,7 @@
             "participants": [
               {
                 "bib": 1,
-                "name": "GAI SEJOUR GIELDZYK Paul",
+                "name": "GAI SEJOUR FABRICE Manon",
                 "category": "H",
                 "record": "00:22",
                 "status": "finished",
@@ -35,12 +35,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 26410,
-                "club": "Gai Sejour"
+                "finishTime": 26410
               },
               {
                 "bib": 2,
-                "name": "BOULAIE ROBIN Christophe",
+                "name": "BOULAIE NAVEZ Mathilde",
                 "category": "H",
                 "record": "00:25",
                 "status": "finished",
@@ -55,12 +54,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 29800,
-                "club": "Boulaie"
+                "finishTime": 29800
               },
               {
                 "bib": 3,
-                "name": "GAI SEJOUR SAVOIE Frédéric",
+                "name": "GAI SEJOUR LEMOINE Delvigne",
                 "category": "H",
                 "record": "00:27",
                 "status": "finished",
@@ -75,12 +73,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 35900,
-                "club": "Gai Sejour"
+                "finishTime": 35900
               },
               {
                 "bib": 4,
-                "name": "TRUCKET POULAIN Thierry",
+                "name": "TRUCKET KEVIN Cools",
                 "category": "H",
                 "record": "00:32",
                 "status": "finished",
@@ -95,12 +92,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 40612,
-                "club": "Trucket"
+                "finishTime": 40612
               },
               {
                 "bib": 5,
-                "name": "GAI SEJOUR STEVANCE Jean-Marie",
+                "name": "GAI SEJOUR FRANCOIS Chloe-Marie",
                 "category": "H",
                 "record": "00:33",
                 "status": "finished",
@@ -115,8 +111,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 41605,
-                "club": "Gai Sejour"
+                "finishTime": 41605
               }
             ],
             "status": "completed",
@@ -136,7 +131,7 @@
             "participants": [
               {
                 "bib": 6,
-                "name": "TRUCKET BISCAUT Olivier",
+                "name": "TRUCKET MARC Leclercq",
                 "category": "H",
                 "record": "00:33",
                 "status": "finished",
@@ -151,22 +146,20 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 36411,
-                "club": "Trucket"
+                "finishTime": 36411
               },
               {
                 "bib": 7,
-                "name": "brasseEmile",
+                "name": "brasseDidier",
                 "category": "H",
                 "record": "00:35,04",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 2,
-                "club": ""
+                "laneNumber": 2
               },
               {
                 "bib": 8,
-                "name": "TRUCKET DUPLICY Amélie",
+                "name": "TRUCKET MERTENS Andrea",
                 "category": "F",
                 "record": "00:38",
                 "status": "finished",
@@ -181,12 +174,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 41610,
-                "club": "Trucket"
+                "finishTime": 41610
               },
               {
                 "bib": 9,
-                "name": "BOULAIE AMEYE Christel",
+                "name": "BOULAIE SARAH Louis",
                 "category": "F",
                 "record": "00:41",
                 "status": "finished",
@@ -201,12 +193,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 45607,
-                "club": "Boulaie"
+                "finishTime": 45607
               },
               {
                 "bib": 10,
-                "name": "BATOULU VERHAEGE Marie",
+                "name": "BATOULU ZOE Marie",
                 "category": "F",
                 "record": "00:41,7",
                 "status": "finished",
@@ -221,8 +212,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 56302,
-                "club": "Batoulu"
+                "finishTime": 56302
               }
             ],
             "status": "completed",
@@ -242,17 +232,16 @@
             "participants": [
               {
                 "bib": 11,
-                "name": "RENARDS DROUARD Maureen",
+                "name": "RENARDS MARTIN Lucas",
                 "category": "F",
                 "record": "00:42,20",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 1,
-                "club": "Renards"
+                "laneNumber": 1
               },
               {
                 "bib": 12,
-                "name": "TRUCKET DETAILLE Franck",
+                "name": "TRUCKET THIRY Willems",
                 "category": "H",
                 "record": "00:43",
                 "status": "finished",
@@ -267,12 +256,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 41900,
-                "club": "Trucket"
+                "finishTime": 41900
               },
               {
                 "bib": 13,
-                "name": "TRUCKET GIBOUX Johan",
+                "name": "TRUCKET CLAES Yasmine",
                 "category": "H",
                 "record": "00:45",
                 "status": "finished",
@@ -287,12 +275,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 54814,
-                "club": "Trucket"
+                "finishTime": 54814
               },
               {
                 "bib": 14,
-                "name": "RENARDS LEGRAND Colin",
+                "name": "RENARDS FONTAINE Ines",
                 "category": "H",
                 "record": "00:45,89",
                 "status": "finished",
@@ -307,12 +294,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 24403,
-                "club": "Renards"
+                "finishTime": 24403
               },
               {
                 "bib": 15,
-                "name": "TRUCKET SIMON Anita",
+                "name": "TRUCKET DELHAYE Pierre",
                 "category": "F",
                 "record": "00:51",
                 "status": "finished",
@@ -327,8 +313,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 52402,
-                "club": "Trucket"
+                "finishTime": 52402
               }
             ],
             "status": "completed",
@@ -348,7 +333,7 @@
             "participants": [
               {
                 "bib": 16,
-                "name": "RENARDS COLAS Benoît",
+                "name": "RENARDS CAMILLE Goossens",
                 "category": "H",
                 "record": "00:51;48",
                 "status": "finished",
@@ -363,12 +348,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 44603,
-                "club": "Renards"
+                "finishTime": 44603
               },
               {
                 "bib": 17,
-                "name": "MARTHE ET MARIE DUMONT John",
+                "name": "MARTHE ET MARIE QUENTIN Michel",
                 "category": "H",
                 "record": "00:52,00",
                 "status": "finished",
@@ -383,12 +367,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 49807,
-                "club": "Marthe Et Marie"
+                "finishTime": 49807
               },
               {
                 "bib": 18,
-                "name": "RENARDS ROSIERE Gilles",
+                "name": "RENARDS WOUTERS Carlier",
                 "category": "H",
                 "record": "00:52,65",
                 "status": "finished",
@@ -403,22 +386,20 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 49403,
-                "club": "Renards"
+                "finishTime": 49403
               },
               {
                 "bib": 19,
-                "name": "TRUCKET Dury Ingrid",
+                "name": "TRUCKET Arthur Hanquet",
                 "category": "F",
                 "record": "01:11",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 4,
-                "club": "Trucket"
+                "laneNumber": 4
               },
               {
                 "bib": 20,
-                "name": "RENARDS VANHAUWERMEIREN",
+                "name": "RENARDS LEROY",
                 "category": "H",
                 "record": "N/A",
                 "status": "finished",
@@ -433,8 +414,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 33904,
-                "club": "Renards"
+                "finishTime": 33904
               }
             ],
             "status": "completed",
@@ -461,7 +441,7 @@
               {
                 "id": 21,
                 "bib": "21",
-                "name": "BOULAIE GENETELLI Gael",
+                "name": "BOULAIE BRASSEUR Delvaux",
                 "category": "H",
                 "laps": [
                   {
@@ -476,13 +456,12 @@
                 "bestLap": 26701,
                 "finishTime": 26701,
                 "lastLapStartTime": 0,
-                "laneNumber": 1,
-                "club": "Boulaie"
+                "laneNumber": 1
               },
               {
                 "id": 24,
                 "bib": "24",
-                "name": "BATOULU DE CROMBRUGGHE Vincent",
+                "name": "BATOULU DE MARGOT Hubert",
                 "category": "H",
                 "laps": [],
                 "status": "running",
@@ -491,13 +470,12 @@
                 "bestLap": null,
                 "finishTime": null,
                 "lastLapStartTime": 0,
-                "laneNumber": 4,
-                "club": "Batoulu"
+                "laneNumber": 4
               },
               {
                 "id": 25,
                 "bib": "25",
-                "name": "BATOULU DELVENNE Samuel",
+                "name": "BATOULU CLARA Hugo",
                 "category": "H",
                 "laps": [],
                 "status": "running",
@@ -506,13 +484,12 @@
                 "bestLap": null,
                 "finishTime": null,
                 "lastLapStartTime": 0,
-                "laneNumber": 5,
-                "club": "Batoulu"
+                "laneNumber": 5
               },
               {
                 "id": 36,
                 "bib": "36",
-                "name": "GAI SEJOUR WATHELET Jean-Philippe",
+                "name": "GAI SEJOUR DOMINIQUE Chloe-Alex",
                 "category": "H",
                 "laps": [],
                 "status": "running",
@@ -521,13 +498,12 @@
                 "bestLap": null,
                 "finishTime": null,
                 "lastLapStartTime": 0,
-                "laneNumber": 6,
-                "club": "Gai Sejour"
+                "laneNumber": 6
               },
               {
                 "id": 59,
                 "bib": "59",
-                "name": "TRUCKET DEMONTPELLIER Paul",
+                "name": "TRUCKET DEBRUYNE Manon",
                 "category": "H",
                 "laps": [
                   {
@@ -542,13 +518,12 @@
                 "bestLap": 32401,
                 "finishTime": 32401,
                 "lastLapStartTime": 0,
-                "laneNumber": 2,
-                "club": "Trucket"
+                "laneNumber": 2
               },
               {
                 "id": 61,
                 "bib": "61",
-                "name": "TRUCKET CORDY Stéphanie",
+                "name": "TRUCKET HARDY Renard",
                 "category": "F",
                 "laps": [
                   {
@@ -563,8 +538,7 @@
                 "bestLap": 40803,
                 "finishTime": 40803,
                 "lastLapStartTime": 0,
-                "laneNumber": 3,
-                "club": "Trucket"
+                "laneNumber": 3
               }
             ],
             "status": "completed",
@@ -585,7 +559,7 @@
             "participants": [
               {
                 "bib": 26,
-                "name": "MARTHE ET MARIE SEGERS Bruno",
+                "name": "MARTHE ET MARIE JULIEN Laura",
                 "category": "H",
                 "record": "00:52,40",
                 "status": "finished",
@@ -600,12 +574,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 39403,
-                "club": "Marthe Et Marie"
+                "finishTime": 39403
               },
               {
                 "bib": 27,
-                "name": "TRUCKET LEJEUNE Steve",
+                "name": "TRUCKET LAURENT Petit",
                 "category": "H",
                 "record": "00:54,02",
                 "status": "finished",
@@ -620,12 +593,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 59212,
-                "club": "Trucket"
+                "finishTime": 59212
               },
               {
                 "bib": 28,
-                "name": "BATOULU LOJKA Florence",
+                "name": "BATOULU LORENT Jade",
                 "category": "F",
                 "record": "01:01,0",
                 "status": "finished",
@@ -640,12 +612,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 48901,
-                "club": "Batoulu"
+                "finishTime": 48901
               },
               {
                 "bib": 29,
-                "name": "BATOULU VERHAEGE Marie",
+                "name": "BATOULU ZOE Marie",
                 "category": "F",
                 "record": "01:03,0",
                 "status": "finished",
@@ -660,12 +631,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 58704,
-                "club": "Batoulu"
+                "finishTime": 58704
               },
               {
                 "bib": 30,
-                "name": "BATOULU RENARD Sara",
+                "name": "BATOULU BASTIN Jules",
                 "category": "F",
                 "record": "01:04,0",
                 "status": "finished",
@@ -680,8 +650,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 67006,
-                "club": "Batoulu"
+                "finishTime": 67006
               }
             ],
             "status": "completed",
@@ -700,7 +669,7 @@
               {
                 "id": 105,
                 "bib": "105",
-                "name": "Gai séjour Belaid 25 dos",
+                "name": "Gai séjour Piron 25 dos",
                 "category": "",
                 "laps": [
                   {
@@ -715,13 +684,12 @@
                 "bestLap": 35010,
                 "finishTime": 35010,
                 "lastLapStartTime": 0,
-                "laneNumber": null,
-                "club": "Gai Sejour"
+                "laneNumber": null
               },
               {
                 "id": 106,
                 "bib": "107",
-                "name": "Gai séjour David Ripert 25 dos",
+                "name": "Gai séjour Olivier Sam 25 dos",
                 "category": "",
                 "laps": [
                   {
@@ -736,13 +704,12 @@
                 "bestLap": 31501,
                 "finishTime": 31501,
                 "lastLapStartTime": 0,
-                "laneNumber": null,
-                "club": "Gai Sejour"
+                "laneNumber": null
               },
               {
                 "id": 108,
                 "bib": "114",
-                "name": "Gai séjour Jean Marie 25 dos",
+                "name": "Gai séjour Chloe Marie 25 dos",
                 "category": "",
                 "laps": [
                   {
@@ -757,8 +724,7 @@
                 "bestLap": 62914,
                 "finishTime": 62914,
                 "lastLapStartTime": 0,
-                "laneNumber": null,
-                "club": "Gai Sejour"
+                "laneNumber": null
               }
             ],
             "status": "completed",
@@ -787,7 +753,7 @@
             "participants": [
               {
                 "bib": 31,
-                "name": "MARTHE ET MARIE NIVARLET Ludovic",
+                "name": "MARTHE ET MARIE THEO Remy",
                 "category": "H",
                 "record": "00:21,0",
                 "status": "finished",
@@ -802,12 +768,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 25003,
-                "club": "Marthe Et Marie"
+                "finishTime": 25003
               },
               {
                 "bib": 32,
-                "name": "MARTHE ET MARIE REMY Bryan",
+                "name": "MARTHE ET MARIE LECOMTE Michaux",
                 "category": "H",
                 "record": "00:21,0",
                 "status": "finished",
@@ -822,12 +787,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 25203,
-                "club": "Marthe Et Marie"
+                "finishTime": 25203
               },
               {
                 "bib": 33,
-                "name": "MARTHE ET MARIE HANS Yohan",
+                "name": "MARTHE ET MARIE VANDAMME Lucie",
                 "category": "H",
                 "record": "00:22,0",
                 "status": "finished",
@@ -842,12 +806,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 19613,
-                "club": "Marthe Et Marie"
+                "finishTime": 19613
               },
               {
                 "bib": 34,
-                "name": "La Cordée Sports Gregoire Christophe",
+                "name": "La Cordée Sports Jadoul Mathilde",
                 "category": "H",
                 "record": "00:23,0",
                 "status": "finished",
@@ -862,12 +825,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 24407,
-                "club": "La Cordee Sports"
+                "finishTime": 24407
               },
               {
                 "bib": 35,
-                "name": "MARTHE ET MARIE MAGERA Benjamin",
+                "name": "MARTHE ET MARIE LECOCQ Marchal",
                 "category": "H",
                 "record": "00:23,0",
                 "status": "finished",
@@ -882,8 +844,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 24603,
-                "club": "Marthe Et Marie"
+                "finishTime": 24603
               }
             ],
             "status": "completed",
@@ -903,7 +864,7 @@
             "participants": [
               {
                 "bib": 36,
-                "name": "GAI SEJOUR WATHELET Jean-Philippe",
+                "name": "GAI SEJOUR DOMINIQUE Chloe-Alex",
                 "category": "H",
                 "record": "00:25",
                 "status": "finished",
@@ -918,12 +879,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 28003,
-                "club": "Gai Sejour"
+                "finishTime": 28003
               },
               {
                 "bib": 37,
-                "name": "GAI SEJOUR RIPERT David",
+                "name": "GAI SEJOUR SAM Olivier",
                 "category": "H",
                 "record": "00:26",
                 "status": "finished",
@@ -938,22 +898,20 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 37504,
-                "club": "Gai Sejour"
+                "finishTime": 37504
               },
               {
                 "bib": 38,
-                "name": "GAI SEJOUR SALAHUN Olivier",
+                "name": "GAI SEJOUR PIRARD Leclercq",
                 "category": "H",
                 "record": "00:27",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 3,
-                "club": "Gai Sejour"
+                "laneNumber": 3
               },
               {
                 "bib": 39,
-                "name": "GAI SEJOUR LEBRUN Marc",
+                "name": "GAI SEJOUR ALINE Steve",
                 "category": "H",
                 "record": "00:28",
                 "status": "finished",
@@ -968,12 +926,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 31301,
-                "club": "Gai Sejour"
+                "finishTime": 31301
               },
               {
                 "bib": 40,
-                "name": "GAI SEJOUR KAISSER Eric",
+                "name": "GAI SEJOUR CELIA Rousseau",
                 "category": "H",
                 "record": "00:30",
                 "status": "finished",
@@ -988,8 +945,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 39612,
-                "club": "Gai Sejour"
+                "finishTime": 39612
               }
             ],
             "status": "completed",
@@ -1009,7 +965,7 @@
             "participants": [
               {
                 "bib": 41,
-                "name": "TRUCKET GIBOUX Johaan",
+                "name": "TRUCKET CLAES Antoine",
                 "category": "H",
                 "record": "00:34,02",
                 "status": "finished",
@@ -1024,12 +980,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 33212,
-                "club": "Trucket"
+                "finishTime": 33212
               },
               {
                 "bib": 42,
-                "name": "RENARDS COLAS Benoît",
+                "name": "RENARDS CAMILLE Goossens",
                 "category": "H",
                 "record": "00:46,41",
                 "status": "finished",
@@ -1044,12 +999,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 43904,
-                "club": "Renards"
+                "finishTime": 43904
               },
               {
                 "bib": 43,
-                "name": "MARTHE ET MARIE SEGERS Bruno",
+                "name": "MARTHE ET MARIE JULIEN Laura",
                 "category": "H",
                 "record": "00:47,0",
                 "status": "finished",
@@ -1064,12 +1018,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 42601,
-                "club": "Marthe Et Marie"
+                "finishTime": 42601
               },
               {
                 "bib": 44,
-                "name": "La Cordée Sports Manil Julien",
+                "name": "La Cordée Sports Pierret Eva",
                 "category": "H",
                 "record": "00:49,0",
                 "status": "finished",
@@ -1084,18 +1037,16 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 42903,
-                "club": "La Cordee Sports"
+                "finishTime": 42903
               },
               {
                 "bib": 45,
-                "name": "La Cordée Sports Bourotte Camille",
+                "name": "La Cordée Sports Alice Gobert",
                 "category": "F",
                 "record": "00:51,0",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 5,
-                "club": "La Cordee Sports"
+                "laneNumber": 5
               }
             ],
             "status": "completed",
@@ -1115,7 +1066,7 @@
             "participants": [
               {
                 "bib": 46,
-                "name": "La Cordée Sports Debuisson Michael",
+                "name": "La Cordée Sports Leblanc Verhoeven",
                 "category": "H",
                 "record": "00:52,0",
                 "status": "finished",
@@ -1130,12 +1081,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 41404,
-                "club": "La Cordee Sports"
+                "finishTime": 41404
               },
               {
                 "bib": 47,
-                "name": "La Cordée Sports Sauvage Dominique",
+                "name": "La Cordée Sports Smets Claude",
                 "category": "H",
                 "record": "01:19,00",
                 "status": "finished",
@@ -1150,22 +1100,20 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 76900,
-                "club": "La Cordee Sports"
+                "finishTime": 76900
               },
               {
                 "bib": 48,
-                "name": "La Cordée Sports Sonnenberg Camille",
+                "name": "La Cordée Sports Cedric Gobert",
                 "category": "F",
                 "record": "01:40,00",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 3,
-                "club": "La Cordee Sports"
+                "laneNumber": 3
               },
               {
                 "bib": 49,
-                "name": "GAI SEJOUR DELEU Kevin",
+                "name": "GAI SEJOUR DEPREZ Dumont",
                 "category": "H",
                 "record": "N/A",
                 "status": "finished",
@@ -1180,12 +1128,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 43003,
-                "club": "Gai Sejour"
+                "finishTime": 43003
               },
               {
                 "bib": 50,
-                "name": "GAI SEJOUR BERTHELON Didier",
+                "name": "GAI SEJOUR PAULINE Gosset",
                 "category": "H",
                 "record": "N/A",
                 "status": "finished",
@@ -1200,8 +1147,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 36300,
-                "club": "Gai Sejour"
+                "finishTime": 36300
               }
             ],
             "status": "completed",
@@ -1221,7 +1167,7 @@
             "participants": [
               {
                 "bib": 51,
-                "name": "BOULAIE VERVEKKEN Jonathan",
+                "name": "BOULAIE LOU Ledent",
                 "category": "H",
                 "record": "N/A",
                 "status": "finished",
@@ -1236,12 +1182,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 20313,
-                "club": "Boulaie"
+                "finishTime": 20313
               },
               {
                 "bib": 52,
-                "name": "BOULAIE Rogge Maxime",
+                "name": "BOULAIE Noa Morgan",
                 "category": "H",
                 "record": "N/A",
                 "status": "finished",
@@ -1256,8 +1201,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 20802,
-                "club": "Boulaie"
+                "finishTime": 20802
               }
             ],
             "status": "completed",
@@ -1285,7 +1229,7 @@
             "participants": [
               {
                 "bib": 53,
-                "name": "GAI SEJOUR GIELDZYK Paul",
+                "name": "GAI SEJOUR FABRICE Manon",
                 "category": "H",
                 "record": "00:50",
                 "status": "finished",
@@ -1300,12 +1244,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 59800,
-                "club": "Gai Sejour"
+                "finishTime": 59800
               },
               {
                 "bib": 54,
-                "name": "BOULAIE ROBIN Christophe",
+                "name": "BOULAIE NAVEZ Mathilde",
                 "category": "H",
                 "record": "00:58",
                 "status": "finished",
@@ -1320,12 +1263,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 63708,
-                "club": "Boulaie"
+                "finishTime": 63708
               },
               {
                 "bib": 55,
-                "name": "MARTHE ET MARIE HANS Yohan",
+                "name": "MARTHE ET MARIE VANDAMME Lucie",
                 "category": "H",
                 "record": "01:02,0",
                 "status": "finished",
@@ -1340,12 +1282,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 53303,
-                "club": "Marthe Et Marie"
+                "finishTime": 53303
               },
               {
                 "bib": 56,
-                "name": "MARTHE ET MARIE NIVARLET Ludovic",
+                "name": "MARTHE ET MARIE THEO Remy",
                 "category": "H",
                 "record": "01:04,0",
                 "status": "finished",
@@ -1360,12 +1301,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 112516,
-                "club": "Marthe Et Marie"
+                "finishTime": 112516
               },
               {
                 "bib": 57,
-                "name": "MARTHE ET MARIE REMY Bryan",
+                "name": "MARTHE ET MARIE LECOMTE Michaux",
                 "category": "H",
                 "record": "01:06,50",
                 "status": "finished",
@@ -1380,8 +1320,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 60503,
-                "club": "Marthe Et Marie"
+                "finishTime": 60503
               }
             ],
             "status": "completed",
@@ -1401,7 +1340,7 @@
             "participants": [
               {
                 "bib": 58,
-                "name": "GAI SEJOUR SAVOIE Frédéric",
+                "name": "GAI SEJOUR LEMOINE Delvigne",
                 "category": "H",
                 "record": "01:07",
                 "status": "finished",
@@ -1416,12 +1355,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 80407,
-                "club": "Gai Sejour"
+                "finishTime": 80407
               },
               {
                 "bib": 59,
-                "name": "TRUCKET DEMONTPELLIER Paul",
+                "name": "TRUCKET DEBRUYNE Manon",
                 "category": "H",
                 "record": "01:13",
                 "status": "finished",
@@ -1436,12 +1374,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 68211,
-                "club": "Trucket"
+                "finishTime": 68211
               },
               {
                 "bib": 60,
-                "name": "BATOULU LOJKA Florence",
+                "name": "BATOULU LORENT Jade",
                 "category": "F",
                 "record": "01:27,0",
                 "status": "finished",
@@ -1456,12 +1393,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 89903,
-                "club": "Batoulu"
+                "finishTime": 89903
               },
               {
                 "bib": 61,
-                "name": "TRUCKET CORDY Stéphanie",
+                "name": "TRUCKET HARDY Renard",
                 "category": "F",
                 "record": "01:28",
                 "status": "finished",
@@ -1476,12 +1412,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 74812,
-                "club": "Trucket"
+                "finishTime": 74812
               },
               {
                 "bib": 62,
-                "name": "BOULAIE AMEYE Christel",
+                "name": "BOULAIE SARAH Louis",
                 "category": "F",
                 "record": "01:32",
                 "status": "finished",
@@ -1496,8 +1431,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 108014,
-                "club": "Boulaie"
+                "finishTime": 108014
               }
             ],
             "status": "completed",
@@ -1517,7 +1451,7 @@
             "participants": [
               {
                 "bib": 63,
-                "name": "TRUCKET BISCAUT Olivier",
+                "name": "TRUCKET MARC Leclercq",
                 "category": "H",
                 "record": "01:33",
                 "status": "finished",
@@ -1532,12 +1466,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 87104,
-                "club": "Trucket"
+                "finishTime": 87104
               },
               {
                 "bib": 64,
-                "name": "TRUCKET DUPLICY Amelie",
+                "name": "TRUCKET MERTENS Andrea",
                 "category": "F",
                 "record": "01:34",
                 "status": "finished",
@@ -1552,12 +1485,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 94804,
-                "club": "Trucket"
+                "finishTime": 94804
               },
               {
                 "bib": 65,
-                "name": "BATOULU RENARD Sara",
+                "name": "BATOULU BASTIN Jules",
                 "category": "F",
                 "record": "01:36,0",
                 "status": "finished",
@@ -1572,12 +1504,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 95613,
-                "club": "Batoulu"
+                "finishTime": 95613
               },
               {
                 "bib": 66,
-                "name": "MARTHE ET MARIE DUMONT John",
+                "name": "MARTHE ET MARIE QUENTIN Michel",
                 "category": "H",
                 "record": "01:39,50",
                 "status": "finished",
@@ -1592,18 +1523,16 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 113305,
-                "club": "Marthe Et Marie"
+                "finishTime": 113305
               },
               {
                 "bib": 67,
-                "name": "BATOULU DELVENNE SAMUEL",
+                "name": "BATOULU CLARA HUGO",
                 "category": "H",
                 "record": "01:42,0",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 5,
-                "club": "Batoulu"
+                "laneNumber": 5
               }
             ],
             "status": "completed",
@@ -1623,7 +1552,7 @@
             "participants": [
               {
                 "bib": 68,
-                "name": "RENARDS ROSIERE Gilles",
+                "name": "RENARDS WOUTERS Carlier",
                 "category": "H",
                 "record": "01:47,73",
                 "status": "finished",
@@ -1638,22 +1567,20 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 109103,
-                "club": "Renards"
+                "finishTime": 109103
               },
               {
                 "bib": 69,
-                "name": "BATOULU DE CROMBRUGGHE",
+                "name": "BATOULU DE MARGOT",
                 "category": "H",
                 "record": "01:48,0",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 2,
-                "club": "Batoulu"
+                "laneNumber": 2
               },
               {
                 "bib": 70,
-                "name": "CORDEE POSTEAU Billy",
+                "name": "CORDEE JORDAN Nathan",
                 "category": "H",
                 "record": "01:50",
                 "status": "finished",
@@ -1668,12 +1595,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 105701,
-                "club": "La Cordee Sports"
+                "finishTime": 105701
               },
               {
                 "bib": 71,
-                "name": "TRUCKET LEJEUNE Steve",
+                "name": "TRUCKET LAURENT Petit",
                 "category": "H",
                 "record": "01:52",
                 "status": "finished",
@@ -1688,12 +1614,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 110300,
-                "club": "Trucket"
+                "finishTime": 110300
               },
               {
                 "bib": 72,
-                "name": "TRUCKET GIBOUX Johaan",
+                "name": "TRUCKET CLAES Antoine",
                 "category": "H",
                 "record": "01:53",
                 "status": "finished",
@@ -1708,8 +1633,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 115315,
-                "club": "Trucket"
+                "finishTime": 115315
               }
             ],
             "status": "completed",
@@ -1729,7 +1653,7 @@
             "participants": [
               {
                 "bib": 73,
-                "name": "TRUCKET DETAILLE Franck",
+                "name": "TRUCKET THIRY Willems",
                 "category": "H",
                 "record": "02:02",
                 "status": "finished",
@@ -1744,12 +1668,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 99912,
-                "club": "Trucket"
+                "finishTime": 99912
               },
               {
                 "bib": 74,
-                "name": "TRUCKET SIMON Smita",
+                "name": "TRUCKET DELHAYE Maxime-Denis",
                 "category": "F",
                 "record": "02:11",
                 "status": "finished",
@@ -1764,12 +1687,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 115808,
-                "club": "Trucket"
+                "finishTime": 115808
               },
               {
                 "bib": 75,
-                "name": "CORDEE DORMAL Guillaume",
+                "name": "CORDEE ANAIS-YASMINE Elodie-Dominique",
                 "category": "H",
                 "record": "03:00",
                 "status": "finished",
@@ -1784,8 +1706,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 122507,
-                "club": "La Cordee Sports"
+                "finishTime": 122507
               }
             ],
             "status": "completed",
@@ -1813,7 +1734,7 @@
             "participants": [
               {
                 "bib": 76,
-                "name": "GAI SEJOUR GRANDREMY Christophe",
+                "name": "GAI SEJOUR ROBIN-CLAES Mathilde",
                 "category": "H",
                 "record": "00:50,6",
                 "status": "finished",
@@ -1828,12 +1749,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 51703,
-                "club": "Gai Sejour"
+                "finishTime": 51703
               },
               {
                 "bib": 77,
-                "name": "BOULAIE GENETELLI Gael",
+                "name": "BOULAIE BRASSEUR Delvaux",
                 "category": "H",
                 "record": "01:00",
                 "status": "finished",
@@ -1848,12 +1768,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 67201,
-                "club": "Boulaie"
+                "finishTime": 67201
               },
               {
                 "bib": 78,
-                "name": "MARTHE ET MARIE MAGERA Benjamin",
+                "name": "MARTHE ET MARIE LECOCQ Marchal",
                 "category": "H",
                 "record": "01:22,0",
                 "status": "finished",
@@ -1868,8 +1787,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 81309,
-                "club": "Marthe Et Marie"
+                "finishTime": 81309
               }
             ],
             "status": "completed",
@@ -1897,7 +1815,7 @@
             "participants": [
               {
                 "bib": 79,
-                "name": "GAI SEJOUR GRANDREMY Christophe",
+                "name": "GAI SEJOUR ROBIN-CLAES Mathilde",
                 "category": "H",
                 "record": "00:47,2",
                 "status": "finished",
@@ -1912,12 +1830,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 45805,
-                "club": "Gai Sejour"
+                "finishTime": 45805
               },
               {
                 "bib": 80,
-                "name": "La Cordée Sports GREGOIRE Christophe",
+                "name": "La Cordée Sports JADOUL Mathilde",
                 "category": "H",
                 "record": "00:50,0",
                 "status": "finished",
@@ -1932,12 +1849,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 46103,
-                "club": "La Cordee Sports"
+                "finishTime": 46103
               },
               {
                 "bib": 81,
-                "name": "RENARDS LEGRAND Colin",
+                "name": "RENARDS FONTAINE Ines",
                 "category": "H",
                 "record": "01:12,52",
                 "status": "finished",
@@ -1952,12 +1868,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 52406,
-                "club": "Renards"
+                "finishTime": 52406
               },
               {
                 "bib": 82,
-                "name": "RENARDS VANHAUWERMEIREN Emile",
+                "name": "RENARDS LEROY Didier",
                 "category": "H",
                 "record": "01:21,47",
                 "status": "finished",
@@ -1972,18 +1887,16 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 81114,
-                "club": "Renards"
+                "finishTime": 81114
               },
               {
                 "bib": 83,
-                "name": "RENARDS DROUARD Maureen",
+                "name": "RENARDS MARTIN Lucas",
                 "category": "F",
                 "record": "01:25,57",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 5,
-                "club": "Renards"
+                "laneNumber": 5
               }
             ],
             "status": "completed",
@@ -2003,7 +1916,7 @@
             "participants": [
               {
                 "bib": 84,
-                "name": "CORDEE RENIER Brice",
+                "name": "CORDEE PAULINE-GASPARD Sacha-Zoe",
                 "category": "H",
                 "record": "01:30.0",
                 "status": "finished",
@@ -2018,22 +1931,20 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 90003,
-                "club": "La Cordee Sports"
+                "finishTime": 90003
               },
               {
                 "bib": 85,
-                "name": "La Cordée Sports BOUROTTE Camille",
+                "name": "La Cordée Sports ALICE Gobert",
                 "category": "F",
                 "record": "01:40,00",
                 "status": "running",
                 "laps": [],
-                "laneNumber": 2,
-                "club": "La Cordee Sports"
+                "laneNumber": 2
               },
               {
                 "bib": 86,
-                "name": "La Cordée Sports MANIL Julien",
+                "name": "La Cordée Sports PIERRET Eva",
                 "category": "H",
                 "record": "01:44,0",
                 "status": "finished",
@@ -2048,12 +1959,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 110803,
-                "club": "La Cordee Sports"
+                "finishTime": 110803
               },
               {
                 "bib": 87,
-                "name": "La Cordée Sports DEBUISSON Michael",
+                "name": "La Cordée Sports LEBLANC Verhoeven",
                 "category": "H",
                 "record": "01:53,0",
                 "status": "finished",
@@ -2068,12 +1978,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 105104,
-                "club": "La Cordee Sports"
+                "finishTime": 105104
               },
               {
                 "bib": 88,
-                "name": "La Cordée Sports SAUVAGE Dominique",
+                "name": "La Cordée Sports SMETS Claude",
                 "category": "H",
                 "record": "02:54,00",
                 "status": "finished",
@@ -2088,8 +1997,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 164203,
-                "club": "La Cordee Sports"
+                "finishTime": 164203
               }
             ],
             "status": "completed",
@@ -2109,7 +2017,7 @@
             "participants": [
               {
                 "bib": 89,
-                "name": "BOULAIE VERVEKKEN Jonathan",
+                "name": "BOULAIE LOU Ledent",
                 "category": "H",
                 "record": "N/A",
                 "status": "finished",
@@ -2124,12 +2032,11 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 43012,
-                "club": "Boulaie"
+                "finishTime": 43012
               },
               {
                 "bib": 90,
-                "name": "BOULAIE Rogge Maxime",
+                "name": "BOULAIE Noa Morgan",
                 "category": "H",
                 "record": "N/A",
                 "status": "finished",
@@ -2144,8 +2051,7 @@
                 "totalTime": null,
                 "totalDistance": null,
                 "bestLap": null,
-                "finishTime": 53800,
-                "club": "Boulaie"
+                "finishTime": 53800
               }
             ],
             "status": "completed",
@@ -2173,53 +2079,48 @@
             "participants": [
               {
                 "bib": 91,
-                "name": "La Cordée Sports DETIENNE Natalie",
+                "name": "La Cordée Sports FONTAINE-FIEVEZ Steve-Schmitz",
                 "category": "F",
                 "record": "00:56,00",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 1,
-                "club": "La Cordee Sports"
+                "laneNumber": 1
               },
               {
                 "bib": 92,
-                "name": "BATOULU HEMPTINNE Elanor",
+                "name": "BATOULU HENRY-JADE Nora-Nathan",
                 "category": "F",
                 "record": "02:00,0",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 2,
-                "club": "Batoulu"
+                "laneNumber": 2
               },
               {
                 "bib": 93,
-                "name": "GAI SEJOUR CHAUVAUX Florian",
+                "name": "GAI SEJOUR CHARLIE Lejeune",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 3,
-                "club": "Gai Sejour"
+                "laneNumber": 3
               },
               {
                 "bib": 94,
-                "name": "GAI SEJOUR LECOMTE Valentin",
+                "name": "GAI SEJOUR ETIENNE De Smet",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 4,
-                "club": "Gai Sejour"
+                "laneNumber": 4
               },
               {
                 "bib": 95,
-                "name": "GAI SEJOUR ARDINET Ludovic",
+                "name": "GAI SEJOUR VICTOR-ERIC Remy",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 5,
-                "club": "Gai Sejour"
+                "laneNumber": 5
               }
             ],
             "status": "running",
@@ -2235,53 +2136,48 @@
             "participants": [
               {
                 "bib": 96,
-                "name": "GAI SEJOUR HERMANN Marc Hermann",
+                "name": "GAI SEJOUR ALINE-MARTIN Steve Aline-Martin",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 1,
-                "club": "Gai Sejour"
+                "laneNumber": 1
               },
               {
                 "bib": 97,
-                "name": "GAI SEJOUR DESROZIERS Arnaud",
+                "name": "GAI SEJOUR LEMAIRE-NOA Smets-Robin",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 2,
-                "club": "Gai Sejour"
+                "laneNumber": 2
               },
               {
                 "bib": 98,
-                "name": "GAI SEJOUR FOURNIER Barry",
+                "name": "GAI SEJOUR FONTAINE-FIEVEZ Manon-Fabrice",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 3,
-                "club": "Gai Sejour"
+                "laneNumber": 3
               },
               {
                 "bib": 99,
-                "name": "GAI SEJOUR GIRARDOT Julien",
+                "name": "GAI SEJOUR JADOUL-LECLERCQ Eva",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 4,
-                "club": "Gai Sejour"
+                "laneNumber": 4
               },
               {
                 "bib": 100,
-                "name": "RENARDS HECHT Alexis",
+                "name": "RENARDS LEDENT-MOREAU Rousseau-Charlier",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 5,
-                "club": "Renards"
+                "laneNumber": 5
               }
             ],
             "status": "pending",
@@ -2296,7 +2192,7 @@
               {
                 "id": 101,
                 "bib": "101",
-                "name": "Boulaie Canivet Frédéric",
+                "name": "Boulaie Noa-Pascal Delvigne",
                 "category": "H",
                 "laps": [],
                 "status": "ready",
@@ -2305,13 +2201,12 @@
                 "bestLap": null,
                 "finishTime": null,
                 "lastLapStartTime": 0,
-                "laneNumber": null,
-                "club": "Boulaie"
+                "laneNumber": null
               },
               {
                 "id": 102,
                 "bib": "102",
-                "name": "Boulaie Leroy Christophe",
+                "name": "Boulaie Lou-Gauthier Mathilde",
                 "category": "H",
                 "laps": [],
                 "status": "ready",
@@ -2320,13 +2215,12 @@
                 "bestLap": null,
                 "finishTime": null,
                 "lastLapStartTime": 0,
-                "laneNumber": null,
-                "club": "Boulaie"
+                "laneNumber": null
               },
               {
                 "id": 103,
                 "bib": "103",
-                "name": "Boulaie Chtourou Anis",
+                "name": "Boulaie Etienne-Leblanc Theo-Mila",
                 "category": "H",
                 "laps": [],
                 "status": "ready",
@@ -2335,8 +2229,7 @@
                 "bestLap": null,
                 "finishTime": null,
                 "lastLapStartTime": 0,
-                "laneNumber": null,
-                "club": "Boulaie"
+                "laneNumber": null
               }
             ],
             "status": "pending",
@@ -2365,33 +2258,30 @@
             "participants": [
               {
                 "bib": 101,
-                "name": "Boulaie Canivet Frédéric",
+                "name": "Boulaie Noa-Pascal Delvigne",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 1,
-                "club": "Boulaie"
+                "laneNumber": 1
               },
               {
                 "bib": 102,
-                "name": "Boulaie Leroy Christophe",
+                "name": "Boulaie Lou-Gauthier Mathilde",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 2,
-                "club": "Boulaie"
+                "laneNumber": 2
               },
               {
                 "bib": 103,
-                "name": "Boulaie Chtourou Anis",
+                "name": "Boulaie Etienne-Leblanc Theo-Mila",
                 "category": "H",
                 "record": "N/A",
                 "status": "ready",
                 "laps": [],
-                "laneNumber": 3,
-                "club": "Boulaie"
+                "laneNumber": 3
               }
             ],
             "status": "pending",
@@ -2403,769 +2293,666 @@
     "participants": [
       {
         "id": 1,
-        "name": "GAI SEJOUR GIELDZYK Paul",
+        "name": "GAI SEJOUR FABRICE Manon",
         "bib": 1,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 2,
-        "name": "BOULAIE ROBIN Christophe",
+        "name": "BOULAIE NAVEZ Mathilde",
         "bib": 2,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 3,
-        "name": "GAI SEJOUR SAVOIE Frédéric",
+        "name": "GAI SEJOUR LEMOINE Delvigne",
         "bib": 3,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 4,
-        "name": "TRUCKET POULAIN Thierry",
+        "name": "TRUCKET KEVIN Cools",
         "bib": 4,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 5,
-        "name": "GAI SEJOUR STEVANCE Jean-Marie",
+        "name": "GAI SEJOUR FRANCOIS Chloe-Marie",
         "bib": 5,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 6,
-        "name": "TRUCKET BISCAUT Olivier",
+        "name": "TRUCKET MARC Leclercq",
         "bib": 6,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 7,
-        "name": "brasseEmile",
+        "name": "brasseDidier",
         "bib": 7,
-        "category": "H",
-        "club": ""
+        "category": "H"
       },
       {
         "id": 8,
-        "name": "TRUCKET DUPLICY Amélie",
+        "name": "TRUCKET MERTENS Andrea",
         "bib": 8,
-        "category": "F",
-        "club": "Trucket"
+        "category": "F"
       },
       {
         "id": 9,
-        "name": "BOULAIE AMEYE Christel",
+        "name": "BOULAIE SARAH Louis",
         "bib": 9,
-        "category": "F",
-        "club": "Boulaie"
+        "category": "F"
       },
       {
         "id": 10,
-        "name": "BATOULU VERHAEGE Marie",
+        "name": "BATOULU ZOE Marie",
         "bib": 10,
-        "category": "F",
-        "club": "Batoulu"
+        "category": "F"
       },
       {
         "id": 11,
-        "name": "RENARDS DROUARD Maureen",
+        "name": "RENARDS MARTIN Lucas",
         "bib": 11,
-        "category": "F",
-        "club": "Renards"
+        "category": "F"
       },
       {
         "id": 12,
-        "name": "TRUCKET DETAILLE Franck",
+        "name": "TRUCKET THIRY Willems",
         "bib": 12,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 13,
-        "name": "TRUCKET GIBOUX Johan",
+        "name": "TRUCKET CLAES Yasmine",
         "bib": 13,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 14,
-        "name": "RENARDS LEGRAND Colin",
+        "name": "RENARDS FONTAINE Ines",
         "bib": 14,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 15,
-        "name": "TRUCKET SIMON Anita",
+        "name": "TRUCKET DELHAYE Pierre",
         "bib": 15,
-        "category": "F",
-        "club": "Trucket"
+        "category": "F"
       },
       {
         "id": 16,
-        "name": "RENARDS COLAS Benoît",
+        "name": "RENARDS CAMILLE Goossens",
         "bib": 16,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 17,
-        "name": "MARTHE ET MARIE DUMONT John",
+        "name": "MARTHE ET MARIE QUENTIN Michel",
         "bib": 17,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 18,
-        "name": "RENARDS ROSIERE Gilles",
+        "name": "RENARDS WOUTERS Carlier",
         "bib": 18,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 19,
-        "name": "TRUCKET Dury Ingrid",
+        "name": "TRUCKET Arthur Hanquet",
         "bib": 19,
-        "category": "F",
-        "club": "Trucket"
+        "category": "F"
       },
       {
         "id": 20,
-        "name": "RENARDS VANHAUWERMEIREN",
+        "name": "RENARDS LEROY",
         "bib": 20,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 21,
-        "name": "BOULAIE GENETELLI Gael",
+        "name": "BOULAIE BRASSEUR Delvaux",
         "bib": 21,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 22,
-        "name": "TRUCKET DEMONTPELLIER Paul",
+        "name": "TRUCKET DEBRUYNE Manon",
         "bib": 22,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 23,
-        "name": "TRUCKET CORDY Stéphanie",
+        "name": "TRUCKET HARDY Renard",
         "bib": 23,
-        "category": "F",
-        "club": "Trucket"
+        "category": "F"
       },
       {
         "id": 24,
-        "name": "BATOULU DE CROMBRUGGHE Vincent",
+        "name": "BATOULU DE MARGOT Hubert",
         "bib": 24,
-        "category": "H",
-        "club": "Batoulu"
+        "category": "H"
       },
       {
         "id": 25,
-        "name": "BATOULU DELVENNE Samuel",
+        "name": "BATOULU CLARA Hugo",
         "bib": 25,
-        "category": "H",
-        "club": "Batoulu"
+        "category": "H"
       },
       {
         "id": 26,
-        "name": "MARTHE ET MARIE SEGERS Bruno",
+        "name": "MARTHE ET MARIE JULIEN Laura",
         "bib": 26,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 27,
-        "name": "TRUCKET LEJEUNE Steve",
+        "name": "TRUCKET LAURENT Petit",
         "bib": 27,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 28,
-        "name": "BATOULU LOJKA Florence",
+        "name": "BATOULU LORENT Jade",
         "bib": 28,
-        "category": "F",
-        "club": "Batoulu"
+        "category": "F"
       },
       {
         "id": 29,
-        "name": "BATOULU VERHAEGE Marie",
+        "name": "BATOULU ZOE Marie",
         "bib": 29,
-        "category": "F",
-        "club": "Batoulu"
+        "category": "F"
       },
       {
         "id": 30,
-        "name": "BATOULU RENARD Sara",
+        "name": "BATOULU BASTIN Jules",
         "bib": 30,
-        "category": "F",
-        "club": "Batoulu"
+        "category": "F"
       },
       {
         "id": 31,
-        "name": "MARTHE ET MARIE NIVARLET Ludovic",
+        "name": "MARTHE ET MARIE THEO Remy",
         "bib": 31,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 32,
-        "name": "MARTHE ET MARIE REMY Bryan",
+        "name": "MARTHE ET MARIE LECOMTE Michaux",
         "bib": 32,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 33,
-        "name": "MARTHE ET MARIE HANS Yohan",
+        "name": "MARTHE ET MARIE VANDAMME Lucie",
         "bib": 33,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 34,
-        "name": "La Cordée Sports Gregoire Christophe",
+        "name": "La Cordée Sports Jadoul Mathilde",
         "bib": 34,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 35,
-        "name": "MARTHE ET MARIE MAGERA Benjamin",
+        "name": "MARTHE ET MARIE LECOCQ Marchal",
         "bib": 35,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 36,
-        "name": "GAI SEJOUR WATHELET Jean-Philippe",
+        "name": "GAI SEJOUR DOMINIQUE Chloe-Alex",
         "bib": 36,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 37,
-        "name": "GAI SEJOUR RIPERT David",
+        "name": "GAI SEJOUR SAM Olivier",
         "bib": 37,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 38,
-        "name": "GAI SEJOUR SALAHUN Olivier",
+        "name": "GAI SEJOUR PIRARD Leclercq",
         "bib": 38,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 39,
-        "name": "GAI SEJOUR LEBRUN Marc",
+        "name": "GAI SEJOUR ALINE Steve",
         "bib": 39,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 40,
-        "name": "GAI SEJOUR KAISSER Eric",
+        "name": "GAI SEJOUR CELIA Rousseau",
         "bib": 40,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 41,
-        "name": "TRUCKET GIBOUX Johaan",
+        "name": "TRUCKET CLAES Antoine",
         "bib": 41,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 42,
-        "name": "RENARDS COLAS Benoît",
+        "name": "RENARDS CAMILLE Goossens",
         "bib": 42,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 43,
-        "name": "MARTHE ET MARIE SEGERS Bruno",
+        "name": "MARTHE ET MARIE JULIEN Laura",
         "bib": 43,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 44,
-        "name": "La Cordée Sports Manil Julien",
+        "name": "La Cordée Sports Pierret Eva",
         "bib": 44,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 45,
-        "name": "La Cordée Sports Bourotte Camille",
+        "name": "La Cordée Sports Alice Gobert",
         "bib": 45,
-        "category": "F",
-        "club": "La Cordee Sports"
+        "category": "F"
       },
       {
         "id": 46,
-        "name": "La Cordée Sports Debuisson Michael",
+        "name": "La Cordée Sports Leblanc Verhoeven",
         "bib": 46,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 47,
-        "name": "La Cordée Sports Sauvage Dominique",
+        "name": "La Cordée Sports Smets Claude",
         "bib": 47,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 48,
-        "name": "La Cordée Sports Sonnenberg Camille",
+        "name": "La Cordée Sports Cedric Gobert",
         "bib": 48,
-        "category": "F",
-        "club": "La Cordee Sports"
+        "category": "F"
       },
       {
         "id": 49,
-        "name": "GAI SEJOUR DELEU Kevin",
+        "name": "GAI SEJOUR DEPREZ Dumont",
         "bib": 49,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 50,
-        "name": "GAI SEJOUR BERTHELON Didier",
+        "name": "GAI SEJOUR PAULINE Gosset",
         "bib": 50,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 51,
-        "name": "BOULAIE VERVEKKEN Jonathan",
+        "name": "BOULAIE LOU Ledent",
         "bib": 51,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 52,
-        "name": "BOULAIE Rogge Maxime",
+        "name": "BOULAIE Noa Morgan",
         "bib": 52,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 53,
-        "name": "GAI SEJOUR GIELDZYK Paul",
+        "name": "GAI SEJOUR FABRICE Manon",
         "bib": 53,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 54,
-        "name": "BOULAIE ROBIN Christophe",
+        "name": "BOULAIE NAVEZ Mathilde",
         "bib": 54,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 55,
-        "name": "MARTHE ET MARIE HANS Yohan",
+        "name": "MARTHE ET MARIE VANDAMME Lucie",
         "bib": 55,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 56,
-        "name": "MARTHE ET MARIE NIVARLET Ludovic",
+        "name": "MARTHE ET MARIE THEO Remy",
         "bib": 56,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 57,
-        "name": "MARTHE ET MARIE REMY Bryan",
+        "name": "MARTHE ET MARIE LECOMTE Michaux",
         "bib": 57,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 58,
-        "name": "GAI SEJOUR SAVOIE Frédéric",
+        "name": "GAI SEJOUR LEMOINE Delvigne",
         "bib": 58,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 59,
-        "name": "TRUCKET DEMONTPELLIER Paul",
+        "name": "TRUCKET DEBRUYNE Manon",
         "bib": 59,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 60,
-        "name": "BATOULU LOJKA Florence",
+        "name": "BATOULU LORENT Jade",
         "bib": 60,
-        "category": "F",
-        "club": "Batoulu"
+        "category": "F"
       },
       {
         "id": 61,
-        "name": "TRUCKET CORDY Stéphanie",
+        "name": "TRUCKET HARDY Renard",
         "bib": 61,
-        "category": "F",
-        "club": "Trucket"
+        "category": "F"
       },
       {
         "id": 62,
-        "name": "BOULAIE AMEYE Christel",
+        "name": "BOULAIE SARAH Louis",
         "bib": 62,
-        "category": "F",
-        "club": "Boulaie"
+        "category": "F"
       },
       {
         "id": 63,
-        "name": "TRUCKET BISCAUT Olivier",
+        "name": "TRUCKET MARC Leclercq",
         "bib": 63,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 64,
-        "name": "TRUCKET DUPLICY Amelie",
+        "name": "TRUCKET MERTENS Andrea",
         "bib": 64,
-        "category": "F",
-        "club": "Trucket"
+        "category": "F"
       },
       {
         "id": 65,
-        "name": "BATOULU RENARD Sara",
+        "name": "BATOULU BASTIN Jules",
         "bib": 65,
-        "category": "F",
-        "club": "Batoulu"
+        "category": "F"
       },
       {
         "id": 66,
-        "name": "MARTHE ET MARIE DUMONT John",
+        "name": "MARTHE ET MARIE QUENTIN Michel",
         "bib": 66,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 67,
-        "name": "BATOULU DELVENNE SAMUEL",
+        "name": "BATOULU CLARA HUGO",
         "bib": 67,
-        "category": "H",
-        "club": "Batoulu"
+        "category": "H"
       },
       {
         "id": 68,
-        "name": "RENARDS ROSIERE Gilles",
+        "name": "RENARDS WOUTERS Carlier",
         "bib": 68,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 69,
-        "name": "BATOULU DE CROMBRUGGHE",
+        "name": "BATOULU DE MARGOT",
         "bib": 69,
-        "category": "H",
-        "club": "Batoulu"
+        "category": "H"
       },
       {
         "id": 70,
-        "name": "CORDEE POSTEAU Billy",
+        "name": "CORDEE JORDAN Nathan",
         "bib": 70,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 71,
-        "name": "TRUCKET LEJEUNE Steve",
+        "name": "TRUCKET LAURENT Petit",
         "bib": 71,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 72,
-        "name": "TRUCKET GIBOUX Johaan",
+        "name": "TRUCKET CLAES Antoine",
         "bib": 72,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 73,
-        "name": "TRUCKET DETAILLE Franck",
+        "name": "TRUCKET THIRY Willems",
         "bib": 73,
-        "category": "H",
-        "club": "Trucket"
+        "category": "H"
       },
       {
         "id": 74,
-        "name": "TRUCKET SIMON Smita",
+        "name": "TRUCKET DELHAYE Maxime-Denis",
         "bib": 74,
-        "category": "F",
-        "club": "Trucket"
+        "category": "F"
       },
       {
         "id": 75,
-        "name": "CORDEE DORMAL Guillaume",
+        "name": "CORDEE ANAIS-YASMINE Elodie-Dominique",
         "bib": 75,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 76,
-        "name": "GAI SEJOUR GRANDREMY Christophe",
+        "name": "GAI SEJOUR ROBIN-CLAES Mathilde",
         "bib": 76,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 77,
-        "name": "BOULAIE GENETELLI Gael",
+        "name": "BOULAIE BRASSEUR Delvaux",
         "bib": 77,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 78,
-        "name": "MARTHE ET MARIE MAGERA Benjamin",
+        "name": "MARTHE ET MARIE LECOCQ Marchal",
         "bib": 78,
-        "category": "H",
-        "club": "Marthe Et Marie"
+        "category": "H"
       },
       {
         "id": 79,
-        "name": "GAI SEJOUR GRANDREMY Christophe",
+        "name": "GAI SEJOUR ROBIN-CLAES Mathilde",
         "bib": 79,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 80,
-        "name": "La Cordée Sports GREGOIRE Christophe",
+        "name": "La Cordée Sports JADOUL Mathilde",
         "bib": 80,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 81,
-        "name": "RENARDS LEGRAND Colin",
+        "name": "RENARDS FONTAINE Ines",
         "bib": 81,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 82,
-        "name": "RENARDS VANHAUWERMEIREN Emile",
+        "name": "RENARDS LEROY Didier",
         "bib": 82,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 83,
-        "name": "RENARDS DROUARD Maureen",
+        "name": "RENARDS MARTIN Lucas",
         "bib": 83,
-        "category": "F",
-        "club": "Renards"
+        "category": "F"
       },
       {
         "id": 84,
-        "name": "CORDEE RENIER Brice",
+        "name": "CORDEE PAULINE-GASPARD Sacha-Zoe",
         "bib": 84,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 85,
-        "name": "La Cordée Sports BOUROTTE Camille",
+        "name": "La Cordée Sports ALICE Gobert",
         "bib": 85,
-        "category": "F",
-        "club": "La Cordee Sports"
+        "category": "F"
       },
       {
         "id": 86,
-        "name": "La Cordée Sports MANIL Julien",
+        "name": "La Cordée Sports PIERRET Eva",
         "bib": 86,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 87,
-        "name": "La Cordée Sports DEBUISSON Michael",
+        "name": "La Cordée Sports LEBLANC Verhoeven",
         "bib": 87,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 88,
-        "name": "La Cordée Sports SAUVAGE Dominique",
+        "name": "La Cordée Sports SMETS Claude",
         "bib": 88,
-        "category": "H",
-        "club": "La Cordee Sports"
+        "category": "H"
       },
       {
         "id": 89,
-        "name": "BOULAIE VERVEKKEN Jonathan",
+        "name": "BOULAIE LOU Ledent",
         "bib": 89,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 90,
-        "name": "BOULAIE Rogge Maxime",
+        "name": "BOULAIE Noa Morgan",
         "bib": 90,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 91,
-        "name": "La Cordée Sports DETIENNE Natalie",
+        "name": "La Cordée Sports FONTAINE-FIEVEZ Steve-Schmitz",
         "bib": 91,
-        "category": "F",
-        "club": "La Cordee Sports"
+        "category": "F"
       },
       {
         "id": 92,
-        "name": "BATOULU HEMPTINNE Elanor",
+        "name": "BATOULU HENRY-JADE Nora-Nathan",
         "bib": 92,
-        "category": "F",
-        "club": "Batoulu"
+        "category": "F"
       },
       {
         "id": 93,
-        "name": "GAI SEJOUR CHAUVAUX Florian",
+        "name": "GAI SEJOUR CHARLIE Lejeune",
         "bib": 93,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 94,
-        "name": "GAI SEJOUR LECOMTE Valentin",
+        "name": "GAI SEJOUR ETIENNE De Smet",
         "bib": 94,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 95,
-        "name": "GAI SEJOUR ARDINET Ludovic",
+        "name": "GAI SEJOUR VICTOR-ERIC Remy",
         "bib": 95,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 96,
-        "name": "GAI SEJOUR HERMANN Marc Hermann",
+        "name": "GAI SEJOUR ALINE-MARTIN Steve Aline-Martin",
         "bib": 96,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 97,
-        "name": "GAI SEJOUR DESROZIERS Arnaud",
+        "name": "GAI SEJOUR LEMAIRE-NOA Smets-Robin",
         "bib": 97,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 98,
-        "name": "GAI SEJOUR FOURNIER Barry",
+        "name": "GAI SEJOUR FONTAINE-FIEVEZ Manon-Fabrice",
         "bib": 98,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 99,
-        "name": "GAI SEJOUR GIRARDOT Julien",
+        "name": "GAI SEJOUR JADOUL-LECLERCQ Eva",
         "bib": 99,
-        "category": "H",
-        "club": "Gai Sejour"
+        "category": "H"
       },
       {
         "id": 100,
-        "name": "RENARDS HECHT Alexis",
+        "name": "RENARDS LEDENT-MOREAU Rousseau-Charlier",
         "bib": 100,
-        "category": "H",
-        "club": "Renards"
+        "category": "H"
       },
       {
         "id": 101,
-        "name": "Boulaie Canivet Frédéric",
+        "name": "Boulaie Noa-Pascal Delvigne",
         "bib": 101,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 102,
-        "name": "Boulaie Leroy Christophe",
+        "name": "Boulaie Lou-Gauthier Mathilde",
         "bib": 102,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 103,
-        "name": "Boulaie Chtourou Anis",
+        "name": "Boulaie Etienne-Leblanc Theo-Mila",
         "bib": 103,
-        "category": "H",
-        "club": "Boulaie"
+        "category": "H"
       },
       {
         "id": 104,
-        "name": "Belaid",
+        "name": "Piron",
         "category": "",
         "bib": "104",
         "age": null,
         "nationality": null,
-        "club": ""
+        "club": null
       },
       {
         "id": 105,
-        "name": "Gai séjour Belaid 25 dos",
+        "name": "Gai séjour Piron 25 dos",
         "category": "",
         "bib": "105",
         "age": null,
         "nationality": null,
-        "club": "Gai Sejour"
+        "club": null
       },
       {
         "id": 106,
-        "name": "Gai séjour David Ripert 25 dos",
+        "name": "Gai séjour Olivier Sam 25 dos",
         "category": "",
         "bib": "107",
         "age": null,
         "nationality": null,
-        "club": "Gai Sejour"
+        "club": null
       },
       {
         "id": 107,
-        "name": "Gai Séjour Jean Philippe 25 dos",
+        "name": "Gai Séjour Chloe Alex 25 dos",
         "category": "",
         "bib": "110",
         "age": null,
         "nationality": null,
-        "club": "Gai Sejour"
+        "club": null
       },
       {
         "id": 108,
-        "name": "Gai séjour Jean Marie 25 dos",
+        "name": "Gai séjour Chloe Marie 25 dos",
         "category": "",
         "bib": "114",
         "age": null,
         "nationality": null,
-        "club": "Gai Sejour"
+        "club": null
       }
     ],
     "nextEventId": 9,
