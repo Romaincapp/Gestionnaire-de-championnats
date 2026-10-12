@@ -6,7 +6,7 @@
 //   HEADED=1 npm run test:e2e         (fenêtre visible, au ralenti)
 //   CHROME_PATH=/chemin/chrome npm run test:e2e
 //
-// Données : les 150 lignes réelles de jsondetest/natation test 2.json
+// Données : les 150 lignes de tests/fixtures/natation test 2.json (format réel, noms anonymisés)
 // (« Club Nom Prénom 25 M Brasse 0:00:35 »).
 // Captures d'écran et rapport : tests/e2e/output/ (non versionné).
 // Code de sortie 1 si un contrôle échoue — à lancer avant chaque compétition.
@@ -20,7 +20,7 @@ const { pathToFileURL } = require('url');
 const ROOT = path.join(__dirname, '..', '..');
 const APP = pathToFileURL(path.join(ROOT, 'index.html')).href;
 const OUT = path.join(__dirname, 'output');
-const DATA = JSON.parse(fs.readFileSync(path.join(ROOT, 'jsondetest', 'natation test 2.json'), 'utf8'));
+const DATA = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', 'natation test 2.json'), 'utf8'));
 const LINES = Object.values(DATA.championship.days['1'].players)
     .flat().map(p => (typeof p === 'string' ? p : p.name));
 const EVENTS = ['50m brasse', '50m dos', '50m libre', '50m assisté', '25m brasse', '25m dos', '25m libre', '25m assisté'];

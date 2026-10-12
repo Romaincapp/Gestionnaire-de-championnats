@@ -2,7 +2,7 @@
  * Script Node.js pour générer un JSON propre de natation
  * avec séries pré-configurées par couloirs (5 nageurs, plus rapide au milieu)
  *
- * Usage: node generate-clean-json.js "natation test 2.json"
+ * Usage: node scripts/generate-clean-json.js "natation test 2.json"  (fichiers dans tests/fixtures/)
  */
 
 const fs = require('fs');
@@ -137,7 +137,8 @@ function formatMs(ms) {
 
 // === MAIN ===
 const inputFile = process.argv[2] || 'natation test 2.json';
-const inputPath = path.resolve(__dirname, inputFile);
+const FIXTURES = path.join(__dirname, '..', 'tests', 'fixtures');
+const inputPath = path.resolve(FIXTURES, inputFile);
 
 console.log(`\nLecture de: ${inputPath}\n`);
 const data = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
@@ -242,7 +243,7 @@ j2.chronoData.nextParticipantId = nextParticipantId;
 
 // Exporter le JSON propre
 const outputFile = inputFile.replace('.json', ' - CLEAN.json');
-const outputPath = path.resolve(__dirname, outputFile);
+const outputPath = path.resolve(FIXTURES, outputFile);
 
 const cleanData = {
     version: data.version,

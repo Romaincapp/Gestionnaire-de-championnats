@@ -1,0 +1,1918 @@
+{
+  "version": "2.0",
+  "exportDate": "2026-03-26T08:01:40.951Z",
+  "championshipName": "natation test 2",
+  "championship": {
+    "currentDay": 1,
+    "config": {
+      "numberOfDivisions": 1,
+      "numberOfCourts": 10
+    },
+    "days": {
+      "1": {
+        "players": {
+          "1": [
+            {
+              "name": "Batoulu Pascal-Margot Nora-Nathan Brasse 25 M Brasse 0:01:16",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Sarah Louis 25 M Brasse",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Anna-Collard Etienne-Leblanc 25 M Brasse 0:00:35",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Brasseur Delvaux 25 M Brasse 0:00:28",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Navez Mathilde 25 M Brasse 0:00:32",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Olivier-Pauline Janssens-Lefebvre 25 M Brasse 0:00:37",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane Laura-Hennes Willems-Michaux 25 M Brasse 0:00:34",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Fabrice Manon 25 M Brasse 0:00:22",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Lemoine Delvigne 25 M Brasse 0:00:28",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Francois Robin-Claes 25 M Brasse 0:00:38",
+              "club": ""
+            },
+            {
+              "name": "Renards Camille Goossens 25 M Brasse",
+              "club": ""
+            },
+            {
+              "name": "Renards Martin Lucas 25 M Brasse 0:00:39",
+              "club": ""
+            },
+            {
+              "name": "Renards Fontaine Ines 25 M Brasse 0:00:34",
+              "club": ""
+            },
+            {
+              "name": "Renards Wouters Carlier 25 M Brasse 0:00:44",
+              "club": ""
+            },
+            {
+              "name": "Trucket Marc Leclercq 25 M Brasse 0:00:30",
+              "club": ""
+            },
+            {
+              "name": "Trucket Thiry Willems 25 M Brasse 0:00:43",
+              "club": ""
+            },
+            {
+              "name": "Trucket Mertens Andrea 25 M Brasse 0:00:43",
+              "club": ""
+            },
+            {
+              "name": "Trucket Claes Yasmine 25 M Brasse 0:00:49",
+              "club": ""
+            },
+            {
+              "name": "Trucket Hanquet Arthur 25 M Brasse 01:10.3 25",
+              "club": ""
+            },
+            {
+              "name": "Trucket Alex-Manon Nathan-Clara 25 M Brasse 0:00:35",
+              "club": ""
+            },
+            {
+              "name": "Trucket Kevin Cools 25 M Brasse 0:00:37",
+              "club": ""
+            },
+            {
+              "name": "Trucket Delhaye Pierre 25 M Brasse 0:00:53",
+              "club": ""
+            },
+            {
+              "name": "Zoe Marie 25 M Brasse 0:01:10",
+              "club": ""
+            },
+            {
+              "name": "Batoulu Clara Hugo 25 M Dos 0:00:54",
+              "club": ""
+            },
+            {
+              "name": "Batoulu Jade 25 M Dos 0:00:52",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Renard-Lea Piron 25 M Dos 0:00:36",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Sam Olivier 25 M Dos 0:00:31",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Dominique Jade-Pasteels 25 M Dos 0:00:25",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Brasseur Delvaux 25 M Dos 0:00:26",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Lou Ledent 25 M Dos 0:00:27",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane Fontaine-Fievez Denis-Ella 25m Dos 0:00:34,154",
+              "club": ""
+            },
+            {
+              "name": "Batoulu . Bastin . Jules . 25 M Dos . 0:01:14,000",
+              "club": ""
+            },
+            {
+              "name": "Trucket Laurent Petit 0:0:57. 25m Dos",
+              "club": ""
+            },
+            {
+              "name": "Boulaie. Collard-Paul. Bertrand. 25 M Dos. 0:00:32,000",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Mathilde-Lecomte. Aline-Martin. 25m Dos",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie. Julien Laura. 25m Dos. 00:52,40",
+              "club": ""
+            },
+            {
+              "name": "Batoulu . Mertens-Wauters . Marie . Dos 25 M .  0:01:15,000",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Pauline Gosset 25m Libre 0:00:37",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Celia Rousseau 25 M Libre 0:00:38",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Aline Steve 25 M Libre 0:00:28",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Sam Olivier 25 M Libre 0:00:34",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Dominique Chloe-Alex 25 M Libre 0:00:26",
+              "club": ""
+            },
+            {
+              "name": "Trucket Alex-Manon Nathan-Clara 25 M Libre 0:00:35,493",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Charlie-Basile Lucas-Andrea 25 M Libre 0:00:39",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Noa Morgan 25 M Libre 0:00:23",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Lou Henrard 25 M Libre 0:00:18",
+              "club": ""
+            },
+            {
+              "name": "Renards Camille Goossens 25 M Libre 0:00:45,143",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie Vandamme Lucie 25m Libre 0:00:18",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie Lecocq Marchal 25m Libre 0:00:23",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie Lecomte Michaux 25m Libre 0:00:22",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane Laura-Hennes Ledent 25m Libre 0:00:21,381",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour. Pirard. Leclercq. 25m .libre",
+              "club": ""
+            },
+            {
+              "name": "Trucket Claes Antoine 0:0:31.00 25m Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Alice Gobert 25m Libre 0.50.00",
+              "club": ""
+            },
+            {
+              "name": "Boulaie. Pasteels. Ruelle-Delvigne. 25 M Libre. 0:00:32,000",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Dubois-Wouters. Vandamme-Vandamme. 25m Libre",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie. Julien Laura. 25 M Libre. 00:47,0",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Pauline-Gaspard Sacha-Zoe. 25m Libre 00: 45,00",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane. Lucas-Andrea. Bodart-Masson.25m Brasse. Lent",
+              "club": ""
+            },
+            {
+              "name": "Jalon .noa-pascal Lucie-Maes 25 M Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Leblanc Verhoeven 25m Libre 0.52.00",
+              "club": ""
+            },
+            {
+              "name": "Boulaie. Quentin-Sam. Lejeune. 25 M Libre. 0:00:38,000",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Kevin-Lambert. Fabrice-Lemaire. 25m Libre",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie. Anais-Yasmine Remy. 25m Libre. 0:00:31,574",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Zoe-Morel Mathilde-Lecomte. 25m Libre. 00:33,00",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane. Ines Elodie-Dominique.25m Brasse",
+              "club": ""
+            },
+            {
+              "name": "Jalon. Lecomte-Elodie Brasseur-Lemoine 25m Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Ines-Arthur Goossens-Marchal 25m Libre 1.20.00",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Michel-Ninon. Chloe-Pasteels. 25m Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Smets-Robin Eva. 25m Libre. 00:56.00",
+              "club": ""
+            },
+            {
+              "name": "Jalon . Eden Bertrand 25m Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Cedric Gobert 25m Libre 1.50.00",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Anais-Yasmine Elodie-Dominique. Libre. 01:02,00",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Pierret Eva 25m Libre 0.57.00",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Jordan Nathan. 25m Libre 00:58,00",
+              "club": ""
+            },
+            {
+              "name": "Trucket Renard Hardy 50 Metres Brasse 1:34:00.",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Smets Claude 50m Brasse 3.25.00",
+              "club": ""
+            },
+            {
+              "name": "Boulaie. Bertrand-Cools. Steve. 50 M Brasse 0:01:10,000",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Michel-Ninon. Goossens. 50 M Brasse",
+              "club": ""
+            },
+            {
+              "name": "Apris.julien-camille.gillet-mathilde. 50 M Brasse 1,24,11",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie. Vandamme Lucie. 50 M Brasse. 01:02,0",
+              "club": ""
+            },
+            {
+              "name": "Trucket Marc Leclercq 50 M Brasse 0:01:17",
+              "club": ""
+            },
+            {
+              "name": "Trucket Thiry Willems 50 M Brasse 0:01:44",
+              "club": ""
+            },
+            {
+              "name": "Trucket Laurent Bodart-Masson 50 M Brasse 0:02:08",
+              "club": ""
+            },
+            {
+              "name": "Trucket Kevin Cools 50 M Brasse 0:01:39",
+              "club": ""
+            },
+            {
+              "name": "Trucket Hanquet Arthur 50 M Brasse0:01:29",
+              "club": ""
+            },
+            {
+              "name": "Trucket Mertens Andrea 50 M Brasse 0:01:33",
+              "club": ""
+            },
+            {
+              "name": "Trucket Maxime-Denis 50 M Brasse 0:01:55",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Sarah Louis 50 M Brasse 0:01:47",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Anna-Collard Etienne-Leblanc 50 M Brasse 0:01:28",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Navez Mathilde 50 M Brasse 0:01:14",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Olivier-Pauline Morel-Ludivine-Mertens-Wauters 50 M Brasse 0:01:34",
+              "club": ""
+            },
+            {
+              "name": "Renards Wouters Carlier 50 M Brasse 0:01:43,496",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Bertrand-Cools. Noel-Mertens. 50m Brasse",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane Willems-Michaux 50 M Brasse 0:01:12,187",
+              "club": ""
+            },
+            {
+              "name": "Batoulu . Bastin . Jules . 50 M Brasse . 0:01:36,000",
+              "club": ""
+            },
+            {
+              "name": "Batoulu . Clara . Hugo .50 M Brasse . 0:01:39,000",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Mathilde-Lecomte. Aline-Martin. 50 M Brasse",
+              "club": ""
+            },
+            {
+              "name": "Apris.yves-julie.lemaire-noa.50 M Brasse 1,49,47",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie. Quentin Michel. 50 M Brasse. 01:39,50",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Henry-Jade. Brasseur-Lemoine. 50 M Brasse",
+              "club": ""
+            },
+            {
+              "name": "Apris.anna-collard.eva. 50 M Brasse 1,30,09",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Fievez-Navez. Mathilde-Lecomte.50 M Brasse",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Elodie-Dominique. Michel-Ninon. 50 M Brasse",
+              "club": ""
+            },
+            {
+              "name": "Apris.hugo-delhaye.ledent. 50 M Brasse 1,25,64",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie. Lecomte Michaux. 50m Brasse. 01:06,50",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Robin-Claes Mathilde 50 M Dos 0:00:48,803",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Lou Ledent 50 M Dos 0:01:02,892",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane Fontaine-Fievez Denis-Ella 50 M Dos 0:01:28,623",
+              "club": ""
+            },
+            {
+              "name": "Boulaie. Collard-Paul. Bertrand. 50 M Dos 0:01:20,000",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie. Lecocq Marchal. 50 M Dos 01:22,0",
+              "club": ""
+            },
+            {
+              "name": "Marthe Et Marie. Theo Remy 50 M Dos 01:52,0",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane Laura-Hennes Ledent 50 M Libre 0:00:53,575",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Charlie-Basile Lucas-Andrea 50 M Libre 0:01:35",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Zoe-Morel Mathilde-Lecomte. 50 M Libre. 01:06,00",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Noa Morgan 50 M Libre 0:00:56",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Jordan Nathan. 50 M Libre 01:55,00",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Lou Henrard 50 M Libre 0:00:40",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Pierret Eva 50 M Libre 2.05.00",
+              "club": ""
+            },
+            {
+              "name": "Renards Martin Lucas 50 M Libre 0:01:14",
+              "club": ""
+            },
+            {
+              "name": "Renards Fontaine Ines 50 M Libre 0:00:52",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Alice Gobert 50 M Libre 1.55.00",
+              "club": ""
+            },
+            {
+              "name": "Boulaie. Pasteels. Ruelle-Delvigne. 50 M Libre 0:01:35,000",
+              "club": ""
+            },
+            {
+              "name": "Renards. Leroy. Didier. 50 M Libre. 1:21,72",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Dubois-Wouters. Vandamme-Vandamme. 50 M Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Pauline-Gaspard Sacha-Zoe. 50 M Libre 01:35,00",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane. Lucas-Andrea Bodart-Masson.50 M Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Leblanc Verhoeven 50 M Libre 2.05.00",
+              "club": ""
+            },
+            {
+              "name": "Boulaie. Quentin-Sam. Lejeune. 50 M Libre 0:01:45,000",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Willems-Michaux. Michel-Ninon. 50 M Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordée Sport Ifa Bouge. Anais-Yasmine Elodie-Dominique. 50 M Libre 02:07,00",
+              "club": ""
+            },
+            {
+              "name": "Carpe Mosane. Ines Elodie-Dominique. 50 M Libre",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Ines-Arthur Goossens-Marchal 50 M Libre 3.00.00",
+              "club": ""
+            },
+            {
+              "name": "Aquaphile Saja. Elodie-Dominique. Michel-Ninon. 50 M Libre",
+              "club": ""
+            },
+            {
+              "name": "Batoulu Pascal-Margot Nora-Nathan 25 M Assisté 0:01:23,522",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Mathilde Lou-Gauthier 25 M Asssité 0:01:16",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Laurent-Antoine Claes-Mathieu 25 M (bord) 0:00:45",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Gilles-Thiry 25 M Asssité 0:00:57",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Victor-Eric Remy 25 M Assisté 0:00:38",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Lambotte-Peeters Lejeune 25 M Assisté 0:00:28",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Aline-Martin Steve 25 M Assisté 0:01:03",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Fontaine-Fievez Manon-Fabrice 25 M Assisté 0:01:20",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Etienne De Smet 25 M Assisté 0:00:34",
+              "club": ""
+            },
+            {
+              "name": "Gai Séjour Jadoul-Leclercq Eva 25 M Assisté",
+              "club": ""
+            },
+            {
+              "name": "Sra Goélands.hanquet-massart.lemaire-noa. 25 M Assisté",
+              "club": ""
+            },
+            {
+              "name": "Sra Goélands.gobert-lambotte.didier-quentin. 25 M Assisté",
+              "club": ""
+            },
+            {
+              "name": "Cordee Sports Fontaine-Fievez Steve-Schmitz 25 M Assiste 1.10.00",
+              "club": ""
+            },
+            {
+              "name": "Renards Ledent-Moreau Rousseau-Charlier 25 M Assistée 01:03,94",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Noa-Pascal Delvigne 50 M Assisté (bord) 00:02:27",
+              "club": ""
+            },
+            {
+              "name": "Boulaie Lou-Gauthier Mathilde 50 M Assisté (bord) 00:02:30",
+              "club": ""
+            }
+          ]
+        },
+        "matches": {
+          "1": []
+        }
+      },
+      "2": {
+        "players": {
+          "1": [],
+          "2": [],
+          "3": []
+        },
+        "matches": {
+          "1": [],
+          "2": [],
+          "3": []
+        },
+        "dayType": "chrono",
+        "chronoData": {
+          "events": [
+            {
+              "id": 1,
+              "name": "50m brasse",
+              "date": "2026-03-26",
+              "createdAt": "2026-03-26T08:00:32.225Z"
+            },
+            {
+              "id": 2,
+              "name": "50m dos",
+              "date": "2026-03-26",
+              "createdAt": "2026-03-26T08:00:41.093Z"
+            },
+            {
+              "id": 3,
+              "name": "50m libre",
+              "date": "2026-03-26",
+              "createdAt": "2026-03-26T08:00:47.921Z"
+            },
+            {
+              "id": 4,
+              "name": "50m assisté",
+              "date": "2026-03-26",
+              "createdAt": "2026-03-26T08:00:55.576Z"
+            },
+            {
+              "id": 5,
+              "name": "25m brasse",
+              "date": "2026-03-26",
+              "createdAt": "2026-03-26T08:01:09.132Z"
+            },
+            {
+              "id": 6,
+              "name": "25m dos",
+              "date": "2026-03-26",
+              "createdAt": "2026-03-26T08:01:15.386Z"
+            },
+            {
+              "id": 7,
+              "name": "25m libre",
+              "date": "2026-03-26",
+              "createdAt": "2026-03-26T08:01:23.198Z"
+            },
+            {
+              "id": 8,
+              "name": "25m assisté",
+              "date": "2026-03-26",
+              "createdAt": "2026-03-26T08:01:33.290Z"
+            }
+          ],
+          "series": [],
+          "participants": [
+            {
+              "id": 1,
+              "name": "Batoulu Pascal-Margot Nora-Nathan Brasse 25 M Brasse 0:01:16",
+              "bib": 1,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 2,
+              "name": "Boulaie Sarah Louis 25 M Brasse",
+              "bib": 2,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 3,
+              "name": "Boulaie Anna-Collard Etienne-Leblanc 25 M Brasse 0:00:35",
+              "bib": 3,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 4,
+              "name": "Boulaie Brasseur Delvaux 25 M Brasse 0:00:28",
+              "bib": 4,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 5,
+              "name": "Boulaie Navez Mathilde 25 M Brasse 0:00:32",
+              "bib": 5,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 6,
+              "name": "Boulaie Olivier-Pauline Janssens-Lefebvre 25 M Brasse 0:00:37",
+              "bib": 6,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 7,
+              "name": "Carpe Mosane Laura-Hennes Willems-Michaux 25 M Brasse 0:00:34",
+              "bib": 7,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 8,
+              "name": "Gai Séjour Fabrice Manon 25 M Brasse 0:00:22",
+              "bib": 8,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 9,
+              "name": "Gai Séjour Lemoine Delvigne 25 M Brasse 0:00:28",
+              "bib": 9,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 10,
+              "name": "Gai Séjour Francois Robin-Claes 25 M Brasse 0:00:38",
+              "bib": 10,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 11,
+              "name": "Renards Camille Goossens 25 M Brasse",
+              "bib": 11,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 12,
+              "name": "Renards Martin Lucas 25 M Brasse 0:00:39",
+              "bib": 12,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 13,
+              "name": "Renards Fontaine Ines 25 M Brasse 0:00:34",
+              "bib": 13,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 14,
+              "name": "Renards Wouters Carlier 25 M Brasse 0:00:44",
+              "bib": 14,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 15,
+              "name": "Trucket Marc Leclercq 25 M Brasse 0:00:30",
+              "bib": 15,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 16,
+              "name": "Trucket Thiry Willems 25 M Brasse 0:00:43",
+              "bib": 16,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 17,
+              "name": "Trucket Mertens Andrea 25 M Brasse 0:00:43",
+              "bib": 17,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 18,
+              "name": "Trucket Claes Yasmine 25 M Brasse 0:00:49",
+              "bib": 18,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 19,
+              "name": "Trucket Hanquet Arthur 25 M Brasse 01:10.3 25",
+              "bib": 19,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 20,
+              "name": "Trucket Alex-Manon Nathan-Clara 25 M Brasse 0:00:35",
+              "bib": 20,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 21,
+              "name": "Trucket Kevin Cools 25 M Brasse 0:00:37",
+              "bib": 21,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 22,
+              "name": "Trucket Delhaye Pierre 25 M Brasse 0:00:53",
+              "bib": 22,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 23,
+              "name": "Zoe Marie 25 M Brasse 0:01:10",
+              "bib": 23,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 24,
+              "name": "Batoulu Clara Hugo 25 M Dos 0:00:54",
+              "bib": 24,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 25,
+              "name": "Batoulu Jade 25 M Dos 0:00:52",
+              "bib": 25,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 26,
+              "name": "Gai Séjour Renard-Lea Piron 25 M Dos 0:00:36",
+              "bib": 26,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 27,
+              "name": "Gai Séjour Sam Olivier 25 M Dos 0:00:31",
+              "bib": 27,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 28,
+              "name": "Gai Séjour Dominique Jade-Pasteels 25 M Dos 0:00:25",
+              "bib": 28,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 29,
+              "name": "Boulaie Brasseur Delvaux 25 M Dos 0:00:26",
+              "bib": 29,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 30,
+              "name": "Boulaie Lou Ledent 25 M Dos 0:00:27",
+              "bib": 30,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 31,
+              "name": "Carpe Mosane Fontaine-Fievez Denis-Ella 25m Dos 0:00:34,154",
+              "bib": 31,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 32,
+              "name": "Batoulu . Bastin . Jules . 25 M Dos . 0:01:14,000",
+              "bib": 32,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 33,
+              "name": "Trucket Laurent Petit 0:0:57. 25m Dos",
+              "bib": 33,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 34,
+              "name": "Boulaie. Collard-Paul. Bertrand. 25 M Dos. 0:00:32,000",
+              "bib": 34,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 35,
+              "name": "Aquaphile Saja. Mathilde-Lecomte. Aline-Martin. 25m Dos",
+              "bib": 35,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 36,
+              "name": "Marthe Et Marie. Julien Laura. 25m Dos. 00:52,40",
+              "bib": 36,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 37,
+              "name": "Batoulu . Mertens-Wauters . Marie . Dos 25 M .  0:01:15,000",
+              "bib": 37,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 38,
+              "name": "Gai Séjour Pauline Gosset 25m Libre 0:00:37",
+              "bib": 38,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 39,
+              "name": "Gai Séjour Celia Rousseau 25 M Libre 0:00:38",
+              "bib": 39,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 40,
+              "name": "Gai Séjour Aline Steve 25 M Libre 0:00:28",
+              "bib": 40,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 41,
+              "name": "Gai Séjour Sam Olivier 25 M Libre 0:00:34",
+              "bib": 41,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 42,
+              "name": "Gai Séjour Dominique Chloe-Alex 25 M Libre 0:00:26",
+              "bib": 42,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 43,
+              "name": "Trucket Alex-Manon Nathan-Clara 25 M Libre 0:00:35,493",
+              "bib": 43,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 44,
+              "name": "Boulaie Charlie-Basile Lucas-Andrea 25 M Libre 0:00:39",
+              "bib": 44,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 45,
+              "name": "Boulaie Noa Morgan 25 M Libre 0:00:23",
+              "bib": 45,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 46,
+              "name": "Boulaie Lou Henrard 25 M Libre 0:00:18",
+              "bib": 46,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 47,
+              "name": "Renards Camille Goossens 25 M Libre 0:00:45,143",
+              "bib": 47,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 48,
+              "name": "Marthe Et Marie Vandamme Lucie 25m Libre 0:00:18",
+              "bib": 48,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 49,
+              "name": "Marthe Et Marie Lecocq Marchal 25m Libre 0:00:23",
+              "bib": 49,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 50,
+              "name": "Marthe Et Marie Lecomte Michaux 25m Libre 0:00:22",
+              "bib": 50,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 51,
+              "name": "Carpe Mosane Laura-Hennes Ledent 25m Libre 0:00:21,381",
+              "bib": 51,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 52,
+              "name": "Gai Séjour. Pirard. Leclercq. 25m .libre",
+              "bib": 52,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 53,
+              "name": "Trucket Claes Antoine 0:0:31.00 25m Libre",
+              "bib": 53,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 54,
+              "name": "Cordee Sports Alice Gobert 25m Libre 0.50.00",
+              "bib": 54,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 55,
+              "name": "Boulaie. Pasteels. Ruelle-Delvigne. 25 M Libre. 0:00:32,000",
+              "bib": 55,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 56,
+              "name": "Aquaphile Saja. Dubois-Wouters. Vandamme-Vandamme. 25m Libre",
+              "bib": 56,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 57,
+              "name": "Marthe Et Marie. Julien Laura. 25 M Libre. 00:47,0",
+              "bib": 57,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 58,
+              "name": "Cordée Sport Ifa Bouge. Pauline-Gaspard Sacha-Zoe. 25m Libre 00: 45,00",
+              "bib": 58,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 59,
+              "name": "Carpe Mosane. Lucas-Andrea. Bodart-Masson.25m Brasse. Lent",
+              "bib": 59,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 60,
+              "name": "Jalon .noa-pascal Lucie-Maes 25 M Libre",
+              "bib": 60,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 61,
+              "name": "Cordee Sports Leblanc Verhoeven 25m Libre 0.52.00",
+              "bib": 61,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 62,
+              "name": "Boulaie. Quentin-Sam. Lejeune. 25 M Libre. 0:00:38,000",
+              "bib": 62,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 63,
+              "name": "Aquaphile Saja. Kevin-Lambert. Fabrice-Lemaire. 25m Libre",
+              "bib": 63,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 64,
+              "name": "Marthe Et Marie. Anais-Yasmine Remy. 25m Libre. 0:00:31,574",
+              "bib": 64,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 65,
+              "name": "Cordée Sport Ifa Bouge. Zoe-Morel Mathilde-Lecomte. 25m Libre. 00:33,00",
+              "bib": 65,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 66,
+              "name": "Carpe Mosane. Ines Elodie-Dominique.25m Brasse",
+              "bib": 66,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 67,
+              "name": "Jalon. Lecomte-Elodie Brasseur-Lemoine 25m Libre",
+              "bib": 67,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 68,
+              "name": "Cordee Sports Ines-Arthur Goossens-Marchal 25m Libre 1.20.00",
+              "bib": 68,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 69,
+              "name": "Aquaphile Saja. Michel-Ninon. Chloe-Pasteels. 25m Libre",
+              "bib": 69,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 70,
+              "name": "Cordée Sport Ifa Bouge. Smets-Robin Eva. 25m Libre. 00:56.00",
+              "bib": 70,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 71,
+              "name": "Jalon . Eden Bertrand 25m Libre",
+              "bib": 71,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 72,
+              "name": "Cordee Sports Cedric Gobert 25m Libre 1.50.00",
+              "bib": 72,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 73,
+              "name": "Cordée Sport Ifa Bouge. Anais-Yasmine Elodie-Dominique. Libre. 01:02,00",
+              "bib": 73,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 74,
+              "name": "Cordee Sports Pierret Eva 25m Libre 0.57.00",
+              "bib": 74,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 75,
+              "name": "Cordée Sport Ifa Bouge. Jordan Nathan. 25m Libre 00:58,00",
+              "bib": 75,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 76,
+              "name": "Trucket Renard Hardy 50 Metres Brasse 1:34:00.",
+              "bib": 76,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 77,
+              "name": "Cordee Sports Smets Claude 50m Brasse 3.25.00",
+              "bib": 77,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 78,
+              "name": "Boulaie. Bertrand-Cools. Steve. 50 M Brasse 0:01:10,000",
+              "bib": 78,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 79,
+              "name": "Aquaphile Saja. Michel-Ninon. Goossens. 50 M Brasse",
+              "bib": 79,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 80,
+              "name": "Apris.julien-camille.gillet-mathilde. 50 M Brasse 1,24,11",
+              "bib": 80,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 81,
+              "name": "Marthe Et Marie. Vandamme Lucie. 50 M Brasse. 01:02,0",
+              "bib": 81,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 82,
+              "name": "Trucket Marc Leclercq 50 M Brasse 0:01:17",
+              "bib": 82,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 83,
+              "name": "Trucket Thiry Willems 50 M Brasse 0:01:44",
+              "bib": 83,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 84,
+              "name": "Trucket Laurent Bodart-Masson 50 M Brasse 0:02:08",
+              "bib": 84,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 85,
+              "name": "Trucket Kevin Cools 50 M Brasse 0:01:39",
+              "bib": 85,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 86,
+              "name": "Trucket Hanquet Arthur 50 M Brasse0:01:29",
+              "bib": 86,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 87,
+              "name": "Trucket Mertens Andrea 50 M Brasse 0:01:33",
+              "bib": 87,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 88,
+              "name": "Trucket Maxime-Denis 50 M Brasse 0:01:55",
+              "bib": 88,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 89,
+              "name": "Boulaie Sarah Louis 50 M Brasse 0:01:47",
+              "bib": 89,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 90,
+              "name": "Boulaie Anna-Collard Etienne-Leblanc 50 M Brasse 0:01:28",
+              "bib": 90,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 91,
+              "name": "Boulaie Navez Mathilde 50 M Brasse 0:01:14",
+              "bib": 91,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 92,
+              "name": "Boulaie Olivier-Pauline Morel-Ludivine-Mertens-Wauters 50 M Brasse 0:01:34",
+              "bib": 92,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 93,
+              "name": "Renards Wouters Carlier 50 M Brasse 0:01:43,496",
+              "bib": 93,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 94,
+              "name": "Aquaphile Saja. Bertrand-Cools. Noel-Mertens. 50m Brasse",
+              "bib": 94,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 95,
+              "name": "Carpe Mosane Willems-Michaux 50 M Brasse 0:01:12,187",
+              "bib": 95,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 96,
+              "name": "Batoulu . Bastin . Jules . 50 M Brasse . 0:01:36,000",
+              "bib": 96,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 97,
+              "name": "Batoulu . Clara . Hugo .50 M Brasse . 0:01:39,000",
+              "bib": 97,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 98,
+              "name": "Aquaphile Saja. Mathilde-Lecomte. Aline-Martin. 50 M Brasse",
+              "bib": 98,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 99,
+              "name": "Apris.yves-julie.lemaire-noa.50 M Brasse 1,49,47",
+              "bib": 99,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 100,
+              "name": "Marthe Et Marie. Quentin Michel. 50 M Brasse. 01:39,50",
+              "bib": 100,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 101,
+              "name": "Aquaphile Saja. Henry-Jade. Brasseur-Lemoine. 50 M Brasse",
+              "bib": 101,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 102,
+              "name": "Apris.anna-collard.eva. 50 M Brasse 1,30,09",
+              "bib": 102,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 103,
+              "name": "Aquaphile Saja. Fievez-Navez. Mathilde-Lecomte.50 M Brasse",
+              "bib": 103,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 104,
+              "name": "Aquaphile Saja. Elodie-Dominique. Michel-Ninon. 50 M Brasse",
+              "bib": 104,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 105,
+              "name": "Apris.hugo-delhaye.ledent. 50 M Brasse 1,25,64",
+              "bib": 105,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 106,
+              "name": "Marthe Et Marie. Lecomte Michaux. 50m Brasse. 01:06,50",
+              "bib": 106,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 107,
+              "name": "Gai Séjour Robin-Claes Mathilde 50 M Dos 0:00:48,803",
+              "bib": 107,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 108,
+              "name": "Boulaie Lou Ledent 50 M Dos 0:01:02,892",
+              "bib": 108,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 109,
+              "name": "Carpe Mosane Fontaine-Fievez Denis-Ella 50 M Dos 0:01:28,623",
+              "bib": 109,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 110,
+              "name": "Boulaie. Collard-Paul. Bertrand. 50 M Dos 0:01:20,000",
+              "bib": 110,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 111,
+              "name": "Marthe Et Marie. Lecocq Marchal. 50 M Dos 01:22,0",
+              "bib": 111,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 112,
+              "name": "Marthe Et Marie. Theo Remy 50 M Dos 01:52,0",
+              "bib": 112,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 113,
+              "name": "Carpe Mosane Laura-Hennes Ledent 50 M Libre 0:00:53,575",
+              "bib": 113,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 114,
+              "name": "Boulaie Charlie-Basile Lucas-Andrea 50 M Libre 0:01:35",
+              "bib": 114,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 115,
+              "name": "Cordée Sport Ifa Bouge. Zoe-Morel Mathilde-Lecomte. 50 M Libre. 01:06,00",
+              "bib": 115,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 116,
+              "name": "Boulaie Noa Morgan 50 M Libre 0:00:56",
+              "bib": 116,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 117,
+              "name": "Cordée Sport Ifa Bouge. Jordan Nathan. 50 M Libre 01:55,00",
+              "bib": 117,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 118,
+              "name": "Boulaie Lou Henrard 50 M Libre 0:00:40",
+              "bib": 118,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 119,
+              "name": "Cordee Sports Pierret Eva 50 M Libre 2.05.00",
+              "bib": 119,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 120,
+              "name": "Renards Martin Lucas 50 M Libre 0:01:14",
+              "bib": 120,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 121,
+              "name": "Renards Fontaine Ines 50 M Libre 0:00:52",
+              "bib": 121,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 122,
+              "name": "Cordee Sports Alice Gobert 50 M Libre 1.55.00",
+              "bib": 122,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 123,
+              "name": "Boulaie. Pasteels. Ruelle-Delvigne. 50 M Libre 0:01:35,000",
+              "bib": 123,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 124,
+              "name": "Renards. Leroy. Didier. 50 M Libre. 1:21,72",
+              "bib": 124,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 125,
+              "name": "Aquaphile Saja. Dubois-Wouters. Vandamme-Vandamme. 50 M Libre",
+              "bib": 125,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 126,
+              "name": "Cordée Sport Ifa Bouge. Pauline-Gaspard Sacha-Zoe. 50 M Libre 01:35,00",
+              "bib": 126,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 127,
+              "name": "Carpe Mosane. Lucas-Andrea Bodart-Masson.50 M Libre",
+              "bib": 127,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 128,
+              "name": "Cordee Sports Leblanc Verhoeven 50 M Libre 2.05.00",
+              "bib": 128,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 129,
+              "name": "Boulaie. Quentin-Sam. Lejeune. 50 M Libre 0:01:45,000",
+              "bib": 129,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 130,
+              "name": "Aquaphile Saja. Willems-Michaux. Michel-Ninon. 50 M Libre",
+              "bib": 130,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 131,
+              "name": "Cordée Sport Ifa Bouge. Anais-Yasmine Elodie-Dominique. 50 M Libre 02:07,00",
+              "bib": 131,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 132,
+              "name": "Carpe Mosane. Ines Elodie-Dominique. 50 M Libre",
+              "bib": 132,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 133,
+              "name": "Cordee Sports Ines-Arthur Goossens-Marchal 50 M Libre 3.00.00",
+              "bib": 133,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 134,
+              "name": "Aquaphile Saja. Elodie-Dominique. Michel-Ninon. 50 M Libre",
+              "bib": 134,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 135,
+              "name": "Batoulu Pascal-Margot Nora-Nathan 25 M Assisté 0:01:23,522",
+              "bib": 135,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 136,
+              "name": "Boulaie Mathilde Lou-Gauthier 25 M Asssité 0:01:16",
+              "bib": 136,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 137,
+              "name": "Boulaie Laurent-Antoine Claes-Mathieu 25 M (bord) 0:00:45",
+              "bib": 137,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 138,
+              "name": "Boulaie Gilles-Thiry 25 M Asssité 0:00:57",
+              "bib": 138,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 139,
+              "name": "Gai Séjour Victor-Eric Remy 25 M Assisté 0:00:38",
+              "bib": 139,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 140,
+              "name": "Gai Séjour Lambotte-Peeters Lejeune 25 M Assisté 0:00:28",
+              "bib": 140,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 141,
+              "name": "Gai Séjour Aline-Martin Steve 25 M Assisté 0:01:03",
+              "bib": 141,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 142,
+              "name": "Gai Séjour Fontaine-Fievez Manon-Fabrice 25 M Assisté 0:01:20",
+              "bib": 142,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 143,
+              "name": "Gai Séjour Etienne De Smet 25 M Assisté 0:00:34",
+              "bib": 143,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 144,
+              "name": "Gai Séjour Jadoul-Leclercq Eva 25 M Assisté",
+              "bib": 144,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 145,
+              "name": "Sra Goélands.hanquet-massart.lemaire-noa. 25 M Assisté",
+              "bib": 145,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 146,
+              "name": "Sra Goélands.gobert-lambotte.didier-quentin. 25 M Assisté",
+              "bib": 146,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 147,
+              "name": "Cordee Sports Fontaine-Fievez Steve-Schmitz 25 M Assiste 1.10.00",
+              "bib": 147,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 148,
+              "name": "Renards Ledent-Moreau Rousseau-Charlier 25 M Assistée 01:03,94",
+              "bib": 148,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 149,
+              "name": "Boulaie Noa-Pascal Delvigne 50 M Assisté (bord) 00:02:27",
+              "bib": 149,
+              "totalTime": null,
+              "laps": 0
+            },
+            {
+              "id": 150,
+              "name": "Boulaie Lou-Gauthier Mathilde 50 M Assisté (bord) 00:02:30",
+              "bib": 150,
+              "totalTime": null,
+              "laps": 0
+            }
+          ],
+          "nextEventId": 9,
+          "nextSerieId": 1,
+          "nextParticipantId": 151
+        },
+        "pools": {
+          "enabled": false,
+          "divisions": {
+            "1": {
+              "pools": [],
+              "matches": []
+            },
+            "2": {
+              "pools": [],
+              "matches": []
+            },
+            "3": {
+              "pools": [],
+              "matches": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "stats": {
+    "totalPlayers": 150,
+    "totalMatches": 0,
+    "totalDays": 2,
+    "uniquePlayersList": [
+      "Batoulu Pascal-Margot Nora-Nathan Brasse 25 M Brasse 0:01:16",
+      "Boulaie Sarah Louis 25 M Brasse",
+      "Boulaie Anna-Collard Etienne-Leblanc 25 M Brasse 0:00:35",
+      "Boulaie Brasseur Delvaux 25 M Brasse 0:00:28",
+      "Boulaie Navez Mathilde 25 M Brasse 0:00:32",
+      "Boulaie Olivier-Pauline Janssens-Lefebvre 25 M Brasse 0:00:37",
+      "Carpe Mosane Laura-Hennes Willems-Michaux 25 M Brasse 0:00:34",
+      "Gai Séjour Fabrice Manon 25 M Brasse 0:00:22",
+      "Gai Séjour Lemoine Delvigne 25 M Brasse 0:00:28",
+      "Gai Séjour Francois Robin-Claes 25 M Brasse 0:00:38",
+      "Renards Camille Goossens 25 M Brasse",
+      "Renards Martin Lucas 25 M Brasse 0:00:39",
+      "Renards Fontaine Ines 25 M Brasse 0:00:34",
+      "Renards Wouters Carlier 25 M Brasse 0:00:44",
+      "Trucket Marc Leclercq 25 M Brasse 0:00:30",
+      "Trucket Thiry Willems 25 M Brasse 0:00:43",
+      "Trucket Mertens Andrea 25 M Brasse 0:00:43",
+      "Trucket Claes Yasmine 25 M Brasse 0:00:49",
+      "Trucket Hanquet Arthur 25 M Brasse 01:10.3 25",
+      "Trucket Alex-Manon Nathan-Clara 25 M Brasse 0:00:35",
+      "Trucket Kevin Cools 25 M Brasse 0:00:37",
+      "Trucket Delhaye Pierre 25 M Brasse 0:00:53",
+      "Zoe Marie 25 M Brasse 0:01:10",
+      "Batoulu Clara Hugo 25 M Dos 0:00:54",
+      "Batoulu Jade 25 M Dos 0:00:52",
+      "Gai Séjour Renard-Lea Piron 25 M Dos 0:00:36",
+      "Gai Séjour Sam Olivier 25 M Dos 0:00:31",
+      "Gai Séjour Dominique Jade-Pasteels 25 M Dos 0:00:25",
+      "Boulaie Brasseur Delvaux 25 M Dos 0:00:26",
+      "Boulaie Lou Ledent 25 M Dos 0:00:27",
+      "Carpe Mosane Fontaine-Fievez Denis-Ella 25m Dos 0:00:34,154",
+      "Batoulu . Bastin . Jules . 25 M Dos . 0:01:14,000",
+      "Trucket Laurent Petit 0:0:57. 25m Dos",
+      "Boulaie. Collard-Paul. Bertrand. 25 M Dos. 0:00:32,000",
+      "Aquaphile Saja. Mathilde-Lecomte. Aline-Martin. 25m Dos",
+      "Marthe Et Marie. Julien Laura. 25m Dos. 00:52,40",
+      "Batoulu . Mertens-Wauters . Marie . Dos 25 M .  0:01:15,000",
+      "Gai Séjour Pauline Gosset 25m Libre 0:00:37",
+      "Gai Séjour Celia Rousseau 25 M Libre 0:00:38",
+      "Gai Séjour Aline Steve 25 M Libre 0:00:28",
+      "Gai Séjour Sam Olivier 25 M Libre 0:00:34",
+      "Gai Séjour Dominique Chloe-Alex 25 M Libre 0:00:26",
+      "Trucket Alex-Manon Nathan-Clara 25 M Libre 0:00:35,493",
+      "Boulaie Charlie-Basile Lucas-Andrea 25 M Libre 0:00:39",
+      "Boulaie Noa Morgan 25 M Libre 0:00:23",
+      "Boulaie Lou Henrard 25 M Libre 0:00:18",
+      "Renards Camille Goossens 25 M Libre 0:00:45,143",
+      "Marthe Et Marie Vandamme Lucie 25m Libre 0:00:18",
+      "Marthe Et Marie Lecocq Marchal 25m Libre 0:00:23",
+      "Marthe Et Marie Lecomte Michaux 25m Libre 0:00:22",
+      "Carpe Mosane Laura-Hennes Ledent 25m Libre 0:00:21,381",
+      "Gai Séjour. Pirard. Leclercq. 25m .libre",
+      "Trucket Claes Antoine 0:0:31.00 25m Libre",
+      "Cordee Sports Alice Gobert 25m Libre 0.50.00",
+      "Boulaie. Pasteels. Ruelle-Delvigne. 25 M Libre. 0:00:32,000",
+      "Aquaphile Saja. Dubois-Wouters. Vandamme-Vandamme. 25m Libre",
+      "Marthe Et Marie. Julien Laura. 25 M Libre. 00:47,0",
+      "Cordée Sport Ifa Bouge. Pauline-Gaspard Sacha-Zoe. 25m Libre 00: 45,00",
+      "Carpe Mosane. Lucas-Andrea. Bodart-Masson.25m Brasse. Lent",
+      "Jalon .noa-pascal Lucie-Maes 25 M Libre",
+      "Cordee Sports Leblanc Verhoeven 25m Libre 0.52.00",
+      "Boulaie. Quentin-Sam. Lejeune. 25 M Libre. 0:00:38,000",
+      "Aquaphile Saja. Kevin-Lambert. Fabrice-Lemaire. 25m Libre",
+      "Marthe Et Marie. Anais-Yasmine Remy. 25m Libre. 0:00:31,574",
+      "Cordée Sport Ifa Bouge. Zoe-Morel Mathilde-Lecomte. 25m Libre. 00:33,00",
+      "Carpe Mosane. Ines Elodie-Dominique.25m Brasse",
+      "Jalon. Lecomte-Elodie Brasseur-Lemoine 25m Libre",
+      "Cordee Sports Ines-Arthur Goossens-Marchal 25m Libre 1.20.00",
+      "Aquaphile Saja. Michel-Ninon. Chloe-Pasteels. 25m Libre",
+      "Cordée Sport Ifa Bouge. Smets-Robin Eva. 25m Libre. 00:56.00",
+      "Jalon . Eden Bertrand 25m Libre",
+      "Cordee Sports Cedric Gobert 25m Libre 1.50.00",
+      "Cordée Sport Ifa Bouge. Anais-Yasmine Elodie-Dominique. Libre. 01:02,00",
+      "Cordee Sports Pierret Eva 25m Libre 0.57.00",
+      "Cordée Sport Ifa Bouge. Jordan Nathan. 25m Libre 00:58,00",
+      "Trucket Renard Hardy 50 Metres Brasse 1:34:00.",
+      "Cordee Sports Smets Claude 50m Brasse 3.25.00",
+      "Boulaie. Bertrand-Cools. Steve. 50 M Brasse 0:01:10,000",
+      "Aquaphile Saja. Michel-Ninon. Goossens. 50 M Brasse",
+      "Apris.julien-camille.gillet-mathilde. 50 M Brasse 1,24,11",
+      "Marthe Et Marie. Vandamme Lucie. 50 M Brasse. 01:02,0",
+      "Trucket Marc Leclercq 50 M Brasse 0:01:17",
+      "Trucket Thiry Willems 50 M Brasse 0:01:44",
+      "Trucket Laurent Bodart-Masson 50 M Brasse 0:02:08",
+      "Trucket Kevin Cools 50 M Brasse 0:01:39",
+      "Trucket Hanquet Arthur 50 M Brasse0:01:29",
+      "Trucket Mertens Andrea 50 M Brasse 0:01:33",
+      "Trucket Maxime-Denis 50 M Brasse 0:01:55",
+      "Boulaie Sarah Louis 50 M Brasse 0:01:47",
+      "Boulaie Anna-Collard Etienne-Leblanc 50 M Brasse 0:01:28",
+      "Boulaie Navez Mathilde 50 M Brasse 0:01:14",
+      "Boulaie Olivier-Pauline Morel-Ludivine-Mertens-Wauters 50 M Brasse 0:01:34",
+      "Renards Wouters Carlier 50 M Brasse 0:01:43,496",
+      "Aquaphile Saja. Bertrand-Cools. Noel-Mertens. 50m Brasse",
+      "Carpe Mosane Willems-Michaux 50 M Brasse 0:01:12,187",
+      "Batoulu . Bastin . Jules . 50 M Brasse . 0:01:36,000",
+      "Batoulu . Clara . Hugo .50 M Brasse . 0:01:39,000",
+      "Aquaphile Saja. Mathilde-Lecomte. Aline-Martin. 50 M Brasse",
+      "Apris.yves-julie.lemaire-noa.50 M Brasse 1,49,47",
+      "Marthe Et Marie. Quentin Michel. 50 M Brasse. 01:39,50",
+      "Aquaphile Saja. Henry-Jade. Brasseur-Lemoine. 50 M Brasse",
+      "Apris.anna-collard.eva. 50 M Brasse 1,30,09",
+      "Aquaphile Saja. Fievez-Navez. Mathilde-Lecomte.50 M Brasse",
+      "Aquaphile Saja. Elodie-Dominique. Michel-Ninon. 50 M Brasse",
+      "Apris.hugo-delhaye.ledent. 50 M Brasse 1,25,64",
+      "Marthe Et Marie. Lecomte Michaux. 50m Brasse. 01:06,50",
+      "Gai Séjour Robin-Claes Mathilde 50 M Dos 0:00:48,803",
+      "Boulaie Lou Ledent 50 M Dos 0:01:02,892",
+      "Carpe Mosane Fontaine-Fievez Denis-Ella 50 M Dos 0:01:28,623",
+      "Boulaie. Collard-Paul. Bertrand. 50 M Dos 0:01:20,000",
+      "Marthe Et Marie. Lecocq Marchal. 50 M Dos 01:22,0",
+      "Marthe Et Marie. Theo Remy 50 M Dos 01:52,0",
+      "Carpe Mosane Laura-Hennes Ledent 50 M Libre 0:00:53,575",
+      "Boulaie Charlie-Basile Lucas-Andrea 50 M Libre 0:01:35",
+      "Cordée Sport Ifa Bouge. Zoe-Morel Mathilde-Lecomte. 50 M Libre. 01:06,00",
+      "Boulaie Noa Morgan 50 M Libre 0:00:56",
+      "Cordée Sport Ifa Bouge. Jordan Nathan. 50 M Libre 01:55,00",
+      "Boulaie Lou Henrard 50 M Libre 0:00:40",
+      "Cordee Sports Pierret Eva 50 M Libre 2.05.00",
+      "Renards Martin Lucas 50 M Libre 0:01:14",
+      "Renards Fontaine Ines 50 M Libre 0:00:52",
+      "Cordee Sports Alice Gobert 50 M Libre 1.55.00",
+      "Boulaie. Pasteels. Ruelle-Delvigne. 50 M Libre 0:01:35,000",
+      "Renards. Leroy. Didier. 50 M Libre. 1:21,72",
+      "Aquaphile Saja. Dubois-Wouters. Vandamme-Vandamme. 50 M Libre",
+      "Cordée Sport Ifa Bouge. Pauline-Gaspard Sacha-Zoe. 50 M Libre 01:35,00",
+      "Carpe Mosane. Lucas-Andrea Bodart-Masson.50 M Libre",
+      "Cordee Sports Leblanc Verhoeven 50 M Libre 2.05.00",
+      "Boulaie. Quentin-Sam. Lejeune. 50 M Libre 0:01:45,000",
+      "Aquaphile Saja. Willems-Michaux. Michel-Ninon. 50 M Libre",
+      "Cordée Sport Ifa Bouge. Anais-Yasmine Elodie-Dominique. 50 M Libre 02:07,00",
+      "Carpe Mosane. Ines Elodie-Dominique. 50 M Libre",
+      "Cordee Sports Ines-Arthur Goossens-Marchal 50 M Libre 3.00.00",
+      "Aquaphile Saja. Elodie-Dominique. Michel-Ninon. 50 M Libre",
+      "Batoulu Pascal-Margot Nora-Nathan 25 M Assisté 0:01:23,522",
+      "Boulaie Mathilde Lou-Gauthier 25 M Asssité 0:01:16",
+      "Boulaie Laurent-Antoine Claes-Mathieu 25 M (bord) 0:00:45",
+      "Boulaie Gilles-Thiry 25 M Asssité 0:00:57",
+      "Gai Séjour Victor-Eric Remy 25 M Assisté 0:00:38",
+      "Gai Séjour Lambotte-Peeters Lejeune 25 M Assisté 0:00:28",
+      "Gai Séjour Aline-Martin Steve 25 M Assisté 0:01:03",
+      "Gai Séjour Fontaine-Fievez Manon-Fabrice 25 M Assisté 0:01:20",
+      "Gai Séjour Etienne De Smet 25 M Assisté 0:00:34",
+      "Gai Séjour Jadoul-Leclercq Eva 25 M Assisté",
+      "Sra Goélands.hanquet-massart.lemaire-noa. 25 M Assisté",
+      "Sra Goélands.gobert-lambotte.didier-quentin. 25 M Assisté",
+      "Cordee Sports Fontaine-Fievez Steve-Schmitz 25 M Assiste 1.10.00",
+      "Renards Ledent-Moreau Rousseau-Charlier 25 M Assistée 01:03,94",
+      "Boulaie Noa-Pascal Delvigne 50 M Assisté (bord) 00:02:27",
+      "Boulaie Lou-Gauthier Mathilde 50 M Assisté (bord) 00:02:30"
+    ]
+  }
+}

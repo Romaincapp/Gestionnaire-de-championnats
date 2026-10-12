@@ -84,5 +84,5 @@ def add_scores_to_file(filename):
 if __name__ == '__main__':
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    filepath = os.path.join(script_dir, 'MODE POOL TEST.json')
+    filepath = os.path.join(script_dir, '..', 'tests', 'fixtures', 'MODE POOL TEST.json')
     add_scores_to_file(filepath)

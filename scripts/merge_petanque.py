@@ -1,11 +1,11 @@
 import json
 
 # Lire J1
-with open('json/Pétanque J1.json', 'r', encoding='utf-8') as f:
+with open('examples/Pétanque J1.json', 'r', encoding='utf-8') as f:
     j1 = json.load(f)
 
 # Lire J2
-with open('json/Pétanque J2.json', 'r', encoding='utf-8') as f:
+with open('examples/Pétanque J2.json', 'r', encoding='utf-8') as f:
     j2 = json.load(f)
 
 # Créer le fichier fusionné
@@ -36,10 +36,10 @@ merged['championship']['days']['2'] = j2['championship']['days']['2']
 merged['stats']['totalMatches'] = j1['stats']['totalMatches'] + j2['stats']['totalMatches']
 
 # Sauvegarder
-with open('json/Pétanque J1 J2 Fusion.json', 'w', encoding='utf-8') as f:
+with open('examples/Pétanque J1 J2 Fusion.json', 'w', encoding='utf-8') as f:
     json.dump(merged, f, ensure_ascii=False, indent=2)
 
-print('Fichier fusionné créé : json/Pétanque J1 J2 Fusion.json')
+print('Fichier fusionné créé : examples/Pétanque J1 J2 Fusion.json')
 print(f"Journées : {merged['stats']['totalDays']}")
 print(f"Matchs J1 : {j1['stats']['totalMatches']}")
 print(f"Matchs J2 : {j2['stats']['totalMatches']}")

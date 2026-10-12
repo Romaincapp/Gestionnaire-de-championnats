@@ -33,8 +33,8 @@ beforeEach(() => {
         2: {
             dayType: 'championship', matches: { 1: [] },
             players: { 1: [
-                'Boulaie Robin Christophe 50 M Brasse 0:00:40',
-                'Marthe Et Marie Hans Yohan 50 M Brasse 0:00:35',
+                'Boulaie Robin Sacha 50 M Brasse 0:00:40',
+                'Marthe Et Marie Noa Lambert 50 M Brasse 0:00:35',
                 'Carpe Mosane Durand Paul 50 M Brasse 0:00:45',
                 'Boulaie Petit Anne 25 M Dos 0:00:30',
             ].map(n => ({ name: n, club: '' })) },
@@ -93,29 +93,29 @@ describe('nageur disqualifié après son arrivée', () => {
         const serie = brasseSerie();
         const lanes = serie.participants.map(p => p.laneNumber);
         runRace(serie, lanes); // tous arrivés
-        const hans = raceData.currentSerie.participants.find(p => p.name === 'Hans Yohan');
+        const hans = raceData.currentSerie.participants.find(p => p.name === 'Noa Lambert');
         window.markAsDISQ(hans.bib); // virage illégal constaté après l'arrivée
         window.backToSeriesList();
 
         const results = brasseSerie().results.map(r => r.name);
-        expect(results).not.toContain('Hans Yohan');
+        expect(results).not.toContain('Noa Lambert');
         expect(results).toHaveLength(2);
 
         const day = window.getChronoResultsForDay(1);
-        expect(day['Hans Yohan']).toBeUndefined();
+        expect(day['Noa Lambert']).toBeUndefined();
         const ranking = window.calculateMultisportRanking();
-        expect(ranking['Hans Yohan']).toBeUndefined();
+        expect(ranking['Noa Lambert']).toBeUndefined();
     });
 
     test('annuler la disqualification le remet dans les résultats', () => {
         window.generateSwimmingSeries(1, 2, 5);
         const serie = brasseSerie();
         runRace(serie, serie.participants.map(p => p.laneNumber));
-        const hans = raceData.currentSerie.participants.find(p => p.name === 'Hans Yohan');
+        const hans = raceData.currentSerie.participants.find(p => p.name === 'Noa Lambert');
         window.markAsDISQ(hans.bib);
         window.cancelDISQ(hans.bib);
         window.backToSeriesList();
-        expect(brasseSerie().results.map(r => r.name)).toContain('Hans Yohan');
+        expect(brasseSerie().results.map(r => r.name)).toContain('Noa Lambert');
     });
 });
 
@@ -126,11 +126,11 @@ describe('club dans les résultats et le classement', () => {
         runRace(serie, serie.participants.map(p => p.laneNumber));
         window.backToSeriesList();
 
-        const robin = brasseSerie().results.find(r => r.name === 'Robin Christophe');
+        const robin = brasseSerie().results.find(r => r.name === 'Robin Sacha');
         expect(robin.club).toBe('Boulaie');
 
         const ranking = window.calculateMultisportRanking();
-        expect(ranking['Robin Christophe'].club).toBe('Boulaie');
-        expect(ranking['Hans Yohan'].club).toBe('Marthe Et Marie');
+        expect(ranking['Robin Sacha'].club).toBe('Boulaie');
+        expect(ranking['Noa Lambert'].club).toBe('Marthe Et Marie');
     });
 });
