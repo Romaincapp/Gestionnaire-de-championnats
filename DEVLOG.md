@@ -33,6 +33,42 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles Boccia (avec noms et vierges) : textes agrandis
+
+- **Contexte** : même demande des arbitres que pour la pétanque.
+- **Fait** : `generateBocciaSheetHTML` et `generateBlankBocciaHTML` — titre 12→15 px, ligne
+  journée 8→12 px (terrain en 16 px gras via `.match-court` sur les feuilles avec noms),
+  identifiant 9→13 px, noms des joueurs 10→17 px, libellés 7-8→10-11 px, en-têtes du tableau
+  et « Manche N » 8→10 px. Cases de score inchangées (la place suffisait). Aucune carte ne
+  déborde (contrôle Chromium, noms longs), 1 page HTML = 1 feuille A4.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ❌ (n/a) · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-12 — Feuilles pétanque : textes agrandis pour les arbitres
+
+- **Contexte** : des arbitres trouvent titres, terrain et équipes trop petits.
+- **Fait** : `generatePetanqueSheetHTML` — titre 11→15 px, ligne journée 8→12 px avec le
+  terrain en 16 px gras (`.match-court`), identifiant du match 9→13 px, noms d'équipe 10→17 px,
+  libellés 7-8→10-11 px. Cases de score : `aspect-ratio: 1` remplacé par une hauteur de 7 mm
+  (cases moins hautes) pour garder la mise en page. Aucune carte ne déborde (contrôle Chromium
+  avec des noms d'équipe longs), 1 page HTML = 1 feuille A4.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ❌ (n/a) · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
+### 2026-10-12 — Feuilles Boccia vierges : un coin de page par tour (recto verso)
+
+- **Contexte** : même disposition que les feuilles avec noms (PR #109), pour les feuilles
+  Boccia vierges. Les récapitulatifs restent inchangés (demande explicite de l'utilisateur).
+- **Fait** : chaque page porte un match de chaque tour, coin pré-imprimé « Tour N • Match N° k »
+  (HG T1, HD T3, BG T2, BD T4). La question devient « Combien de matchs par tour ? » (= nombre
+  de pages, 4 feuilles chacune) au lieu d'un nombre total de feuilles. `generateBlankBocciaHTML(numPages)`
+  (signature changée, exposée pour les tests). Page ramenée à 190×276 mm, vérifié en PDF.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`, `tests/unit/tourCornerSheets.test.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-12 — Feuilles de match classiques : 4 coins par page, un par tour (recto verso)
 
 - **Contexte** : même demande que pétanque/Boccia/2 scores, pour « 📋 Feuilles de match ».

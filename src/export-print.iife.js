@@ -1241,19 +1241,26 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     margin-bottom: 2mm;
                 }
 
+                /* Titres, terrain et joueurs en grand (lisibles par les arbitres) */
+                .match-court {
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #000;
+                }
+
                 .match-title {
-                    font-size: 12px;
+                    font-size: 15px;
                     font-weight: bold;
                     margin-bottom: 1mm;
                 }
 
                 .match-info {
-                    font-size: 8px;
+                    font-size: 12px;
                     color: #666;
                 }
 
                 .match-id {
-                    font-size: 9px;
+                    font-size: 13px;
                     font-weight: bold;
                     background: #f0f0f0;
                     padding: 1mm;
@@ -1273,7 +1280,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
 
                 .player-label {
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 11px;
                     width: 20mm;
                 }
 
@@ -1281,7 +1288,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     flex: 1;
                     border: 1px solid #000;
                     padding: 1.5mm;
-                    font-size: 10px;
+                    font-size: 17px;
                     font-weight: bold;
                     background: #f8f8f8;
                 }
@@ -1304,7 +1311,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     color: white;
                     padding: 1.5mm;
                     text-align: center;
-                    font-size: 8px;
+                    font-size: 10px;
                     border: 1px solid #000;
                     font-weight: bold;
                 }
@@ -1319,7 +1326,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                 .manche-header {
                     background: #f0f0f0;
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 10px;
                     text-align: left;
                     padding-left: 2mm !important;
                     width: 25%;
@@ -1357,7 +1364,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                 }
 
                 .result-label {
-                    font-size: 7px;
+                    font-size: 10px;
                     font-weight: bold;
                     margin-right: 2mm;
                 }
@@ -1408,7 +1415,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
 
 function generateBocciaMatchCard(match, dayNumber) {
     // Afficher le numéro de terrain si disponible (en gras)
-    const terrainInfo = match.court ? ` • Terrain <strong>${match.court}</strong>` : '';
+    const terrainInfo = match.court ? ` • <span class="match-court">Terrain ${match.court}</span>` : '';
 
     return `
         <div class="match-card">
@@ -1621,19 +1628,26 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                     margin-bottom: 2mm;
                 }
 
+                /* Titres, terrain et équipes en grand (lisibles par les arbitres) */
                 .match-title {
-                    font-size: 11px;
+                    font-size: 15px;
                     font-weight: bold;
                     margin-bottom: 1mm;
                 }
 
                 .match-info {
-                    font-size: 8px;
-                    color: #666;
+                    font-size: 12px;
+                    color: #333;
+                }
+
+                .match-court {
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #000;
                 }
 
                 .match-id {
-                    font-size: 9px;
+                    font-size: 13px;
                     font-weight: bold;
                     background: #e8f5e9;
                     padding: 1mm;
@@ -1653,7 +1667,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
 
                 .player-label {
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 11px;
                     width: 22mm;
                 }
 
@@ -1661,7 +1675,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                     flex: 1;
                     border: 1px solid #000;
                     padding: 1.5mm;
-                    font-size: 10px;
+                    font-size: 17px;
                     font-weight: bold;
                     background: #f8f8f8;
                 }
@@ -1680,15 +1694,15 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                     margin-bottom: 2mm;
                 }
 
+                /* Cases plus basses que larges : la place va aux textes */
                 .score-cell {
-                    aspect-ratio: 1;
                     border: 1px solid #999;
                     background: white;
-                    min-height: 6mm;
+                    height: 7mm;
                 }
 
                 .grid-label {
-                    font-size: 7px;
+                    font-size: 10px;
                     font-weight: bold;
                     text-align: center;
                     margin-bottom: 1mm;
@@ -1708,7 +1722,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                 }
 
                 .result-label {
-                    font-size: 7px;
+                    font-size: 10px;
                     font-weight: bold;
                     margin-right: 2mm;
                 }
@@ -1759,7 +1773,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
 
 function generatePetanqueMatchCard(match, dayNumber, pointsLimit) {
     // Afficher le numéro de terrain si disponible
-    const terrainInfo = match.court ? ` • Terrain <strong>${match.court}</strong>` : '';
+    const terrainInfo = match.court ? ` • <span class="match-court">Terrain ${match.court}</span>` : '';
 
     // Générer les cellules de score pour chaque joueur
     const generateScoreRow = (label) => {
@@ -1828,25 +1842,26 @@ function generatePetanqueMatchCard(match, dayNumber, pointsLimit) {
 // ===============================================
 
 function printBlankBocciaSheets() {
-    // Demander le nombre de feuilles à imprimer
-    const numSheets = prompt('Combien de feuilles Boccia vierges voulez-vous imprimer ?', '8');
-    if (!numSheets || isNaN(parseInt(numSheets)) || parseInt(numSheets) < 1) {
+    // Chaque page porte un match de chaque tour, chaque coin réservé à un tour
+    // (T1 HG, T3 HD, T2 BG, T4 BD) comme les feuilles avec noms : une page par
+    // match de tour
+    const answer = prompt('Combien de matchs par tour ? (1 page A4 = 1 match des tours 1, 2, 3 et 4)', '2');
+    if (!answer || isNaN(parseInt(answer)) || parseInt(answer) < 1) {
         return;
     }
 
-    const count = parseInt(numSheets);
-    const numPages = Math.ceil(count / 4);
+    const numPages = parseInt(answer);
 
     // Générer le HTML d'impression
-    const printHTML = generateBlankBocciaHTML(count, numPages);
+    const printHTML = generateBlankBocciaHTML(numPages);
 
     // Ouvrir dans une nouvelle fenêtre pour impression
     openPrintWindow(printHTML, `Feuilles_Boccia_Vierges`);
 
-    showNotification(`📄 ${count} feuilles Boccia vierges générées !`, 'success');
+    showNotification(`📄 ${numPages * 4} feuilles Boccia vierges générées (${numPages} par tour) !`, 'success');
 }
 
-function generateBlankBocciaHTML(count, numPages) {
+function generateBlankBocciaHTML(numPages) {
     const currentDate = new Date().toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'long',
@@ -1880,15 +1895,19 @@ function generateBlankBocciaHTML(count, numPages) {
                     background: white;
                 }
 
+                /* Exactement la zone imprimable (A4 moins les marges de 10 mm) :
+                   une page HTML = une feuille, sinon le recto verso se décale */
                 .page {
-                    width: 210mm;
-                    height: 297mm;
+                    width: 190mm;
+                    height: 276mm;
                     page-break-after: always;
+                    break-after: page;
+                    overflow: hidden;
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    grid-template-rows: 1fr 1fr;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    grid-template-rows: repeat(2, minmax(0, 1fr));
                     gap: 5mm;
-                    padding: 5mm;
+                    padding: 3mm;
                 }
 
                 .page:last-child {
@@ -1896,6 +1915,8 @@ function generateBlankBocciaHTML(count, numPages) {
                 }
 
                 .match-card {
+                    overflow: hidden;
+                    min-height: 0;
                     border: 2px solid #000;
                     padding: 3mm;
                     background: white;
@@ -1910,19 +1931,20 @@ function generateBlankBocciaHTML(count, numPages) {
                     margin-bottom: 2mm;
                 }
 
+                /* Titres et joueurs en grand (lisibles par les arbitres) */
                 .match-title {
-                    font-size: 12px;
+                    font-size: 15px;
                     font-weight: bold;
                     margin-bottom: 1mm;
                 }
 
                 .match-info {
-                    font-size: 8px;
+                    font-size: 12px;
                     color: #666;
                 }
 
                 .match-id {
-                    font-size: 9px;
+                    font-size: 13px;
                     font-weight: bold;
                     background: #f0f0f0;
                     padding: 1mm;
@@ -1942,7 +1964,7 @@ function generateBlankBocciaHTML(count, numPages) {
 
                 .player-label {
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 11px;
                     width: 20mm;
                 }
 
@@ -1950,7 +1972,7 @@ function generateBlankBocciaHTML(count, numPages) {
                     flex: 1;
                     border: 1px solid #000;
                     padding: 1.5mm;
-                    font-size: 10px;
+                    font-size: 17px;
                     font-weight: bold;
                     background: white;
                     min-height: 6mm;
@@ -1974,7 +1996,7 @@ function generateBlankBocciaHTML(count, numPages) {
                     color: white;
                     padding: 1.5mm;
                     text-align: center;
-                    font-size: 8px;
+                    font-size: 10px;
                     border: 1px solid #000;
                     font-weight: bold;
                 }
@@ -1989,7 +2011,7 @@ function generateBlankBocciaHTML(count, numPages) {
                 .manche-header {
                     background: #f0f0f0;
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 10px;
                     text-align: left;
                     padding-left: 2mm !important;
                     width: 25%;
@@ -2027,7 +2049,7 @@ function generateBlankBocciaHTML(count, numPages) {
                 }
 
                 .result-label {
-                    font-size: 7px;
+                    font-size: 10px;
                     font-weight: bold;
                     margin-right: 2mm;
                 }
@@ -2053,24 +2075,14 @@ function generateBlankBocciaHTML(count, numPages) {
         <body>
     `;
 
-    // Générer les pages (4 feuilles par page)
-    let sheetsGenerated = 0;
-    for (let page = 0; page < numPages; page++) {
+    // Coins dans l'ordre HG, HD, BG, BD = tours 1, 3, 2, 4 (recto verso
+    // bord long : T3 au dos de T1, T4 au dos de T2)
+    const cornerTours = [1, 3, 2, 4];
+    for (let page = 1; page <= numPages; page++) {
         htmlContent += `<div class="page">`;
-
-        for (let i = 0; i < 4 && sheetsGenerated < count; i++) {
-            sheetsGenerated++;
-            htmlContent += generateBlankBocciaCard(sheetsGenerated, currentDate);
-        }
-
-        // Compléter avec des cartes vides si dernière page incomplète
-        const remaining = 4 - (sheetsGenerated % 4 === 0 ? 4 : sheetsGenerated % 4);
-        if (page === numPages - 1 && remaining < 4 && remaining > 0) {
-            for (let j = 0; j < remaining; j++) {
-                htmlContent += `<div class="match-card" style="border-style: dashed; opacity: 0.3;"></div>`;
-            }
-        }
-
+        cornerTours.forEach(tour => {
+            htmlContent += generateBlankBocciaCard(page, currentDate, tour);
+        });
         htmlContent += `</div>`;
     }
 
@@ -2082,13 +2094,13 @@ function generateBlankBocciaHTML(count, numPages) {
     return htmlContent;
 }
 
-function generateBlankBocciaCard(sheetNumber, currentDate) {
+function generateBlankBocciaCard(sheetNumber, currentDate, tour) {
     return `
         <div class="match-card">
             <div class="match-header">
                 <div class="match-title">🎾 FEUILLE DE MATCH BOCCIA</div>
                 <div class="match-info">${currentDate}</div>
-                <div class="match-id">Feuille N° ${sheetNumber}</div>
+                <div class="match-id">Tour ${tour} • Match N° ${sheetNumber}</div>
             </div>
 
             <div class="players-section">
@@ -2977,6 +2989,7 @@ window.addPrintMatchesButton = addPrintMatchesButton;
 window.getDivisionMatches = getDivisionMatches;
 window.buildTourCornerPages = buildTourCornerPages;
 window.generateBocciaPages = generateBocciaPages;
+window.generateBlankBocciaHTML = generateBlankBocciaHTML;
 window.generatePetanqueSheetHTML = generatePetanqueSheetHTML;
 window.generateMatchSheetHTML = generateMatchSheetHTML;
 window.generateCompactMatchSheet = generateCompactMatchSheet;

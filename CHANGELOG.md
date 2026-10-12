@@ -13,6 +13,17 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🔠 Feuilles pétanque et Boccia plus lisibles
+- Titre, terrain (en gras), numéro du match et noms des équipes / joueurs écrits bien plus grands.
+- Pétanque : les cases de score sont un peu moins hautes pour garder la même mise en page.
+- Boccia (avec noms et vierges) : mise en page et cases de score inchangées.
+
+### 🖨️ Feuilles Boccia vierges : un coin par tour
+- Chaque page A4 porte 4 feuilles déjà marquées **Tour 1** (haut gauche), **Tour 3** (haut
+  droite), **Tour 2** (bas gauche) et **Tour 4** (bas droite), comme les feuilles avec noms :
+  en recto verso, le tour 3 tombe au dos du tour 1 et le tour 4 au dos du tour 2.
+- La question devient « Combien de matchs par tour ? » : 1 page = 1 match de chaque tour.
+
 ### 🖨️ Feuilles de match (classiques, 2 scores, Boccia, pétanque) prêtes pour le recto verso et la découpe
 - Chaque coin de la page A4 est réservé à un tour : **tour 1 en haut à gauche, tour 3 en haut
   à droite, tour 2 en bas à gauche, tour 4 en bas à droite**. En recto verso, le tour 3 tombe
