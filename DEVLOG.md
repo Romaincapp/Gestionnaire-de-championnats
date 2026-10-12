@@ -33,6 +33,18 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-12 — Feuilles Boccia (avec noms et vierges) : textes agrandis
+
+- **Contexte** : même demande des arbitres que pour la pétanque.
+- **Fait** : `generateBocciaSheetHTML` et `generateBlankBocciaHTML` — titre 12→15 px, ligne
+  journée 8→12 px (terrain en 16 px gras via `.match-court` sur les feuilles avec noms),
+  identifiant 9→13 px, noms des joueurs 10→17 px, libellés 7-8→10-11 px, en-têtes du tableau
+  et « Manche N » 8→10 px. Cases de score inchangées (la place suffisait). Aucune carte ne
+  déborde (contrôle Chromium, noms longs), 1 page HTML = 1 feuille A4.
+- **Fichiers/modules touchés** : `src/export-print.iife.js`
+- **Commit(s)** : voir branche `claude/wonderful-euler-h2wktx`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ❌ (n/a) · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-10-12 — Feuilles pétanque : textes agrandis pour les arbitres
 
 - **Contexte** : des arbitres trouvent titres, terrain et équipes trop petits.

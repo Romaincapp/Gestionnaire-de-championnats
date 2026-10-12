@@ -1241,19 +1241,26 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     margin-bottom: 2mm;
                 }
 
+                /* Titres, terrain et joueurs en grand (lisibles par les arbitres) */
+                .match-court {
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #000;
+                }
+
                 .match-title {
-                    font-size: 12px;
+                    font-size: 15px;
                     font-weight: bold;
                     margin-bottom: 1mm;
                 }
 
                 .match-info {
-                    font-size: 8px;
+                    font-size: 12px;
                     color: #666;
                 }
 
                 .match-id {
-                    font-size: 9px;
+                    font-size: 13px;
                     font-weight: bold;
                     background: #f0f0f0;
                     padding: 1mm;
@@ -1273,7 +1280,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
 
                 .player-label {
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 11px;
                     width: 20mm;
                 }
 
@@ -1281,7 +1288,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     flex: 1;
                     border: 1px solid #000;
                     padding: 1.5mm;
-                    font-size: 10px;
+                    font-size: 17px;
                     font-weight: bold;
                     background: #f8f8f8;
                 }
@@ -1304,7 +1311,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     color: white;
                     padding: 1.5mm;
                     text-align: center;
-                    font-size: 8px;
+                    font-size: 10px;
                     border: 1px solid #000;
                     font-weight: bold;
                 }
@@ -1319,7 +1326,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                 .manche-header {
                     background: #f0f0f0;
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 10px;
                     text-align: left;
                     padding-left: 2mm !important;
                     width: 25%;
@@ -1357,7 +1364,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                 }
 
                 .result-label {
-                    font-size: 7px;
+                    font-size: 10px;
                     font-weight: bold;
                     margin-right: 2mm;
                 }
@@ -1408,7 +1415,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
 
 function generateBocciaMatchCard(match, dayNumber) {
     // Afficher le numéro de terrain si disponible (en gras)
-    const terrainInfo = match.court ? ` • Terrain <strong>${match.court}</strong>` : '';
+    const terrainInfo = match.court ? ` • <span class="match-court">Terrain ${match.court}</span>` : '';
 
     return `
         <div class="match-card">
@@ -1924,19 +1931,20 @@ function generateBlankBocciaHTML(numPages) {
                     margin-bottom: 2mm;
                 }
 
+                /* Titres et joueurs en grand (lisibles par les arbitres) */
                 .match-title {
-                    font-size: 12px;
+                    font-size: 15px;
                     font-weight: bold;
                     margin-bottom: 1mm;
                 }
 
                 .match-info {
-                    font-size: 8px;
+                    font-size: 12px;
                     color: #666;
                 }
 
                 .match-id {
-                    font-size: 9px;
+                    font-size: 13px;
                     font-weight: bold;
                     background: #f0f0f0;
                     padding: 1mm;
@@ -1956,7 +1964,7 @@ function generateBlankBocciaHTML(numPages) {
 
                 .player-label {
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 11px;
                     width: 20mm;
                 }
 
@@ -1964,7 +1972,7 @@ function generateBlankBocciaHTML(numPages) {
                     flex: 1;
                     border: 1px solid #000;
                     padding: 1.5mm;
-                    font-size: 10px;
+                    font-size: 17px;
                     font-weight: bold;
                     background: white;
                     min-height: 6mm;
@@ -1988,7 +1996,7 @@ function generateBlankBocciaHTML(numPages) {
                     color: white;
                     padding: 1.5mm;
                     text-align: center;
-                    font-size: 8px;
+                    font-size: 10px;
                     border: 1px solid #000;
                     font-weight: bold;
                 }
@@ -2003,7 +2011,7 @@ function generateBlankBocciaHTML(numPages) {
                 .manche-header {
                     background: #f0f0f0;
                     font-weight: bold;
-                    font-size: 8px;
+                    font-size: 10px;
                     text-align: left;
                     padding-left: 2mm !important;
                     width: 25%;
@@ -2041,7 +2049,7 @@ function generateBlankBocciaHTML(numPages) {
                 }
 
                 .result-label {
-                    font-size: 7px;
+                    font-size: 10px;
                     font-weight: bold;
                     margin-right: 2mm;
                 }
