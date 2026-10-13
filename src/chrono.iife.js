@@ -411,7 +411,7 @@ function updateLaneDisplay(laneNumber, participant, finishTime) {
 function laneButtonInnerHTML(laneNumber, participant, finishTime) {
     const isFinished = participant.status === 'finished';
     return `
-        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85;">Couloir</div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Couloir</div>
         <div style="font-size: 36px; font-weight: bold; line-height: 1;">${laneNumber}</div>
         <div class="lane-name" style="font-size: 12px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">${participant.name}</div>
         <div style="font-size: 18px; margin-top: 5px;">${isFinished ? '✅' : '🏃'}</div>
@@ -1618,7 +1618,7 @@ function generateRaceRanking() {
                             const position = index + 1;
                             const isDNS = isOutOfRaceStatus(p.status);
                             const medal = isDNS ? outOfRaceLabel(p.status) : (position <= 3 ? medals[position - 1] : position);
-                            const rowBg = isDNS ? 'background: #fdeaea; opacity: 0.7;' : (position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : '');
+                            const rowBg = isDNS ? 'background: #fdeaea;' : (position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : '');
 
                             return `
                                 <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
@@ -1734,7 +1734,7 @@ function buildLiveRaceDisplayContentHTML() {
         const position = index + 1;
         const isDNS = isOutOfRaceStatus(p.status);
         const medal = isDNS ? outOfRaceLabel(p.status) : (position <= 3 ? medals[position - 1] : position);
-        const rowBg = isDNS ? 'background: rgba(231,76,60,0.15); opacity: 0.7;' : (position <= 3 ? 'background: rgba(255,215,0,0.12);' : '');
+        const rowBg = isDNS ? 'background: rgba(231,76,60,0.15);' : (position <= 3 ? 'background: rgba(255,215,0,0.12);' : '');
         const statusHtml = p.status === 'finished'
             ? '<span style="color: #017239; font-weight: bold;">✅ Terminé</span>'
             : p.status === 'disq'

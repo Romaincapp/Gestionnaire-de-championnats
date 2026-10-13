@@ -33,6 +33,27 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — P2 de l'audit Impeccable : opacité, annonces, animations, alert()
+
+- **Contexte** : P2 restants après le nouvel audit (12/20) et les libellés des champs.
+- **Fait** : (1) `test:contrast` compte l'opacité du texte : 465 textes sous le seuil révélés
+  (lignes atténuées par `opacity`, sous-titres blancs à 85-90 %) → opacités retirées ou
+  remplacées (couleur, bordure en pointillés pour les BYE, liseré pour les journées forfait) :
+  0 ; notifications incluses dans l'audit. (2) `announce()` + zones d'annonce permanentes ;
+  toasts aux couleurs de la palette. (3) `prefers-reduced-motion` : CSS + défilements JS
+  « smooth » neutralisés (`a11y.iife.js`). (4) `window.alert` remplacé par `appAlert`
+  (fenêtre de l'app non bloquante) ; `confirm`/`prompt` volontairement natifs (38 appels dont
+  la réponse est attendue de façon synchrone : les remplacer imposerait de réécrire chaque
+  enchaînement).
+- **Fichiers/modules touchés** : `src/notifications.iife.js`, `src/a11y.iife.js`, `styles.css`,
+  `index.html`, `src/{chrono,matches,multisport,pools,ranking,ui}.iife.js` (opacités),
+  `tests/e2e/contrast.e2e.js`, `tests/unit/notificationsLive.test.js` (nouveau),
+  `tests/unit/a11yKeyboard.test.js`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md — · claude.md —
+- **Suite possible** : relancer `audit` ; `polish` (bordures latérales épaisses, dégradés
+  devenus unis, cartes imbriquées).
+
 ### 2026-10-13 — Nouvel audit Impeccable (12/20) puis libellés des champs
 
 - **Contexte** : audit relancé après les 3 P1 : 9/20 → 12/20 (accessibilité 2, perf 3, thème 2,

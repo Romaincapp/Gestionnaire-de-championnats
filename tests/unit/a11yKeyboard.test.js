@@ -261,3 +261,19 @@ Joueur 2"></textarea>
     expect(host.querySelector('.b').getAttribute('aria-label')).toBe('Liste, une entrée par ligne (ex. Joueur 1)');
     expect(host.querySelector('.c').hasAttribute('aria-label')).toBe(false);
 });
+
+test('« réduire les animations » : un défilement en douceur demandé en JS devient instantané', () => {
+    const calls = [];
+    const original = function(arg, extra) { calls.push([this, arg, extra]); };
+    const wrapped = window.a11yRules.withoutSmooth(original);
+    const target = {};
+    window.matchMedia = (q) => ({ matches: q.includes('reduce'), media: q, addListener() {}, removeListener() {} });
+    wrapped.call(target, { behavior: 'smooth', block: 'start' }, 'x');
+    expect(calls[0]).toEqual([target, { behavior: 'auto', block: 'start' }, 'x']);
+    wrapped.call(target, true);                                   // forme booléenne : intacte
+    expect(calls[1][1]).toBe(true);
+    window.matchMedia = (q) => ({ matches: false, media: q, addListener() {}, removeListener() {} });
+    wrapped.call(target, { behavior: 'smooth' });                 // réglage absent : intact
+    expect(calls[2][1]).toEqual({ behavior: 'smooth' });
+    delete window.matchMedia;
+});

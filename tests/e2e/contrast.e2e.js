@@ -7,7 +7,8 @@
 // Ouvre un à un les écrans et fenêtres de screens.js (mêmes données réelles
 // anonymisées que les audits mode sombre / clavier) et mesure chaque texte
 // réellement affiché contre son fond réel (dégradés compris : le texte doit
-// rester lisible sur l'arrêt le plus défavorable du dégradé). Seuils WCAG AA :
+// rester lisible sur l'arrêt le plus défavorable du dégradé ; l'opacité de
+// l'élément et de ses ancêtres est prise en compte). Seuils WCAG AA :
 // 4,5:1, ou 3:1 pour un grand texte (≥ 24 px, ou ≥ 18,66 px en gras). Les
 // boutons désactivés sont exemptés (WCAG 1.4.3). Le mode sombre a son propre
 // audit (npm run test:darkmode).
@@ -94,7 +95,7 @@ function auditContrast() {
     const issues = [];
     for (const el of [root, ...root.querySelectorAll('*')]) {
         if (['SCRIPT', 'STYLE', 'OPTION', 'BR', 'svg', 'path'].includes(el.tagName)) continue;
-        if (el.closest('.notification, .app-search-bar')) continue;
+        if (el.closest('.app-search-bar')) continue;
         if (el.closest('button:disabled, [disabled]')) continue;
         const text = [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
         if (!text || !/[A-Za-zÀ-ÿ0-9]/.test(text)) continue;
@@ -102,6 +103,8 @@ function auditContrast() {
         const cs = getComputedStyle(el);
         const fg = parse(cs.color);
         if (!fg || fg.a === 0) continue;
+        // opacité des ancêtres (et de l'élément) : le texte se fond d'autant dans son fond
+        for (let e = el; e && e.nodeType === 1; e = e.parentElement) fg.a *= parseFloat(getComputedStyle(e).opacity);
         const size = parseFloat(cs.fontSize), bold = parseInt(cs.fontWeight, 10) >= 700;
         const need = size >= 24 || (bold && size >= 18.66) ? 3 : 4.5;
         let worst = null;

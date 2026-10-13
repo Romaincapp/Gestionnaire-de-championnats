@@ -1807,10 +1807,10 @@
                     <h3 style="margin: 0 0 8px; color: #2c3e50;">✏️ Renommer « ${esc(oldName)} » en « ${esc(newName)} »</h3>
                     <p style="margin: 0 0 16px; color: #54637a; font-size: 14px;">« ${esc(oldName)} » ${others}.</p>
                     <button id="renameChoiceAll" onclick="resolveRenamePlayerChoice('all')" style="display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 10px; background: #236bdd; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
-                        <strong>✏️ Renommer partout</strong><br><span style="font-size: 12px; opacity: 0.9;">Même joueur (faute de frappe…) : « ${esc(newName)} » remplace « ${esc(oldName)} » dans tous les matchs et au listing de la journée</span>
+                        <strong>✏️ Renommer partout</strong><br><span style="font-size: 12px;">Même joueur (faute de frappe…) : « ${esc(newName)} » remplace « ${esc(oldName)} » dans tous les matchs et au listing de la journée</span>
                     </button>
                     <button id="renameChoiceSingle" onclick="resolveRenamePlayerChoice('single')" style="display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 14px; background: #087f58; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
-                        <strong>➕ Nouveau joueur</strong><br><span style="font-size: 12px; opacity: 0.9;">Autre joueur : « ${esc(newName)} » remplace « ${esc(oldName)} » dans ce match seulement et rejoint le listing</span>
+                        <strong>➕ Nouveau joueur</strong><br><span style="font-size: 12px;">Autre joueur : « ${esc(newName)} » remplace « ${esc(oldName)} » dans ce match seulement et rejoint le listing</span>
                     </button>
                     <div style="text-align: right;"><button onclick="resolveRenamePlayerChoice(null)" class="btn btn-secondary">Annuler</button></div>
                 </div>

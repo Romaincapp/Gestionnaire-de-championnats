@@ -1300,7 +1300,7 @@
                     '<span style="color: #586566; font-size: 12px; margin-left: 10px;">' + info + '</span>';
 
                 if (missing.length === 0) {
-                    html += '<div data-serie-id="' + serie.id + '" style="padding: 12px; margin-bottom: 8px; background: #e8f5e9; border-radius: 8px; opacity: 0.6;">' +
+                    html += '<div data-serie-id="' + serie.id + '" style="padding: 12px; margin-bottom: 8px; background: #e8f5e9; border-radius: 8px; border: 1px dashed #017239;">' +
                         body + '<span style="color: #017239; font-size: 12px; margin-left: 10px;">✓ Déjà présent</span></div>';
                     return;
                 }
@@ -2220,7 +2220,7 @@
         var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
         html += '<div style="background: linear-gradient(135deg, #5267d0 0%, #764ba2 100%); color: white; padding: 20px;">';
         html += '<h2 style="margin: 0; text-align: center; color: white;">🏆 ' + (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses') + '</h2>';
-        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">' + (mixed ? 'Matchs + Courses (points)' : 'Courses — distance &amp; temps') + '</p>';
+        html += '<p style="margin: 10px 0 0 0; text-align: center;">' + (mixed ? 'Matchs + Courses (points)' : 'Courses — distance &amp; temps') + '</p>';
         html += '</div>';
 
         // Barre d'outils : harmonisation des noms
@@ -2547,10 +2547,10 @@
             });
 
             body += '<div style="margin-top:16px; padding:12px; background:linear-gradient(135deg,#5267d0,#764ba2); color:white; border-radius:8px; display:flex; justify-content:space-around; flex-wrap:wrap; gap:8px; text-align:center;">' +
-                '<div><div style="font-size:11px; opacity:.85;">Séries</div><div style="font-size:18px; font-weight:700;">' + grandSeries + '</div></div>' +
-                '<div><div style="font-size:11px; opacity:.85;">Distance totale</div><div style="font-size:18px; font-weight:700;">' + formatDistance(grandDistance) + '</div></div>' +
-                '<div><div style="font-size:11px; opacity:.85;">Temps total</div><div style="font-size:18px; font-weight:700;">' + formatDurationHMS(grandTime) + '</div></div>' +
-                '<div><div style="font-size:11px; opacity:.85;">Points (multisport)</div><div style="font-size:18px; font-weight:700;">' + grandPoints + '</div></div>' +
+                '<div><div style="font-size:11px;">Séries</div><div style="font-size:18px; font-weight:700;">' + grandSeries + '</div></div>' +
+                '<div><div style="font-size:11px;">Distance totale</div><div style="font-size:18px; font-weight:700;">' + formatDistance(grandDistance) + '</div></div>' +
+                '<div><div style="font-size:11px;">Temps total</div><div style="font-size:18px; font-weight:700;">' + formatDurationHMS(grandTime) + '</div></div>' +
+                '<div><div style="font-size:11px;">Points (multisport)</div><div style="font-size:18px; font-weight:700;">' + grandPoints + '</div></div>' +
                 '</div>';
         }
 

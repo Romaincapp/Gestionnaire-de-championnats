@@ -1221,7 +1221,7 @@ generalRanking.divisions[division].forEach((player, index) => {
             if (dayStats.isForfeit) {
                 historyHtml += `
                     <div class="day-summary">
-                        <div class="day-header" style="background: #fee; opacity: 0.8;">
+                        <div class="day-header" style="background: #fee; border-left: 3px solid #d03427;">
                             <div class="day-header-left">
                                 <span style="color: #d03427;">⚠️</span>
                                 <span class="day-title">Journée ${dayStats.day}</span>

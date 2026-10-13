@@ -17,7 +17,8 @@
 //     tabindex="0", role="button" (sauf <tr>), Entrée/Espace = clic ;
 //   - champ sans libellé : nom accessible (aria-label) déduit du contexte —
 //     case de score « Score de A contre B », champ de nom de joueur, libellé
-//     voisin non relié, en-tête de colonne, placeholder parlant.
+//     voisin non relié, en-tête de colonne, placeholder parlant ;
+//   - réglage « réduire les animations » : défilements JS « smooth » instantanés.
 // Aucune fonction d'affichage n'a besoin de connaître ce module.
 (function(global) {
     'use strict';
@@ -29,10 +30,10 @@
         'input[type="email"], input[type="tel"], input[type="time"], textarea, select';
     // ✖️ = ✖ + sélecteur de variante (U+FE0F)
     var CLOSE_SYMBOL = /^[×✕✖✗❌]\uFE0F?$/;
-    // « Fermer » / « Annuler », éventuellement précédé d'un symbole de fermeture
+    // « Fermer » / « Annuler » / « OK » (message), éventuellement précédé d'un symbole de fermeture
     // (« ❌ Annuler ») — pas de n'importe quel émoji : « ↩️ Annuler » annule une
     // action de course (undoRaceAction), il ne ferme rien.
-    var CLOSE_WORD = /^(?:[×✕✖✗❌]\uFE0F?\s*)?(fermer|annuler)$/i;
+    var CLOSE_WORD = /^(?:[×✕✖✗❌]\uFE0F?\s*)?(fermer|annuler|ok)$/i;
     // barre de recherche, notifications, panneau latéral de l'historique de course
     // (étroit sur ordinateur, mais ≥ 90 % de l'écran sur un très petit téléphone)
     var IGNORED = '#appSearchBar, .notification, #raceActionHistoryPanel';
@@ -348,6 +349,28 @@
         });
     }
 
+    // « Réduire les animations » (réglage système) : les défilements en douceur
+    // demandés en JS (scrollIntoView / scrollTo avec behavior: 'smooth') deviennent
+    // instantanés — le CSS (styles.css, MOINS D'ANIMATIONS) ne les atteint pas.
+    function reducedMotion() {
+        return !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+    function withoutSmooth(original) {
+        return function(arg) {
+            if (reducedMotion() && arg && typeof arg === 'object' && arg.behavior === 'smooth') {
+                arg = Object.assign({}, arg, { behavior: 'auto' });
+                return original.apply(this, [arg].concat(Array.prototype.slice.call(arguments, 1)));
+            }
+            return original.apply(this, arguments);
+        };
+    }
+    if (global.Element && Element.prototype.scrollIntoView) {
+        Element.prototype.scrollIntoView = withoutSmooth(Element.prototype.scrollIntoView);
+    }
+    if (typeof global.scrollTo === 'function') global.scrollTo = withoutSmooth(global.scrollTo);
+    if (global.Element && Element.prototype.scrollTo) Element.prototype.scrollTo = withoutSmooth(Element.prototype.scrollTo);
+
+    global.a11yRules = { withoutSmooth: withoutSmooth };   // pour les tests
     global.getOpenDialogs = function() { return openDialogs.map(function(d) { return d.el; }); };
     global.closeTopDialog = closeTopDialog;
     global.refreshA11y = function() { enhanceClickables(document.body); nameFields(document.body); syncDialogs(); };

@@ -3046,7 +3046,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                             <tr style="
                                 background: ${bgColor};
                                 border-bottom: 1px solid #dee2e6;
-                                ${!status.qualified ? 'opacity: 0.7;' : ''}
+                                ${!status.qualified ? 'color: #5b636b;' : ''}
                             ">
                                 <td style="padding: 8px; font-weight: bold; color: ${textColor};">
                                     ${index + 1} ${emoji}
@@ -4614,7 +4614,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
                 <h3 style="margin: 0 0 10px 0; font-size: 1.5rem;">
                     ${headerTitle} - Division ${division}
                 </h3>
-                <div style="font-size: 16px; opacity: 0.9;">
+                <div style="font-size: 16px;">
                     ${finalPhase.qualified.length} joueurs en compétition
                 </div>
                 ${currentRound ? `
@@ -4767,7 +4767,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
             border-radius: 10px;
             padding: 10px;
             position: relative;
-            ${match.isBye ? 'opacity: 0.7;' : ''}
+            ${match.isBye ? 'border-style: dashed;' : ''}
         ">
             ${!match.isBye && window.showForfaitButtons ? `<button onclick="event.stopPropagation(); deleteManualMatch(${dayNumber}, ${division}, '${roundName}', ${match.position})"
                     title="Supprimer ce match"
@@ -5979,7 +5979,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
             border: 2px solid ${isCompleted ? '#087227' : isActive ? '#096cde' : '#5b636b'};
             border-radius: 10px;
             padding: 15px;
-            ${match.isBye ? 'opacity: 0.7;' : ''}
+            ${match.isBye ? 'border-style: dashed;' : ''}
         ">
             <div class="match-header" style="
                 display: flex;
@@ -6919,7 +6919,7 @@ function showModulatePoolsModal(dayNumber) {
                     <h3 style="margin: 0 0 10px 0; font-size: 22px;">
                         ⚖️ Moduler les tailles de pools
                     </h3>
-                    <div style="font-size: 14px; opacity: 0.9;">
+                    <div style="font-size: 14px;">
                         Redistribuez les joueurs pour faciliter la génération des matchs
                     </div>
                 </div>

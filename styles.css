@@ -2396,3 +2396,23 @@ html.dm-measuring *, html.dm-measuring *::before, html.dm-measuring *::after { t
         font-size: 16px;    /* sous 16 px, iOS zoome la page en touchant le champ */
     }
 }
+
+/* ============================================
+   MOINS D'ANIMATIONS (réglage système « réduire les animations »)
+   Les animations de l'app sont décoratives (apparition en fondu / glissé des
+   fenêtres et panneaux, survols qui grossissent) : elles deviennent
+   instantanées. Les changements d'état (couleur, contenu, fenêtre ouverte)
+   restent visibles, sans mouvement. Le chrono n'est pas animé : inchangé.
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-delay: 0s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+    }
+}

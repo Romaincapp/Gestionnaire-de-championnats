@@ -203,7 +203,7 @@
                     <option value="championship" ${!isChrono ? 'selected' : ''}>🏆 Matchs</option>
                     <option value="chrono" ${isChrono ? 'selected' : ''}>⏱️ Courses</option>
                 </select>
-                <span id="day-type-label-${dayNumber}" style="font-size: 11px; opacity: 0.9; margin-left: auto;">
+                <span id="day-type-label-${dayNumber}" style="font-size: 11px; margin-left: auto;">
                     ${isChrono ? 'Chronométrage' : 'Championnat'}
                 </span>
             </div>

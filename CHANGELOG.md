@@ -13,6 +13,18 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 💬 Messages, annonces et animations
+- Les messages d'information (« Aucun fichier sélectionné », « Créez d'abord une série »…)
+  s'affichent dans une fenêtre de l'application, aux couleurs du thème (mode sombre compris),
+  au lieu de la boîte grise du navigateur. Elle ne fige plus la page : le chrono continue de
+  s'afficher pendant qu'un message est ouvert. Entrée, Échap ou OK la ferment.
+- Les notifications (« Série enregistrée »…) sont lues par les lecteurs d'écran, et leurs
+  couleurs sont plus contrastées.
+- Avec le réglage système « réduire les animations », les fenêtres et panneaux apparaissent
+  sans fondu ni glissement, et la page ne défile plus en douceur.
+- Lignes atténuées (joueurs non qualifiés, DNS, séries déjà remplies) et sous-titres sur
+  bandeaux colorés désormais lisibles : ils étaient affaiblis par transparence.
+
 ### 🔊 Champs annoncés correctement par les lecteurs d'écran
 - Chaque case de score dit à qui elle appartient : « Score de Gai Séjour 1 contre Les
   Aquaphiles 2 » au lieu de « champ numérique, zéro » (matchs, poules, phase finale).

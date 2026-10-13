@@ -96,6 +96,15 @@ export-print, chrono, search, darkmode, mobile, a11y, init (puis `script.js`). U
   rouge persistant avec bouton « Exporter maintenant », retiré automatiquement
   quand toutes les sauvegardes (`'championship'`, `'chrono'`) réussissent de
   nouveau. Appelées par `saveToLocalStorage()` et `saveChronoToLocalStorage()`
+- `announce(message, assertive)` - Annonce aux lecteurs d'écran via deux zones permanentes et
+  invisibles (`#a11yLiveStatus` polie, `#a11yLiveAlert` prioritaire) ; `showNotification`
+  l'appelle (prioritaire pour `warning`/`error`). Couleurs des toasts prises dans la palette
+- `appAlert(message)` - **remplace `window.alert`** : fenêtre de l'app `.app-alert`
+  (`role="alertdialog"`, message en `aria-describedby`, retours à la ligne gardés, bouton OK
+  focalisé, focus rendu à la fermeture), non bloquante (une boîte native gelait l'affichage,
+  chrono compris). Les appels `alert(...)` des modules n'ont pas changé ; les tests qui
+  remplacent `window.alert` par un `jest.fn()` continuent de marcher. `confirm()`/`prompt()`
+  restent natifs (réponse attendue de façon synchrone)
 
 ### 4. state.iife.js
 **Rôle** : Gestion de l'état global et persistance
@@ -393,6 +402,9 @@ Pour une nouvelle fenêtre : rien à faire si elle a un titre `h1`-`h4` et un bo
 « Fermer » ou « Annuler ». Pour un nouveau champ : un `<label for>` (ou `aria-label`) ; sinon
 `npm run test:a11y` le signale (« champ sans nom accessible »). Pour un nouvel élément cliquable, préférer un vrai `<button>`.
 Contour de focus : `:focus-visible` dans `styles.css` (bleu `#1d6fb8`, `#7cc4ff` en sombre).
+**Réduire les animations** (réglage système) : section « MOINS D'ANIMATIONS » de `styles.css`
+(animations et transitions instantanées) et, ici, `scrollIntoView` / `scrollTo` avec
+`behavior: 'smooth'` rendus instantanés (`a11yRules.withoutSmooth`, exposée pour les tests).
 - `getOpenDialogs()`, `closeTopDialog()`, `refreshA11y()` (exposées, pour les tests)
 - Contrôle en vrai navigateur : `npm run test:a11y` et `npm run test:a11y:mobile` (voir 🧪 Tests)
 
@@ -512,7 +524,8 @@ utilisent les mêmes valeurs en hexadécimal (`#09679e` bleu, `#017239` vert, `#
 (`#3498db`, `#2ecc71`, `#f39c12`, `#7f8c8d`…) sont refusées par
 `tests/unit/colorPalette.test.js`, qui indique la remplaçante. `npm run test:contrast`
 (`tests/e2e/contrast.e2e.js`) mesure chaque texte affiché contre son fond réel (dégradés
-compris, arrêt le plus défavorable) sur les écrans de `screens.js` ; rapport regroupé par
+compris, arrêt le plus défavorable, opacité de l'élément et de ses ancêtres comprise : ne pas
+atténuer un texte par `opacity`, utiliser une couleur) sur les écrans de `screens.js` ; rapport regroupé par
 couple de couleurs dans `tests/e2e/output-contrast/`.
 
 **Tactile** : section « TACTILE » en fin de `styles.css`, active seulement sur écran au doigt
