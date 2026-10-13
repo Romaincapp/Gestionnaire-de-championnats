@@ -33,6 +33,21 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Impeccable « polish » : finitions sans changer l'identité
+
+- **Contexte** : passe `polish` demandée après les P1/P2 ; captures ordinateur + téléphone des
+  écrans principaux pour juger du rendu réel.
+- **Fait** : `.btn` sans `text-transform: uppercase` / `letter-spacing` (casse unifiée) ;
+  `.app-search-toggle` sans le padding global des boutons (loupe centrée) ; en-tête plus compact
+  et libellé de type de journée masqué sous 768 px ; dégradé de l'en-tête du classement
+  Multisport porté par la rangée (`!important`, les gabarits posent un fond en ligne) ;
+  38 dégradés à deux arrêts identiques (issus de `colorize`) remplacés par une couleur pleine ;
+  dernier `opacity` sur texte (libellé de type de J1, `index.html`). Conservé volontairement :
+  bordures latérales épaisses (état des séries, identité des panneaux), émojis, palette.
+- **Fichiers/modules touchés** : `styles.css`, `index.html`, `src/*.iife.js` (dégradés)
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md — · TODO.md — · claude.md —
+
 ### 2026-10-13 — P2 de l'audit Impeccable : opacité, annonces, animations, alert()
 
 - **Contexte** : P2 restants après le nouvel audit (12/20) et les libellés des champs.

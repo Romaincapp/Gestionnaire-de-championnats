@@ -2187,7 +2187,7 @@
     // Onglet Multisport d'une compétition 100 % natation
     function renderEventRankingsPanel() {
         var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
-        html += '<div style="background: linear-gradient(135deg, #057e68 0%, #057e68 100%); color: white; padding: 20px;">';
+        html += '<div style="background: #057e68; color: white; padding: 20px;">';
         html += '<h2 style="margin: 0; text-align: center;">🏊 Classement par épreuve</h2>';
         html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">Toutes les séries d\'une même épreuve regroupées, classées au temps</p>';
         html += '</div>';

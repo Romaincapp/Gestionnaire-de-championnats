@@ -276,7 +276,7 @@
                         <button class="toggle-btn active" onclick="showRankingsForDay(${dayNumber}, 'points')">Par Points</button>
                         <button class="toggle-btn" onclick="showRankingsForDay(${dayNumber}, 'winrate')">Par % Victoires</button>
                         <button class="toggle-btn" onclick="openRankingInNewWindow(${dayNumber})" style="background: linear-gradient(135deg, #9654b1, #8e44ad); color: white;">📺 Afficher</button>
-                        <button class="toggle-btn" onclick="showCompleteDayRanking(${dayNumber})" style="background: linear-gradient(135deg, #017239, #017239); color: white;">📊 Complet</button>
+                        <button class="toggle-btn" onclick="showCompleteDayRanking(${dayNumber})" style="background: #017239; color: white;">📊 Complet</button>
                     </div>
                 </div>
                 <div id="rankingsContent-${dayNumber}"></div>
@@ -290,7 +290,7 @@
             
             <!-- SECTION CHRONO (affichée si type = chrono) -->
             <div id="chrono-section-${dayNumber}" style="display: ${isChrono ? 'block' : 'none'};">
-                <div class="section" style="background: linear-gradient(135deg, #057e68 0%, #057e68 100%);">
+                <div class="section" style="background: #057e68;">
                     <h2 style="color: white;">⏱️ Gestion des Courses - Journée ${dayNumber}</h2>
                     <div id="chrono-content-${dayNumber}" style="background: white; padding: 20px; border-radius: 10px; margin-top: 15px;">
                         ${isChrono && typeof renderChronoInterfaceForDay === 'function' ? renderChronoInterfaceForDay(dayNumber) : '<p style="text-align: center; color: #586566;">Chargement de l\'interface chrono...</p>'}
@@ -688,7 +688,7 @@
             }
             .refresh-btn {
                 position: fixed; bottom: 20px; right: 20px;
-                background: linear-gradient(135deg, #017239, #017239); color: white; border: none;
+                background: #017239; color: white; border: none;
                 padding: 15px 25px; border-radius: 50px; font-size: 16px; cursor: pointer;
                 box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
             }

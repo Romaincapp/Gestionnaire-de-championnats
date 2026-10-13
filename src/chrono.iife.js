@@ -191,7 +191,7 @@ function displayRaceInterface(serie) {
 
             <!-- Saisie rapide dossard (visible uniquement si course lancée ET pas en mode couloirs) -->
             ${serie.isRunning && !serie.laneMode ? `
-                <div style="background: linear-gradient(135deg, #057e68, #057e68); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <div style="background: #057e68; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                         <label style="color: white; font-weight: bold; font-size: 16px;">⚡ Saisie Rapide:</label>
                         <input
@@ -222,7 +222,7 @@ function displayRaceInterface(serie) {
                 <button class="btn" onclick="backToSeriesList()" style="background: #566566; margin-right: 10px;">
                     ⬅️ Retour aux séries
                 </button>
-                <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #057e68, #057e68); margin-right: 10px;">
+                <button class="btn" onclick="showRaceRanking()" style="background: #057e68; margin-right: 10px;">
                     🏆 Voir Classement
                 </button>
                 <button class="btn" onclick="openLiveRaceDisplayWindow()" style="background: linear-gradient(135deg, #9654b1, #8e44ad); margin-right: 10px;">
@@ -243,7 +243,7 @@ function displayRaceInterface(serie) {
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white;">
                     <thead>
-                        <tr style="background: linear-gradient(135deg, #057e68, #057e68); color: white;">
+                        <tr style="background: #057e68; color: white;">
                             <th style="padding: 12px; text-align: center;">${serie.laneMode ? 'Couloir' : 'Dossard'}</th>
                             <th style="padding: 12px; text-align: left;">Participant</th>
                             <th style="padding: 12px; text-align: left;">Club</th>
@@ -1590,7 +1590,7 @@ function generateRaceRanking() {
     const showCategory = !!ranked.hasMultipleCategories;
 
     let html = `
-        <div style="background: linear-gradient(135deg, #057e68 0%, #057e68 100%); padding: 20px; border-radius: 10px;">
+        <div style="background: #057e68; padding: 20px; border-radius: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="color: white; margin: 0;">🏆 Classement Général</h3>
                 <button onclick="exportRaceRankingToPDF()" style="background: white; color: #057e68; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
@@ -1668,11 +1668,11 @@ function generateRaceRanking() {
                 </table>
 
                 <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                    <div style="background: linear-gradient(135deg, #057e68, #057e68); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="background: #057e68; color: white; padding: 15px; border-radius: 8px; text-align: center;">
                         <div style="font-size: 14px; opacity: 0.9;">Participants Totaux</div>
                         <div style="font-size: 32px; font-weight: bold;">${serie.participants.length}</div>
                     </div>
-                    <div style="background: linear-gradient(135deg, #057e68, #057e68); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="background: #057e68; color: white; padding: 15px; border-radius: 8px; text-align: center;">
                         <div style="font-size: 14px; opacity: 0.9;">Terminés</div>
                         <div style="font-size: 32px; font-weight: bold;">
                             ${serie.participants.filter(p => p.status === 'finished').length}
@@ -1796,7 +1796,7 @@ window.openLiveRaceDisplayWindow = function() {
         table { width: 100%; }
         td, th { font-size: 15px; }
         .auto-refresh { position: fixed; bottom: 20px; left: 20px; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 25px; font-size: 13px; }
-        .refresh-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #017239, #017239); color: white; border: none; padding: 15px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; }
+        .refresh-btn { position: fixed; bottom: 20px; right: 20px; background: #017239; color: white; border: none; padding: 15px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; }
         .refreshing { animation: pulse 1s ease-in-out; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style></head><body>
@@ -1923,7 +1923,7 @@ window.exportRaceRankingToPDF = function() {
         h1 { text-align: center; color: #057e68; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #586566; font-size: 13px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        thead tr { background: linear-gradient(135deg, #057e68, #057e68); color: white; }
+        thead tr { background: #057e68; color: white; }
         th { padding: 10px 8px; text-align: center; font-weight: bold; }
         th:nth-child(3) { text-align: left; }
         th:nth-child(4) { text-align: left; }
@@ -2022,10 +2022,10 @@ window.showSerieClubRanking = function() {
     const medals = ['🥇', '🥈', '🥉'];
 
     let html = `
-        <div style="background: linear-gradient(135deg, #017239 0%, #017239 100%); padding: 20px; border-radius: 10px;">
+        <div style="background: #017239; padding: 20px; border-radius: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="color: white; margin: 0;">🏅 Classement par Club</h3>
-                <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #057e68, #057e68); color: white; font-weight: bold;">
+                <button class="btn" onclick="showRaceRanking()" style="background: #057e68; color: white; font-weight: bold;">
                     👤 Classement Individuel
                 </button>
             </div>
@@ -2037,7 +2037,7 @@ window.showSerieClubRanking = function() {
 
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
                     <thead>
-                        <tr style="background: linear-gradient(135deg, #017239, #017239); color: white;">
+                        <tr style="background: #017239; color: white;">
                             <th style="padding: 12px; text-align: center;">Position</th>
                             <th style="padding: 12px; text-align: left;">Club</th>
                             <th style="padding: 12px; text-align: center;">Points</th>

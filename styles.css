@@ -106,7 +106,7 @@ body   * {
         }
         
         .add-day-btn {
-            background: linear-gradient(135deg, var(--color-success), var(--color-success));
+            background: var(--color-success);
             color: white;
             border: none;
             padding: 12px 16px;
@@ -221,8 +221,6 @@ body   * {
             border: none;
             cursor: pointer;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
         
         .btn:hover {
@@ -231,7 +229,7 @@ body   * {
         }
         
         .btn-success {
-            background: linear-gradient(135deg, var(--color-success), var(--color-success));
+            background: var(--color-success);
         }
         
         .btn-danger {
@@ -1488,8 +1486,13 @@ body   * {
     border-collapse: collapse;
 }
 
+.multisport-ranking thead tr {
+    /* !important : les gabarits posent un fond gris clair en ligne sur cette rangée */
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong)) !important;
+}
+
 .multisport-ranking th {
-    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
+    background: transparent;
     color: white;
     padding: 15px 10px;
     font-weight: 600;
@@ -2115,6 +2118,11 @@ body.dark-mode .notification {
     border-radius: 50%;
     width: 34px;
     height: 34px;
+    padding: 0;                /* le padding global des boutons décentrait la loupe */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     font-size: 16px;
     cursor: pointer;
     flex-shrink: 0;
@@ -2414,5 +2422,31 @@ html.dm-measuring *, html.dm-measuring *::before, html.dm-measuring *::after { t
         transition-duration: 1ms !important;
         transition-delay: 0s !important;
         scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================
+   FINITIONS (audit Impeccable « polish »)
+   ============================================ */
+/* Barre « Mode » : le libellé ne se coupe pas */
+.day-type-selector > span:first-child {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    /* En-tête : le titre tenait sur 3 lignes et ~40 % du premier écran */
+    .header {
+        padding: 16px 14px;
+    }
+    .header h1 {
+        font-size: 1.6rem;
+        line-height: 1.2;
+    }
+    .header p {
+        font-size: 13px;
+    }
+    /* Barre « Mode » : « Championnat / Chronométrage » répète le sélecteur, place au sélecteur */
+    [id^="day-type-label-"] {
+        display: none;
     }
 }

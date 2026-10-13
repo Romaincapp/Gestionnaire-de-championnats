@@ -13,6 +13,15 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ✨ Finitions
+- Tous les boutons écrits de la même façon (« Appliquer », « Générer poules », « Mettre à jour »
+  au lieu de majuscules espacées sur une partie d'entre eux).
+- Téléphone : titre de l'application plus compact (2 lignes au lieu de 3, le contenu remonte) ;
+  barre « Mode » sur une ligne (le libellé « Championnat / Chronométrage », qui répétait le
+  sélecteur, est masqué).
+- Loupe 🔍 de l'en-tête centrée dans son cercle.
+- En-tête du tableau du classement Multisport d'un seul tenant (il était découpé en blocs).
+
 ### 💬 Messages, annonces et animations
 - Les messages d'information (« Aucun fichier sélectionné », « Créez d'abord une série »…)
   s'affichent dans une fenêtre de l'application, aux couleurs du thème (mode sombre compris),

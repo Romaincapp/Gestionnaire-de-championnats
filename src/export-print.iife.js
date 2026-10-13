@@ -975,7 +975,7 @@ function showPrintOptionsModal(dayNumber) {
             </button>
             <button id="print-option-boccia" style="
                 padding: 12px;
-                background: linear-gradient(135deg, #057e68, #057e68);
+                background: #057e68;
                 color: white;
                 border: none;
                 border-radius: 5px;
@@ -1001,7 +1001,7 @@ function showPrintOptionsModal(dayNumber) {
             </button>
             <button id="print-option-petanque" style="
                 padding: 12px;
-                background: linear-gradient(135deg, #017239, #017239);
+                background: #017239;
                 color: white;
                 border: none;
                 border-radius: 5px;

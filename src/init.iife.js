@@ -337,7 +337,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: linear-gradient(135deg, #017239, #017239);
+            background: #017239;
             color: white;
             border: none;
             padding: 15px 25px;
@@ -930,7 +930,7 @@ function openCompleteRankingInNewWindow() {
         .header {
             text-align: center;
             padding: 20px;
-            background: linear-gradient(135deg, #017239, #017239);
+            background: #017239;
             border-radius: 15px;
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(39, 174, 96, 0.3);
@@ -1062,7 +1062,7 @@ function showByeManagementModal(dayNumber) {
                     <td style="padding: 10px; text-align: center;">
                         <button onclick="showByeScoreModal(${dayNumber}, ${player.division}, '${escapedPlayerName}');"
                                 style="
-                            background: linear-gradient(135deg, #017239, #017239);
+                            background: #017239;
                             color: white;
                             border: none;
                             padding: 8px 15px;

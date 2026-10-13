@@ -210,7 +210,7 @@ function addPoolToggleToInterface(dayNumber) {
 
                 <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                     <button class="btn" onclick="generatePools(${dayNumber})" style="
-                        background: linear-gradient(135deg, #017239, #017239);
+                        background: #017239;
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -255,7 +255,7 @@ function addPoolToggleToInterface(dayNumber) {
                     </button>
 
                     <button class="btn" onclick="showImportPoolRankingsModal(${dayNumber})" style="
-                        background: linear-gradient(135deg, #057e68, #057e68);
+                        background: #057e68;
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -429,7 +429,7 @@ function updateAdvancedConfigInfo(dayNumber) {
         infoHTML += `</div>`;
 
         // Logique de qualification - APERÇU DÉTAILLÉ
-        infoHTML += `<div style="background: linear-gradient(135deg, #017239, #017239); color: white; padding: 10px; border-radius: 8px; margin-top: 8px;">`;
+        infoHTML += `<div style="background: #017239; color: white; padding: 10px; border-radius: 8px; margin-top: 8px;">`;
         infoHTML += `<div style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">🏆 Logique de Qualification → ${totalQualified} qualifiés</div>`;
 
         // Affichage visuel de la logique
@@ -2050,7 +2050,7 @@ function updatePoolsDisplay(dayNumber) {
                             ">${count}/${targetMatches}</span>` : '';
                             
                             return `<span class="pool-player-tag" onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${escapeForOnclick(player)}')" style="
-                                background: ${isMissing ? 'linear-gradient(135deg, #d03427, #c0392b)' : 'linear-gradient(135deg, #017239, #017239)'};
+                                background: ${isMissing ? 'linear-gradient(135deg, #d03427, #c0392b)' : '#017239'};
                                 color: white;
                                 padding: 8px 15px;
                                 border-radius: 20px;
@@ -3676,7 +3676,7 @@ function showImportPoolRankingsModal(dayNumber) {
                     Annuler
                 </button>
                 <button onclick="applyImportPoolRankings(${dayNumber})"
-                    style="padding:10px 20px;border:none;background:linear-gradient(135deg,#057e68,#057e68);color:white;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">
+                    style="padding:10px 20px;border:none;background:#057e68;color:white;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">
                     ⚡ Générer la phase finale
                 </button>
             </div>
@@ -4597,7 +4597,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
 
     // Adapter les textes selon le mode
     const headerTitle = isDirectMode ? '⚡ ÉLIMINATION DIRECTE' : '🏆 PHASE FINALE';
-    const headerBg = isDirectMode ? 'linear-gradient(135deg, #9654b1, #8e44ad)' : 'linear-gradient(135deg, #057e68, #057e68)';
+    const headerBg = isDirectMode ? 'linear-gradient(135deg, #9654b1, #8e44ad)' : '#057e68';
     const playersTitle = isDirectMode ? '👥 Participants au Tournoi' : '✨ Joueurs Qualifiés des Poules';
 
     let html = `
@@ -5880,7 +5880,7 @@ if (originalCheckPoolsCompletion) {
             const dayData = championship.days[dayNumber];
             if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.enabled) {
                 finalButton.innerHTML = '🔄 Gérer Phase Finale';
-                finalButton.style.background = 'linear-gradient(135deg, #057e68, #057e68)';
+                finalButton.style.background = '#057e68';
                 finalButton.onclick = () => updateManualFinalPhaseDisplay(dayNumber);
             } else {
                 finalButton.innerHTML = '🏆 Phase Finale Manuelle';
@@ -6311,7 +6311,7 @@ function showMatchVerificationModal(dayNumber, issues, targetCount) {
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <button onclick="addMissingMatches(${dayNumber}, ${targetCount})" style="
-                                background: linear-gradient(135deg, #017239, #017239);
+                                background: #017239;
                                 color: white;
                                 border: none;
                                 padding: 10px 20px;
@@ -6957,7 +6957,7 @@ function showModulatePoolsModal(dayNumber) {
                         justify-content: center;
                     ">
                         <button onclick="applyPoolRedistribution(${dayNumber})" style="
-                            background: linear-gradient(135deg, #017239, #017239);
+                            background: #017239;
                             color: white;
                             border: none;
                             padding: 12px 25px;
