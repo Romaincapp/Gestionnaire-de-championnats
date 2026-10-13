@@ -469,7 +469,7 @@ function updateAdvancedConfigInfo(dayNumber) {
 
         // Phase finale
         const finalPhaseType = getFinalPhaseType(totalQualified);
-        infoHTML += `<div style="margin-top: 6px; font-size: 10px; opacity: 0.9;">`;
+        infoHTML += `<div style="margin-top: 6px; font-size: 11px; opacity: 0.9;">`;
         infoHTML += `📊 Phase finale : <strong>${finalPhaseType}</strong>`;
         infoHTML += `</div>`;
 
@@ -480,7 +480,7 @@ function updateAdvancedConfigInfo(dayNumber) {
             hasWarning = true;
             infoHTML += `<div style="margin-top: 8px;">`;
             result.warnings.forEach(warning => {
-                infoHTML += `<div style="background: #fff3cd; color: #6c5103; padding: 4px 8px; border-radius: 4px; font-size: 10px; margin-bottom: 2px;">⚠️ ${warning}</div>`;
+                infoHTML += `<div style="background: #fff3cd; color: #6c5103; padding: 4px 8px; border-radius: 4px; font-size: 11px; margin-bottom: 2px;">⚠️ ${warning}</div>`;
             });
             infoHTML += `</div>`;
         }
@@ -2042,7 +2042,7 @@ function updatePoolsDisplay(dayNumber) {
                             const badge = isMissing ? `<span style="
                                 background: #d03427;
                                 color: white;
-                                font-size: 10px;
+                                font-size: 11px;
                                 padding: 2px 6px;
                                 border-radius: 10px;
                                 margin-left: 5px;
@@ -2241,11 +2241,11 @@ function generatePoolMatchHTML(match, dayNumber) {
             ${!match.completed && window.showForfaitButtons ? `
             <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: 8px;">
                 <button onclick="declareForfait('pool', ${dayNumber}, ${match.division}, '${match.id}', 'player1')"
-                        style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
+                        style="padding: 2px 6px; font-size: 11px; background: #d03427; color: white;
                                border: none; border-radius: 3px; cursor: pointer;"
                         title="Forfait ${match.player1}">F1</button>
                 <button onclick="declareForfait('pool', ${dayNumber}, ${match.division}, '${match.id}', 'player2')"
-                        style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
+                        style="padding: 2px 6px; font-size: 11px; background: #d03427; color: white;
                                border: none; border-radius: 3px; cursor: pointer;"
                         title="Forfait ${match.player2}">F2</button>
             </div>
@@ -3027,13 +3027,13 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                             bgColor = '#d4edda';
                             textColor = '#155724';
                             emoji = '✅';
-                            badge = '<span style="font-size: 10px; background: #087227; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Qualifié</span>';
+                            badge = '<span style="font-size: 11px; background: #087227; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Qualifié</span>';
                         } else if (status.qualified && !status.isDirect) {
                             // Meilleur runner-up
                             bgColor = '#fff3cd';
                             textColor = '#6c5103';
                             emoji = '⭐';
-                            badge = '<span style="font-size: 10px; background: #ffc107; color: #6c5103; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Repêché</span>';
+                            badge = '<span style="font-size: 11px; background: #ffc107; color: #6c5103; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Repêché</span>';
                         } else {
                             // Non qualifié
                             bgColor = 'white';
@@ -4863,11 +4863,11 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                 ${!isCompleted && window.showForfaitButtons ? `
                 <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: 8px;">
                     <button onclick="declareForfait('final', ${dayNumber}, ${division}, '${match.id}', 'player1')"
-                            style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
+                            style="padding: 2px 6px; font-size: 11px; background: #d03427; color: white;
                                    border: none; border-radius: 3px; cursor: pointer;"
                             title="Forfait ${match.player1}">F1</button>
                     <button onclick="declareForfait('final', ${dayNumber}, ${division}, '${match.id}', 'player2')"
-                            style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
+                            style="padding: 2px 6px; font-size: 11px; background: #d03427; color: white;
                                    border: none; border-radius: 3px; cursor: pointer;"
                             title="Forfait ${match.player2}">F2</button>
                 </div>
@@ -6758,7 +6758,7 @@ function showModulatePoolsModal(dayNumber) {
                                     right: -8px;
                                     background: #d03427;
                                     color: white;
-                                    font-size: 10px;
+                                    font-size: 11px;
                                     padding: 2px 8px;
                                     border-radius: 10px;
                                     font-weight: bold;
@@ -6823,7 +6823,7 @@ function showModulatePoolsModal(dayNumber) {
                                         right: -8px;
                                         background: #d03427;
                                         color: white;
-                                        font-size: 10px;
+                                        font-size: 11px;
                                         padding: 2px 8px;
                                         border-radius: 10px;
                                         font-weight: bold;

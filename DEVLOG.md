@@ -33,6 +33,27 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Impeccable P1 « adapt » : cibles tactiles et texte minimum (via APEX)
+
+- **Contexte** : 3e et dernière correction P1 de l'audit Impeccable (cases de score 40×32,
+  textes 10 px). Les audits mode sombre lancés après `colorize` avaient aussi relevé 7 défauts,
+  corrigés ici d'abord.
+- **Fait** : (1) mode sombre : `darkmode.iife.js` ignorait le texte inséré après coup dans un
+  élément vide (libellé « - Journée N » de « Ajouter des joueurs ») → premier texte d'un élément
+  désormais revu, une seule fois (le chrono change ses textes 10×/s) ; podium Multisport en blanc
+  en mode sombre (cellules comprises). (2) nouvel audit `npm run test:touch` (téléphone, 48 écrans) :
+  **3 968 → 0** défauts. Section « TACTILE » de `styles.css` (`pointer: coarse`) : cibles ≥ 24 px,
+  cases de score 44 px / 16 px ; textes d'écran 10 px → 11 px (35 endroits, gabarits
+  d'impression exclus).
+- **Fichiers/modules touchés** : `styles.css`, `index.html`, `src/darkmode.iife.js`,
+  `src/{chrono,init,matches,multisport,players,pools,ranking,ui}.iife.js` (tailles de texte),
+  `tests/e2e/touch.e2e.js` (nouveau), `tests/unit/darkModeLateText.test.js` (nouveau),
+  `package.json`, `.gitignore`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ (Tests → Tactile) · TODO.md — · claude.md —
+- **Suite possible** : les 3 P1 de l'audit Impeccable sont faits ; relancer `audit` pour la
+  nouvelle note, puis P2 (`alert`/`confirm` natifs, `prefers-reduced-motion`) et `polish`.
+
 ### 2026-10-13 — Impeccable P1 « colorize » : contraste WCAG AA en mode clair (via APEX)
 
 - **Contexte** : 2e correction P1 de l'audit Impeccable (texte blanc sur boutons/bandeaux à

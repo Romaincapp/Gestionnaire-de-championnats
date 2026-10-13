@@ -1037,11 +1037,11 @@
                                         ${!match.completed && window.showForfaitButtons ? `
                                         <div style="display: flex; gap: 4px; justify-content: center; margin-top: 6px;">
                                             <button onclick="declareForfait('regular', ${dayNumber}, ${division}, ${globalIndex}, 'player1')"
-                                                    style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
+                                                    style="padding: 2px 6px; font-size: 11px; background: #d03427; color: white;
                                                            border: none; border-radius: 3px; cursor: pointer;"
                                                     title="Forfait ${match.player1}">F1</button>
                                             <button onclick="declareForfait('regular', ${dayNumber}, ${division}, ${globalIndex}, 'player2')"
-                                                    style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
+                                                    style="padding: 2px 6px; font-size: 11px; background: #d03427; color: white;
                                                            border: none; border-radius: 3px; cursor: pointer;"
                                                     title="Forfait ${match.player2}">F2</button>
                                         </div>

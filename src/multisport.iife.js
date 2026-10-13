@@ -564,10 +564,10 @@
                 html += '<span style="font-weight: bold; color: #9c5003; min-width: 26px;">#' + (p.bib != null ? p.bib : '-') + '</span>';
                 html += '<span' + (p.swimRaw ? ' title="' + escapeLaneHtml('Ligne d\'origine : ' + p.swimRaw) + '"' : '') + '>' + p.name + '</span>';
                 if (p.club) {
-                    html += '<span style="font-size: 10px; background: #057e68; color: white; padding: 2px 6px; border-radius: 3px;">' + p.club + '</span>';
+                    html += '<span style="font-size: 11px; background: #057e68; color: white; padding: 2px 6px; border-radius: 3px;">' + p.club + '</span>';
                 }
                 if (item.unplaced) {
-                    html += '<span class="participant-unplaced" title="' + escapeLaneHtml(item.unplaced) + '" style="font-size: 10px; font-weight: 600; color: #9a6700; background: #fdebc8; padding: 2px 6px; border-radius: 3px;">⚠️ non placée</span>';
+                    html += '<span class="participant-unplaced" title="' + escapeLaneHtml(item.unplaced) + '" style="font-size: 11px; font-weight: 600; color: #9a6700; background: #fdebc8; padding: 2px 6px; border-radius: 3px;">⚠️ non placée</span>';
                 }
                 var info = participantEntryInfo(p, chronoData, placement);
                 if (info) {
@@ -582,7 +582,7 @@
                     html += '<button onclick="showAddToSerieModal(' + dayNumber + ', ' + p.id + ')" ' +
                         'style="padding: 3px 8px; font-size: 11px; background: #017239; color: white; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0;">+</button>';
                 } else {
-                    html += '<span style="font-size: 10px; color: #566566; flex-shrink: 0;">Créez une série</span>';
+                    html += '<span style="font-size: 11px; color: #566566; flex-shrink: 0;">Créez une série</span>';
                 }
                 html += '</div>'; // fin actions
 
@@ -590,7 +590,7 @@
             });
             html += '</div>';
             if (listHeight) {
-                html += '<div style="text-align: right; font-size: 10px; color: #566376; margin-top: 2px;">↘ tirer le coin pour agrandir la liste</div>';
+                html += '<div style="text-align: right; font-size: 11px; color: #566376; margin-top: 2px;">↘ tirer le coin pour agrandir la liste</div>';
             }
         }
 
@@ -2253,7 +2253,7 @@
             sorted.forEach(function(stat, index) {
                 var rankClass = index < 3 ? 'rank-' + (index + 1) : '';
                 var rowStyle = index % 2 === 0 ? 'background: white;' : 'background: #f8f9fa;';
-                var clubBadge = stat.club ? '<span style="background: linear-gradient(135deg, #5267d0, #764ba2); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px;">' + stat.club + '</span>' : '-';
+                var clubBadge = stat.club ? '<span style="background: linear-gradient(135deg, #5267d0, #764ba2); color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px;">' + stat.club + '</span>' : '-';
 
                 html += '<tr class="' + rankClass + '" style="' + rowStyle + ' border-bottom: 1px solid #ecf0f1;">';
                 html += '<td style="padding: 15px; text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
@@ -2265,11 +2265,11 @@
                 if (mixed) {
                     html += '<td style="padding: 15px; text-align: center;">';
                     html += '<span style="font-weight: bold; color: #09679e;">' + stat.championshipPoints + ' pts</span>';
-                    html += '<br><small style="color: #586566;">' + stat.championshipWins + 'V / ' + stat.championshipMatches + 'J</small>';
+                    html += '<br><small style="color: #586566; font-size: 11px;">' + stat.championshipWins + 'V / ' + stat.championshipMatches + 'J</small>';
                     html += '</td>';
                     html += '<td style="padding: 15px; text-align: center;">';
                     html += '<span style="font-weight: bold; color: #9c5003;">' + stat.chronoPoints + ' pts</span>';
-                    html += '<br><small style="color: #586566;">' + stat.chronoSeries + ' séries</small>';
+                    html += '<br><small style="color: #586566; font-size: 11px;">' + stat.chronoSeries + ' séries</small>';
                     html += '</td>';
                     html += '<td style="padding: 15px; text-align: center; background: #e8f4f8; font-size: 1.2em;">';
                     html += '<strong style="color: #017239;">' + stat.totalPoints + '</strong>';
@@ -3251,10 +3251,10 @@
             html += '<tr id="serie-prow-' + dayNumber + '-' + serie.id + '-' + p.id + '" style="border-bottom: 1px solid #ecf0f1;">';
             html += '<td style="padding: 10px; text-align: center;">#' + p.bib + '</td>';
             html += '<td style="padding: 10px;">' +
-                (serie.laneMode && p.laneNumber ? '<span style="font-size:10px; background:#08689d; color:white; padding:2px 6px; border-radius:3px; margin-right:6px;">Couloir ' + p.laneNumber + '</span>' : '') +
+                (serie.laneMode && p.laneNumber ? '<span style="font-size:11px; background:#08689d; color:white; padding:2px 6px; border-radius:3px; margin-right:6px;">Couloir ' + p.laneNumber + '</span>' : '') +
                 p.name +
-                (p.club ? '<span style="font-size:10px; background:#057e68; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.club + '</span>' : '') +
-                (p.category ? '<span style="font-size:10px; background:#8e44ad; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.category + '</span>' : '') +
+                (p.club ? '<span style="font-size:11px; background:#057e68; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.club + '</span>' : '') +
+                (p.category ? '<span style="font-size:11px; background:#8e44ad; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.category + '</span>' : '') +
                 '</td>';
             html += '<td style="padding: 10px; text-align: center; white-space: nowrap;">' +
                 '<button onclick="editSerieParticipant(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm" style="background:#8b5700; color:white; margin-right:4px;" title="Éditer nom / dossard">✏️</button>' +

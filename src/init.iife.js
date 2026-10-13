@@ -887,7 +887,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
                 <td style="padding: 8px; text-align: center; font-weight: 600;">${badge} ${player.position}</td>
                 <td style="padding: 8px; font-weight: ${player.position <= 4 ? '600' : '400'};">
                     ${player.name}
-                    ${player.label && player.position <= 4 ? `<span style="font-size: 10px; color: #666; margin-left: 5px;">(${player.label})</span>` : ''}
+                    ${player.label && player.position <= 4 ? `<span style="font-size: 11px; color: #666; margin-left: 5px;">(${player.label})</span>` : ''}
                 </td>
                 <td style="padding: 8px; text-align: center;">${player.totalPoints || 0}</td>
                 <td style="padding: 8px; text-align: center;">${player.wins || 0}/${player.draws || 0}/${player.losses || 0}/${player.forfeits || 0}</td>

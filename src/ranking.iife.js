@@ -1205,7 +1205,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                     margin-right: 6px;
                 }
                 .forfait-badge {
-                    font-size: 10px;
+                    font-size: 11px;
                     padding: 2px 6px;
                     border-radius: 10px;
                     background: #fff3cd;
@@ -1311,7 +1311,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                                 resultClass = 'pending';
                                 resultIcon = '⏳';
                                 scoreDisplay = `${playerScore || '-'}-${opponentScore || '-'}`;
-                                statusBadge = '<span style="font-size: 10px; color: #8b5700; margin-left: 6px;">en cours</span>';
+                                statusBadge = '<span style="font-size: 11px; color: #8b5700; margin-left: 6px;">en cours</span>';
                             } else {
                                 resultClass = 'pending';
                                 resultIcon = '📅';

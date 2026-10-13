@@ -467,6 +467,7 @@ npm run test:a11y            # Clavier : chaque fenêtre (dialog, titre, focus, 
 npm run test:a11y:mobile     # Même contrôle sur un téléphone
 npm run test:contrast        # Contraste du texte en mode clair (WCAG AA 4,5:1) sur les mêmes écrans
 npm run test:contrast:mobile # Même mesure sur un téléphone
+npm run test:touch           # Téléphone : cibles tactiles ≥ 24 px, cases de score ≥ 44 px, texte ≥ 11 px
 ```
 
 La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR et
@@ -504,6 +505,15 @@ utilisent les mêmes valeurs en hexadécimal (`#09679e` bleu, `#017239` vert, `#
 (`tests/e2e/contrast.e2e.js`) mesure chaque texte affiché contre son fond réel (dégradés
 compris, arrêt le plus défavorable) sur les écrans de `screens.js` ; rapport regroupé par
 couple de couleurs dans `tests/e2e/output-contrast/`.
+
+**Tactile** : section « TACTILE » en fin de `styles.css`, active seulement sur écran au doigt
+(`@media (pointer: coarse)`) : boutons, champs, liens et éléments cliquables (`[data-a11y-click]`,
+posé par `a11y.iife.js`) d'au moins 24×24 px (WCAG 2.2 AA), cases à cocher 24 px, cases de score
+(`.score-input`, poules, phase finale) de 44×44 px en 16 px. Ce sont des `min-width` /
+`min-height` : ils l'emportent sur les tailles posées en ligne, rien à faire dans un nouveau
+gabarit. Texte d'écran : 11 px minimum (les gabarits d'impression gardent leurs petites tailles).
+`npm run test:touch` (`tests/e2e/touch.e2e.js`) mesure tout cela sur téléphone ; les débordements
+éventuels sont vus par `npm run test:darkmode:mobile`.
 
 Quand tu corriges un bug, ajoute un test de non-régression dans `tests/unit/` (voir `clearDayData.test.js` ou `interclubRanking.test.js`). Quand tu supprimes du code que tu penses mort, lance `npm test` avant ET après — une suite verte avant qui reste verte après est la vraie preuve que la suppression est sûre, pas juste le grep qui l'a justifiée. Voir `CONTRIBUTING.md` et `tests/helpers/loadApp.js` pour le détail.
 

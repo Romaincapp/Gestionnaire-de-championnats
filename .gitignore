@@ -11,3 +11,4 @@ tests/e2e/output-a11y-mobile/
 .claude/settings.local.json
 tests/e2e/output-contrast/
 tests/e2e/output-contrast-mobile/
+tests/e2e/output-touch/

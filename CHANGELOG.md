@@ -13,6 +13,16 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 📱 Plus facile au doigt sur téléphone et tablette
+- Cases de score agrandies à 44×44 px (au lieu de 40×32 en matchs et 50×40 en poules), chiffres en
+  16 px : plus de zoom intempestif de la page en touchant une case sur iPhone.
+- Tous les boutons et éléments touchables font au moins 24×24 px : « × » des onglets de journée,
+  ✏️ et × des joueurs, noms de joueurs cliquables, cases à cocher, en-têtes de matchs repliables.
+- Plus aucun texte d'écran sous 11 px (badges Qualifié / Repêché, choix de génération de matchs,
+  DNS / DISQ, « 3V / 3J » du classement Multisport…). Rien ne change à la souris.
+- Mode sombre : le libellé « - Journée N » de la fenêtre « Ajouter des joueurs » et les points
+  du podium Multisport redeviennent lisibles.
+
 ### 🎨 Textes lisibles partout (contraste)
 - Les boutons et bandeaux colorés (bleu, vert, rouge, orange, turquoise, violet) prennent une
   teinte un peu plus foncée de la même couleur : le texte blanc y est désormais lisible

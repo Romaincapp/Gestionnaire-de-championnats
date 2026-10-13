@@ -263,6 +263,10 @@
 
     var observer = null;
     var wasDark = false;
+    // Éléments déjà revus à l'arrivée de leur premier texte (un libellé vide rempli
+    // ensuite par textContent, ex. #addPlayerDayLabel). Les textes qui changent
+    // ensuite (chrono, 10 fois par seconde) ne changent pas les couleurs.
+    var textChecked = new WeakSet();
     function start() {
         if (observer || typeof MutationObserver !== 'function' || !document.body) return;
         observer = new MutationObserver(function(mutations) {
@@ -276,7 +280,13 @@
                     if (m.target === document.body || onlyDisplayChanged(m)) return;
                     roots.push(m.target);
                 } else {
-                    m.addedNodes.forEach(function(n) { if (n.nodeType === 1) roots.push(n); });
+                    m.addedNodes.forEach(function(n) {
+                        if (n.nodeType === 1) roots.push(n);
+                        else if (n.nodeType === 3 && m.target.nodeType === 1 && !textChecked.has(m.target)) {
+                            textChecked.add(m.target);
+                            roots.push(m.target);
+                        }
+                    });
                 }
             });
             if (roots.length) processRoots(roots);

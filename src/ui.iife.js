@@ -119,7 +119,7 @@
         newTab.dataset.day = dayNumber;
         
         if (dayNumber === 1) {
-            newTab.innerHTML = `Journée ${dayNumber} <span style="font-size: 10px; opacity: 0.7;">(Hub Central)</span>`;
+            newTab.innerHTML = `Journée ${dayNumber} <span style="font-size: 11px; opacity: 0.7;">(Hub Central)</span>`;
         } else {
             newTab.innerHTML = `
                 Journée ${dayNumber}

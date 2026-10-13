@@ -411,7 +411,7 @@ function updateLaneDisplay(laneNumber, participant, finishTime) {
 function laneButtonInnerHTML(laneNumber, participant, finishTime) {
     const isFinished = participant.status === 'finished';
     return `
-        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85;">Couloir</div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85;">Couloir</div>
         <div style="font-size: 36px; font-weight: bold; line-height: 1;">${laneNumber}</div>
         <div class="lane-name" style="font-size: 12px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">${participant.name}</div>
         <div style="font-size: 18px; margin-top: 5px;">${isFinished ? '✅' : '🏃'}</div>
@@ -572,8 +572,8 @@ function generateParticipantsRows(serie) {
                         <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
                             <button onclick="recordLap('${p.bib}')" style="background: #09679e; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
                             <button onclick="finishParticipant('${p.bib}')" style="background: #017239; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
-                            <button onclick="markAsDNS('${p.bib}')" style="background: none; border: 1px solid #ccc; color: #626262; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
-                            <button onclick="markAsDISQ('${p.bib}')" style="background: none; border: 1px solid #d03427; color: #d03427; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Disqualifier">DISQ</button>
+                            <button onclick="markAsDNS('${p.bib}')" style="background: none; border: 1px solid #ccc; color: #626262; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;" title="Non partant">DNS</button>
+                            <button onclick="markAsDISQ('${p.bib}')" style="background: none; border: 1px solid #d03427; color: #d03427; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;" title="Disqualifier">DISQ</button>
                             <button onclick="editParticipantRowInline('${p.bib}')" style="background: #8b5700; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
                         </div>
                     `}
@@ -1388,8 +1388,8 @@ function updateParticipantRow(participant) {
                 <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
                     <button onclick="recordLap('${participant.bib}')" style="background: #09679e; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
                     <button onclick="finishParticipant('${participant.bib}')" style="background: #017239; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
-                    <button onclick="markAsDNS('${participant.bib}')" style="background: none; border: 1px solid #ccc; color: #626262; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
-                    <button onclick="markAsDISQ('${participant.bib}')" style="background: none; border: 1px solid #d03427; color: #d03427; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Disqualifier">DISQ</button>
+                    <button onclick="markAsDNS('${participant.bib}')" style="background: none; border: 1px solid #ccc; color: #626262; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;" title="Non partant">DNS</button>
+                    <button onclick="markAsDISQ('${participant.bib}')" style="background: none; border: 1px solid #d03427; color: #d03427; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;" title="Disqualifier">DISQ</button>
                     <button onclick="editParticipantRowInline('${participant.bib}')" style="background: #8b5700; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
                 </div>
             `}
