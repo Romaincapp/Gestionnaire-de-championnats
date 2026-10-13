@@ -96,7 +96,7 @@ async function main() {
         if (before.unnamed.length > 15) issues.push(`… et ${before.unnamed.length - 15} autre(s) champ(s) sans nom`);
         if (before.count) {
             dialogsChecked++;
-            if (before.role !== 'dialog') issues.push('role="dialog" absent');
+            if (before.role !== 'dialog' && before.role !== 'alertdialog') issues.push('role="dialog" absent');
             if (before.modal !== 'true') issues.push('aria-modal absent');
             if (!before.title) issues.push('fenêtre sans titre (aria-labelledby)');
             if (!before.focusInside) issues.push('focus hors de la fenêtre à l\'ouverture');

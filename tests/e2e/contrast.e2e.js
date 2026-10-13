@@ -100,6 +100,9 @@ function auditContrast() {
         const text = [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
         if (!text || !/[A-Za-zÀ-ÿ0-9]/.test(text)) continue;
         if (!visible(el)) continue;
+        // texte réservé aux lecteurs d'écran (zone d'annonce découpée à 1 px) : jamais affiché
+        const box = el.getBoundingClientRect();
+        if (box.width <= 1 && box.height <= 1) continue;
         const cs = getComputedStyle(el);
         const fg = parse(cs.color);
         if (!fg || fg.a === 0) continue;

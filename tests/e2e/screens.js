@@ -83,7 +83,10 @@ async function readInfo(page) {
 
 // Liste [nom, fonction qui ouvre l'écran] ; chaque écran part d'une page rechargée.
 function buildScreens(page, info) {
-    const call = (code) => async () => { await page.evaluate(code); await page.waitForTimeout(600); };
+    // Un message alert() s'ouvre dans l'app (appAlert) : on le ferme comme le navigateur de test
+    // acceptait la boîte native, pour auditer l'écran derrière ; l'écran « message » l'audite lui-même.
+    const closeMessages = () => page.evaluate(() => document.querySelectorAll('.app-alert button').forEach(b => b.click()));
+    const call = (code) => async () => { await page.evaluate(code); await page.waitForTimeout(600); await closeMessages(); };
     const click = (sel) => async () => { await page.locator(sel).filter({ visible: true }).first().click(); await page.waitForTimeout(350); };
     const screens = [
         ['accueil-j1-poules', call('switchTab(1)')],
@@ -146,6 +149,10 @@ function buildScreens(page, info) {
         }],
         ['recherche', call(`switchTab(3); openAppSearch(); onAppSearchInput(${JSON.stringify(info.player3.slice(0, 4))})`)],
         ['notification', call(`showNotification('Test de notification', 'success')`)],
+        ['message', async () => {
+            await page.evaluate(`alert('🏁 Séries automatiques\\n\\nCréez d\\'abord une épreuve, puis relancez.')`);
+            await page.waitForTimeout(400);
+        }],
     ];
     return screens;
 }
