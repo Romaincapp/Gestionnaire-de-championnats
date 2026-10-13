@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Barre « Mode » sobre
+
+- **Contexte** : après le fond de page, la barre « 🎾 Mode : Matchs/Courses » en dégradé bleu (orange en Courses) restait trop voyante.
+- **Fait** : barre gris clair `#f8f9fa`, bordure fine, texte foncé ; le type de journée reste repérable par un
+  liseré gauche de 4 px (bleu `#09679e` Matchs, orange `#9c5003` Courses) que `handleDayTypeChange` /
+  `initializeDayTypeSelectorForDay1` changent via `borderLeftColor` au lieu du fond. Liste déroulante bordée.
+  Mode sombre pris en charge par `darkmode.iife.js` (vérifié par capture).
+- **Fichiers/modules touchés** : `index.html`, `src/ui.iife.js`
+- **Commit(s)** : voir branche `claude/dreamy-carson-cszy17`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md — · TODO.md — · claude.md —
+
 ### 2026-10-13 — Fond de page sobre (gris clair au lieu du dégradé bleu)
 
 - **Contexte** : le dégradé bleu vif derrière l'application était jugé trop chargé.

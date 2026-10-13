@@ -16,6 +16,8 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 ### 🎨 Apparence
 - Fond de page plus sobre : gris clair uni au lieu du dégradé bleu (aussi dans l'export HTML du
   classement général) ; barre d'adresse du téléphone assortie à l'en-tête.
+- Barre « Mode » (Matchs / Courses) plus discrète : gris clair, le type de journée reste signalé par
+  un liseré bleu (Matchs) ou orange (Courses).
 
 ### 🐛 Corrections
 - Badges des terrains par division : avec moins de terrains que de divisions (ex. 1 terrain pour
