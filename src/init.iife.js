@@ -1259,7 +1259,7 @@ function exportGeneralRankingToHTML() {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                     line-height: 1.6;
                     color: #333;
-                    background: linear-gradient(135deg, #0a64da 0%, #2020c7 100%);
+                    background: #e9ecef;
                     min-height: 100vh;
                     padding: 20px;
                 }

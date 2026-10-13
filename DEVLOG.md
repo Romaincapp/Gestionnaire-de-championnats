@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Fond de page sobre (gris clair au lieu du dégradé bleu)
+
+- **Contexte** : le dégradé bleu vif derrière l'application était jugé trop chargé.
+- **Fait** : fond `body` en gris clair uni `#e9ecef` (ombre du panneau adoucie), même fond dans
+  l'export HTML du classement général (`init.iife.js`) ; `theme-color` du téléphone aligné sur
+  l'en-tête ardoise `#2c3e50`. Mode sombre inchangé.
+- **Fichiers/modules touchés** : `styles.css`, `index.html`, `script.js`, `src/init.iife.js`,
+  `tests/unit/darkModeThemeColor.test.js`
+- **Commit(s)** : voir branche `claude/dreamy-carson-cszy17`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md — · TODO.md — · claude.md —
+
 ### 2026-10-13 — Badges terrains : plus de « Terrains 2-1 » avec moins de terrains que de divisions
 
 - **Contexte** : 3 divisions sur 1 terrain → badges « Division 2: Terrains 2-1 », « Division 3: Terrains 3-1 ».

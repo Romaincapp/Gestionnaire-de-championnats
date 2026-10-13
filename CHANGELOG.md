@@ -13,6 +13,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎨 Apparence
+- Fond de page plus sobre : gris clair uni au lieu du dégradé bleu (aussi dans l'export HTML du
+  classement général) ; barre d'adresse du téléphone assortie à l'en-tête.
+
 ### 🐛 Corrections
 - Badges des terrains par division : avec moins de terrains que de divisions (ex. 1 terrain pour
   3 divisions), les divisions se partagent les terrains au lieu d'afficher « Terrains 2-1 » ;

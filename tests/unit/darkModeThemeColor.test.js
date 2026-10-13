@@ -12,7 +12,7 @@ const theme = () => document.querySelector('meta[name="theme-color"]').getAttrib
 
 beforeEach(() => {
     localStorage.clear();
-    document.head.innerHTML = '<meta name="theme-color" content="#0a64da">';
+    document.head.innerHTML = '<meta name="theme-color" content="#2c3e50">';
     document.body.className = '';
     document.body.innerHTML = '<input type="checkbox" id="darkModeToggle">';
 });
@@ -25,7 +25,7 @@ test('l\'interrupteur passe la barre d\'adresse en sombre puis en clair', () => 
     expect(theme()).toBe('#1a1a2e');
     toggle.checked = false;
     window.toggleDarkMode();
-    expect(theme()).toBe('#0a64da');
+    expect(theme()).toBe('#2c3e50');
 });
 
 test('mode sombre mémorisé : barre d\'adresse sombre dès le chargement', () => {
