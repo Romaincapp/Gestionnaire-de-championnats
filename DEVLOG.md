@@ -33,6 +33,31 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Audit Impeccable + P1 « harden » (clavier, fenêtres, focus) via APEX
+
+- **Contexte** : audit du skill de design Impeccable (pbakaus/impeccable) sur l'app :
+  9/20 (accessibilité 1, perf 3, thème 1, téléphone 2, cohérence 2). Correction des P1 une
+  par une, menée avec la méthode APEX (Analyze → Plan → Execute → eXamine, Melvynx/aiblueprint).
+  Première passe : `harden` (fenêtres et clavier).
+- **Fait** : nouveau module `src/a11y.iife.js` (MutationObserver, aucun gabarit modifié) :
+  toute fenêtre affichée (.modal ou calque fixe plein écran) → `role="dialog"`, `aria-modal`,
+  titre, focus dedans, Tab piégé, Échap = son bouton ×/Fermer/Annuler (ou son fond cliquable),
+  focus rendu à la fermeture ; `[onclick]` non natifs → `tabindex`, `role="button"`,
+  Entrée/Espace. Gestionnaire Échap de `init.iife.js` retiré (remplacé). Contour
+  `:focus-visible` et halo des champs renforcés (`styles.css`, `pools.iife.js`). Liste des
+  écrans de l'audit mode sombre extraite dans `tests/e2e/screens.js`, réutilisée par le
+  nouveau `npm run test:a11y` (32 fenêtres vérifiées, 0 défaut).
+- **Fichiers/modules touchés** : `src/a11y.iife.js` (nouveau), `index.html`, `styles.css`,
+  `src/init.iife.js`, `src/pools.iife.js`, `tests/unit/a11yKeyboard.test.js`,
+  `tests/e2e/a11y.e2e.js`, `tests/e2e/screens.js`, `tests/e2e/darkmode.e2e.js`,
+  `tests/helpers/loadApp.js`, `package.json`, `.gitignore`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ (section 13 quinquies) · TODO.md — · claude.md ✅
+- **Suite possible** : P1 restants de l'audit : `colorize` (variables de couleur, texte blanc
+  à 4,5:1 sur les boutons/bandeaux, gris secondaire `#7f8c8d`) puis `adapt` (cases de score
+  44 px, textes 10 px de la génération de matchs). Note : `modal-bye` n'ouvre parfois rien
+  dans les audits navigateur (aucun joueur n'a besoin d'un BYE selon le tirage des matchs).
+
 ### 2026-10-12 — Nettoyage du dépôt public et anonymisation des données
 
 - **Contexte** : le dépôt est mis en avant sur le portfolio de Romain ; les exports JSON

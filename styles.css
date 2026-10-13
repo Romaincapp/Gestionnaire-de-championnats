@@ -175,8 +175,23 @@ body   * {
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            border-color: #1d6fb8;
+            box-shadow: 0 0 0 3px rgba(29, 111, 184, 0.45);
+        }
+
+        /* Clavier : contour net sur tout ce qui reçoit le focus (boutons,
+           éléments cliquables rendus accessibles par a11y.iife.js). Les champs
+           gardent leur bordure + halo ci-dessus. */
+        :focus-visible {
+            outline: 3px solid #1d6fb8;
+            outline-offset: 2px;
+        }
+        input:focus-visible, select:focus-visible, textarea:focus-visible {
+            outline: none;
+        }
+        /* panneau d'une fenêtre qui reçoit le focus à l'ouverture (a11y.iife.js) */
+        [role="dialog"] [tabindex="-1"]:focus, [role="dialog"][tabindex="-1"]:focus {
+            outline: none;
         }
         
         .btn {
@@ -678,8 +693,8 @@ body   * {
         }
         
         .score-input:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+            border-color: #1d6fb8;
+            box-shadow: 0 0 0 3px rgba(29, 111, 184, 0.45);
             outline: none;
             background: #f8f9fa;
             transform: scale(1.05);
@@ -1714,8 +1729,17 @@ body.dark-mode textarea {
 body.dark-mode input:focus,
 body.dark-mode select:focus,
 body.dark-mode textarea:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    border-color: #7cc4ff;
+    box-shadow: 0 0 0 3px rgba(124, 196, 255, 0.45);
+}
+
+body.dark-mode :focus-visible {
+    outline-color: #7cc4ff;
+}
+body.dark-mode input:focus-visible,
+body.dark-mode select:focus-visible,
+body.dark-mode textarea:focus-visible {
+    outline: none;
 }
 
 body.dark-mode .score-input {

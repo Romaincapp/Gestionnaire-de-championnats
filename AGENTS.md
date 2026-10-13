@@ -26,7 +26,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 ├── script.js               # Legacy — dark mode uniquement (37 lignes), PAS la logique de l'app
 ├── AGENTS.md               # Cette documentation
 ├── claude.md                # Guide d'architecture pour agents IA (structure de données, patterns critiques)
-├── src/                    # Toute la logique applicative (18 modules IIFE, ~30k lignes)
+├── src/                    # Toute la logique applicative (19 modules IIFE, ~30k lignes)
 │   ├── config.iife.js      # Configuration (divisions, terrains)
 │   ├── utils.iife.js       # Fonctions utilitaires
 │   ├── notifications.iife.js # Système de notifications
@@ -44,6 +44,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 │   ├── search.iife.js      # Barre de recherche 🔍 dans la page (façon Ctrl+F), voir section 13 bis
 │   ├── darkmode.iife.js    # Mode sombre : assombrit les couleurs inline claires, voir section 13 ter
 │   ├── mobile.iife.js      # Téléphone : tableaux trop larges défilables, voir section 13 quater
+│   ├── a11y.iife.js        # Clavier : fenêtres (dialog, focus, Tab, Échap) et éléments cliquables, voir section 13 quinquies
 │   └── init.iife.js        # Bootstrap de l'application, chargé en dernier
 ├── examples/               # Exports JSON d'exemple (noms anonymisés)
 ├── scripts/                # Scripts utilitaires (fusion, extraction de clubs, fixtures)
@@ -51,7 +52,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 ```
 Ordre de chargement dans `index.html` : config, utils, notifications, state,
 clubs, multisport, players, ui, matches, pools, ranking, export-json,
-export-print, chrono, search, darkmode, mobile, init (puis `script.js`). Un script chargé plus tard peut écraser un
+export-print, chrono, search, darkmode, mobile, a11y, init (puis `script.js`). Un script chargé plus tard peut écraser un
 `window.x =` du même nom défini plus tôt — c'est ce qui rendait
 `export.iife.js` (supprimé, issue #64) mort : ses fonctions étaient
 écrasées par `export-json.iife.js`/`export-print.iife.js` chargés après.
@@ -364,6 +365,28 @@ son parent. Les tableaux qui tiennent et tout l'affichage ordinateur restent int
   tout contenu qui dépasse de l'écran (« débordement » / « contenu coupé ») avec l'élément
   responsable
 
+### 13 quinquies. a11y.iife.js
+**Rôle** : clavier et lecteurs d'écran, sans toucher aux gabarits. Un `MutationObserver`
+(comme `darkmode`/`mobile`) repère :
+- **les fenêtres** : `.modal` / `.player-modal` affichées, ou calque `position: fixed` couvrant
+  ≥ 90 % de l'écran (tous les fonds créés en JS). Elles reçoivent `role="dialog"`,
+  `aria-modal="true"`, `aria-labelledby` (premier `h1`-`h4`) ; le focus va sur le premier champ
+  texte (sur écran tactile : sur le panneau, pour ne pas sortir le clavier virtuel) ; Tab /
+  Maj+Tab restent dans la fenêtre du dessus ; **Échap** clique son bouton de fermeture
+  (× / ✕ d'abord, puis « Fermer » / « Annuler », émojis de tête ignorés) ou, à défaut, son fond
+  cliquable (`onclick="if (event.target === this) …"`) : la fenêtre se ferme donc par sa propre
+  logique. À la fermeture, le focus revient à l'élément d'origine (ou dans la fenêtre restée
+  ouverte en dessous). Ancien gestionnaire Échap de `init.iife.js` retiré (remplacé)
+- **les éléments cliquables non natifs** (`[onclick]` sur div/span/h2/td/tr…) : `tabindex="0"`,
+  `role="button"` (pas sur `<tr>`), Entrée / Espace = clic. Ignorés : fonds de fenêtre,
+  `onclick="event.stopPropagation()"`, barre de recherche, notifications
+
+Pour une nouvelle fenêtre : rien à faire si elle a un titre `h1`-`h4` et un bouton « × »,
+« Fermer » ou « Annuler ». Pour un nouvel élément cliquable, préférer un vrai `<button>`.
+Contour de focus : `:focus-visible` dans `styles.css` (bleu `#1d6fb8`, `#7cc4ff` en sombre).
+- `getOpenDialogs()`, `closeTopDialog()`, `refreshA11y()` (exposées, pour les tests)
+- Contrôle en vrai navigateur : `npm run test:a11y` et `npm run test:a11y:mobile` (voir 🧪 Tests)
+
 ### 14. init.iife.js
 **Rôle** : Deux choses distinctes dans ce fichier, malgré son nom :
 1. **Bootstrap réel** : un handler `DOMContentLoaded` qui orchestre le
@@ -418,7 +441,7 @@ chargement réel (voir `<script>` dans `index.html`) :
 2. state, clubs
 3. multisport, players, ui
 4. matches, pools, ranking
-5. export-json, export-print, chrono, search, darkmode, mobile
+5. export-json, export-print, chrono, search, darkmode, mobile, a11y
 6. init (bootstrap), puis `script.js` (interrupteur du mode sombre)
 
 Un module chargé plus tard écrase silencieusement un `window.x =` du même
@@ -440,6 +463,8 @@ npm run check:duplicates    # Détection de doublons en CLI seule (déjà inclus
 npm run test:e2e            # Journée natation complète dans un vrai navigateur (HEADED=1 pour regarder)
 npm run test:darkmode       # Audit du mode sombre : contraste de ~50 écrans/fenêtres dans un vrai navigateur
 npm run test:darkmode:mobile # Même audit sur un téléphone (390×844, tactile) + contenu qui déborde de l'écran
+npm run test:a11y            # Clavier : chaque fenêtre (dialog, titre, focus, Tab, Échap) et éléments cliquables
+npm run test:a11y:mobile     # Même contrôle sur un téléphone
 ```
 
 La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR et
@@ -459,7 +484,11 @@ chacun, il mesure les couleurs réellement affichées : texte moins lisible qu'e
 cocher, listes du téléphone : `color-scheme: dark` sur `body.dark-mode`). Code de sortie 1 au
 moindre défaut ; captures et rapport dans `tests/e2e/output-darkmode/` (`-mobile/` avec
 `npm run test:darkmode:mobile`). À lancer après toute modification
-d'affichage, et ajouter une ligne à `screens` pour toute nouvelle fenêtre.
+d'affichage, et ajouter une ligne à `screens` (`tests/e2e/screens.js`, partagé avec
+`npm run test:a11y`) pour toute nouvelle fenêtre. `npm run test:a11y` (`tests/e2e/a11y.e2e.js`)
+ouvre les mêmes écrans et vérifie, sur chaque fenêtre : `role="dialog"`, titre, focus dedans,
+Tab qui y reste, Échap qui la ferme ; sur chaque écran : aucun `[onclick]` inatteignable au
+clavier. Rapport dans `tests/e2e/output-a11y/`.
 
 Quand tu corriges un bug, ajoute un test de non-régression dans `tests/unit/` (voir `clearDayData.test.js` ou `interclubRanking.test.js`). Quand tu supprimes du code que tu penses mort, lance `npm test` avant ET après — une suite verte avant qui reste verte après est la vraie preuve que la suppression est sûre, pas juste le grep qui l'a justifiée. Voir `CONTRIBUTING.md` et `tests/helpers/loadApp.js` pour le détail.
 

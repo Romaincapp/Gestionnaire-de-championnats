@@ -5947,7 +5947,7 @@ function addScoreInputStyles() {
         
         .manual-match input[type="number"]:focus {
             border-color: #0056b3 !important;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25) !important;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.45) !important;
             outline: none !important;
         }
         

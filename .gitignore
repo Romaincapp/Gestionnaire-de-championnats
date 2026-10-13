@@ -4,6 +4,8 @@ coverage/
 tests/e2e/output/
 tests/e2e/output-darkmode/
 tests/e2e/output-darkmode-mobile/
+tests/e2e/output-a11y/
+tests/e2e/output-a11y-mobile/
 
 # Réglages locaux des outils
 .claude/settings.local.json

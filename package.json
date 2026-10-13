@@ -8,7 +8,9 @@
     "test": "jest",
     "test:e2e": "node tests/e2e/natation.e2e.js",
     "test:darkmode": "node tests/e2e/darkmode.e2e.js",
-    "test:darkmode:mobile": "node tests/e2e/darkmode.e2e.js --mobile"
+    "test:darkmode:mobile": "node tests/e2e/darkmode.e2e.js --mobile",
+    "test:a11y": "node tests/e2e/a11y.e2e.js",
+    "test:a11y:mobile": "node tests/e2e/a11y.e2e.js --mobile"
   },
   "devDependencies": {
     "jest": "^30.5.1",

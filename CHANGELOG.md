@@ -13,6 +13,20 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ⌨️ Fenêtres et boutons utilisables au clavier
+- **Échap ferme la fenêtre ouverte** (toutes, plus seulement 3), comme si on cliquait
+  sur son bouton « × », « Fermer » ou « Annuler ». Avec deux fenêtres l'une sur l'autre,
+  seule celle du dessus se ferme.
+- À l'ouverture d'une fenêtre, le curseur va directement dans le premier champ ; **Tab reste
+  dans la fenêtre** au lieu de partir dans la page derrière ; à la fermeture, on retrouve le
+  bouton qui l'avait ouverte. Sur téléphone, le clavier virtuel ne s'ouvre plus tout seul.
+- Les titres repliables (journée, classement général, multisport), les cartes de choix
+  (génération de matchs, pré-remplissage des poules), les lignes de classement et les séries
+  s'atteignent avec Tab et s'ouvrent avec Entrée ou Espace.
+- Contour bleu bien visible autour de l'élément sélectionné au clavier (et halo plus marqué
+  sur les champs, y compris les cases de score), en mode clair comme en mode sombre.
+- Les fenêtres sont annoncées comme telles, avec leur titre, par les lecteurs d'écran.
+
 ### 🔠 Feuilles pétanque et Boccia plus lisibles
 - Titre, terrain (en gras), numéro du match et noms des équipes / joueurs écrits bien plus grands.
 - Pétanque : les cases de score sont un peu moins hautes pour garder la même mise en page.

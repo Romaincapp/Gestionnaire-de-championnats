@@ -1219,13 +1219,7 @@ function showByeManagementModal(dayNumber) {
             });
         }
         
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeBulkModal();
-                closePlayerModal();
-                closeImportModal();
-            }
-        });
+        // Échap : géré pour toutes les fenêtres par a11y.iife.js (ferme celle du dessus)
         
         const playerNameInput = document.getElementById('playerName');
         if (playerNameInput) {
