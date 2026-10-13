@@ -33,6 +33,28 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Impeccable P1 « colorize » : contraste WCAG AA en mode clair (via APEX)
+
+- **Contexte** : 2e correction P1 de l'audit Impeccable (texte blanc sur boutons/bandeaux à
+  2,1-3,8:1, gris secondaire `#7f8c8d` à 3,5:1). Méthode APEX comme pour `harden`.
+- **Fait** : nouvel audit navigateur `npm run test:contrast` (texte affiché vs fond réel, arrêt
+  le plus défavorable des dégradés, 48 écrans) : **4 751 → 0** textes sous le seuil. Teintes
+  remplacées partout par une version plus foncée de même ton (OKLCH, ≥ 5:1 avec le blanc ;
+  ≥ 4,5:1 aussi sur les fonds clairs teintés pour les gris, verts, bleu principal, ocre,
+  orange). Corrections de contexte : badge « Terminé », boutons `.remove-player` /
+  `.edit-player` (voile noir au lieu de blanc), « × » des matchs (opacité 0,9), pastilles des
+  bandeaux de poules, titre et « Total » du classement Multisport, podium en encre foncée
+  (mode clair seulement), chiffres or/bronze. Palette en variables `:root` dans `styles.css`.
+  Garde-fou `tests/unit/colorPalette.test.js` (anciennes teintes refusées).
+- **Fichiers/modules touchés** : `styles.css`, `index.html`, 14 modules `src/*.iife.js`
+  (couleurs seulement), `tests/e2e/contrast.e2e.js` (nouveau), `tests/unit/colorPalette.test.js`
+  (nouveau), `tests/unit/manualResults.test.js` (vert attendu), `package.json`, `.gitignore`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ (Tests → Couleurs et contraste) · TODO.md — · claude.md —
+- **Suite possible** : dernier P1 `adapt` (cases de score 44 px, textes 10 px). Les dégradés
+  bicolores sont devenus presque unis (les deux teintes convergent) : à reprendre dans
+  `polish` si on veut garder un relief.
+
 ### 2026-10-13 — Audit Impeccable + P1 « harden » (clavier, fenêtres, focus) via APEX
 
 - **Contexte** : audit du skill de design Impeccable (pbakaus/impeccable) sur l'app :

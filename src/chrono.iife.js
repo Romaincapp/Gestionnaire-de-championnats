@@ -143,7 +143,7 @@ function displayRaceInterface(serie) {
                     <h3 style="margin: 0;">
                         ${sportEmoji[serie.sportType]} ${serie.name}
                     </h3>
-                    <p style="color: #7f8c8d; margin: 5px 0 0 0;">
+                    <p style="color: #586566; margin: 5px 0 0 0;">
                         Distance: ${serie.distance}m | ${serie.raceType === 'relay' ? `Relais ${serie.relayDuration} min` : 'Course individuelle'}
                     </p>
                 </div>
@@ -159,7 +159,7 @@ function displayRaceInterface(serie) {
 
             <!-- Mode Couloirs (visible si laneMode activé et course lancée) -->
             ${serie.laneMode && serie.isRunning ? `
-                <div style="background: linear-gradient(135deg, #2980b9, #3498db); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <div style="background: linear-gradient(135deg, #08689d, #09679e); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
                     <div style="text-align: center; margin-bottom: 15px;">
                         <h4 style="color: white; margin: 0 0 8px 0; font-size: 18px;">🏊 MODE COULOIRS ACTIF</h4>
                         <p style="color: #ecf0f1; margin: 0; font-size: 13px;">Appuyez sur les touches <strong>1-9</strong> du clavier (<strong>0</strong> = couloir 10) pour arrêter les chronos instantanément</p>
@@ -171,7 +171,7 @@ function displayRaceInterface(serie) {
                             .map(p => {
                             const laneNumber = p.laneNumber;
                             const isFinished = p.status === 'finished';
-                            const bgColor = isFinished ? '#27ae60' : '#e74c3c';
+                            const bgColor = isFinished ? '#017239' : '#d03427';
                             return `
                                 <div id="lane-${laneNumber}"
                                      onclick="finishLane(${laneNumber})"
@@ -191,7 +191,7 @@ function displayRaceInterface(serie) {
 
             <!-- Saisie rapide dossard (visible uniquement si course lancée ET pas en mode couloirs) -->
             ${serie.isRunning && !serie.laneMode ? `
-                <div style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <div style="background: linear-gradient(135deg, #057e68, #057e68); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                         <label style="color: white; font-weight: bold; font-size: 16px;">⚡ Saisie Rapide:</label>
                         <input
@@ -219,18 +219,18 @@ function displayRaceInterface(serie) {
             ` : ''}
 
             <div style="margin-bottom: 20px;">
-                <button class="btn" onclick="backToSeriesList()" style="background: #95a5a6; margin-right: 10px;">
+                <button class="btn" onclick="backToSeriesList()" style="background: #566566; margin-right: 10px;">
                     ⬅️ Retour aux séries
                 </button>
-                <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #16a085, #1abc9c); margin-right: 10px;">
+                <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #057e68, #057e68); margin-right: 10px;">
                     🏆 Voir Classement
                 </button>
-                <button class="btn" onclick="openLiveRaceDisplayWindow()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); margin-right: 10px;">
+                <button class="btn" onclick="openLiveRaceDisplayWindow()" style="background: linear-gradient(135deg, #9654b1, #8e44ad); margin-right: 10px;">
                     🖥️ Afficher
                 </button>
                 <button class="btn" onclick="toggleActionHistoryPanel()" style="background: #34495e; margin-right: 10px; position: relative;">
                     🕘 Historique
-                    <span id="raceHistoryBadge" style="background: #e74c3c; color: white; font-size: 11px; font-weight: bold; padding: 1px 6px; border-radius: 10px; margin-left: 6px;"></span>
+                    <span id="raceHistoryBadge" style="background: #d03427; color: white; font-size: 11px; font-weight: bold; padding: 1px 6px; border-radius: 10px; margin-left: 6px;"></span>
                 </button>
                 <button class="btn btn-danger" onclick="endSerie()">
                     🏁 Terminer la Série
@@ -243,7 +243,7 @@ function displayRaceInterface(serie) {
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white;">
                     <thead>
-                        <tr style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
+                        <tr style="background: linear-gradient(135deg, #057e68, #057e68); color: white;">
                             <th style="padding: 12px; text-align: center;">${serie.laneMode ? 'Couloir' : 'Dossard'}</th>
                             <th style="padding: 12px; text-align: left;">Participant</th>
                             <th style="padding: 12px; text-align: left;">Club</th>
@@ -396,7 +396,7 @@ function updateLaneDisplay(laneNumber, participant, finishTime) {
     const laneElement = document.getElementById(`lane-${laneNumber}`);
     if (!laneElement) return;
 
-    laneElement.style.background = '#27ae60';
+    laneElement.style.background = '#017239';
     laneElement.style.cursor = 'default';
     laneElement.style.boxShadow = 'none';
 
@@ -514,10 +514,10 @@ function generateParticipantsRows(serie) {
 
     return list.map(p => {
         const statusColor = {
-            ready: '#95a5a6',
-            running: '#3498db',
-            finished: '#27ae60',
-            dns: '#e74c3c',
+            ready: '#566566',
+            running: '#09679e',
+            finished: '#017239',
+            dns: '#d03427',
             disq: '#8e44ad'
         };
 
@@ -536,10 +536,10 @@ function generateParticipantsRows(serie) {
                 </td>
                 <td style="padding: 12px;">
                     <div style="font-weight: bold;">${p.name}</div>
-                    ${p.category ? `<div style="font-size: 12px; color: #7f8c8d;">${p.category}</div>` : ''}
+                    ${p.category ? `<div style="font-size: 12px; color: #586566;">${p.category}</div>` : ''}
                 </td>
                 <td style="padding: 12px;">
-                    <div style="font-weight: bold; color: #16a085;">${p.club || '-'}</div>
+                    <div style="font-weight: bold; color: #057e68;">${p.club || '-'}</div>
                 </td>
                 <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
                     ${(p.laps || []).length}
@@ -561,20 +561,20 @@ function generateParticipantsRows(serie) {
                 <td style="padding: 8px; text-align: center;">
                     ${isOutOfRaceStatus(p.status) ? `
                         <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                            <button onclick="${p.status === 'disq' ? 'cancelDISQ' : 'cancelDNS'}('${p.bib}')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler ${outOfRaceLabel(p.status)}">↩️</button>
+                            <button onclick="${p.status === 'disq' ? 'cancelDISQ' : 'cancelDNS'}('${p.bib}')" style="background: #566566; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler ${outOfRaceLabel(p.status)}">↩️</button>
                         </div>
                     ` : p.status === 'finished' ? `
                         <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                            <button onclick="editParticipantTime('${p.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer le temps">✏️</button>
-                            <button onclick="restartParticipant('${p.bib}')" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Relancer">🔄</button>
+                            <button onclick="editParticipantTime('${p.bib}')" style="background: #8b5700; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer le temps">✏️</button>
+                            <button onclick="restartParticipant('${p.bib}')" style="background: #d03427; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Relancer">🔄</button>
                         </div>
                     ` : `
                         <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                            <button onclick="recordLap('${p.bib}')" style="background: #3498db; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
-                            <button onclick="finishParticipant('${p.bib}')" style="background: #27ae60; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
-                            <button onclick="markAsDNS('${p.bib}')" style="background: none; border: 1px solid #ccc; color: #999; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
-                            <button onclick="markAsDISQ('${p.bib}')" style="background: none; border: 1px solid #e74c3c; color: #e74c3c; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Disqualifier">DISQ</button>
-                            <button onclick="editParticipantRowInline('${p.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
+                            <button onclick="recordLap('${p.bib}')" style="background: #09679e; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
+                            <button onclick="finishParticipant('${p.bib}')" style="background: #017239; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
+                            <button onclick="markAsDNS('${p.bib}')" style="background: none; border: 1px solid #ccc; color: #626262; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
+                            <button onclick="markAsDISQ('${p.bib}')" style="background: none; border: 1px solid #d03427; color: #d03427; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Disqualifier">DISQ</button>
+                            <button onclick="editParticipantRowInline('${p.bib}')" style="background: #8b5700; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
                         </div>
                     `}
                 </td>
@@ -849,21 +849,21 @@ function renderActionHistoryPanel() {
     if (!panel) return;
 
     const listHtml = log.length === 0
-        ? '<p style="color: #95a5a6; text-align: center; margin-top: 20px;">Aucune action pour le moment</p>'
+        ? '<p style="color: #566566; text-align: center; margin-top: 20px;">Aucune action pour le moment</p>'
         : log.slice().reverse().map(a => `
             <div style="background: #f8f9fa; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                 <div>
                     <div style="font-weight: bold; font-size: 13px;">#${a.bib} ${a.participantName}</div>
-                    <div style="font-size: 12px; color: #7f8c8d;">${a.label}</div>
+                    <div style="font-size: 12px; color: #586566;">${a.label}</div>
                 </div>
-                <button onclick="undoRaceAction(${a.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; white-space: nowrap;" title="Revenir à l'état d'avant cette action">↩️ Annuler</button>
+                <button onclick="undoRaceAction(${a.id})" style="background: #d03427; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; white-space: nowrap;" title="Revenir à l'état d'avant cette action">↩️ Annuler</button>
             </div>
         `).join('');
 
     panel.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h4 style="margin: 0;">🕘 Historique</h4>
-            <button onclick="toggleActionHistoryPanel()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #7f8c8d;" title="Fermer">✖️</button>
+            <button onclick="toggleActionHistoryPanel()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #586566;" title="Fermer">✖️</button>
         </div>
         ${listHtml}
     `;
@@ -1330,10 +1330,10 @@ function updateParticipantRow(participant) {
     if (!serie) return;
 
     const statusColor = {
-        ready: '#95a5a6',
-        running: '#3498db',
-        finished: '#27ae60',
-        dns: '#e74c3c',
+        ready: '#566566',
+        running: '#09679e',
+        finished: '#017239',
+        dns: '#d03427',
         disq: '#8e44ad'
     };
 
@@ -1352,10 +1352,10 @@ function updateParticipantRow(participant) {
         </td>
         <td style="padding: 12px;">
             <div style="font-weight: bold;">${participant.name}</div>
-            ${participant.category ? `<div style="font-size: 12px; color: #7f8c8d;">${participant.category}</div>` : ''}
+            ${participant.category ? `<div style="font-size: 12px; color: #586566;">${participant.category}</div>` : ''}
         </td>
         <td style="padding: 12px;">
-            <div style="font-weight: bold; color: #16a085;">${participant.club || '-'}</div>
+            <div style="font-weight: bold; color: #057e68;">${participant.club || '-'}</div>
         </td>
         <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
             ${(participant.laps || []).length}
@@ -1377,20 +1377,20 @@ function updateParticipantRow(participant) {
         <td style="padding: 8px; text-align: center;">
             ${isOutOfRaceStatus(participant.status) ? `
                 <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                    <button onclick="${participant.status === 'disq' ? 'cancelDISQ' : 'cancelDNS'}('${participant.bib}')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler ${outOfRaceLabel(participant.status)}">↩️</button>
+                    <button onclick="${participant.status === 'disq' ? 'cancelDISQ' : 'cancelDNS'}('${participant.bib}')" style="background: #566566; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler ${outOfRaceLabel(participant.status)}">↩️</button>
                 </div>
             ` : participant.status === 'finished' ? `
                 <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                    <button onclick="editParticipantTime('${participant.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer le temps">✏️</button>
-                    <button onclick="restartParticipant('${participant.bib}')" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Relancer">🔄</button>
+                    <button onclick="editParticipantTime('${participant.bib}')" style="background: #8b5700; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer le temps">✏️</button>
+                    <button onclick="restartParticipant('${participant.bib}')" style="background: #d03427; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Relancer">🔄</button>
                 </div>
             ` : `
                 <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                    <button onclick="recordLap('${participant.bib}')" style="background: #3498db; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
-                    <button onclick="finishParticipant('${participant.bib}')" style="background: #27ae60; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
-                    <button onclick="markAsDNS('${participant.bib}')" style="background: none; border: 1px solid #ccc; color: #999; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
-                    <button onclick="markAsDISQ('${participant.bib}')" style="background: none; border: 1px solid #e74c3c; color: #e74c3c; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Disqualifier">DISQ</button>
-                    <button onclick="editParticipantRowInline('${participant.bib}')" style="background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
+                    <button onclick="recordLap('${participant.bib}')" style="background: #09679e; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Enregistrer un tour">LAP</button>
+                    <button onclick="finishParticipant('${participant.bib}')" style="background: #017239; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;" title="Terminer">FIN</button>
+                    <button onclick="markAsDNS('${participant.bib}')" style="background: none; border: 1px solid #ccc; color: #626262; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Non partant">DNS</button>
+                    <button onclick="markAsDISQ('${participant.bib}')" style="background: none; border: 1px solid #d03427; color: #d03427; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Disqualifier">DISQ</button>
+                    <button onclick="editParticipantRowInline('${participant.bib}')" style="background: #8b5700; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Éditer tours / distance / temps">✏️</button>
                 </div>
             `}
         </td>
@@ -1445,12 +1445,12 @@ window.editParticipantRowInline = function(bib) {
     var distanceKm = ((participant.totalDistance || 0) / 1000).toFixed(2);
     var timeStr = formatTime(participant.totalTime || participant.finishTime || 0);
 
-    cells[3].innerHTML = '<input type="number" min="0" id="edit-laps-' + bib + '" value="' + lapsCount + '" style="width: 60px; padding: 4px; text-align: center; border: 1px solid #f39c12; border-radius: 4px; font-size: 14px;">';
-    cells[4].innerHTML = '<input type="number" min="0" step="0.01" id="edit-dist-' + bib + '" value="' + distanceKm + '" style="width: 65px; padding: 4px; text-align: center; border: 1px solid #f39c12; border-radius: 4px; font-size: 14px;"> km';
-    cells[5].innerHTML = '<input type="text" id="edit-time-' + bib + '" value="' + timeStr + '" placeholder="MM:SS.cc" style="width: 95px; padding: 4px; text-align: center; font-family: monospace; border: 1px solid #f39c12; border-radius: 4px; font-size: 14px;">';
+    cells[3].innerHTML = '<input type="number" min="0" id="edit-laps-' + bib + '" value="' + lapsCount + '" style="width: 60px; padding: 4px; text-align: center; border: 1px solid #8b5700; border-radius: 4px; font-size: 14px;">';
+    cells[4].innerHTML = '<input type="number" min="0" step="0.01" id="edit-dist-' + bib + '" value="' + distanceKm + '" style="width: 65px; padding: 4px; text-align: center; border: 1px solid #8b5700; border-radius: 4px; font-size: 14px;"> km';
+    cells[5].innerHTML = '<input type="text" id="edit-time-' + bib + '" value="' + timeStr + '" placeholder="MM:SS.cc" style="width: 95px; padding: 4px; text-align: center; font-family: monospace; border: 1px solid #8b5700; border-radius: 4px; font-size: 14px;">';
     cells[8].innerHTML = '<div style="display: flex; gap: 4px; justify-content: center; align-items: center;">' +
-        '<button onclick="saveParticipantRowInline(\'' + bib + '\')" style="background: #27ae60; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Enregistrer">💾</button>' +
-        '<button onclick="cancelParticipantRowInline(\'' + bib + '\')" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler">✖️</button>' +
+        '<button onclick="saveParticipantRowInline(\'' + bib + '\')" style="background: #017239; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Enregistrer">💾</button>' +
+        '<button onclick="cancelParticipantRowInline(\'' + bib + '\')" style="background: #566566; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Annuler">✖️</button>' +
         '</div>';
 
     var timeInput = document.getElementById('edit-time-' + bib);
@@ -1590,10 +1590,10 @@ function generateRaceRanking() {
     const showCategory = !!ranked.hasMultipleCategories;
 
     let html = `
-        <div style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); padding: 20px; border-radius: 10px;">
+        <div style="background: linear-gradient(135deg, #057e68 0%, #057e68 100%); padding: 20px; border-radius: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="color: white; margin: 0;">🏆 Classement Général</h3>
-                <button onclick="exportRaceRankingToPDF()" style="background: white; color: #16a085; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                <button onclick="exportRaceRankingToPDF()" style="background: white; color: #057e68; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                     📄 Exporter en PDF
                 </button>
             </div>
@@ -1622,18 +1622,18 @@ function generateRaceRanking() {
 
                             return `
                                 <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
-                                    <td style="padding: 12px; text-align: center; font-size: ${isDNS ? '14px' : '24px'}; font-weight: bold; color: ${isDNS ? '#e74c3c' : 'inherit'};">
+                                    <td style="padding: 12px; text-align: center; font-size: ${isDNS ? '14px' : '24px'}; font-weight: bold; color: ${isDNS ? '#d03427' : 'inherit'};">
                                         ${medal}
                                     </td>
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: #3498db;">
+                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: #09679e;">
                                         #${p.bib}
                                     </td>
                                     <td style="padding: 12px;">
                                         <div style="font-weight: bold; font-size: 16px;">${p.name}</div>
-                                        ${p.category ? `<div style="font-size: 12px; color: #7f8c8d;">${p.category}</div>` : ''}
+                                        ${p.category ? `<div style="font-size: 12px; color: #586566;">${p.category}</div>` : ''}
                                     </td>
                                     <td style="padding: 12px;">
-                                        <div style="font-weight: bold; color: #16a085; font-size: 14px;">${p.club || '-'}</div>
+                                        <div style="font-weight: bold; color: #057e68; font-size: 14px;">${p.club || '-'}</div>
                                     </td>
                                     ${showCategory ? `
                                     <td style="padding: 12px;">
@@ -1653,12 +1653,12 @@ function generateRaceRanking() {
                                     </td>
                                     <td style="padding: 12px; text-align: center;">
                                         ${p.status === 'finished' ?
-                                            '<span style="color: #27ae60; font-weight: bold;">✅ Terminé</span>' :
+                                            '<span style="color: #017239; font-weight: bold;">✅ Terminé</span>' :
                                             p.status === 'dns' ?
-                                            '<span style="color: #e74c3c; font-weight: bold;">🚫 DNS</span>' :
+                                            '<span style="color: #d03427; font-weight: bold;">🚫 DNS</span>' :
                                             p.status === 'disq' ?
                                             '<span style="color: #8e44ad; font-weight: bold;">⛔ DISQ</span>' :
-                                            '<span style="color: #e67e22; font-weight: bold;">⏳ En cours</span>'
+                                            '<span style="color: #9c5003; font-weight: bold;">⏳ En cours</span>'
                                         }
                                     </td>
                                 </tr>
@@ -1668,11 +1668,11 @@ function generateRaceRanking() {
                 </table>
 
                 <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                    <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="background: linear-gradient(135deg, #057e68, #057e68); color: white; padding: 15px; border-radius: 8px; text-align: center;">
                         <div style="font-size: 14px; opacity: 0.9;">Participants Totaux</div>
                         <div style="font-size: 32px; font-weight: bold;">${serie.participants.length}</div>
                     </div>
-                    <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="background: linear-gradient(135deg, #057e68, #057e68); color: white; padding: 15px; border-radius: 8px; text-align: center;">
                         <div style="font-size: 14px; opacity: 0.9;">Terminés</div>
                         <div style="font-size: 32px; font-weight: bold;">
                             ${serie.participants.filter(p => p.status === 'finished').length}
@@ -1713,7 +1713,7 @@ function generateRaceRanking() {
 function buildLiveRaceDisplayContentHTML() {
     const serie = raceData.currentSerie;
     if (!serie) {
-        return { title: 'Aucune course en cours', body: '<p style="text-align:center; padding:40px; color:#7f8c8d;">Aucune course en cours.</p>' };
+        return { title: 'Aucune course en cours', body: '<p style="text-align:center; padding:40px; color:#586566;">Aucune course en cours.</p>' };
     }
 
     const ranked = [...serie.participants].sort((a, b) => {
@@ -1736,10 +1736,10 @@ function buildLiveRaceDisplayContentHTML() {
         const medal = isDNS ? outOfRaceLabel(p.status) : (position <= 3 ? medals[position - 1] : position);
         const rowBg = isDNS ? 'background: rgba(231,76,60,0.15); opacity: 0.7;' : (position <= 3 ? 'background: rgba(255,215,0,0.12);' : '');
         const statusHtml = p.status === 'finished'
-            ? '<span style="color: #2ecc71; font-weight: bold;">✅ Terminé</span>'
+            ? '<span style="color: #017239; font-weight: bold;">✅ Terminé</span>'
             : p.status === 'disq'
             ? '<span style="color: #c39bd3; font-weight: bold;">⛔ DISQ</span>'
-            : (isDNS ? '<span style="color: #e74c3c; font-weight: bold;">🚫 DNS</span>' : '<span style="color: #f39c12; font-weight: bold;">⏳ En cours</span>');
+            : (isDNS ? '<span style="color: #d03427; font-weight: bold;">🚫 DNS</span>' : '<span style="color: #8b5700; font-weight: bold;">⏳ En cours</span>');
         const categoryCell = showCategory
             ? `<td style="padding: 12px; text-align: left;">${p.category || '-'}${p.category ? ` (${p.catRank}e/${p.catTotal})` : ''}</td>`
             : '';
@@ -1747,8 +1747,8 @@ function buildLiveRaceDisplayContentHTML() {
         return `
             <tr style="${rowBg} border-bottom: 1px solid rgba(255,255,255,0.1);">
                 <td style="padding: 12px; text-align: center; font-size: ${isDNS ? '14px' : '22px'}; font-weight: bold;">${medal}</td>
-                <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px; color: #3498db;">${serie.laneMode ? (p.laneNumber != null ? p.laneNumber : '-') : '#' + p.bib}</td>
-                <td style="padding: 12px; font-weight: bold;">${p.name}${p.club ? '<div style="font-size:11px; color:#94a3b8; font-weight:normal;">' + p.club + '</div>' : ''}</td>
+                <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px; color: #09679e;">${serie.laneMode ? (p.laneNumber != null ? p.laneNumber : '-') : '#' + p.bib}</td>
+                <td style="padding: 12px; font-weight: bold;">${p.name}${p.club ? '<div style="font-size:11px; color:#566376; font-weight:normal;">' + p.club + '</div>' : ''}</td>
                 ${categoryCell}
                 <td style="padding: 12px; text-align: center; font-weight: bold;">${p.laps.length}</td>
                 <td style="padding: 12px; text-align: center; font-weight: bold;">${(p.totalDistance / 1000).toFixed(2)} km</td>
@@ -1792,11 +1792,11 @@ window.openLiveRaceDisplayWindow = function() {
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 25px; }
         h1 { text-align: center; margin: 0 0 5px 0; font-size: 26px; }
-        .update-time { text-align: center; font-size: 0.85em; color: #94a3b8; margin-bottom: 20px; }
+        .update-time { text-align: center; font-size: 0.85em; color: #566376; margin-bottom: 20px; }
         table { width: 100%; }
         td, th { font-size: 15px; }
         .auto-refresh { position: fixed; bottom: 20px; left: 20px; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 25px; font-size: 13px; }
-        .refresh-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 15px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; }
+        .refresh-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #017239, #017239); color: white; border: none; padding: 15px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; }
         .refreshing { animation: pulse 1s ease-in-out; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style></head><body>
@@ -1890,16 +1890,16 @@ window.exportRaceRankingToPDF = function() {
         const rowBg = isDNS ? '#fdeaea' : (position <= 3 ? '#fff9e6' : (index % 2 === 0 ? '#f8f9fa' : 'white'));
         const timeDisplay = p.status === 'finished' ? formatTime(p.finishTime) : formatTime(p.totalTime);
         const statusText = p.status === 'finished' ? 'Terminé' : (p.status === 'disq' ? 'DISQ' : (p.status === 'dns' ? 'DNS' : 'En cours'));
-        const statusColorForText = p.status === 'finished' ? '#27ae60' : (p.status === 'disq' ? '#8e44ad' : (p.status === 'dns' ? '#e74c3c' : '#e67e22'));
+        const statusColorForText = p.status === 'finished' ? '#017239' : (p.status === 'disq' ? '#8e44ad' : (p.status === 'dns' ? '#d03427' : '#9c5003'));
 
         return `<tr style="background: ${rowBg}; border-bottom: 1px solid #dee2e6;">
-            <td style="padding: 10px; text-align: center; font-size: ${isDNS ? '13px' : '20px'}; font-weight: bold; color: ${isDNS ? '#e74c3c' : 'inherit'};">${medal}</td>
-            <td style="padding: 10px; text-align: center; font-weight: bold; color: #3498db;">#${p.bib}</td>
+            <td style="padding: 10px; text-align: center; font-size: ${isDNS ? '13px' : '20px'}; font-weight: bold; color: ${isDNS ? '#d03427' : 'inherit'};">${medal}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; color: #09679e;">#${p.bib}</td>
             <td style="padding: 10px;">
                 <div style="font-weight: bold;">${p.name}</div>
-                <div style="font-size: 11px; color: #7f8c8d;">${p.category || '-'}</div>
+                <div style="font-size: 11px; color: #586566;">${p.category || '-'}</div>
             </td>
-            <td style="padding: 10px; color: #16a085; font-weight: bold;">${p.club || '-'}</td>
+            <td style="padding: 10px; color: #057e68; font-weight: bold;">${p.club || '-'}</td>
             <td style="padding: 10px; text-align: center; font-weight: bold;">${p.laps.length}</td>
             <td style="padding: 10px; text-align: center; font-weight: bold;">${(p.totalDistance / 1000).toFixed(2)} km</td>
             <td style="padding: 10px; text-align: center; font-family: monospace; font-weight: bold;">${timeDisplay}</td>
@@ -1920,19 +1920,19 @@ window.exportRaceRankingToPDF = function() {
     <title>Classement Général - ${serieName}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; color: #2c3e50; }
-        h1 { text-align: center; color: #16a085; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 20px; }
+        h1 { text-align: center; color: #057e68; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #586566; font-size: 13px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        thead tr { background: linear-gradient(135deg, #16a085, #1abc9c); color: white; }
+        thead tr { background: linear-gradient(135deg, #057e68, #057e68); color: white; }
         th { padding: 10px 8px; text-align: center; font-weight: bold; }
         th:nth-child(3) { text-align: left; }
         th:nth-child(4) { text-align: left; }
         td { border-bottom: 1px solid #dee2e6; }
         .stats { display: flex; gap: 15px; margin-top: 20px; justify-content: center; }
-        .stat-card { background: #f0faf8; border: 2px solid #16a085; border-radius: 8px; padding: 12px 20px; text-align: center; }
-        .stat-label { font-size: 11px; color: #7f8c8d; }
-        .stat-value { font-size: 22px; font-weight: bold; color: #16a085; }
-        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #95a5a6; }
+        .stat-card { background: #f0faf8; border: 2px solid #057e68; border-radius: 8px; padding: 12px 20px; text-align: center; }
+        .stat-label { font-size: 11px; color: #586566; }
+        .stat-value { font-size: 22px; font-weight: bold; color: #057e68; }
+        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #566566; }
         @media print { button { display: none; } }
     </style>
 </head>
@@ -2022,22 +2022,22 @@ window.showSerieClubRanking = function() {
     const medals = ['🥇', '🥈', '🥉'];
 
     let html = `
-        <div style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); padding: 20px; border-radius: 10px;">
+        <div style="background: linear-gradient(135deg, #017239 0%, #017239 100%); padding: 20px; border-radius: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="color: white; margin: 0;">🏅 Classement par Club</h3>
-                <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; font-weight: bold;">
+                <button class="btn" onclick="showRaceRanking()" style="background: linear-gradient(135deg, #057e68, #057e68); color: white; font-weight: bold;">
                     👤 Classement Individuel
                 </button>
             </div>
 
             <div style="background: white; border-radius: 10px; padding: 20px;">
-                <p style="color: #7f8c8d; margin-bottom: 20px; text-align: center;">
+                <p style="color: #586566; margin-bottom: 20px; text-align: center;">
                     Attribution de points selon la position : 1er=25pts, 2e=18pts, 3e=15pts, 4e=12pts, 5e=10pts, 6e=8pts, 7e=6pts, 8e=4pts, 9e=2pts, 10e=1pt
                 </p>
 
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
                     <thead>
-                        <tr style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white;">
+                        <tr style="background: linear-gradient(135deg, #017239, #017239); color: white;">
                             <th style="padding: 12px; text-align: center;">Position</th>
                             <th style="padding: 12px; text-align: left;">Club</th>
                             <th style="padding: 12px; text-align: center;">Points</th>
@@ -2056,26 +2056,26 @@ window.showSerieClubRanking = function() {
                                         ${medal}
                                     </td>
                                     <td style="padding: 12px;">
-                                        <div style="font-weight: bold; font-size: 18px; color: #2ecc71;">
+                                        <div style="font-weight: bold; font-size: 18px; color: #017239;">
                                             🏅 ${club.clubName}
                                         </div>
                                     </td>
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 24px; color: #27ae60;">
+                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 24px; color: #017239;">
                                         ${club.totalPoints} pts
                                     </td>
                                     <td style="padding: 12px; text-align: center;">
-                                        <div style="font-weight: bold; color: #3498db; font-size: 16px;">
+                                        <div style="font-weight: bold; color: #09679e; font-size: 16px;">
                                             ${club.participants.length} participant(s)
                                         </div>
                                     </td>
                                 </tr>
                                 <tr style="${rowBg}">
                                     <td colspan="4" style="padding: 0 12px 12px 60px;">
-                                        <div style="font-size: 13px; color: #7f8c8d;">
+                                        <div style="font-size: 13px; color: #586566;">
                                             ${club.positions.map(pos =>
                                                 `<span style="display: inline-block; margin-right: 15px; margin-bottom: 5px;">
                                                     <strong>${pos.position}e</strong> - ${pos.name}
-                                                    <span style="color: #27ae60;">(${pos.points} pts)</span>
+                                                    <span style="color: #017239;">(${pos.points} pts)</span>
                                                 </span>`
                                             ).join('')}
                                         </div>
@@ -2168,9 +2168,9 @@ function generateInterclubRanking(rankedParticipants, event) {
 
     if (sortedClubs.length === 0) {
         return `
-            <div style="margin-top: 20px; background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 20px; border-radius: 10px;">
+            <div style="margin-top: 20px; background: linear-gradient(135deg, #9654b1, #8e44ad); padding: 20px; border-radius: 10px;">
                 <h3 style="color: white; text-align: center; margin-bottom: 15px;">🏅 Classement Interclub</h3>
-                <div style="background: white; border-radius: 10px; padding: 20px; text-align: center; color: #7f8c8d;">
+                <div style="background: white; border-radius: 10px; padding: 20px; text-align: center; color: #586566;">
                     Aucun club trouvé. Assurez-vous que les participants ont un club assigné.
                 </div>
             </div>
@@ -2180,7 +2180,7 @@ function generateInterclubRanking(rankedParticipants, event) {
     const clubMedals = ['🥇', '🥈', '🥉'];
 
     return `
-        <div style="margin-top: 20px; background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 20px; border-radius: 10px;">
+        <div style="margin-top: 20px; background: linear-gradient(135deg, #9654b1, #8e44ad); padding: 20px; border-radius: 10px;">
             <h3 style="color: white; text-align: center; margin-bottom: 15px;">🏅 Classement Interclub</h3>
             <p style="color: rgba(255,255,255,0.8); text-align: center; margin-bottom: 15px; font-size: 13px;">
                 Barème: ${pointsScale.map((p, i) => `${i + 1}er=${p}pts`).join(', ')}
@@ -2206,16 +2206,16 @@ function generateInterclubRanking(rankedParticipants, event) {
                                     <td style="padding: 12px; text-align: center; font-size: 24px; font-weight: bold;">
                                         ${medal}
                                     </td>
-                                    <td style="padding: 12px; font-weight: bold; font-size: 16px; color: #9b59b6;">
+                                    <td style="padding: 12px; font-weight: bold; font-size: 16px; color: #9654b1;">
                                         ${c.club}
                                     </td>
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 24px; color: #e74c3c;">
+                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 24px; color: #d03427;">
                                         ${c.points}
                                     </td>
                                     <td style="padding: 12px; text-align: center; font-weight: bold;">
                                         ${c.athletes.length}
                                     </td>
-                                    <td style="padding: 12px; font-size: 12px; color: #7f8c8d;">
+                                    <td style="padding: 12px; font-size: 12px; color: #586566;">
                                         ${c.athletes.map(a => {
                                             const individualInfo = a.individualPosition && a.individualPosition !== a.position
                                                 ? ` - ${a.individualPosition}e indiv.`
@@ -2381,7 +2381,7 @@ window.printChronoCompetition = function(dayNumber) {
                 .club-ranking h4 { margin-bottom: 8px; color: #8e44ad; }
                 .stats { display: flex; gap: 20px; margin: 10px 0; flex-wrap: wrap; }
                 .stat { background: #f5f5f5; padding: 8px 15px; border-radius: 5px; }
-                .print-date { text-align: right; color: #999; font-size: 10px; margin-bottom: 10px; }
+                .print-date { text-align: right; color: #626262; font-size: 10px; margin-bottom: 10px; }
                 @media print {
                     .event { page-break-inside: avoid; }
                     body { padding: 10px; }
@@ -2418,7 +2418,7 @@ window.printChronoCompetition = function(dayNumber) {
         `;
 
         if (event.series.length === 0) {
-            printContent += `<p style="color: #999; margin-left: 20px;">Aucune série</p>`;
+            printContent += `<p style="color: #626262; margin-left: 20px;">Aucune série</p>`;
         } else {
             // Parcourir les séries
             event.series.forEach(serie => {
@@ -2431,7 +2431,7 @@ window.printChronoCompetition = function(dayNumber) {
                 `;
 
                 if (serie.participants.length === 0) {
-                    printContent += `<p style="color: #999;">Aucun participant</p>`;
+                    printContent += `<p style="color: #626262;">Aucun participant</p>`;
                 } else {
                     // Mode couloirs sans arrivée : feuille de départ, dans l'ordre des couloirs
                     // (la position et le dossard, sans couloir, faisaient placer les nageurs
@@ -3347,7 +3347,7 @@ window.showSwimmingImportModal = function(dayNumber) {
 
     modal.innerHTML = '\
         <div style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 95%; max-height: 85vh; overflow-y: auto;">\
-            <h3 style="margin: 0 0 15px 0; color: #16a085; font-size: 16px;">🏁 Séries automatiques → par couloirs, au temps d\'engagement</h3>\
+            <h3 style="margin: 0 0 15px 0; color: #057e68; font-size: 16px;">🏁 Séries automatiques → par couloirs, au temps d\'engagement</h3>\
             <div id="swimExistingWarning" style="display: none; margin-bottom: 12px; padding: 10px; background: #fff3cd; border: 1px solid #ffe08a; border-radius: 6px; font-size: 13px; color: #7a5b00;"></div>\
             <div style="margin-bottom: 12px;">\
                 <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Journée source (avec noms bruts) :</label>\
@@ -3371,11 +3371,11 @@ window.showSwimmingImportModal = function(dayNumber) {
                 </select>\
             </div>\
             <div style="margin-bottom: 12px;">\
-                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Épreuve par défaut <span style="font-weight:400;color:#888;">(si distance/nage absentes des données)</span> :</label>\
+                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555; font-weight: 600;">Épreuve par défaut <span style="font-weight:400;color:#626262;">(si distance/nage absentes des données)</span> :</label>\
                 <select id="swimDefaultEvent" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">' + defaultEventOptions + '</select>\
             </div>\
             <div style="margin-bottom: 12px; padding: 10px; background: #f0fbf9; border: 1px solid #cdeae4; border-radius: 6px;">\
-                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #16a085; font-weight: 600;">📋 Séparateur de colonnes (façon Excel) :</label>\
+                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #057e68; font-weight: 600;">📋 Séparateur de colonnes (façon Excel) :</label>\
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">\
                     <select id="swimSeparator" onchange="renderSwimmingColumnMapping()" style="flex:1; min-width:180px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">\
                         <option value="auto" selected>Automatique (ligne entière, détection intelligente)</option>\
@@ -3401,8 +3401,8 @@ window.showSwimmingImportModal = function(dayNumber) {
             </div>\
             <div style="display: flex; gap: 10px; justify-content: flex-end; position: sticky; bottom: 0; background: white; padding-top: 10px;">\
                 <button onclick="document.getElementById(\'swimmingImportModal\').remove()" style="padding: 8px 15px; border: 1px solid #ddd; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 13px;">Annuler</button>\
-                <button onclick="previewSwimmingImport(' + dayNumber + ')" style="padding: 8px 15px; border: none; background: #3498db; color: white; border-radius: 4px; cursor: pointer; font-size: 13px;">👁️ Aperçu</button>\
-                <button onclick="confirmSwimmingImport(' + dayNumber + ')" style="padding: 8px 15px; border: none; background: #16a085; color: white; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">🏁 Générer les séries</button>\
+                <button onclick="previewSwimmingImport(' + dayNumber + ')" style="padding: 8px 15px; border: none; background: #09679e; color: white; border-radius: 4px; cursor: pointer; font-size: 13px;">👁️ Aperçu</button>\
+                <button onclick="confirmSwimmingImport(' + dayNumber + ')" style="padding: 8px 15px; border: none; background: #057e68; color: white; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">🏁 Générer les séries</button>\
             </div>\
         </div>';
 
@@ -3457,7 +3457,7 @@ window.updateSwimmingEventsPreview = function() {
         ? events.map(function(e) {
             return '<span style="display:inline-block;padding:3px 8px;margin:2px;background:#e8f4f8;border-radius:4px;font-size:11px;">' + e.name + '</span>';
         }).join('')
-        : '<span style="font-size:11px;color:#e74c3c;">Aucune épreuve configurée sur cette journée</span>';
+        : '<span style="font-size:11px;color:#d03427;">Aucune épreuve configurée sur cette journée</span>';
 
     // Repeupler le sélecteur d'épreuve par défaut (en conservant le choix si possible)
     var defSel = document.getElementById('swimDefaultEvent');
@@ -3597,7 +3597,7 @@ window.renderSwimmingColumnMapping = function() {
     var srcSel = document.getElementById('swimSourceDay');
     var lines = srcSel ? getSwimmingSourceLines(parseInt(srcSel.value)) : [];
     if (lines.length === 0) {
-        container.innerHTML = '<span style="font-size:11px;color:#e74c3c;">Aucune ligne dans la journée source</span>';
+        container.innerHTML = '<span style="font-size:11px;color:#d03427;">Aucune ligne dans la journée source</span>';
         return;
     }
 
@@ -3605,7 +3605,7 @@ window.renderSwimmingColumnMapping = function() {
     var maxCols = rows.reduce(function(m, r) { return Math.max(m, r.length); }, 0);
 
     if (maxCols <= 1) {
-        container.innerHTML = '<span style="font-size:11px;color:#e67e22;">⚠️ Ce séparateur ne découpe rien (une seule colonne). Vérifie le séparateur ou repasse en « Automatique ».</span>';
+        container.innerHTML = '<span style="font-size:11px;color:#9c5003;">⚠️ Ce séparateur ne découpe rien (une seule colonne). Vérifie le séparateur ou repasse en « Automatique ».</span>';
         return;
     }
 
@@ -3838,8 +3838,8 @@ window.previewSwimmingImport = function(dayNumber) {
 
     // Générer l'aperçu HTML
     var html = '<div style="margin-bottom:8px;padding:6px;background:#d4edda;border-radius:4px;"><strong>✅ ' + parsed.length + ' entrées parsées</strong>';
-    if (errors.length > 0) html += ' | <span style="color:#e74c3c;">❌ ' + errors.length + ' non parsées</span>';
-    if (unmatched.length > 0) html += ' | <span style="color:#f39c12;">⚠️ ' + unmatched.length + ' sans épreuve</span>';
+    if (errors.length > 0) html += ' | <span style="color:#d03427;">❌ ' + errors.length + ' non parsées</span>';
+    if (unmatched.length > 0) html += ' | <span style="color:#8b5700;">⚠️ ' + unmatched.length + ' sans épreuve</span>';
     html += '</div>';
 
     events.forEach(function(evt) {
@@ -3854,7 +3854,7 @@ window.previewSwimmingImport = function(dayNumber) {
         var sorted = withTime.concat(withoutTime);
         var nbSeries = Math.ceil(sorted.length / lanesPerSerie);
 
-        html += '<div style="margin:8px 0;padding:8px;background:#e8f4f8;border-radius:4px;border-left:3px solid #16a085;">';
+        html += '<div style="margin:8px 0;padding:8px;background:#e8f4f8;border-radius:4px;border-left:3px solid #057e68;">';
         html += '<strong>🎯 ' + evt.name + '</strong> — ' + sorted.length + ' participants → ' + nbSeries + ' série(s)';
 
         for (var i = 0; i < sorted.length; i += lanesPerSerie) {

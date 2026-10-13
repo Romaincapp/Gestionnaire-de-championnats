@@ -440,8 +440,8 @@
         
         // En-tête compact avec actions sur une ligne (comme Championship)
         html += '<div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px;">';
-        html += '<span style="font-size: 13px; color: #64748b; margin-right: 5px;">⏱️ Actions:</span>';
-        html += '<button onclick="showAddEventModalForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #e67e22; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🎯 Épreuve</button>';
+        html += '<span style="font-size: 13px; color: #54637a; margin-right: 5px;">⏱️ Actions:</span>';
+        html += '<button onclick="showAddEventModalForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #9c5003; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🎯 Épreuve</button>';
         // Pas de bouton « Série » ici : une série se crée dans son épreuve (➕ Série de la
         // carte). Créée d'ici, elle n'avait pas d'épreuve : ni imprimée ni classée par épreuve.
         var allSeries = [];
@@ -449,15 +449,15 @@
         var allOpen = allSeries.length > 0 && allSeries.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
         html += '<button id="toggle-all-series-' + dayNumber + '" onclick="toggleAllSeriesDetails(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Afficher / masquer les participants de toutes les séries">' + (allOpen ? '📁 Tout replier' : '📂 Tout déplier') + '</button>';
         html += '<span style="color: #cbd5e1;">|</span>';
-        html += '<button onclick="showImportPlayersModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer participants</button>';
+        html += '<button onclick="showImportPlayersModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #804fe8; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer participants</button>';
         html += '<span id="chrono-quick-copy-buttons-' + dayNumber + '" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>';
         html += '<span style="color: #cbd5e1;">|</span>';
-        html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'events') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #1abc9c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Répartir les participants en séries par couloirs, au temps d\'engagement (natation, athlétisme…)">🏁 Séries automatiques</button>';
-        html += '<button onclick="printChronoCompetition(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🖨️ Imprimer séries</button>';
+        html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'events') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #057e68; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Répartir les participants en séries par couloirs, au temps d\'engagement (natation, athlétisme…)">🏁 Séries automatiques</button>';
+        html += '<button onclick="printChronoCompetition(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #9654b1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🖨️ Imprimer séries</button>';
         html += '<span style="color: #cbd5e1;">|</span>';
-        html += '<button onclick="exportChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">💾 Exporter</button>';
-        html += '<button onclick="importChronoDataForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer</button>';
-        html += '<button onclick="clearChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">🗑️ Vider</button>';
+        html += '<button onclick="exportChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #017239; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">💾 Exporter</button>';
+        html += '<button onclick="importChronoDataForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #09679e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer</button>';
+        html += '<button onclick="clearChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">🗑️ Vider</button>';
         html += '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">🔄</button>';
         html += '</div>';
         
@@ -470,7 +470,7 @@
         // Liste des épreuves
         html += '<div class="chrono-events-list">';
         if (chronoData.events.length === 0) {
-            html += '<p style="color: #7f8c8d; text-align: center; padding: 15px; font-size: 13px;">Aucune épreuve. Créez-en une avec 🎯 Épreuve</p>';
+            html += '<p style="color: #586566; text-align: center; padding: 15px; font-size: 13px;">Aucune épreuve. Créez-en une avec 🎯 Épreuve</p>';
         } else {
             chronoData.events.forEach(function(event) {
                 html += renderEventCard(dayNumber, event, chronoData);
@@ -482,7 +482,7 @@
         var orphanSeries = chronoData.series.filter(function(s) { return !s.eventId; });
         if (orphanSeries.length > 0) {
             html += '<div class="chrono-orphan-series" style="margin-top: 15px;">';
-            html += '<h4 style="font-size: 13px; color: #64748b; margin-bottom: 8px;">🏃 Séries indépendantes</h4>';
+            html += '<h4 style="font-size: 13px; color: #54637a; margin-bottom: 8px;">🏃 Séries indépendantes</h4>';
             orphanSeries.forEach(function(serie) {
                 html += renderSerieCard(dayNumber, serie, false, chronoData.events);
             });
@@ -502,18 +502,18 @@
         var html = '<div class="chrono-participants-section" style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">';
         html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
         html += '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">👥 Participants disponibles (' + participants.length + ')</h4>';
-        html += '<button onclick="showAddParticipantManualModal(' + dayNumber + ')" style="padding: 5px 10px; font-size: 12px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">➕ Ajouter</button>';
+        html += '<button onclick="showAddParticipantManualModal(' + dayNumber + ')" style="padding: 5px 10px; font-size: 12px; background: #09679e; color: white; border: none; border-radius: 5px; cursor: pointer;">➕ Ajouter</button>';
         html += '</div>';
         
         // Formulaire rapide d'ajout (toujours visible)
         html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 10px; background: #f0f9ff; border-radius: 6px;">';
         html += '<input type="text" id="quick-participant-name-' + dayNumber + '" placeholder="Nom du participant" style="flex: 1; min-width: 150px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
         html += '<input type="text" id="quick-participant-club-' + dayNumber + '" placeholder="Club (optionnel)" style="width: 120px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
-        html += '<button onclick="quickAddParticipantToDay(' + dayNumber + ')" style="padding: 8px 15px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">Ajouter</button>';
+        html += '<button onclick="quickAddParticipantToDay(' + dayNumber + ')" style="padding: 8px 15px; background: #087f58; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">Ajouter</button>';
         html += '</div>';
         
         if (participants.length === 0) {
-            html += '<p style="color: #95a5a6; font-size: 12px; text-align: center; margin: 0; padding: 15px;">Aucun participant encore. Ajoutez-en avec le formulaire ci-dessus, ou importez depuis une autre journée avec 📥 Importer.</p>';
+            html += '<p style="color: #566566; font-size: 12px; text-align: center; margin: 0; padding: 15px;">Aucun participant encore. Ajoutez-en avec le formulaire ci-dessus, ou importez depuis une autre journée avec 📥 Importer.</p>';
         } else {
             // Barre d'affectation de club aux participants cochés
             var clubSet = {};
@@ -528,11 +528,11 @@
             html += '<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; padding: 8px; background: #fef9e7; border-radius: 6px;">';
             html += '<input list="clubs-datalist-' + dayNumber + '" id="assign-club-input-' + dayNumber + '" placeholder="Club à affecter" style="flex: 1; min-width: 140px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
             html += '<datalist id="clubs-datalist-' + dayNumber + '">' + datalistOptions + '</datalist>';
-            html += '<button onclick="assignClubToSelected(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">🏷️ Affecter aux cochés</button>';
+            html += '<button onclick="assignClubToSelected(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #9c5003; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">🏷️ Affecter aux cochés</button>';
             if (hasSeries) {
-                html += '<button onclick="showBulkAddToSerieModal(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">➕ Ajouter à une série</button>';
+                html += '<button onclick="showBulkAddToSerieModal(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #017239; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">➕ Ajouter à une série</button>';
             }
-            html += '<label style="font-size: 11px; color: #7f8c8d; cursor: pointer; white-space: nowrap;"><input type="checkbox" onchange="toggleAllParticipants(' + dayNumber + ', this.checked)" style="vertical-align: middle;"> Tout</label>';
+            html += '<label style="font-size: 11px; color: #586566; cursor: pointer; white-space: nowrap;"><input type="checkbox" onchange="toggleAllParticipants(' + dayNumber + ', this.checked)" style="vertical-align: middle;"> Tout</label>';
             html += '</div>';
 
             // Après « 🏁 Séries automatiques » : une fiche par inscription. Infos de chaque
@@ -561,28 +561,28 @@
                 html += '<div id="participant-row-' + dayNumber + '-' + p.id + '" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; background: ' + (item.unplaced ? '#fff8e6' : '#f8f9fa') + '; border-radius: 6px;">';
                 html += '<label style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; flex: 1; min-width: 0; cursor: pointer; font-size: 12px; color: #2c3e50;">';
                 html += '<input type="checkbox" class="participant-check-' + dayNumber + '" value="' + p.id + '">';
-                html += '<span style="font-weight: bold; color: #e67e22; min-width: 26px;">#' + (p.bib != null ? p.bib : '-') + '</span>';
+                html += '<span style="font-weight: bold; color: #9c5003; min-width: 26px;">#' + (p.bib != null ? p.bib : '-') + '</span>';
                 html += '<span' + (p.swimRaw ? ' title="' + escapeLaneHtml('Ligne d\'origine : ' + p.swimRaw) + '"' : '') + '>' + p.name + '</span>';
                 if (p.club) {
-                    html += '<span style="font-size: 10px; background: #16a085; color: white; padding: 2px 6px; border-radius: 3px;">' + p.club + '</span>';
+                    html += '<span style="font-size: 10px; background: #057e68; color: white; padding: 2px 6px; border-radius: 3px;">' + p.club + '</span>';
                 }
                 if (item.unplaced) {
                     html += '<span class="participant-unplaced" title="' + escapeLaneHtml(item.unplaced) + '" style="font-size: 10px; font-weight: 600; color: #9a6700; background: #fdebc8; padding: 2px 6px; border-radius: 3px;">⚠️ non placée</span>';
                 }
                 var info = participantEntryInfo(p, chronoData, placement);
                 if (info) {
-                    html += '<span class="participant-entry-info" style="margin-left: auto; font-size: 11px; color: #64748b; white-space: nowrap;">' + escapeLaneHtml(info) + '</span>';
+                    html += '<span class="participant-entry-info" style="margin-left: auto; font-size: 11px; color: #54637a; white-space: nowrap;">' + escapeLaneHtml(info) + '</span>';
                 }
                 html += '</label>';
 
                 html += '<div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">';
-                html += '<button onclick="editParticipantInfo(' + dayNumber + ', ' + p.id + ')" style="padding: 3px 7px; font-size: 11px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Éditer nom / dossard">✏️</button>';
+                html += '<button onclick="editParticipantInfo(' + dayNumber + ', ' + p.id + ')" style="padding: 3px 7px; font-size: 11px; background: #8b5700; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Éditer nom / dossard">✏️</button>';
 
                 if (hasSeries) {
                     html += '<button onclick="showAddToSerieModal(' + dayNumber + ', ' + p.id + ')" ' +
-                        'style="padding: 3px 8px; font-size: 11px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0;">+</button>';
+                        'style="padding: 3px 8px; font-size: 11px; background: #017239; color: white; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0;">+</button>';
                 } else {
-                    html += '<span style="font-size: 10px; color: #95a5a6; flex-shrink: 0;">Créez une série</span>';
+                    html += '<span style="font-size: 10px; color: #566566; flex-shrink: 0;">Créez une série</span>';
                 }
                 html += '</div>'; // fin actions
 
@@ -590,7 +590,7 @@
             });
             html += '</div>';
             if (listHeight) {
-                html += '<div style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 2px;">↘ tirer le coin pour agrandir la liste</div>';
+                html += '<div style="text-align: right; font-size: 10px; color: #566376; margin-top: 2px;">↘ tirer le coin pour agrandir la liste</div>';
             }
         }
 
@@ -806,7 +806,7 @@
             '<input type="text" id="bulkAddToSerieCategory-' + dayNumber + '" list="categoryList-' + dayNumber + '" placeholder="ex: Solo, Équipe..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">' +
             buildCategoryDatalist(dayNumber) +
             '</div>' +
-            '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
+            '<p style="color: #586566; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
             '<div style="margin: 15px 0;">';
 
         html += renderSeriePickerHTML(chronoData, names, function(serie) {
@@ -890,15 +890,15 @@
         var safeCategory = (p.category || '').replace(/"/g, '&quot;');
         row.innerHTML =
             '<div style="display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap;">' +
-            '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width: 55px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px; text-align: center;">' +
-            '<input type="text" id="edit-pname-' + dayNumber + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="flex: 1; min-width: 120px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
-            '<input type="text" id="edit-pclub-' + dayNumber + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 110px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
-            '<input type="text" id="edit-pcategory-' + dayNumber + '-' + participantId + '" list="categoryListRow-' + dayNumber + '-' + participantId + '" value="' + safeCategory + '" placeholder="Catégorie" style="width: 100px; padding: 5px; border: 1px solid #f39c12; border-radius: 4px; font-size: 12px;">' +
+            '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width: 55px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px; text-align: center;">' +
+            '<input type="text" id="edit-pname-' + dayNumber + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="flex: 1; min-width: 120px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px;">' +
+            '<input type="text" id="edit-pclub-' + dayNumber + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 110px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px;">' +
+            '<input type="text" id="edit-pcategory-' + dayNumber + '-' + participantId + '" list="categoryListRow-' + dayNumber + '-' + participantId + '" value="' + safeCategory + '" placeholder="Catégorie" style="width: 100px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px;">' +
             buildCategoryDatalist(dayNumber).replace('categoryList-' + dayNumber, 'categoryListRow-' + dayNumber + '-' + participantId) +
             '</div>' +
             '<div style="display: flex; gap: 4px; flex-shrink: 0;">' +
-            '<button onclick="saveParticipantInfo(' + dayNumber + ', ' + participantId + ')" style="padding: 4px 8px; font-size: 11px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Enregistrer">💾</button>' +
-            '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="padding: 4px 8px; font-size: 11px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Annuler">✖️</button>' +
+            '<button onclick="saveParticipantInfo(' + dayNumber + ', ' + participantId + ')" style="padding: 4px 8px; font-size: 11px; background: #017239; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Enregistrer">💾</button>' +
+            '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="padding: 4px 8px; font-size: 11px; background: #566566; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Annuler">✖️</button>' +
             '</div>';
 
         var nameInput = document.getElementById('edit-pname-' + dayNumber + '-' + participantId);
@@ -1028,7 +1028,7 @@
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeAddParticipantsModal(' + dayNumber + ')">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>➕ Ajouter des participants - Journée ' + dayNumber + '</h3>' +
-            '<p style="color: #7f8c8d; font-size: 13px;">Entrez les noms (un par ligne). Formats acceptés : Nom · Nom, Club · Dossard + Nom (séparés par tabulation ou virgule, colonnes en trop ignorées)</p>' +
+            '<p style="color: #586566; font-size: 13px;">Entrez les noms (un par ligne). Formats acceptés : Nom · Nom, Club · Dossard + Nom (séparés par tabulation ou virgule, colonnes en trop ignorées)</p>' +
             '<div style="margin: 15px 0;">' +
             '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\n1\tGringos 1\n2\tGringos 2\n..."></textarea>' +
             '</div>' +
@@ -1155,7 +1155,7 @@
             'align-items: center; z-index: 10000;">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 420px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>➕ Ajouter ' + participant.name + '</h3>' +
-            '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
+            '<p style="color: #586566; font-size: 13px; margin-bottom: 15px;">Sélectionnez une série :</p>' +
             '<div style="margin: 15px 0;">';
 
         html += renderSeriePickerHTML(chronoData, [participant.name], function(serie) {
@@ -1297,22 +1297,22 @@
                     info += lane ? ' · → couloir ' + lane : ' · couloirs pleins';
                 }
                 var body = '<strong style="font-size: 14px;">🏃 ' + serie.name + '</strong>' +
-                    '<span style="color: #7f8c8d; font-size: 12px; margin-left: 10px;">' + info + '</span>';
+                    '<span style="color: #586566; font-size: 12px; margin-left: 10px;">' + info + '</span>';
 
                 if (missing.length === 0) {
                     html += '<div data-serie-id="' + serie.id + '" style="padding: 12px; margin-bottom: 8px; background: #e8f5e9; border-radius: 8px; opacity: 0.6;">' +
-                        body + '<span style="color: #27ae60; font-size: 12px; margin-left: 10px;">✓ Déjà présent</span></div>';
+                        body + '<span style="color: #017239; font-size: 12px; margin-left: 10px;">✓ Déjà présent</span></div>';
                     return;
                 }
                 if (elsewhere.length > 0) {
-                    body += '<div style="color: #d97706; font-size: 12px; margin-top: 4px;">⚠️ ' +
+                    body += '<div style="color: #a95b02; font-size: 12px; margin-top: 4px;">⚠️ ' +
                         (names.length === 1 ? 'déjà en ' + elsewhere[0] + ' : sera déplacé ici'
                             : 'certains déjà en ' + elsewhere.join(', ') + ' : seront déplacés ici') + '</div>';
                 }
                 html += '<div data-serie-id="' + serie.id + '" onclick="' + onclickFor(serie) + '" ' +
                     'style="padding: 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; cursor: pointer; ' +
                     'border: 2px solid transparent; transition: all 0.2s;" ' +
-                    'onmouseover="this.style.borderColor=\'#27ae60\'; this.style.background=\'#e8f5e9\';" ' +
+                    'onmouseover="this.style.borderColor=\'#017239\'; this.style.background=\'#e8f5e9\';" ' +
                     'onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'#f8f9fa\';">' +
                     body + '</div>';
             });
@@ -1331,20 +1331,20 @@
         var eventOpen = eventSeries.length > 0 && eventSeries.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
         // Chevron hors du <h4> : le titre garde son texte exact « 🎯 nom » (repéré tel quel par le test e2e)
         html += '<span onclick="toggleEventSeriesDetails(' + dayNumber + ', ' + event.id + ')" style="display: inline-flex; align-items: center; cursor: pointer;" title="Afficher / masquer les participants de toutes les séries">' +
-            '<span id="event-chevron-' + dayNumber + '-' + event.id + '" style="display: inline-block; width: 14px; color: #64748b; font-size: 11px;">' + (eventOpen ? '▼' : '▶') + '</span>' +
+            '<span id="event-chevron-' + dayNumber + '-' + event.id + '" style="display: inline-block; width: 14px; color: #54637a; font-size: 11px;">' + (eventOpen ? '▼' : '▶') + '</span>' +
             '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">🎯 ' + event.name + '</h4></span>';
         if (event.fun) html += funEventBadgeHTML();
         html += '<button onclick="editEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
-        html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
+        html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #d03427; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
         html += '</div>';
         html += '<div style="display: flex; align-items: center; gap: 8px;">';
-        html += '<span style="color: #7f8c8d; font-size: 11px;">' + (event.date || '') + '</span>';
-        html += '<button onclick="showAddSerieModalForDayAndEvent(' + dayNumber + ', ' + event.id + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Ajouter une série à cette épreuve">➕ Série</button>';
+        html += '<span style="color: #586566; font-size: 11px;">' + (event.date || '') + '</span>';
+        html += '<button onclick="showAddSerieModalForDayAndEvent(' + dayNumber + ', ' + event.id + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 12px; background: #017239; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Ajouter une série à cette épreuve">➕ Série</button>';
         html += '</div>';
         html += '</div>';
         
         if (eventSeries.length === 0) {
-            html += '<p style="color: #95a5a6; font-size: 13px;">Aucune série — ➕ Série pour en ajouter une</p>';
+            html += '<p style="color: #566566; font-size: 13px;">Aucune série — ➕ Série pour en ajouter une</p>';
         } else {
             html += '<div class="event-series" style="display: grid; gap: 10px;">';
             eventSeries.forEach(function(serie) {
@@ -1390,30 +1390,30 @@
         if (progress.dns) outOfRace.push(progress.dns + ' DNS');
         if (progress.disq) outOfRace.push(progress.disq + ' DISQ');
 
-        var html = '<div class="chrono-serie-card" style="background: #f8f9fa; border-radius: 8px; padding: ' + (compact ? '8px 10px' : '10px 12px') + '; border-left: 4px solid ' + (complete ? '#27ae60' : '#3498db') + '; margin-bottom: 8px;">';
+        var html = '<div class="chrono-serie-card" style="background: #f8f9fa; border-radius: 8px; padding: ' + (compact ? '8px 10px' : '10px 12px') + '; border-left: 4px solid ' + (complete ? '#017239' : '#09679e') + '; margin-bottom: 8px;">';
         var open = isSerieDetailsOpen(dayNumber, serie.id);
         html += '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">';
         // Accordéon : un clic sur le nom de la série affiche / masque ses participants
         html += '<div onclick="toggleSerieDetails(' + dayNumber + ', ' + serie.id + ')" style="cursor: pointer; flex: 1; min-width: 160px;" title="Afficher / masquer les participants">';
-        html += '<span id="serie-chevron-' + dayNumber + '-' + serie.id + '" style="display: inline-block; width: 14px; color: #64748b; font-size: 11px;">' + (open ? '▼' : '▶') + '</span>';
+        html += '<span id="serie-chevron-' + dayNumber + '-' + serie.id + '" style="display: inline-block; width: 14px; color: #54637a; font-size: 11px;">' + (open ? '▼' : '▶') + '</span>';
         html += '<strong style="color: #2c3e50; font-size: 13px;">🏃 ' + serie.name + '</strong>';
-        html += '<span style="color: #7f8c8d; font-size: 11px; margin-left: 8px;">' + (complete ? '✅ ' : '') + completedCount + '/' + totalCount + ' résultats' +
+        html += '<span style="color: #586566; font-size: 11px; margin-left: 8px;">' + (complete ? '✅ ' : '') + completedCount + '/' + totalCount + ' résultats' +
             (outOfRace.length ? ' (dont ' + outOfRace.join(', ') + ')' : '') + '</span>';
         html += '</div>';
         html += '<div style="display: flex; gap: 4px;">';
-        html += '<button onclick="manageSerieParticipants(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Gérer les participants">👥</button>';
-        html += '<button onclick="assignSerieLanes(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #1abc9c; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Affecter les nageurs aux couloirs">🏊</button>';
+        html += '<button onclick="manageSerieParticipants(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #09679e; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Gérer les participants">👥</button>';
+        html += '<button onclick="assignSerieLanes(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #057e68; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Affecter les nageurs aux couloirs">🏊</button>';
         // Bouton Démarrer la course (si des participants existent)
         if (totalCount > 0) {
-            html += '<button onclick="startChronoRaceForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;" title="Démarrer la course avec chronométrage">▶️ Course</button>';
+            html += '<button onclick="startChronoRaceForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #d03427; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;" title="Démarrer la course avec chronométrage">▶️ Course</button>';
         }
-        html += '<button onclick="enterSerieResults(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: ' + (hasResults ? '#27ae60' : '#95a5a6') + '; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Saisie manuelle des résultats">⏱️</button>';
-        html += '<button onclick="showSerieRanking(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f39c12; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Voir le classement">🏆</button>';
-        html += '<button onclick="deleteSerieForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #fdecea; color: #e74c3c; border: none; border-radius: 5px; cursor: pointer;" title="Supprimer la série">🗑️</button>';
+        html += '<button onclick="enterSerieResults(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: ' + (hasResults ? '#017239' : '#566566') + '; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Saisie manuelle des résultats">⏱️</button>';
+        html += '<button onclick="showSerieRanking(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #8b5700; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Voir le classement">🏆</button>';
+        html += '<button onclick="deleteSerieForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #fdecea; color: #d03427; border: none; border-radius: 5px; cursor: pointer;" title="Supprimer la série">🗑️</button>';
         html += '</div>';
         html += '</div>';
         if (attachEvents && attachEvents.length > 0) {
-            html += '<div style="margin-top: 6px; font-size: 11px; color: #7f8c8d;">Sans épreuve : ni imprimée ni classée par épreuve. ';
+            html += '<div style="margin-top: 6px; font-size: 11px; color: #586566;">Sans épreuve : ni imprimée ni classée par épreuve. ';
             html += '<select id="attachSerie-' + dayNumber + '-' + serie.id + '" onchange="if (this.value) attachSerieToEvent(' + dayNumber + ', ' + serie.id + ', parseInt(this.value))" style="padding: 3px 6px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 4px;">';
             html += '<option value="">📎 Rattacher à une épreuve…</option>';
             attachEvents.forEach(function(evt) {
@@ -1445,7 +1445,7 @@
     function renderSerieDetailsHTML(serie) {
         var participants = (serie.participants || []).slice();
         if (participants.length === 0) {
-            return '<p style="margin: 0; padding: 6px 4px; color: #95a5a6; font-size: 12px;">Aucun participant</p>';
+            return '<p style="margin: 0; padding: 6px 4px; color: #566566; font-size: 12px;">Aucun participant</p>';
         }
         var esc = escapeLaneHtml;
         var ranked = rankSerieResults(serie).entries;
@@ -1461,7 +1461,7 @@
 
         var td = 'padding: 4px 8px; border-bottom: 1px solid #eef2f7;';
         var html = '<table style="width: 100%; border-collapse: collapse; font-size: 12px; background: white; border-radius: 6px;">';
-        html += '<thead><tr style="color: #64748b; text-align: left;">' +
+        html += '<thead><tr style="color: #54637a; text-align: left;">' +
             (hasLanes ? '<th style="' + td + '">Couloir</th>' : '') +
             '<th style="' + td + '">Dossard</th><th style="' + td + '">Nom</th>' +
             (hasClub ? '<th style="' + td + '">Club</th>' : '') +
@@ -1469,18 +1469,18 @@
             '<th style="' + td + ' text-align: center;">Rang</th><th style="' + td + '">Temps</th></tr></thead><tbody>';
         participants.forEach(function(p) {
             var r = resultByName[(p.name || '').toLowerCase()];
-            var rank = '', time = '<span style="color: #95a5a6;">—</span>';
+            var rank = '', time = '<span style="color: #566566;">—</span>';
             if (p.status === 'dns' || p.status === 'disq') {
-                time = '<span style="color: #e74c3c; font-weight: bold;">' + (p.status === 'dns' ? 'DNS' : 'DISQ') + '</span>';
+                time = '<span style="color: #d03427; font-weight: bold;">' + (p.status === 'dns' ? 'DNS' : 'DISQ') + '</span>';
             } else if (r) {
                 rank = r.rank;
                 time = '<span style="font-family: monospace;">' + formatDurationHMS(r.time) + '</span>';
             } else if (p.status === 'running') {
-                time = '<span style="color: #e67e22;">en course</span>';
+                time = '<span style="color: #9c5003;">en course</span>';
             }
             html += '<tr>' +
                 (hasLanes ? '<td style="' + td + '">' + (p.laneNumber || '') + '</td>' : '') +
-                '<td style="' + td + ' color: #e67e22; font-weight: bold;">' + (p.bib != null ? '#' + p.bib : '') + '</td>' +
+                '<td style="' + td + ' color: #9c5003; font-weight: bold;">' + (p.bib != null ? '#' + p.bib : '') + '</td>' +
                 '<td style="' + td + '">' + esc(p.name) + '</td>' +
                 (hasClub ? '<td style="' + td + '">' + esc(p.club || '') + '</td>' : '') +
                 (hasCategory ? '<td style="' + td + '">' + esc(p.category || '') + '</td>' : '') +
@@ -2108,8 +2108,8 @@
     function buildClubRankingHTML(events, clubs, multiDay) {
         var th = 'padding: 6px; text-align: center; font-size: 11px; vertical-align: bottom;';
         var html = '<div class="club-ranking" style="margin: 0 0 26px 0; page-break-inside: avoid;">';
-        html += '<h3 style="margin: 0 0 4px 0; color: #16a085;">🏆 Classement des clubs (toutes épreuves)</h3>';
-        html += '<p style="margin: 0 0 8px 0; font-size: 12px; color: #7f8c8d;">Barème 25-19-17-15-12-10-8-6-4-2 : un club marque une fois par épreuve, avec son meilleur classé.</p>';
+        html += '<h3 style="margin: 0 0 4px 0; color: #057e68;">🏆 Classement des clubs (toutes épreuves)</h3>';
+        html += '<p style="margin: 0 0 8px 0; font-size: 12px; color: #586566;">Barème 25-19-17-15-12-10-8-6-4-2 : un club marque une fois par épreuve, avec son meilleur classé.</p>';
         html += '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
         html += '<thead><tr><th style="' + th + '">Rang</th><th style="' + th + ' text-align: left;">Club</th>';
         events.forEach(function(evt) {
@@ -2123,7 +2123,7 @@
             c.perEvent.forEach(function(pts) {
                 html += '<td style="padding: 6px; text-align: center;' + (pts == null ? ' color: #bdc3c7;' : '') + '">' + (pts == null ? '–' : pts) + '</td>';
             });
-            html += '<td style="padding: 6px; text-align: center; font-weight: bold; color: #16a085;">' + c.total + '</td></tr>';
+            html += '<td style="padding: 6px; text-align: center; font-weight: bold; color: #057e68;">' + c.total + '</td></tr>';
         });
         html += '</tbody></table></div></div>';
         return html;
@@ -2134,7 +2134,7 @@
     function buildEventRankingsHTML() {
         var events = calculateEventRankings();
         if (events.length === 0) {
-            return '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Aucun résultat pour le moment</p>';
+            return '<p style="text-align: center; padding: 40px; color: #586566;">Aucun résultat pour le moment</p>';
         }
         var multiDay = events.some(function(e) { return e.dayNumber !== events[0].dayNumber; });
         var medals = ['🥇', '🥈', '🥉'];
@@ -2146,12 +2146,12 @@
         events.forEach(function(evt) {
             var withPoints = !evt.fun;
             html += '<div class="event-ranking" style="margin: 0 0 22px 0; page-break-inside: avoid;">';
-            html += '<h3 style="margin: 0 0 8px 0; color: #16a085;">🏊 ' + escapeLaneHtml(evt.eventName) +
+            html += '<h3 style="margin: 0 0 8px 0; color: #057e68;">🏊 ' + escapeLaneHtml(evt.eventName) +
                 (multiDay ? ' — Journée ' + evt.dayNumber : '') +
-                ' <span style="font-size: 12px; color: #7f8c8d; font-weight: normal;">(' + evt.entries.length + ' classé' + (evt.entries.length > 1 ? 's' : '') + ')</span>' +
+                ' <span style="font-size: 12px; color: #586566; font-weight: normal;">(' + evt.entries.length + ' classé' + (evt.entries.length > 1 ? 's' : '') + ')</span>' +
                 (evt.fun ? ' ' + funEventBadgeHTML() : '') + '</h3>';
             if (evt.fun) {
-                html += '<p class="fun-event-note" style="margin: 0 0 8px 0; font-size: 12px; color: #7f8c8d;">🎉 Épreuve fun — hors classement des clubs</p>';
+                html += '<p class="fun-event-note" style="margin: 0 0 8px 0; font-size: 12px; color: #586566;">🎉 Épreuve fun — hors classement des clubs</p>';
             }
             html += '<table style="width: 100%; border-collapse: collapse;">';
             html += '<thead><tr><th style="padding: 8px; text-align: center;">Rang</th><th style="padding: 8px; text-align: left;">Nageur</th>' +
@@ -2160,7 +2160,7 @@
                 (withPoints ? '<th style="padding: 8px; text-align: center;">Points</th>' : '') + '</tr></thead><tbody>';
             evt.entries.forEach(function(e) {
                 var pointsCell = !withPoints ? '' : e.clubPoints != null
-                    ? '<td style="padding: 8px; text-align: center; font-weight: bold; color: #16a085;">' + e.clubPoints + '</td>'
+                    ? '<td style="padding: 8px; text-align: center; font-weight: bold; color: #057e68;">' + e.clubPoints + '</td>'
                     : '<td style="padding: 8px; text-align: center; color: #bdc3c7;" title="' + (e.club ? 'Déjà compté pour ce club' : 'Sans club') + '">–</td>';
                 html += '<tr style="border-bottom: 1px solid #ecf0f1;">' +
                     '<td style="padding: 8px; text-align: center; font-weight: bold;">' + (e.rank <= 3 ? medals[e.rank - 1] + ' ' : '') + e.rank + '</td>' +
@@ -2170,7 +2170,7 @@
                     '<td style="padding: 8px; text-align: center; font-family: monospace;">' + formatDurationHMS(e.time) + '</td>' + pointsCell + '</tr>';
             });
             evt.outOfRace.forEach(function(o) {
-                html += '<tr style="border-bottom: 1px solid #ecf0f1; color: #7f8c8d;">' +
+                html += '<tr style="border-bottom: 1px solid #ecf0f1; color: #586566;">' +
                     '<td style="padding: 8px; text-align: center; font-weight: bold;">' + (o.status === 'disq' ? 'DISQ' : 'DNS') + '</td>' +
                     '<td style="padding: 8px;">' + escapeLaneHtml(o.name) + '</td>' +
                     '<td style="padding: 8px; text-align: center;">' + (o.club ? escapeLaneHtml(o.club) : '-') + '</td>' +
@@ -2187,13 +2187,13 @@
     // Onglet Multisport d'une compétition 100 % natation
     function renderEventRankingsPanel() {
         var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
-        html += '<div style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; padding: 20px;">';
+        html += '<div style="background: linear-gradient(135deg, #057e68 0%, #057e68 100%); color: white; padding: 20px;">';
         html += '<h2 style="margin: 0; text-align: center;">🏊 Classement par épreuve</h2>';
         html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">Toutes les séries d\'une même épreuve regroupées, classées au temps</p>';
         html += '</div>';
         html += '<div style="padding: 12px 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #ecf0f1; background: #fbfbfd;">';
         html += '<button onclick="showNameHarmonizationModal()" style="padding: 8px 14px; font-size: 13px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔤 Harmoniser les noms</button>';
-        html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #16a085; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
+        html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #057e68; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
         html += '<button onclick="printGeneralRanking()" style="padding: 8px 14px; font-size: 13px; background: #34495e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🖨️ Imprimer</button>';
         html += '</div>';
         html += '<div style="padding: 15px;">' + buildEventRankingsHTML() + '</div>';
@@ -2218,21 +2218,21 @@
         });
 
         var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
-        html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px;">';
-        html += '<h2 style="margin: 0; text-align: center;">🏆 ' + (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses') + '</h2>';
+        html += '<div style="background: linear-gradient(135deg, #5267d0 0%, #764ba2 100%); color: white; padding: 20px;">';
+        html += '<h2 style="margin: 0; text-align: center; color: white;">🏆 ' + (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses') + '</h2>';
         html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">' + (mixed ? 'Matchs + Courses (points)' : 'Courses — distance &amp; temps') + '</p>';
         html += '</div>';
 
         // Barre d'outils : harmonisation des noms
         html += '<div style="padding: 12px 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #ecf0f1; background: #fbfbfd;">';
         html += '<button onclick="showNameHarmonizationModal()" style="padding: 8px 14px; font-size: 13px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔤 Harmoniser les noms</button>';
-        html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #16a085; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
+        html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #057e68; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
         html += '<button onclick="printGeneralRanking()" style="padding: 8px 14px; font-size: 13px; background: #34495e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🖨️ Imprimer</button>';
-        html += '<span style="font-size: 12px; color: #7f8c8d;">Harmoniser : fusionne les variantes d\'un nom. Normaliser : majuscule à chaque mot.</span>';
+        html += '<span style="font-size: 12px; color: #586566;">Harmoniser : fusionne les variantes d\'un nom. Normaliser : majuscule à chaque mot.</span>';
         html += '</div>';
 
         if (sorted.length === 0) {
-            html += '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Aucune donnée disponible</p>';
+            html += '<p style="text-align: center; padding: 40px; color: #586566;">Aucune donnée disponible</p>';
         } else {
             html += '<table class="ranking-table" style="width: 100%; border-collapse: collapse;">';
             html += '<thead><tr style="background: #f8f9fa;">';
@@ -2242,7 +2242,7 @@
             if (mixed) {
                 html += '<th style="padding: 15px; text-align: center;">🎾 Matchs</th>';
                 html += '<th style="padding: 15px; text-align: center;">⏱️ Courses</th>';
-                html += '<th style="padding: 15px; text-align: center; background: #e8f4f8;">Total</th>';
+                html += '<th style="padding: 15px; text-align: center; background: #e8f4f8; color: #1a2b3c;">Total</th>';
             } else {
                 html += '<th style="padding: 15px; text-align: center;">📏 Distance</th>';
                 html += '<th style="padding: 15px; text-align: center;">⏱️ Temps total</th>';
@@ -2253,7 +2253,7 @@
             sorted.forEach(function(stat, index) {
                 var rankClass = index < 3 ? 'rank-' + (index + 1) : '';
                 var rowStyle = index % 2 === 0 ? 'background: white;' : 'background: #f8f9fa;';
-                var clubBadge = stat.club ? '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px;">' + stat.club + '</span>' : '-';
+                var clubBadge = stat.club ? '<span style="background: linear-gradient(135deg, #5267d0, #764ba2); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px;">' + stat.club + '</span>' : '-';
 
                 html += '<tr class="' + rankClass + '" style="' + rowStyle + ' border-bottom: 1px solid #ecf0f1;">';
                 html += '<td style="padding: 15px; text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
@@ -2264,20 +2264,20 @@
                 html += '<td style="padding: 15px; text-align: center;">' + clubBadge + '</td>';
                 if (mixed) {
                     html += '<td style="padding: 15px; text-align: center;">';
-                    html += '<span style="font-weight: bold; color: #3498db;">' + stat.championshipPoints + ' pts</span>';
-                    html += '<br><small style="color: #7f8c8d;">' + stat.championshipWins + 'V / ' + stat.championshipMatches + 'J</small>';
+                    html += '<span style="font-weight: bold; color: #09679e;">' + stat.championshipPoints + ' pts</span>';
+                    html += '<br><small style="color: #586566;">' + stat.championshipWins + 'V / ' + stat.championshipMatches + 'J</small>';
                     html += '</td>';
                     html += '<td style="padding: 15px; text-align: center;">';
-                    html += '<span style="font-weight: bold; color: #e67e22;">' + stat.chronoPoints + ' pts</span>';
-                    html += '<br><small style="color: #7f8c8d;">' + stat.chronoSeries + ' séries</small>';
+                    html += '<span style="font-weight: bold; color: #9c5003;">' + stat.chronoPoints + ' pts</span>';
+                    html += '<br><small style="color: #586566;">' + stat.chronoSeries + ' séries</small>';
                     html += '</td>';
                     html += '<td style="padding: 15px; text-align: center; background: #e8f4f8; font-size: 1.2em;">';
-                    html += '<strong style="color: #27ae60;">' + stat.totalPoints + '</strong>';
+                    html += '<strong style="color: #017239;">' + stat.totalPoints + '</strong>';
                     html += '</td>';
                 } else {
-                    html += '<td style="padding: 15px; text-align: center; font-weight: bold; color: #2980b9;">' + formatDistance(stat.chronoDistance) + '</td>';
-                    html += '<td style="padding: 15px; text-align: center; font-family: monospace; color: #e67e22;">' + (stat.chronoTime ? formatDurationHMS(stat.chronoTime) : '-') + '</td>';
-                    html += '<td style="padding: 15px; text-align: center; background: #e8f4f8;"><strong style="color: #27ae60;">' + stat.chronoSeries + '</strong></td>';
+                    html += '<td style="padding: 15px; text-align: center; font-weight: bold; color: #08689d;">' + formatDistance(stat.chronoDistance) + '</td>';
+                    html += '<td style="padding: 15px; text-align: center; font-family: monospace; color: #9c5003;">' + (stat.chronoTime ? formatDurationHMS(stat.chronoTime) : '-') + '</td>';
+                    html += '<td style="padding: 15px; text-align: center; background: #e8f4f8;"><strong style="color: #017239;">' + stat.chronoSeries + '</strong></td>';
                 }
                 html += '</tr>';
             });
@@ -2511,11 +2511,11 @@
         var body = '';
 
         if (days.length === 0) {
-            body = '<p style="color:#7f8c8d; text-align:center; padding:20px;">Aucune épreuve trouvée pour ce participant.</p>';
+            body = '<p style="color:#586566; text-align:center; padding:20px;">Aucune épreuve trouvée pour ce participant.</p>';
         } else {
             days.forEach(function(d) {
                 var dayDistance = 0, dayTime = 0;
-                body += '<div style="margin:14px 0 6px; font-weight:700; color:#2c3e50; border-bottom:2px solid #667eea; padding-bottom:4px;">📅 Journée ' + d.day + '</div>';
+                body += '<div style="margin:14px 0 6px; font-weight:700; color:#2c3e50; border-bottom:2px solid #5267d0; padding-bottom:4px;">📅 Journée ' + d.day + '</div>';
                 body += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
                 body += '<thead><tr style="background:#f4f6fb; color:#34495e;">' +
                     '<th style="padding:6px 8px; text-align:left;">Épreuve</th>' +
@@ -2534,19 +2534,19 @@
                         '<td style="padding:6px 8px;">' + (r.serieName || '') + '</td>' +
                         '<td style="padding:6px 8px; text-align:center; font-weight:600;">' + posTxt + '</td>' +
                         '<td style="padding:6px 8px; text-align:center;">' + (r.laps != null ? r.laps : '-') + '</td>' +
-                        '<td style="padding:6px 8px; text-align:center; color:#2980b9;">' + formatDistance(r.distance) + '</td>' +
-                        '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#e67e22;">' + (r.time ? formatDurationHMS(r.time) : '-') + '</td>' +
+                        '<td style="padding:6px 8px; text-align:center; color:#08689d;">' + formatDistance(r.distance) + '</td>' +
+                        '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#9c5003;">' + (r.time ? formatDurationHMS(r.time) : '-') + '</td>' +
                         '</tr>';
                 });
                 body += '<tr style="background:#fbfbfd; font-weight:700;">' +
                     '<td colspan="4" style="padding:6px 8px; text-align:right;">Sous-total journée :</td>' +
-                    '<td style="padding:6px 8px; text-align:center; color:#2980b9;">' + formatDistance(dayDistance) + '</td>' +
-                    '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#e67e22;">' + formatDurationHMS(dayTime) + '</td>' +
+                    '<td style="padding:6px 8px; text-align:center; color:#08689d;">' + formatDistance(dayDistance) + '</td>' +
+                    '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#9c5003;">' + formatDurationHMS(dayTime) + '</td>' +
                     '</tr>';
                 body += '</tbody></table>';
             });
 
-            body += '<div style="margin-top:16px; padding:12px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:8px; display:flex; justify-content:space-around; flex-wrap:wrap; gap:8px; text-align:center;">' +
+            body += '<div style="margin-top:16px; padding:12px; background:linear-gradient(135deg,#5267d0,#764ba2); color:white; border-radius:8px; display:flex; justify-content:space-around; flex-wrap:wrap; gap:8px; text-align:center;">' +
                 '<div><div style="font-size:11px; opacity:.85;">Séries</div><div style="font-size:18px; font-weight:700;">' + grandSeries + '</div></div>' +
                 '<div><div style="font-size:11px; opacity:.85;">Distance totale</div><div style="font-size:18px; font-weight:700;">' + formatDistance(grandDistance) + '</div></div>' +
                 '<div><div style="font-size:11px; opacity:.85;">Temps total</div><div style="font-size:18px; font-weight:700;">' + formatDurationHMS(grandTime) + '</div></div>' +
@@ -2693,9 +2693,9 @@
 
         var body;
         if (groups.length === 0) {
-            body = '<p style="color:#7f8c8d; text-align:center; padding:20px;">✅ Aucune similitude détectée. Les noms semblent déjà harmonisés.</p>';
+            body = '<p style="color:#586566; text-align:center; padding:20px;">✅ Aucune similitude détectée. Les noms semblent déjà harmonisés.</p>';
         } else {
-            body = '<p style="color:#7f8c8d; font-size:13px;">' + groups.length + ' groupe(s) de noms similaires détecté(s). Choisis le nom final, décoche ce que tu veux ignorer, puis applique.</p>';
+            body = '<p style="color:#586566; font-size:13px;">' + groups.length + ' groupe(s) de noms similaires détecté(s). Choisis le nom final, décoche ce que tu veux ignorer, puis applique.</p>';
             groups.forEach(function(g, gi) {
                 var distinct = {};
                 g.members.forEach(function(m) { distinct[m.name] = (distinct[m.name] || 0) + m.count; });
@@ -2704,7 +2704,7 @@
                 body += '<div style="border:1px solid #e0e0e0; border-radius:8px; padding:12px; margin:10px 0; background:#fbfbfd;">';
                 body += '<label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:600; color:#2c3e50;">' +
                     '<input type="checkbox" class="harmo-group-check" data-group="' + gi + '" checked> Fusionner ce groupe</label>';
-                body += '<div style="font-size:12px; color:#7f8c8d; margin-bottom:8px;">Variantes : ' +
+                body += '<div style="font-size:12px; color:#586566; margin-bottom:8px;">Variantes : ' +
                     Object.keys(distinct).map(function(n) { return n + ' (' + distinct[n] + ')'; }).join(' · ') + '</div>';
                 body += '<label style="font-size:12px; color:#34495e;">Nom final :</label>';
                 body += '<input type="text" class="harmo-canonical" data-group="' + gi + '" value="' + suggestion.replace(/"/g, '&quot;') + '" style="width:100%; padding:8px; border:1px solid #8e44ad; border-radius:5px; margin-top:4px; box-sizing:border-box;">';
@@ -2842,11 +2842,11 @@
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">' +
             '<h3>🎯 Nouvelle(s) épreuve(s) - Journée ' + dayNumber + '</h3>' +
             '<div style="margin: 15px 0;">' +
-            '<label>Nom(s) : <span style="font-weight: normal; color: #7f8c8d; font-size: 12px;">une épreuve par ligne</span></label>' +
+            '<label>Nom(s) : <span style="font-weight: normal; color: #586566; font-size: 12px;">une épreuve par ligne</span></label>' +
             '<textarea id="eventName-' + dayNumber + '" rows="5" style="width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; font-family: inherit; resize: vertical;" ' +
             'placeholder="ex :&#10;50m brasse&#10;50m dos&#10;100m nage libre" ' +
             'onkeydown="if (event.key === \'Enter\' && (event.ctrlKey || event.metaKey)) saveEventForDay(' + dayNumber + ')"></textarea>' +
-            '<div style="font-size: 11px; color: #95a5a6; margin-top: 4px;">Collez une liste pour tout créer d\'un coup (Ctrl+Entrée pour valider).</div>' +
+            '<div style="font-size: 11px; color: #566566; margin-top: 4px;">Collez une liste pour tout créer d\'un coup (Ctrl+Entrée pour valider).</div>' +
             '</div>' +
             '<div style="margin: 15px 0;">' +
             '<label>Date :</label>' +
@@ -2854,7 +2854,7 @@
             '</div>' +
             '<label style="display: flex; align-items: flex-start; gap: 8px; margin: 15px 0; cursor: pointer;">' +
             '<input type="checkbox" id="eventFun-' + dayNumber + '" style="margin-top: 3px;">' +
-            '<span>🎉 Épreuve fun <span style="display: block; font-size: 12px; color: #7f8c8d;">Hors classement des clubs (s\'applique à toutes les épreuves saisies)</span></span>' +
+            '<span>🎉 Épreuve fun <span style="display: block; font-size: 12px; color: #586566;">Hors classement des clubs (s\'applique à toutes les épreuves saisies)</span></span>' +
             '</label>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeEventModalForDay(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
@@ -2941,7 +2941,7 @@
             '</div>' +
             '<label style="display: flex; align-items: flex-start; gap: 8px; margin: 15px 0; cursor: pointer;">' +
             '<input type="checkbox" id="editEventFun-' + dayNumber + '-' + eventId + '"' + (event.fun ? ' checked' : '') + ' style="margin-top: 3px;">' +
-            '<span>🎉 Épreuve fun <span style="display: block; font-size: 12px; color: #7f8c8d;">Résultats affichés, mais hors classement des clubs</span></span>' +
+            '<span>🎉 Épreuve fun <span style="display: block; font-size: 12px; color: #586566;">Résultats affichés, mais hors classement des clubs</span></span>' +
             '</label>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
             '<button onclick="closeEditEventModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
@@ -3241,7 +3241,7 @@
 
     function renderParticipantsList(serie, dayNumber) {
         if (!serie.participants || serie.participants.length === 0) {
-            return '<p style="color: #7f8c8d; text-align: center;">Aucun participant</p>';
+            return '<p style="color: #586566; text-align: center;">Aucun participant</p>';
         }
 
         var html = '<table style="width: 100%; border-collapse: collapse;">';
@@ -3251,13 +3251,13 @@
             html += '<tr id="serie-prow-' + dayNumber + '-' + serie.id + '-' + p.id + '" style="border-bottom: 1px solid #ecf0f1;">';
             html += '<td style="padding: 10px; text-align: center;">#' + p.bib + '</td>';
             html += '<td style="padding: 10px;">' +
-                (serie.laneMode && p.laneNumber ? '<span style="font-size:10px; background:#2980b9; color:white; padding:2px 6px; border-radius:3px; margin-right:6px;">Couloir ' + p.laneNumber + '</span>' : '') +
+                (serie.laneMode && p.laneNumber ? '<span style="font-size:10px; background:#08689d; color:white; padding:2px 6px; border-radius:3px; margin-right:6px;">Couloir ' + p.laneNumber + '</span>' : '') +
                 p.name +
-                (p.club ? '<span style="font-size:10px; background:#16a085; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.club + '</span>' : '') +
+                (p.club ? '<span style="font-size:10px; background:#057e68; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.club + '</span>' : '') +
                 (p.category ? '<span style="font-size:10px; background:#8e44ad; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.category + '</span>' : '') +
                 '</td>';
             html += '<td style="padding: 10px; text-align: center; white-space: nowrap;">' +
-                '<button onclick="editSerieParticipant(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm" style="background:#f39c12; color:white; margin-right:4px;" title="Éditer nom / dossard">✏️</button>' +
+                '<button onclick="editSerieParticipant(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm" style="background:#8b5700; color:white; margin-right:4px;" title="Éditer nom / dossard">✏️</button>' +
                 '<button onclick="removeParticipantFromSerie(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm btn-danger" title="Retirer">🗑️</button>' +
                 '</td>';
             html += '</tr>';
@@ -3285,16 +3285,16 @@
         var safeCategory = (p.category || '').replace(/"/g, '&quot;');
         row.innerHTML =
             '<td style="padding: 8px; text-align: center;">' +
-            '<input type="number" id="edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" style="width: 60px; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; text-align: center;">' +
+            '<input type="number" id="edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" style="width: 60px; padding: 6px; border: 1px solid #8b5700; border-radius: 4px; text-align: center;">' +
             '</td>' +
             '<td style="padding: 8px;">' +
-            '<input type="text" id="edit-spname-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; margin-bottom: 4px;">' +
-            '<input type="text" id="edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px; margin-bottom: 4px;">' +
-            '<input type="text" id="edit-spcategory-' + dayNumber + '-' + serieId + '-' + participantId + '" list="categoryListRow-' + dayNumber + '-' + participantId + '" value="' + safeCategory + '" placeholder="Catégorie" style="width: 100%; padding: 6px; border: 1px solid #f39c12; border-radius: 4px;">' +
+            '<input type="text" id="edit-spname-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="width: 100%; padding: 6px; border: 1px solid #8b5700; border-radius: 4px; margin-bottom: 4px;">' +
+            '<input type="text" id="edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 100%; padding: 6px; border: 1px solid #8b5700; border-radius: 4px; margin-bottom: 4px;">' +
+            '<input type="text" id="edit-spcategory-' + dayNumber + '-' + serieId + '-' + participantId + '" list="categoryListRow-' + dayNumber + '-' + participantId + '" value="' + safeCategory + '" placeholder="Catégorie" style="width: 100%; padding: 6px; border: 1px solid #8b5700; border-radius: 4px;">' +
             buildCategoryDatalist(dayNumber).replace('categoryList-' + dayNumber, 'categoryListRow-' + dayNumber + '-' + participantId) +
             '</td>' +
             '<td style="padding: 8px; text-align: center; white-space: nowrap;">' +
-            '<button onclick="saveSerieParticipant(' + dayNumber + ', ' + serieId + ', ' + participantId + ')" class="btn btn-sm" style="background:#27ae60; color:white; margin-right:4px;" title="Enregistrer">💾</button>' +
+            '<button onclick="saveSerieParticipant(' + dayNumber + ', ' + serieId + ', ' + participantId + ')" class="btn btn-sm" style="background:#017239; color:white; margin-right:4px;" title="Enregistrer">💾</button>' +
             '<button onclick="refreshSerieParticipantsList(' + dayNumber + ', ' + serieId + ')" class="btn btn-sm btn-secondary" title="Annuler">✖️</button>' +
             '</td>';
 
@@ -3491,8 +3491,8 @@
         });
 
         var html = '';
-        html += '<h3 style="margin:0 0 4px 0; color:#16a085;">🏊 Couloirs — ' + escapeLaneHtml(serie.name) + '</h3>';
-        html += '<p style="color:#7f8c8d; font-size:12px; margin:0 0 14px 0;">Choisis le nageur de chaque couloir dans la liste des « Participants disponibles » de la journée. Les nageurs non placés restent disponibles pour les autres séries.</p>';
+        html += '<h3 style="margin:0 0 4px 0; color:#057e68;">🏊 Couloirs — ' + escapeLaneHtml(serie.name) + '</h3>';
+        html += '<p style="color:#586566; font-size:12px; margin:0 0 14px 0;">Choisis le nageur de chaque couloir dans la liste des « Participants disponibles » de la journée. Les nageurs non placés restent disponibles pour les autres séries.</p>';
 
         // Nombre de couloirs
         html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">';
@@ -3505,10 +3505,10 @@
         for (var k = 1; k <= laneCount; k++) {
             var occId = byLane[k];
             html += '<div style="display:flex; align-items:center; gap:8px;">';
-            html += '<span style="flex:0 0 78px; font-size:12px; font-weight:600; color:#16a085;">Couloir ' + k + '</span>';
+            html += '<span style="flex:0 0 78px; font-size:12px; font-weight:600; color:#057e68;">Couloir ' + k + '</span>';
             html += '<select id="laneSel-' + dayNumber + '-' + k + '" style="flex:1; padding:7px; border:1px solid #ddd; border-radius:4px; font-size:13px;">' +
                 optionsFor(occId != null ? occId : null) + '</select>';
-            html += '<button onclick="editLaneSwimmer(' + dayNumber + ', ' + serieId + ', ' + k + ')" title="Éditer nom / club / dossard" style="flex:0 0 auto; padding:6px 9px; font-size:12px; background:#f39c12; color:white; border:none; border-radius:4px; cursor:pointer;">✏️</button>';
+            html += '<button onclick="editLaneSwimmer(' + dayNumber + ', ' + serieId + ', ' + k + ')" title="Éditer nom / club / dossard" style="flex:0 0 auto; padding:6px 9px; font-size:12px; background:#8b5700; color:white; border:none; border-radius:4px; cursor:pointer;">✏️</button>';
             html += '</div>';
             html += '<div id="laneEdit-' + dayNumber + '-' + k + '"></div>';
         }
@@ -3516,16 +3516,16 @@
 
         // Coller une liste de noms → pool "Participants disponibles"
         html += '<div style="margin-bottom:14px; padding:10px; background:#f0fbf9; border:1px solid #cdeae4; border-radius:6px;">';
-        html += '<label style="display:block; font-size:12px; color:#16a085; font-weight:600; margin-bottom:5px;">➕ Ajouter des nageurs aux Participants disponibles (un nom par ligne) :</label>';
+        html += '<label style="display:block; font-size:12px; color:#057e68; font-weight:600; margin-bottom:5px;">➕ Ajouter des nageurs aux Participants disponibles (un nom par ligne) :</label>';
         html += '<textarea id="laneReserve-' + dayNumber + '" rows="3" placeholder="Dupont Jean\nMartin Alice\n…" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:13px; box-sizing:border-box;"></textarea>';
-        html += '<button onclick="addReserveNamesToSerie(' + dayNumber + ', ' + serieId + ')" style="margin-top:6px; padding:6px 12px; border:none; background:#16a085; color:white; border-radius:4px; cursor:pointer; font-size:12px;">Ajouter à la liste</button>';
-        html += '<span style="font-size:11px; color:#7f8c8d; margin-left:8px;">Ils apparaîtront dans les listes déroulantes ci-dessus.</span>';
+        html += '<button onclick="addReserveNamesToSerie(' + dayNumber + ', ' + serieId + ')" style="margin-top:6px; padding:6px 12px; border:none; background:#057e68; color:white; border-radius:4px; cursor:pointer; font-size:12px;">Ajouter à la liste</button>';
+        html += '<span style="font-size:11px; color:#586566; margin-left:8px;">Ils apparaîtront dans les listes déroulantes ci-dessus.</span>';
         html += '</div>';
 
         // Actions
         html += '<div style="display:flex; gap:10px; justify-content:flex-end;">';
         html += '<button onclick="closeLaneAssignModal(' + dayNumber + ')" style="padding:8px 15px; border:1px solid #ddd; background:#f5f5f5; border-radius:4px; cursor:pointer; font-size:13px;">Annuler</button>';
-        html += '<button onclick="saveSerieLanes(' + dayNumber + ', ' + serieId + ')" style="padding:8px 15px; border:none; background:#16a085; color:white; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">💾 Enregistrer</button>';
+        html += '<button onclick="saveSerieLanes(' + dayNumber + ', ' + serieId + ')" style="padding:8px 15px; border:none; background:#057e68; color:white; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">💾 Enregistrer</button>';
         html += '</div>';
 
         return html;
@@ -3617,11 +3617,11 @@
         var safeClub = (p.club || '').replace(/"/g, '&quot;');
         wrap.innerHTML =
             '<div style="display:flex; gap:6px; align-items:center; margin:2px 0 6px 86px; flex-wrap:wrap;">' +
-            '<input type="number" id="laneEditBib-' + dayNumber + '-' + lane + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width:52px; padding:5px; border:1px solid #f39c12; border-radius:4px; font-size:12px; text-align:center;">' +
-            '<input type="text" id="laneEditName-' + dayNumber + '-' + lane + '" value="' + safeName + '" placeholder="Nom" style="flex:1; min-width:120px; padding:5px; border:1px solid #f39c12; border-radius:4px; font-size:12px;">' +
-            '<input type="text" id="laneEditClub-' + dayNumber + '-' + lane + '" value="' + safeClub + '" placeholder="Club" style="width:100px; padding:5px; border:1px solid #f39c12; border-radius:4px; font-size:12px;">' +
-            '<button onclick="saveLaneSwimmer(' + dayNumber + ', ' + serieId + ', ' + lane + ', ' + p.id + ')" style="padding:4px 8px; font-size:11px; background:#27ae60; color:white; border:none; border-radius:4px; cursor:pointer;" title="Enregistrer">💾</button>' +
-            '<button onclick="document.getElementById(\'laneEdit-' + dayNumber + '-' + lane + '\').innerHTML=\'\'" style="padding:4px 8px; font-size:11px; background:#95a5a6; color:white; border:none; border-radius:4px; cursor:pointer;" title="Annuler">✖️</button>' +
+            '<input type="number" id="laneEditBib-' + dayNumber + '-' + lane + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width:52px; padding:5px; border:1px solid #8b5700; border-radius:4px; font-size:12px; text-align:center;">' +
+            '<input type="text" id="laneEditName-' + dayNumber + '-' + lane + '" value="' + safeName + '" placeholder="Nom" style="flex:1; min-width:120px; padding:5px; border:1px solid #8b5700; border-radius:4px; font-size:12px;">' +
+            '<input type="text" id="laneEditClub-' + dayNumber + '-' + lane + '" value="' + safeClub + '" placeholder="Club" style="width:100px; padding:5px; border:1px solid #8b5700; border-radius:4px; font-size:12px;">' +
+            '<button onclick="saveLaneSwimmer(' + dayNumber + ', ' + serieId + ', ' + lane + ', ' + p.id + ')" style="padding:4px 8px; font-size:11px; background:#017239; color:white; border:none; border-radius:4px; cursor:pointer;" title="Enregistrer">💾</button>' +
+            '<button onclick="document.getElementById(\'laneEdit-' + dayNumber + '-' + lane + '\').innerHTML=\'\'" style="padding:4px 8px; font-size:11px; background:#566566; color:white; border:none; border-radius:4px; cursor:pointer;" title="Annuler">✖️</button>' +
             '</div>';
         var ni = document.getElementById('laneEditName-' + dayNumber + '-' + lane);
         if (ni) { ni.focus(); ni.select(); }
@@ -3802,7 +3802,7 @@
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeResultsModal(' + dayNumber + ')">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>⏱️ Saisie des résultats - ' + serie.name + '</h3>' +
-            '<p style="color: #7f8c8d; font-size: 13px;">Temps (1:02.35, 62.35 ou 1\'02"35), ou DNS / DISQ. Champ vidé = temps retiré. Entrée : ligne suivante.' +
+            '<p style="color: #586566; font-size: 13px;">Temps (1:02.35, 62.35 ou 1\'02"35), ou DNS / DISQ. Champ vidé = temps retiré. Entrée : ligne suivante.' +
             (serie.laneMode ? ' Lignes dans l\'ordre des couloirs, comme la feuille imprimée.' : '') + '</p>' +
             '<div id="resultsForm-' + dayNumber + '-' + serieId + '">' +
             renderResultsForm(dayNumber, serie) +
@@ -3825,7 +3825,7 @@
 
     function renderResultsForm(dayNumber, serie) {
         if (!serie.participants || serie.participants.length === 0) {
-            return '<p style="color: #7f8c8d; text-align: center;">Aucun participant</p>';
+            return '<p style="color: #586566; text-align: center;">Aucun participant</p>';
         }
 
         // Mode couloirs : colonne Couloir, lignes dans l'ordre du bassin (comme la feuille
@@ -3966,7 +3966,7 @@
 
         // Une saisie illisible : on n'enregistre rien (plutôt que d'ignorer la ligne en silence)
         var invalid = rows.filter(function(x) { return x.r.kind === 'invalid'; });
-        rows.forEach(function(x) { x.el.style.borderColor = x.r.kind === 'invalid' ? '#e74c3c' : ''; });
+        rows.forEach(function(x) { x.el.style.borderColor = x.r.kind === 'invalid' ? '#d03427' : ''; });
         if (invalid.length > 0) {
             showNotification(invalid.length + ' saisie(s) illisible(s) (ex. : 1:02.35, 62.35, DNS, DISQ) : rien n\'est enregistré', 'error');
             invalid[0].el.focus();
@@ -4038,7 +4038,7 @@
             '<h3>🏆 Classement - ' + esc(serie.name) + '</h3>';
         
         if (sorted.length === 0 && ranking.outOfRace.length === 0) {
-            html += '<p style="color: #7f8c8d; text-align: center;">Aucun résultat</p>';
+            html += '<p style="color: #586566; text-align: center;">Aucun résultat</p>';
         } else {
             html += '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
             html += '<thead><tr style="background: #f8f9fa;"><th style="' + th + '">' + (showCategory ? 'Pos. Scratch' : 'Pos') + '</th><th style="' + th + '">Nom</th>' +
@@ -4050,7 +4050,7 @@
 
             sorted.forEach(function(result) {
                 var rank = result.rank;
-                var rankStyle = rank <= 3 ? 'font-weight: bold; color: ' + (rank === 1 ? '#f1c40f' : rank === 2 ? '#95a5a6' : '#cd7f32') + ';' : '';
+                var rankStyle = rank <= 3 ? 'font-weight: bold; color: ' + (rank === 1 ? '#8e7205' : rank === 2 ? '#566566' : '#ae6203') + ';' : '';
                 html += '<tr style="border-bottom: 1px solid #ecf0f1;">';
                 html += '<td style="padding: 10px; text-align: center; ' + rankStyle + '">' + rank + '</td>';
                 html += '<td style="padding: 10px; ' + rankStyle + '">' + esc(result.name) + '</td>';
@@ -4060,13 +4060,13 @@
                 }
                 if (showDistance) html += '<td style="padding: 10px; text-align: center;">' + formatDistance(result.distance) + '</td>';
                 html += '<td style="padding: 10px; font-family: monospace;">' + formatDurationHMS(result.time) + '</td>';
-                if (showPoints) html += '<td style="padding: 10px; text-align: center; font-weight: bold; color: #27ae60;">+' + calculateChronoPoints(rank) + '</td>';
+                if (showPoints) html += '<td style="padding: 10px; text-align: center; font-weight: bold; color: #017239;">+' + calculateChronoPoints(rank) + '</td>';
                 html += '</tr>';
             });
 
             ranking.outOfRace.forEach(function(o) {
                 var cols = 3 + (showClub ? 1 : 0) + (showCategory ? 1 : 0) + (showDistance ? 1 : 0) + (showPoints ? 1 : 0);
-                html += '<tr style="border-bottom: 1px solid #ecf0f1; color: #95a5a6;">' +
+                html += '<tr style="border-bottom: 1px solid #ecf0f1; color: #566566;">' +
                     '<td style="padding: 10px; text-align: center;">' + (o.status === 'disq' ? 'DISQ' : 'DNS') + '</td>' +
                     '<td style="padding: 10px;">' + esc(o.name) + '</td>' +
                     (showClub ? '<td style="padding: 10px;">' + esc(o.club || '-') + '</td>' : '') +
@@ -4204,7 +4204,7 @@
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeImportPlayersModal(' + dayNumber + ')">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>📥 Importer des joueurs</h3>' +
-            '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">' +
+            '<p style="color: #586566; font-size: 13px; margin-bottom: 15px;">' +
             'Sélectionnez une journée source pour importer les joueurs. ' +
             'Ils seront automatiquement convertis au format ' + (currentType === 'chrono' ? 'Chrono' : 'Championship') + '.' +
             '</p>';
@@ -4215,13 +4215,13 @@
             html += '<div onclick="importPlayersFromDay(' + dayNumber + ', ' + day.dayNumber + ')" ' +
                 'style="padding: 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 8px; cursor: pointer; ' +
                 'border: 2px solid transparent; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center;" ' +
-                'onmouseover="this.style.borderColor=\'#3498db\'; this.style.background=\'#ebf5fb\';" ' +
+                'onmouseover="this.style.borderColor=\'#09679e\'; this.style.background=\'#ebf5fb\';" ' +
                 'onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'#f8f9fa\';">' +
                 '<div>' +
                 '<strong style="font-size: 14px;">Journée ' + day.dayNumber + '</strong>' +
-                '<span style="color: #7f8c8d; font-size: 12px; margin-left: 10px;">' + typeIcon + ' ' + (day.type === 'chrono' ? 'Courses' : 'Matchs') + '</span>' +
+                '<span style="color: #586566; font-size: 12px; margin-left: 10px;">' + typeIcon + ' ' + (day.type === 'chrono' ? 'Courses' : 'Matchs') + '</span>' +
                 '</div>' +
-                '<span style="background: #3498db; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">' + day.count + ' joueurs</span>' +
+                '<span style="background: #09679e; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">' + day.count + ' joueurs</span>' +
                 '</div>';
         });
         html += '</div>';

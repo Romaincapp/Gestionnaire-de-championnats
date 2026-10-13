@@ -69,7 +69,7 @@ function addPoolToggleToInterface(dayNumber) {
         <!-- Section Mode Poules (bouton déplacé dans la barre d'action) -->
         <div class="pool-toggle-section" id="pool-toggle-${dayNumber}" style="
             background: linear-gradient(135deg, #fff8e1, #ffe082);
-            border: 2px solid #f39c12;
+            border: 2px solid #8b5700;
             border-radius: 8px;
             padding: 15px;
             margin: 15px auto;
@@ -77,7 +77,7 @@ function addPoolToggleToInterface(dayNumber) {
             display: none;
         ">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="color: #e67e22; margin: 0; font-size: 16px;">
+                <h3 style="color: #9c5003; margin: 0; font-size: 16px;">
                     🏊 Mode Poules de Qualification
                 </h3>
                 <button onclick="togglePoolSection(${dayNumber})" style="
@@ -85,30 +85,30 @@ function addPoolToggleToInterface(dayNumber) {
                     border: none;
                     font-size: 24px;
                     cursor: pointer;
-                    color: #e67e22;
+                    color: #9c5003;
                     padding: 0;
                     line-height: 1;
                 ">×</button>
             </div>
 
-            <p style="color: #856404; margin-bottom: 12px; font-size: 12px;">
+            <p style="color: #6c5103; margin-bottom: 12px; font-size: 12px;">
                 Créez des groupes, puis organisez des phases finales avec les meilleurs
             </p>
 
             <div class="toggle-container" style="margin-bottom: 12px; text-align: center;">
                 <label class="toggle-switch" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
                     <input type="checkbox" id="pool-enabled-${dayNumber}" onchange="togglePoolMode(${dayNumber})" style="
-                        width: 18px; height: 18px; cursor: pointer; accent-color: #f39c12;
+                        width: 18px; height: 18px; cursor: pointer; accent-color: #8b5700;
                     ">
-                    <span style="font-weight: bold; color: #e67e22; font-size: 13px;">✓ Activer le mode Poules</span>
+                    <span style="font-weight: bold; color: #9c5003; font-size: 13px;">✓ Activer le mode Poules</span>
                 </label>
             </div>
 
             <div id="pool-config-${dayNumber}" class="pool-config" style="display: none;">
                 ${dayNumber > 1 ? `
-                    <div style="background: rgba(52, 152, 219, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 12px; border: 2px solid #3498db;">
+                    <div style="background: rgba(52, 152, 219, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 12px; border: 2px solid #09679e;">
                         <button class="btn" onclick="preFillFromGeneralRanking(${dayNumber})" style="
-                            background: linear-gradient(135deg, #3498db, #2980b9);
+                            background: linear-gradient(135deg, #09679e, #08689d);
                             color: white;
                             padding: 8px 12px;
                             font-size: 12px;
@@ -127,13 +127,13 @@ function addPoolToggleToInterface(dayNumber) {
                     <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px;">
                         <input type="radio" name="pool-config-mode-${dayNumber}" value="simple" checked
                                onchange="togglePoolConfigMode(${dayNumber}, 'simple')"
-                               style="width: 16px; height: 16px; cursor: pointer; accent-color: #3498db;">
+                               style="width: 16px; height: 16px; cursor: pointer; accent-color: #09679e;">
                         <span style="font-weight: 600; color: #2c3e50;">📊 Mode Simple</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px;">
                         <input type="radio" name="pool-config-mode-${dayNumber}" value="advanced"
                                onchange="togglePoolConfigMode(${dayNumber}, 'advanced')"
-                               style="width: 16px; height: 16px; cursor: pointer; accent-color: #e67e22;">
+                               style="width: 16px; height: 16px; cursor: pointer; accent-color: #9c5003;">
                         <span style="font-weight: 600; color: #2c3e50;">🎯 Mode Avancé</span>
                     </label>
                 </div>
@@ -142,7 +142,7 @@ function addPoolToggleToInterface(dayNumber) {
                 <div id="simple-config-${dayNumber}" style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
                     <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
                         <span style="font-weight: 600; color: #2c3e50;">Taille:</span>
-                        <select id="pool-size-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #3498db; border-radius: 5px; font-size: 12px;">
+                        <select id="pool-size-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #09679e; border-radius: 5px; font-size: 12px;">
                             <option value="4">4 joueurs/poule</option>
                             <option value="5">5 joueurs/poule</option>
                             <option value="6">6 joueurs/poule</option>
@@ -151,7 +151,7 @@ function addPoolToggleToInterface(dayNumber) {
 
                     <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
                         <span style="font-weight: 600; color: #2c3e50;">Qualifiés:</span>
-                        <select id="qualified-per-pool-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #3498db; border-radius: 5px; font-size: 12px;">
+                        <select id="qualified-per-pool-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #09679e; border-radius: 5px; font-size: 12px;">
                             <option value="2">2 premiers</option>
                             <option value="3">3 premiers</option>
                         </select>
@@ -159,7 +159,7 @@ function addPoolToggleToInterface(dayNumber) {
 
                     <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
                         <span style="font-weight: 600; color: #2c3e50;">⚡ Matchs/joueur:</span>
-                        <select id="matches-per-player-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #16a085; border-radius: 5px; font-size: 12px;">
+                        <select id="matches-per-player-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #057e68; border-radius: 5px; font-size: 12px;">
                             <option value="">Tous contre tous</option>
                             <option value="3" selected>3 matchs</option>
                             <option value="4">4 matchs</option>
@@ -174,19 +174,19 @@ function addPoolToggleToInterface(dayNumber) {
                         <span style="font-weight: 600; color: #2c3e50;">Nombre de poules:</span>
                         <input type="number" id="num-pools-${dayNumber}" min="2" max="10" value="4"
                                onchange="updateAdvancedConfigInfo(${dayNumber})"
-                               style="width: 60px; padding: 6px 8px; border: 2px solid #e67e22; border-radius: 5px; font-size: 12px;">
+                               style="width: 60px; padding: 6px 8px; border: 2px solid #9c5003; border-radius: 5px; font-size: 12px;">
                     </label>
 
                     <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
                         <span style="font-weight: 600; color: #2c3e50;">Total qualifiés:</span>
                         <input type="number" id="total-qualified-${dayNumber}" min="4" max="32" value="8"
                                onchange="updateAdvancedConfigInfo(${dayNumber})"
-                               style="width: 60px; padding: 6px 8px; border: 2px solid #e67e22; border-radius: 5px; font-size: 12px;">
+                               style="width: 60px; padding: 6px 8px; border: 2px solid #9c5003; border-radius: 5px; font-size: 12px;">
                     </label>
 
                     <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
                         <span style="font-weight: 600; color: #2c3e50;">⚡ Matchs/joueur:</span>
-                        <select id="matches-per-player-adv-${dayNumber}" onchange="updateAdvancedConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #16a085; border-radius: 5px; font-size: 12px;">
+                        <select id="matches-per-player-adv-${dayNumber}" onchange="updateAdvancedConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #057e68; border-radius: 5px; font-size: 12px;">
                             <option value="">Tous contre tous</option>
                             <option value="3" selected>3 matchs</option>
                             <option value="4">4 matchs</option>
@@ -204,13 +204,13 @@ function addPoolToggleToInterface(dayNumber) {
                     font-size: 11px;
                     color: #2c3e50;
                     text-align: center;
-                    border-left: 3px solid #3498db;
+                    border-left: 3px solid #09679e;
                     display: none;
                 "></div>
 
                 <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                     <button class="btn" onclick="generatePools(${dayNumber})" style="
-                        background: linear-gradient(135deg, #27ae60, #2ecc71);
+                        background: linear-gradient(135deg, #017239, #017239);
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -219,7 +219,7 @@ function addPoolToggleToInterface(dayNumber) {
                     </button>
 
                     <button class="btn" onclick="showModulatePoolsModal(${dayNumber})" style="
-                        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                        background: linear-gradient(135deg, #9654b1, #8e44ad);
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -228,7 +228,7 @@ function addPoolToggleToInterface(dayNumber) {
                     </button>
 
                     <button class="btn" onclick="verifyPoolMatchesCount(${dayNumber})" style="
-                        background: linear-gradient(135deg, #17a2b8, #138496);
+                        background: linear-gradient(135deg, #067b8c, #077b8c);
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -237,7 +237,7 @@ function addPoolToggleToInterface(dayNumber) {
                     </button>
 
                     <button class="btn" onclick="generateFinalPhase(${dayNumber})" style="
-                        background: linear-gradient(135deg, #f39c12, #e67e22);
+                        background: linear-gradient(135deg, #8b5700, #9c5003);
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -246,7 +246,7 @@ function addPoolToggleToInterface(dayNumber) {
                     </button>
 
                     <button class="btn" onclick="generateDirectFinalPhase(${dayNumber})" style="
-                        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                        background: linear-gradient(135deg, #9654b1, #8e44ad);
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -255,7 +255,7 @@ function addPoolToggleToInterface(dayNumber) {
                     </button>
 
                     <button class="btn" onclick="showImportPoolRankingsModal(${dayNumber})" style="
-                        background: linear-gradient(135deg, #1abc9c, #16a085);
+                        background: linear-gradient(135deg, #057e68, #057e68);
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -264,7 +264,7 @@ function addPoolToggleToInterface(dayNumber) {
                     </button>
 
                     <button class="btn" onclick="generateSeasonFinalPhase(${dayNumber})" style="
-                        background: linear-gradient(135deg, #f39c12, #e67e22);
+                        background: linear-gradient(135deg, #8b5700, #9c5003);
                         color: white;
                         padding: 8px 15px;
                         font-size: 12px;
@@ -371,7 +371,7 @@ function updateSimpleConfigInfo(dayNumber) {
 
     configInfo.innerHTML = infoHTML;
     configInfo.style.display = 'block';
-    configInfo.style.borderLeftColor = '#3498db';
+    configInfo.style.borderLeftColor = '#09679e';
     configInfo.style.background = 'rgba(52, 152, 219, 0.1)';
 }
 
@@ -411,29 +411,29 @@ function updateAdvancedConfigInfo(dayNumber) {
         const result = calculateQualificationDistribution(numPools, totalQualified, players.length);
         const poolSize = Math.ceil(players.length / numPools);
 
-        infoHTML += `<div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 2px solid #3498db;">`;
+        infoHTML += `<div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 2px solid #09679e;">`;
         infoHTML += `<div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px; font-size: 13px;">📋 Division ${division} — ${players.length} joueurs</div>`;
 
         // Structure des poules
         infoHTML += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">`;
-        infoHTML += `<span style="background: #3498db; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">${result.poolSizeInfo}</span>`;
+        infoHTML += `<span style="background: #09679e; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">${result.poolSizeInfo}</span>`;
 
         // Matchs par poule
         if (!matchesPerPlayer || matchesPerPlayer >= poolSize - 1) {
             const matchesPerPool = Math.round((poolSize * (poolSize - 1)) / 2);
-            infoHTML += `<span style="background: #9b59b6; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">~${matchesPerPool} matchs/poule</span>`;
+            infoHTML += `<span style="background: #9654b1; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">~${matchesPerPool} matchs/poule</span>`;
         } else {
             const matchesPerPool = Math.round((poolSize * matchesPerPlayer) / 2);
-            infoHTML += `<span style="background: #16a085; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">${matchesPerPlayer} matchs/joueur</span>`;
+            infoHTML += `<span style="background: #057e68; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">${matchesPerPlayer} matchs/joueur</span>`;
         }
         infoHTML += `</div>`;
 
         // Logique de qualification - APERÇU DÉTAILLÉ
-        infoHTML += `<div style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 10px; border-radius: 8px; margin-top: 8px;">`;
+        infoHTML += `<div style="background: linear-gradient(135deg, #017239, #017239); color: white; padding: 10px; border-radius: 8px; margin-top: 8px;">`;
         infoHTML += `<div style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">🏆 Logique de Qualification → ${totalQualified} qualifiés</div>`;
 
         // Affichage visuel de la logique
-        infoHTML += `<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 6px; font-size: 11px;">`;
+        infoHTML += `<div style="background: rgba(0,0,0,0.18); padding: 8px; border-radius: 6px; font-size: 11px;">`;
 
         if (result.topPerPool === 0) {
             infoHTML += `<div style="margin-bottom: 4px;">🥇 Les <strong>${totalQualified} meilleurs 1ers</strong> toutes poules confondues</div>`;
@@ -480,7 +480,7 @@ function updateAdvancedConfigInfo(dayNumber) {
             hasWarning = true;
             infoHTML += `<div style="margin-top: 8px;">`;
             result.warnings.forEach(warning => {
-                infoHTML += `<div style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 10px; margin-bottom: 2px;">⚠️ ${warning}</div>`;
+                infoHTML += `<div style="background: #fff3cd; color: #6c5103; padding: 4px 8px; border-radius: 4px; font-size: 10px; margin-bottom: 2px;">⚠️ ${warning}</div>`;
             });
             infoHTML += `</div>`;
         }
@@ -588,13 +588,13 @@ function togglePoolSection(dayNumber) {
             poolSection.style.display = 'block';
             if (toggleBtn) {
                 toggleBtn.textContent = '🏊 Masquer';
-                toggleBtn.style.background = '#dc2626';
+                toggleBtn.style.background = '#d92223';
             }
         } else {
             poolSection.style.display = 'none';
             if (toggleBtn) {
                 toggleBtn.textContent = '🏊 Poules';
-                toggleBtn.style.background = '#f59e0b';
+                toggleBtn.style.background = '#9c6304';
             }
         }
     }
@@ -1923,7 +1923,7 @@ function updatePoolsDisplay(dayNumber) {
         if (qualificationInfo) {
             html += `
                 <div style="
-                    background: linear-gradient(135deg, #f39c12, #e67e22);
+                    background: linear-gradient(135deg, #8b5700, #9c5003);
                     color: white;
                     padding: 12px 15px;
                     border-radius: 8px;
@@ -1971,13 +1971,13 @@ function updatePoolsDisplay(dayNumber) {
             html += `
                 <div class="pool-section" style="
                     background: white;
-                    border: 2px solid ${isCompleted && matchDistributionOk ? '#27ae60' : !matchDistributionOk ? '#e74c3c' : '#3498db'};
+                    border: 2px solid ${isCompleted && matchDistributionOk ? '#017239' : !matchDistributionOk ? '#d03427' : '#09679e'};
                     border-radius: 12px;
                     padding: 20px;
                     margin-bottom: 20px;
                 ">
                     <div class="pool-header" onclick="togglePoolCollapse('${poolContentId}', '${poolArrowId}')" style="
-                        background: linear-gradient(135deg, ${isCompleted && matchDistributionOk ? '#27ae60, #2ecc71' : !matchDistributionOk ? '#e74c3c, #c0392b' : '#3498db, #2980b9'});
+                        background: linear-gradient(135deg, ${isCompleted && matchDistributionOk ? '#017239, #017239' : !matchDistributionOk ? '#d03427, #c0392b' : '#09679e, #08689d'});
                         color: white;
                         padding: 15px;
                         border-radius: 8px;
@@ -2000,7 +2000,7 @@ function updatePoolsDisplay(dayNumber) {
                                 title="Ajouter un match"
                                 style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
                                        width: 28px; height: 28px; background: rgba(255,255,255,0.9);
-                                       color: #3498db; border: none; border-radius: 50%;
+                                       color: #09679e; border: none; border-radius: 50%;
                                        font-size: 20px; font-weight: bold; cursor: pointer;
                                        display: flex; align-items: center; justify-content: center;"
                                 onmouseover="this.style.background='white'; this.style.transform='translateY(-50%) scale(1.1)'"
@@ -2008,7 +2008,7 @@ function updatePoolsDisplay(dayNumber) {
                         <h4 style="margin: 0; font-size: 1.2rem;">${poolName}${isCompleted && matchDistributionOk ? ' ✓' : ''}</h4>
                         <div style="font-size: 14px; margin-top: 5px;">
                             ${completedMatches}/${poolMatches.length} matchs terminés
-                            ${!matchDistributionOk && targetMatches ? `<span style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-weight: bold;">⚠️ ${playersWithMissingMatches} joueur${playersWithMissingMatches > 1 ? 's' : ''} à compléter</span>` : ''}
+                            ${!matchDistributionOk && targetMatches ? `<span style="background: rgba(0,0,0,0.18); padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-weight: bold;">⚠️ ${playersWithMissingMatches} joueur${playersWithMissingMatches > 1 ? 's' : ''} à compléter</span>` : ''}
                         </div>
                     </div>
 
@@ -2040,7 +2040,7 @@ function updatePoolsDisplay(dayNumber) {
                             const count = playerMatchCounts[player] || 0;
                             const isMissing = targetMatches && count < targetMatches;
                             const badge = isMissing ? `<span style="
-                                background: #e74c3c;
+                                background: #d03427;
                                 color: white;
                                 font-size: 10px;
                                 padding: 2px 6px;
@@ -2050,7 +2050,7 @@ function updatePoolsDisplay(dayNumber) {
                             ">${count}/${targetMatches}</span>` : '';
                             
                             return `<span class="pool-player-tag" onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${escapeForOnclick(player)}')" style="
-                                background: ${isMissing ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : 'linear-gradient(135deg, #27ae60, #2ecc71)'};
+                                background: ${isMissing ? 'linear-gradient(135deg, #d03427, #c0392b)' : 'linear-gradient(135deg, #017239, #017239)'};
                                 color: white;
                                 padding: 8px 15px;
                                 border-radius: 20px;
@@ -2124,12 +2124,12 @@ function generatePoolMatchHTML(match, dayNumber) {
                     align-items: center;
                     margin-bottom: 10px;
                 ">
-                    <div class="player-names" style="font-weight: 600; color: #856404;">
+                    <div class="player-names" style="font-weight: 600; color: #6c5103;">
                         🎯 <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(realPlayer)}')"
                                 style="cursor: pointer; text-decoration: underline dotted;"
                                 title="Cliquez pour voir les statistiques"
-                                onmouseover="this.style.color='#3498db'"
-                                onmouseout="this.style.color='#856404'">${realPlayer}</span> VS ${byePlayer}
+                                onmouseover="this.style.color='#09679e'"
+                                onmouseout="this.style.color='#6c5103'">${realPlayer}</span> VS ${byePlayer}
                     </div>
                     <div class="match-status" style="
                         font-size: 12px;
@@ -2142,12 +2142,12 @@ function generatePoolMatchHTML(match, dayNumber) {
                 </div>
 
                 <div style="text-align: center; padding: 10px; background: rgba(255, 193, 7, 0.1); border-radius: 6px;">
-                    <strong style="color: #856404;">✅ <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(realPlayer)}')"
+                    <strong style="color: #6c5103;">✅ <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(realPlayer)}')"
                                                             style="cursor: pointer; text-decoration: underline dotted;"
                                                             title="Cliquez pour voir les statistiques"
-                                                            onmouseover="this.style.color='#3498db'"
-                                                            onmouseout="this.style.color='#856404'">${realPlayer}</span> qualifié(e) automatiquement</strong>
-                    <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
+                                                            onmouseover="this.style.color='#09679e'"
+                                                            onmouseout="this.style.color='#6c5103'">${realPlayer}</span> qualifié(e) automatiquement</strong>
+                    <div style="font-size: 12px; color: #5b636b; margin-top: 5px;">
                         Match non joué - Victoire par forfait
                     </div>
                 </div>
@@ -2177,11 +2177,11 @@ function generatePoolMatchHTML(match, dayNumber) {
                     title="Supprimer ce match"
                     style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
                            width: 18px; height: 18px; z-index: 10;
-                           background: #e74c3c; color: white; border: none; border-radius: 50%;
+                           background: #d03427; color: white; border: none; border-radius: 50%;
                            font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
-                           opacity: 0.6; transition: opacity 0.2s;"
+                           opacity: 0.9; transition: opacity 0.2s;"
                     onmouseover="this.style.opacity='1'"
-                    onmouseout="this.style.opacity='0.6'">×</button>` : ''}
+                    onmouseout="this.style.opacity='0.9'">×</button>` : ''}
             ${match.completed ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="
                 display: flex;
                 justify-content: space-between;
@@ -2198,7 +2198,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                     border-radius: 12px;
                     font-weight: bold;
                     background: #a8e6cf;
-                    color: #00b894;
+                    color: #096b54;
                 ">${statusText}</div>
             </div>` : ''}
             
@@ -2206,11 +2206,11 @@ function generatePoolMatchHTML(match, dayNumber) {
                 ${window.showForfaitButtons ? 
                     `<input type="text" value="${match.player1}" 
                             onchange="editPoolMatchPlayerName(${dayNumber}, ${match.division}, '${match.id}', 'player1', this.value)"
-                            style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white; cursor: text;">`
+                            style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white; cursor: text;">`
                     : `<span class="player-name-left" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player1)}')"
                           style="cursor: pointer; text-decoration: underline dotted;"
                           title="Cliquez pour voir les statistiques"
-                          onmouseover="this.style.color='#3498db'"
+                          onmouseover="this.style.color='#09679e'"
                           onmouseout="this.style.color='#2c3e50'">${match.player1}</span>`}
                 <div class="score-center">
                     <input type="number"
@@ -2218,34 +2218,34 @@ function generatePoolMatchHTML(match, dayNumber) {
                            placeholder="0"
                            onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score1', this.value, ${match.division})"
                            onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}', ${match.division})"
-                           style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
-                    <span style="font-weight: bold; color: #7f8c8d; font-size: 14px;">-</span>
+                           style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #096cde; border-radius: 6px;">
+                    <span style="font-weight: bold; color: #586566; font-size: 14px;">-</span>
                     <input type="number"
                            value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
                            placeholder="0"
                            onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value, ${match.division})"
                            onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}', ${match.division})"
-                           style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #007bff; border-radius: 6px;">
+                           style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #096cde; border-radius: 6px;">
                 </div>
                 ${window.showForfaitButtons ? 
                     `<input type="text" value="${match.player2}" 
                             onchange="editPoolMatchPlayerName(${dayNumber}, ${match.division}, '${match.id}', 'player2', this.value)"
-                            style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white; cursor: text;">`
+                            style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white; cursor: text;">`
                     : `<span class="player-name-right" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player2)}')"
                           style="cursor: pointer; text-decoration: underline dotted;"
                           title="Cliquez pour voir les statistiques"
-                          onmouseover="this.style.color='#3498db'"
+                          onmouseover="this.style.color='#09679e'"
                           onmouseout="this.style.color='#2c3e50'">${match.player2}</span>`}
             </div>
 
             ${!match.completed && window.showForfaitButtons ? `
             <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: 8px;">
                 <button onclick="declareForfait('pool', ${dayNumber}, ${match.division}, '${match.id}', 'player1')"
-                        style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                        style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
                                border: none; border-radius: 3px; cursor: pointer;"
                         title="Forfait ${match.player1}">F1</button>
                 <button onclick="declareForfait('pool', ${dayNumber}, ${match.division}, '${match.id}', 'player2')"
-                        style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                        style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
                                border: none; border-radius: 3px; cursor: pointer;"
                         title="Forfait ${match.player2}">F2</button>
             </div>
@@ -2259,7 +2259,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                 border-radius: 6px;
                 font-size: 13px;
                 background: ${match.forfaitBy ? '#fff3cd' : '#a8e6cf'};
-                color: ${match.forfaitBy ? '#856404' : '#00b894'};
+                color: ${match.forfaitBy ? '#6c5103' : '#096b54'};
             ">
                 ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2})
             </div>` : ''}
@@ -2652,7 +2652,7 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
             " onclick="event.stopPropagation()">
                 <!-- En-tête -->
                 <div style="
-                    background: linear-gradient(135deg, #3498db, #2980b9);
+                    background: linear-gradient(135deg, #09679e, #08689d);
                     color: white;
                     padding: 20px;
                     border-radius: 15px 15px 0 0;
@@ -2691,7 +2691,7 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                         color: #2c3e50;
                         margin: 0 0 15px 0;
                         font-size: 18px;
-                        border-bottom: 2px solid #3498db;
+                        border-bottom: 2px solid #09679e;
                         padding-bottom: 8px;
                     ">
                         📊 Matchs (${stats.totalMatches} terminé${stats.totalMatches > 1 ? 's' : ''}${stats.upcomingCount > 0 ? `, ${stats.upcomingCount} à venir` : ''})
@@ -2721,17 +2721,17 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                                 if (!opp.completed) {
                                     return `
                                         <tr style="background: ${bgColor}; border-bottom: 1px solid #dee2e6; opacity: 0.8;">
-                                            <td style="padding: 10px; font-weight: 500; color: #6c757d;">${opp.name}</td>
-                                            <td style="padding: 10px; text-align: center; font-size: 11px; color: #6c757d;">
+                                            <td style="padding: 10px; font-weight: 500; color: #5b636b;">${opp.name}</td>
+                                            <td style="padding: 10px; text-align: center; font-size: 11px; color: #5b636b;">
                                                 ${opp.matchType}
                                             </td>
-                                            <td style="padding: 10px; text-align: center; font-weight: bold; color: #95a5a6;">
+                                            <td style="padding: 10px; text-align: center; font-weight: bold; color: #566566;">
                                                 - / -
                                             </td>
                                             <td style="padding: 10px; text-align: center;">
                                                 <span style="
                                                     background: #fff3cd;
-                                                    color: #856404;
+                                                    color: #6c5103;
                                                     padding: 4px 10px;
                                                     border-radius: 12px;
                                                     font-weight: bold;
@@ -2767,13 +2767,13 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                                         break;
                                     case 'F':
                                         resultBg = '#fff3cd';
-                                        resultColor = '#856404';
+                                        resultColor = '#6c5103';
                                         resultIcon = '⚠';
                                         resultText = 'Forfait';
                                         break;
                                     default:
                                         resultBg = '#f8f9fa';
-                                        resultColor = '#6c757d';
+                                        resultColor = '#5b636b';
                                         resultIcon = '?';
                                         resultText = opp.result;
                                 }
@@ -2781,13 +2781,13 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                                 return `
                                     <tr style="background: ${bgColor}; border-bottom: 1px solid #dee2e6;">
                                         <td style="padding: 10px; font-weight: 500;">${opp.name}</td>
-                                        <td style="padding: 10px; text-align: center; font-size: 11px; color: #6c757d;">
+                                        <td style="padding: 10px; text-align: center; font-size: 11px; color: #5b636b;">
                                             ${opp.matchType}
                                         </td>
                                         <td style="padding: 10px; text-align: center; font-weight: bold;">
                                             <span style="color: #2c3e50;">${opp.playerScore}</span>
-                                            <span style="color: #95a5a6;"> - </span>
-                                            <span style="color: #7f8c8d;">${opp.opponentScore}</span>
+                                            <span style="color: #566566;"> - </span>
+                                            <span style="color: #586566;">${opp.opponentScore}</span>
                                         </td>
                                         <td style="padding: 10px; text-align: center;">
                                             <span style="
@@ -2814,13 +2814,13 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                         padding: 12px;
                         background: linear-gradient(135deg, #fff3cd, #ffeaa7);
                         border-radius: 8px;
-                        border-left: 4px solid #f39c12;
+                        border-left: 4px solid #8b5700;
                     ">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 20px;">⏳</span>
                             <div>
-                                <div style="font-weight: 600; color: #856404;">Progression</div>
-                                <div style="font-size: 13px; color: #856404;">
+                                <div style="font-weight: 600; color: #6c5103;">Progression</div>
+                                <div style="font-size: 13px; color: #6c5103;">
                                     ${stats.totalMatches} match${stats.totalMatches > 1 ? 's' : ''} terminé${stats.totalMatches > 1 ? 's' : ''} sur ${stats.totalScheduled} programmé${stats.totalScheduled > 1 ? 's' : ''}
                                 </div>
                             </div>
@@ -2834,40 +2834,40 @@ function showPlayerPoolSummary(dayNumber, division, playerName) {
                         padding: 15px;
                         background: linear-gradient(135deg, #f8f9fa, #e9ecef);
                         border-radius: 10px;
-                        border-left: 4px solid #3498db;
+                        border-left: 4px solid #09679e;
                     ">
                         <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
                             <div style="text-align: center;">
-                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Victoires</div>
-                                <div style="font-size: 20px; font-weight: bold; color: #27ae60;">${stats.wins}</div>
+                                <div style="font-size: 12px; color: #5b636b; margin-bottom: 4px;">Victoires</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #017239;">${stats.wins}</div>
                             </div>
                             <div style="text-align: center;">
-                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Défaites</div>
-                                <div style="font-size: 20px; font-weight: bold; color: #e74c3c;">${stats.losses}</div>
+                                <div style="font-size: 12px; color: #5b636b; margin-bottom: 4px;">Défaites</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #d03427;">${stats.losses}</div>
                             </div>
                             ${stats.draws > 0 ? `
                             <div style="text-align: center;">
-                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Nuls</div>
-                                <div style="font-size: 20px; font-weight: bold; color: #3498db;">${stats.draws}</div>
+                                <div style="font-size: 12px; color: #5b636b; margin-bottom: 4px;">Nuls</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #09679e;">${stats.draws}</div>
                             </div>
                             ` : ''}
                             ${stats.forfeits > 0 ? `
                             <div style="text-align: center;">
-                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Forfaits</div>
-                                <div style="font-size: 20px; font-weight: bold; color: #f39c12;">${stats.forfeits}</div>
+                                <div style="font-size: 12px; color: #5b636b; margin-bottom: 4px;">Forfaits</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #8b5700;">${stats.forfeits}</div>
                             </div>
                             ` : ''}
                             <div style="text-align: center;">
-                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Points marqués</div>
-                                <div style="font-size: 20px; font-weight: bold; color: #3498db;">${stats.pointsWon}</div>
+                                <div style="font-size: 12px; color: #5b636b; margin-bottom: 4px;">Points marqués</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #09679e;">${stats.pointsWon}</div>
                             </div>
                             <div style="text-align: center;">
-                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Points encaissés</div>
-                                <div style="font-size: 20px; font-weight: bold; color: #95a5a6;">${stats.pointsLost}</div>
+                                <div style="font-size: 12px; color: #5b636b; margin-bottom: 4px;">Points encaissés</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #566566;">${stats.pointsLost}</div>
                             </div>
                             <div style="text-align: center;">
-                                <div style="font-size: 12px; color: #6c757d; margin-bottom: 4px;">Différence</div>
-                                <div style="font-size: 20px; font-weight: bold; color: ${stats.diff >= 0 ? '#27ae60' : '#e74c3c'};">
+                                <div style="font-size: 12px; color: #5b636b; margin-bottom: 4px;">Différence</div>
+                                <div style="font-size: 20px; font-weight: bold; color: ${stats.diff >= 0 ? '#017239' : '#d03427'};">
                                     ${stats.diff >= 0 ? '+' : ''}${stats.diff}
                                 </div>
                             </div>
@@ -2998,16 +2998,16 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
     return `
         <div style="
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border: 2px solid #28a745;
+            border: 2px solid #087227;
             border-radius: 8px;
             padding: 15px;
         ">
-            <h5 style="text-align: center; color: #28a745; margin-bottom: 15px;">
+            <h5 style="text-align: center; color: #087227; margin-bottom: 15px;">
                 📊 Classement ${String.fromCharCode(65 + poolIndex)}
             </h5>
             <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                 <thead>
-                    <tr style="background: #28a745; color: white;">
+                    <tr style="background: #087227; color: white;">
                         <th style="padding: 8px; text-align: left;">Rang</th>
                         <th style="padding: 8px; text-align: left;">Joueur</th>
                         <th style="padding: 8px; text-align: center;">Pts</th>
@@ -3027,17 +3027,17 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                             bgColor = '#d4edda';
                             textColor = '#155724';
                             emoji = '✅';
-                            badge = '<span style="font-size: 10px; background: #28a745; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Qualifié</span>';
+                            badge = '<span style="font-size: 10px; background: #087227; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Qualifié</span>';
                         } else if (status.qualified && !status.isDirect) {
                             // Meilleur runner-up
                             bgColor = '#fff3cd';
-                            textColor = '#856404';
+                            textColor = '#6c5103';
                             emoji = '⭐';
-                            badge = '<span style="font-size: 10px; background: #ffc107; color: #856404; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Repêché</span>';
+                            badge = '<span style="font-size: 10px; background: #ffc107; color: #6c5103; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Repêché</span>';
                         } else {
                             // Non qualifié
                             bgColor = 'white';
-                            textColor = '#6c757d';
+                            textColor = '#5b636b';
                             emoji = '';
                             badge = '';
                         }
@@ -3055,7 +3055,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                                     <span ${dayNumber && division ? `onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${escapeForOnclick(player.name)}')"` : ''}
                                           style="cursor: ${dayNumber && division ? 'pointer' : 'default'}; ${dayNumber && division ? 'text-decoration: underline dotted;' : ''}"
                                           ${dayNumber && division ? `title="Cliquez pour voir les statistiques"` : ''}
-                                          ${dayNumber && division ? `onmouseover="this.style.color='#3498db'"` : ''}
+                                          ${dayNumber && division ? `onmouseover="this.style.color='#09679e'"` : ''}
                                           ${dayNumber && division ? `onmouseout="this.style.color='${textColor}'"` : ''}>${player.name}</span>${badge}
                                 </td>
                                 <td style="padding: 8px; text-align: center; font-weight: bold; color: ${textColor};">${player.points}</td>
@@ -3068,7 +3068,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                 </tbody>
             </table>
             ${qualifiedPlayers ? `
-                <div style="margin-top: 10px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 5px; font-size: 11px; color: #6c757d; text-align: center;">
+                <div style="margin-top: 10px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 5px; font-size: 11px; color: #5b636b; text-align: center;">
                     ✅ Qualifié direct | ⭐ Repêché (meilleur runner-up)
                 </div>
             ` : ''}
@@ -3642,7 +3642,7 @@ function showImportPoolRankingsModal(dayNumber) {
     modal.innerHTML = `
         <div style="background:white;padding:25px;border-radius:12px;max-width:720px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4);margin:auto;">
             <h3 style="margin:0 0 6px 0;color:#2c3e50;font-size:18px;">🏆 Phase finale depuis vos classements</h3>
-            <p style="margin:0 0 20px 0;color:#7f8c8d;font-size:13px;">
+            <p style="margin:0 0 20px 0;color:#586566;font-size:13px;">
                 Collez les classements finaux de vos groupes joués pendant l'année.
                 Aucun match de poule ne sera créé : le tableau à élimination directe est généré
                 immédiatement, en croisant les classements (le 1er du classement 1 et le 1er du
@@ -3664,7 +3664,7 @@ function showImportPoolRankingsModal(dayNumber) {
 
             <div id="poolInputsContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:18px;"></div>
 
-            <div style="background:#eaf4fb;padding:10px 14px;border-radius:6px;margin-bottom:20px;font-size:12px;color:#2980b9;">
+            <div style="background:#eaf4fb;padding:10px 14px;border-radius:6px;margin-bottom:20px;font-size:12px;color:#08689d;">
                 💡 <strong>Un joueur par ligne</strong>, du 1er au dernier du classement.
                 Les mieux classés sont têtes de série (exemptés en priorité si le nombre de joueurs est impair)
                 et les joueurs d'un même classement sont placés dans des parties opposées du tableau.
@@ -3676,7 +3676,7 @@ function showImportPoolRankingsModal(dayNumber) {
                     Annuler
                 </button>
                 <button onclick="applyImportPoolRankings(${dayNumber})"
-                    style="padding:10px 20px;border:none;background:linear-gradient(135deg,#1abc9c,#16a085);color:white;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">
+                    style="padding:10px 20px;border:none;background:linear-gradient(135deg,#057e68,#057e68);color:white;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">
                     ⚡ Générer la phase finale
                 </button>
             </div>
@@ -4597,7 +4597,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
 
     // Adapter les textes selon le mode
     const headerTitle = isDirectMode ? '⚡ ÉLIMINATION DIRECTE' : '🏆 PHASE FINALE';
-    const headerBg = isDirectMode ? 'linear-gradient(135deg, #9b59b6, #8e44ad)' : 'linear-gradient(135deg, #16a085, #1abc9c)';
+    const headerBg = isDirectMode ? 'linear-gradient(135deg, #9654b1, #8e44ad)' : 'linear-gradient(135deg, #057e68, #057e68)';
     const playersTitle = isDirectMode ? '👥 Participants au Tournoi' : '✨ Joueurs Qualifiés des Poules';
 
     let html = `
@@ -4619,7 +4619,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
                 </div>
                 ${currentRound ? `
                     <div style="
-                        background: rgba(255,255,255,0.2);
+                        background: rgba(0,0,0,0.18);
                         padding: 10px 20px;
                         border-radius: 20px;
                         margin-top: 15px;
@@ -4632,7 +4632,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
 
             <div class="qualified-players" style="
                 background: linear-gradient(135deg, #e8f5e8, #d4edda);
-                border: 2px solid #28a745;
+                border: 2px solid #087227;
                 border-radius: 12px;
                 padding: 20px;
                 margin-bottom: 25px;
@@ -4643,7 +4643,7 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
                     ${finalPhase.qualified.map(player => `
                         <span style="
-                            background: linear-gradient(135deg, #28a745, #20c997);
+                            background: linear-gradient(135deg, #087227, #017f5d);
                             color: white;
                             padding: 8px 15px;
                             border-radius: 20px;
@@ -4691,7 +4691,7 @@ function generateRoundsHTML(dayNumber, division, rounds, currentRound) {
         html += `
             <div class="manual-round" style="
                 background: ${isCurrentRound ? 'linear-gradient(135deg, #fff3cd, #ffeaa7)' : 'white'};
-                border: 3px solid ${isCurrentRound ? '#ffc107' : isCompleted ? '#28a745' : '#6c757d'};
+                border: 3px solid ${isCurrentRound ? '#ffc107' : isCompleted ? '#087227' : '#5b636b'};
                 border-radius: 15px;
                 padding: 25px;
                 margin-bottom: 25px;
@@ -4705,14 +4705,14 @@ function generateRoundsHTML(dayNumber, division, rounds, currentRound) {
                 ">
                     <h4 style="
                         margin: 0;
-                        color: ${isCurrentRound ? '#856404' : isCompleted ? '#155724' : '#495057'};
+                        color: ${isCurrentRound ? '#6c5103' : isCompleted ? '#155724' : '#495057'};
                         font-size: 1.3rem;
                     ">
                         ${getRoundIcon(roundName)} ${roundName}
                     </h4>
                     <div style="
                         background: ${isCompleted ? '#d4edda' : isCurrentRound ? '#fff3cd' : '#f8f9fa'};
-                        color: ${isCompleted ? '#155724' : isCurrentRound ? '#856404' : '#6c757d'};
+                        color: ${isCompleted ? '#155724' : isCurrentRound ? '#6c5103' : '#5b636b'};
                         padding: 8px 15px;
                         border-radius: 20px;
                         font-weight: bold;
@@ -4763,7 +4763,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
     return `
         <div class="manual-match ${match.isCollapsed ? 'collapsed' : ''}" style="
             background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
-            border: 2px solid ${isCompleted ? '#28a745' : isActive ? '#007bff' : '#6c757d'};
+            border: 2px solid ${isCompleted ? '#087227' : isActive ? '#096cde' : '#5b636b'};
             border-radius: 10px;
             padding: 10px;
             position: relative;
@@ -4773,11 +4773,11 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     title="Supprimer ce match"
                     style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
                            width: 18px; height: 18px; z-index: 10;
-                           background: #e74c3c; color: white; border: none; border-radius: 50%;
+                           background: #d03427; color: white; border: none; border-radius: 50%;
                            font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
-                           opacity: 0.6; transition: opacity 0.2s;"
+                           opacity: 0.9; transition: opacity 0.2s;"
                     onmouseover="this.style.opacity='1'"
-                    onmouseout="this.style.opacity='0.6'">×</button>` : ''}
+                    onmouseout="this.style.opacity='0.9'">×</button>` : ''}
             <div class="match-header" ${isCompleted && !match.isBye ? `onclick="toggleMatchCollapse(this.parentElement)"` : ''} style="
                 display: flex;
                 justify-content: space-between;
@@ -4787,7 +4787,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
             ">
                 <div class="match-title" style="
                     font-size: 13px;
-                    color: #6c757d;
+                    color: #5b636b;
                     font-weight: bold;
                 ">
                     Match ${match.position}${scoreDisplay}
@@ -4798,7 +4798,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     border-radius: 15px;
                     font-weight: bold;
                     background: ${isCompleted ? '#d4edda' : '#e2e3e5'};
-                    color: ${isCompleted ? '#155724' : '#6c757d'};
+                    color: ${isCompleted ? '#155724' : '#5b636b'};
                 ">
                     ${isCompleted ? 'Terminé ✅' : 'Qualifié ⚡'}
                 </div>` : ''}
@@ -4819,7 +4819,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
             ${match.isBye ? `
                 <div style="
                     text-align: center;
-                    color: #28a745;
+                    color: #087227;
                     font-style: italic;
                     padding: 10px;
                 ">
@@ -4836,7 +4836,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     ${window.showForfaitButtons ? 
                         `<input type="text" value="${match.player1}" 
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
-                                style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">`
+                                style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
                         : `<span class="player-name-left">${match.player1}</span>`}
                     <div class="score-center">
                         <input type="number"
@@ -4844,30 +4844,30 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                                placeholder="0"
                                onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
                                onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
-                        <span style="color: #6c757d; font-weight: bold; font-size: 14px;">-</span>
+                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #096cde; border-radius: 4px; font-size: 16px; font-weight: bold;">
+                        <span style="color: #5b636b; font-weight: bold; font-size: 14px;">-</span>
                         <input type="number"
                                value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
                                placeholder="0"
                                onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
                                onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #007bff; border-radius: 4px; font-size: 16px; font-weight: bold;">
+                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #096cde; border-radius: 4px; font-size: 16px; font-weight: bold;">
                     </div>
                     ${window.showForfaitButtons ? 
                         `<input type="text" value="${match.player2}" 
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player2', this.value)"
-                                style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">`
+                                style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
                         : `<span class="player-name-right">${match.player2}</span>`}
                 </div>
 
                 ${!isCompleted && window.showForfaitButtons ? `
                 <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: 8px;">
                     <button onclick="declareForfait('final', ${dayNumber}, ${division}, '${match.id}', 'player1')"
-                            style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                            style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
                                    border: none; border-radius: 3px; cursor: pointer;"
                             title="Forfait ${match.player1}">F1</button>
                     <button onclick="declareForfait('final', ${dayNumber}, ${division}, '${match.id}', 'player2')"
-                            style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                            style="padding: 2px 6px; font-size: 10px; background: #d03427; color: white;
                                    border: none; border-radius: 3px; cursor: pointer;"
                             title="Forfait ${match.player2}">F2</button>
                 </div>
@@ -4879,7 +4879,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     border-radius: 6px;
                     font-weight: bold;
                     background: ${isCompleted ? (match.forfaitBy ? '#fff3cd' : (match.winner === null ? '#e3f2fd' : '#d4edda')) : '#fff3cd'};
-                    color: ${isCompleted ? (match.forfaitBy ? '#856404' : (match.winner === null ? '#1565c0' : '#155724')) : '#856404'};
+                    color: ${isCompleted ? (match.forfaitBy ? '#6c5103' : (match.winner === null ? '#1565c0' : '#155724')) : '#6c5103'};
                     font-size: 13px;
                 ">
                     ${isCompleted && match.winner ? `${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} gagne${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2})` :
@@ -4900,7 +4900,7 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
                 padding: 15px;
                 background: #f8f9fa;
                 border-radius: 8px;
-                color: #6c757d;
+                color: #5b636b;
                 font-style: italic;
             ">
                 Terminez tous les matchs pour passer au tour suivant
@@ -4913,7 +4913,7 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
             <div style="
                 text-align: center;
                 padding: 20px;
-                background: linear-gradient(135deg, #28a745, #20c997);
+                background: linear-gradient(135deg, #087227, #017f5d);
                 color: white;
                 border-radius: 10px;
                 font-weight: bold;
@@ -4932,7 +4932,7 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
                 background: linear-gradient(135deg, #ffc107, #ffca2c);
                 border-radius: 10px;
             ">
-                <div style="color: #856404; font-weight: bold; margin-bottom: 15px; font-size: 16px;">
+                <div style="color: #6c5103; font-weight: bold; margin-bottom: 15px; font-size: 16px;">
                     ✅ Demi-finales terminées !
                 </div>
                 <div style="display: flex; gap: 15px; justify-content: center; margin-top: 15px;">
@@ -4977,7 +4977,7 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
                     background: linear-gradient(135deg, #ffc107, #ffca2c);
                     border-radius: 10px;
                 ">
-                    <div style="color: #856404; font-weight: bold; margin-bottom: 15px; font-size: 16px;">
+                    <div style="color: #6c5103; font-weight: bold; margin-bottom: 15px; font-size: 16px;">
                         ✅ Tous les matchs sont terminés !
                     </div>
                     <div style="margin-bottom: 15px; color: #6c5f00;">
@@ -4985,7 +4985,7 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
                     </div>
                     <button class="btn" onclick="generateNextManualRound(${dayNumber}, ${division}, '${roundName}')" 
                             style="
-                        background: linear-gradient(135deg, #28a745, #20c997);
+                        background: linear-gradient(135deg, #087227, #017f5d);
                         color: white;
                         border: none;
                         padding: 12px 25px;
@@ -5421,7 +5421,7 @@ function generatePodiumHTML(finalPhase) {
     return `
         <div class="podium-container" style="
             background: linear-gradient(135deg, #ffd700, #ffed4e);
-            border: 3px solid #f39c12;
+            border: 3px solid #8b5700;
             border-radius: 20px;
             padding: 30px;
             margin-top: 30px;
@@ -5507,7 +5507,7 @@ function generatePodiumHTML(finalPhase) {
                     padding: 10px 20px;
                     border-radius: 10px;
                     margin-top: 15px;
-                    color: #6c757d;
+                    color: #5b636b;
                 ">
                     <strong>4ème place :</strong> ${quatrieme}
                 </div>
@@ -5516,7 +5516,7 @@ function generatePodiumHTML(finalPhase) {
             <div style="
                 margin-top: 20px;
                 font-size: 14px;
-                color: #856404;
+                color: #6c5103;
                 font-style: italic;
             ">
                 🎉 Félicitations à tous les participants ! 🎉
@@ -5880,11 +5880,11 @@ if (originalCheckPoolsCompletion) {
             const dayData = championship.days[dayNumber];
             if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.enabled) {
                 finalButton.innerHTML = '🔄 Gérer Phase Finale';
-                finalButton.style.background = 'linear-gradient(135deg, #16a085, #1abc9c)';
+                finalButton.style.background = 'linear-gradient(135deg, #057e68, #057e68)';
                 finalButton.onclick = () => updateManualFinalPhaseDisplay(dayNumber);
             } else {
                 finalButton.innerHTML = '🏆 Phase Finale Manuelle';
-                finalButton.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
+                finalButton.style.background = 'linear-gradient(135deg, #8b5700, #9c5003)';
             }
         }
         
@@ -5940,7 +5940,7 @@ function addScoreInputStyles() {
             font-weight: bold !important;
             text-align: center !important;
             padding: 8px 4px !important;
-            border: 2px solid #007bff !important;
+            border: 2px solid #096cde !important;
             border-radius: 6px !important;
             background: white !important;
         }
@@ -5976,7 +5976,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
     return `
         <div class="manual-match" style="
             background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
-            border: 2px solid ${isCompleted ? '#28a745' : isActive ? '#007bff' : '#6c757d'};
+            border: 2px solid ${isCompleted ? '#087227' : isActive ? '#096cde' : '#5b636b'};
             border-radius: 10px;
             padding: 15px;
             ${match.isBye ? 'opacity: 0.7;' : ''}
@@ -5989,7 +5989,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
             ">
                 <div class="match-title" style="
                     font-size: 13px;
-                    color: #6c757d;
+                    color: #5b636b;
                     font-weight: bold;
                 ">
                     Match ${match.position}
@@ -6000,7 +6000,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                     border-radius: 15px;
                     font-weight: bold;
                     background: ${isCompleted ? '#d4edda' : isActive ? '#cce5ff' : '#e2e3e5'};
-                    color: ${isCompleted ? '#155724' : isActive ? '#004085' : '#6c757d'};
+                    color: ${isCompleted ? '#155724' : isActive ? '#004085' : '#5b636b'};
                 ">
                     ${isCompleted ? 'Terminé ✅' : match.isBye ? 'Qualifié ⚡' : 'En cours 🎯'}
                 </div>
@@ -6020,7 +6020,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
             ${match.isBye ? `
                 <div style="
                     text-align: center;
-                    color: #28a745;
+                    color: #087227;
                     font-style: italic;
                     padding: 10px;
                 ">
@@ -6037,7 +6037,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                     ${window.showForfaitButtons ? 
                         `<input type="text" value="${match.player1}" 
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
-                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">`
+                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
                         : `<span class="player-name-left">${match.player1}</span>`}
                     <div class="score-center">
                         <input type="number"
@@ -6051,7 +6051,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                                    width: 55px;
                                    height: 45px;
                                    text-align: center;
-                                   border: 2px solid #007bff;
+                                   border: 2px solid #096cde;
                                    border-radius: 8px;
                                    font-size: 18px;
                                    font-weight: bold;
@@ -6070,7 +6070,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                                    width: 55px;
                                    height: 45px;
                                    text-align: center;
-                                   border: 2px solid #007bff;
+                                   border: 2px solid #096cde;
                                    border-radius: 8px;
                                    font-size: 18px;
                                    font-weight: bold;
@@ -6081,7 +6081,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                     ${window.showForfaitButtons ? 
                         `<input type="text" value="${match.player2}" 
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player2', this.value)"
-                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">`
+                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
                         : `<span class="player-name-right">${match.player2}</span>`}
                 </div>
                 
@@ -6091,7 +6091,7 @@ function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) 
                     border-radius: 6px;
                     font-weight: bold;
                     background: ${isCompleted ? '#d4edda' : '#fff3cd'};
-                    color: ${isCompleted ? '#155724' : '#856404'};
+                    color: ${isCompleted ? '#155724' : '#6c5103'};
                     font-size: 14px;
                 ">
                     ${isCompleted && match.winner ? `🏆 ${match.winner} gagne` : 'En attente des scores'}
@@ -6223,7 +6223,7 @@ function showMatchVerificationModal(dayNumber, issues, targetCount) {
             " onclick="event.stopPropagation()">
                 <!-- En-tête -->
                 <div style="
-                    background: linear-gradient(135deg, #e74c3c, #c0392b);
+                    background: linear-gradient(135deg, #d03427, #c0392b);
                     color: white;
                     padding: 20px;
                     border-radius: 15px 15px 0 0;
@@ -6264,7 +6264,7 @@ function showMatchVerificationModal(dayNumber, issues, targetCount) {
                             background: #f8f9fa;
                             border-radius: 10px;
                             padding: 15px;
-                            border-left: 4px solid #e74c3c;
+                            border-left: 4px solid #d03427;
                         ">
                             <h4 style="margin: 0 0 12px 0; color: #2c3e50; font-size: 16px;">
                                 Division ${pool.division} - Poule ${pool.poolName}
@@ -6283,11 +6283,11 @@ function showMatchVerificationModal(dayNumber, issues, targetCount) {
                                         <tr style="background: ${idx % 2 === 0 ? 'white' : '#f8f9fa'};">
                                             <td style="padding: 8px; font-weight: 600;">${p.player}</td>
                                             <td style="padding: 8px; text-align: center;">
-                                                <span style="color: #e74c3c; font-weight: bold;">${p.currentCount}</span>
+                                                <span style="color: #d03427; font-weight: bold;">${p.currentCount}</span>
                                             </td>
                                             <td style="padding: 8px; text-align: center;">${p.targetCount}</td>
                                             <td style="padding: 8px; text-align: center;">
-                                                <span style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">
+                                                <span style="background: #d03427; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">
                                                     -${p.missing}
                                                 </span>
                                             </td>
@@ -6304,14 +6304,14 @@ function showMatchVerificationModal(dayNumber, issues, targetCount) {
                         padding: 15px;
                         background: linear-gradient(135deg, #fff3cd, #ffeaa7);
                         border-radius: 10px;
-                        border-left: 4px solid #f39c12;
+                        border-left: 4px solid #8b5700;
                     ">
-                        <div style="font-weight: 600; color: #856404; margin-bottom: 10px;">
+                        <div style="font-weight: 600; color: #6c5103; margin-bottom: 10px;">
                             💡 Actions possibles :
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <button onclick="addMissingMatches(${dayNumber}, ${targetCount})" style="
-                                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                                background: linear-gradient(135deg, #017239, #017239);
                                 color: white;
                                 border: none;
                                 padding: 10px 20px;
@@ -6323,7 +6323,7 @@ function showMatchVerificationModal(dayNumber, issues, targetCount) {
                                 ➕ Ajouter les matchs manquants automatiquement
                             </button>
                             <button onclick="openModulateFromVerification(${dayNumber})" style="
-                                background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                                background: linear-gradient(135deg, #9654b1, #8e44ad);
                                 color: white;
                                 border: none;
                                 padding: 10px 20px;
@@ -6335,7 +6335,7 @@ function showMatchVerificationModal(dayNumber, issues, targetCount) {
                                 ⚖️ Moduler les pools
                             </button>
                             <button onclick="closeMatchVerificationModal()" style="
-                                background: #95a5a6;
+                                background: #566566;
                                 color: white;
                                 border: none;
                                 padding: 10px 20px;
@@ -6346,7 +6346,7 @@ function showMatchVerificationModal(dayNumber, issues, targetCount) {
                                 Fermer
                             </button>
                         </div>
-                        <div style="margin-top: 10px; font-size: 11px; color: #856404;">
+                        <div style="margin-top: 10px; font-size: 11px; color: #6c5103;">
                             <p style="margin: 0 0 5px 0;">
                                 ℹ️ <strong>Ajouter les matchs</strong> : Crée des matchs supplémentaires entre les joueurs qui en ont le moins.
                             </p>
@@ -6733,7 +6733,7 @@ function showModulatePoolsModal(dayNumber) {
                     <h4 style="margin: 0; color: #2c3e50;">
                         ${division === '1' ? '🥇' : division === '2' ? '🥈' : '🥉'} Division ${division}
                     </h4>
-                    <div style="font-size: 12px; color: #6c757d;">
+                    <div style="font-size: 12px; color: #5b636b;">
                         ${data.totalPlayers} joueurs • ${poolCount} poules • ~${avgSize}/poule
                     </div>
                 </div>
@@ -6747,7 +6747,7 @@ function showModulatePoolsModal(dayNumber) {
                         return `
                             <div style="
                                 background: ${isProblematic ? '#f8d7da' : 'white'};
-                                border: 2px solid ${isProblematic ? '#e74c3c' : '#3498db'};
+                                border: 2px solid ${isProblematic ? '#d03427' : '#09679e'};
                                 border-radius: 8px;
                                 padding: 12px;
                                 position: relative;
@@ -6756,7 +6756,7 @@ function showModulatePoolsModal(dayNumber) {
                                     position: absolute;
                                     top: -8px;
                                     right: -8px;
-                                    background: #e74c3c;
+                                    background: #d03427;
                                     color: white;
                                     font-size: 10px;
                                     padding: 2px 8px;
@@ -6764,32 +6764,32 @@ function showModulatePoolsModal(dayNumber) {
                                     font-weight: bold;
                                 ">⚠️ Bloquée</div>` : ''}
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <strong style="color: ${isProblematic ? '#e74c3c' : '#3498db'};">Poule ${poolName}</strong>
-                                    <span style="font-size: 11px; color: #6c757d;">${poolInfo.matchCount}/${maxPossibleMatches} matchs</span>
+                                    <strong style="color: ${isProblematic ? '#d03427' : '#09679e'};">Poule ${poolName}</strong>
+                                    <span style="font-size: 11px; color: #5b636b;">${poolInfo.matchCount}/${maxPossibleMatches} matchs</span>
                                 </div>
                                 <div style="font-size: 13px; color: #2c3e50;">
                                     ${realPlayerCount} joueurs
                                 </div>
-                                <div style="font-size: 11px; color: #6c757d; margin-top: 5px;">
+                                <div style="font-size: 11px; color: #5b636b; margin-top: 5px;">
                                     ${poolInfo.pool.filter(p => !p.startsWith('BYE')).slice(0, 3).join(', ')}${realPlayerCount > 3 ? '...' : ''}
                                 </div>
                                 ${isProblematic 
-                                    ? `<div style="font-size: 11px; color: #e74c3c; margin-top: 8px; font-weight: 600;">⚠️ ${poolInfo.playersNeedingMatches} joueur${poolInfo.playersNeedingMatches > 1 ? 's' : ''} manque de matchs</div>` 
-                                    : `<div style="font-size: 11px; color: #27ae60; margin-top: 8px;">✓ OK</div>`}
+                                    ? `<div style="font-size: 11px; color: #d03427; margin-top: 8px; font-weight: 600;">⚠️ ${poolInfo.playersNeedingMatches} joueur${poolInfo.playersNeedingMatches > 1 ? 's' : ''} manque de matchs</div>` 
+                                    : `<div style="font-size: 11px; color: #017239; margin-top: 8px;">✓ OK</div>`}
                             </div>
                         `;
                     }).join('')}
                 </div>
                 
                 ${data.hasProblematicPools ? `
-                <div style="background: #f8d7da; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                <div style="background: #f8d7da; border-left: 4px solid #d03427; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
                     <strong style="color: #721c24;">⚠️ ${data.poolsWithIssues.filter(p => p.hasIssue).length} poule(s) bloquée(s) détectée(s)</strong>
                     <p style="margin: 5px 0 0 0; font-size: 12px; color: #721c24;">
                         Les poules marquées d'un badge rouge ont épuisé toutes les paires possibles mais des joueurs n'ont pas assez de matchs.
                         Objectif: ${targetMatches} matchs/joueur.
                     </p>
                 </div>
-                ` : `<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                ` : `<div style="background: #d4edda; border-left: 4px solid #087227; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
                     <strong style="color: #155724;">✓ Aucune poule bloquée</strong>
                     <p style="margin: 5px 0 0 0; font-size: 12px; color: #155724;">
                         Toutes les poules peuvent générer les matchs nécessaires ou ont déjà assez de matchs.
@@ -6801,7 +6801,7 @@ function showModulatePoolsModal(dayNumber) {
                     <div style="font-weight: 600; color: #2c3e50; margin-bottom: 10px;">
                         🎚️ Définir les tailles des ${poolCount} poules :
                     </div>
-                    <div style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: #5b636b; margin-bottom: 12px;">
                         Total: ${data.totalPlayers} joueurs à répartir
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px;">
@@ -6812,7 +6812,7 @@ function showModulatePoolsModal(dayNumber) {
                             return `
                                 <div style="
                                     background: ${isProblematic ? '#f8d7da' : '#f8f9fa'};
-                                    border: 2px solid ${isProblematic ? '#e74c3c' : '#dee2e6'};
+                                    border: 2px solid ${isProblematic ? '#d03427' : '#dee2e6'};
                                     border-radius: 8px;
                                     padding: 10px;
                                     position: relative;
@@ -6821,14 +6821,14 @@ function showModulatePoolsModal(dayNumber) {
                                         position: absolute;
                                         top: -8px;
                                         right: -8px;
-                                        background: #e74c3c;
+                                        background: #d03427;
                                         color: white;
                                         font-size: 10px;
                                         padding: 2px 8px;
                                         border-radius: 10px;
                                         font-weight: bold;
                                     ">⚠️ Bloquée</div>` : ''}
-                                    <label style="font-size: 12px; font-weight: 600; color: ${isProblematic ? '#e74c3c' : '#495057'}; display: block; margin-bottom: 5px;">
+                                    <label style="font-size: 12px; font-weight: 600; color: ${isProblematic ? '#d03427' : '#495057'}; display: block; margin-bottom: 5px;">
                                         Poule ${poolName}
                                     </label>
                                     <input type="number" 
@@ -6839,15 +6839,15 @@ function showModulatePoolsModal(dayNumber) {
                                            style="
                                                width: 100%;
                                                padding: 8px;
-                                               border: 2px solid ${isProblematic ? '#e74c3c' : '#3498db'};
+                                               border: 2px solid ${isProblematic ? '#d03427' : '#09679e'};
                                                border-radius: 4px;
                                                font-size: 14px;
                                                text-align: center;
                                                background: ${isProblematic ? '#fff5f5' : 'white'};
-                                               color: ${isProblematic ? '#e74c3c' : '#2c3e50'};
+                                               color: ${isProblematic ? '#d03427' : '#2c3e50'};
                                                font-weight: ${isProblematic ? 'bold' : 'normal'};
                                            ">
-                                    <div style="font-size: 11px; color: ${isProblematic ? '#e74c3c' : '#6c757d'}; margin-top: 4px; font-weight: ${isProblematic ? '600' : 'normal'};">
+                                    <div style="font-size: 11px; color: ${isProblematic ? '#d03427' : '#5b636b'}; margin-top: 4px; font-weight: ${isProblematic ? '600' : 'normal'};">
                                         ${isProblematic ? '⚠️ Toutes les paires tirées' : 'joueurs'}
                                     </div>
                                 </div>
@@ -6891,7 +6891,7 @@ function showModulatePoolsModal(dayNumber) {
             " onclick="event.stopPropagation()">
                 <!-- En-tête -->
                 <div style="
-                    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                    background: linear-gradient(135deg, #9654b1, #8e44ad);
                     color: white;
                     padding: 20px;
                     border-radius: 15px 15px 0 0;
@@ -6927,14 +6927,14 @@ function showModulatePoolsModal(dayNumber) {
                 <!-- Corps -->
                 <div style="padding: 20px;">
                     ${hasAnyIssues 
-                        ? `<div style="background: #f8d7da; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                        ? `<div style="background: #f8d7da; border-left: 4px solid #d03427; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
                             <strong style="color: #721c24;">⚠️ ${problematicPools.size} poule${problematicPools.size > 1 ? 's' : ''} bloquée${problematicPools.size > 1 ? 's' : ''} détectée${problematicPools.size > 1 ? 's' : ''}</strong>
                             <p style="margin: 5px 0 0 0; font-size: 13px; color: #721c24;">
                                 Les poules marquées d'un ⚠️ ont épuisé toutes les paires possibles. 
                                 Modifiez les tailles pour permettre de nouvelles combinaisons (le nombre de poules reste identique).
                             </p>
                         </div>`
-                        : `<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                        : `<div style="background: #d4edda; border-left: 4px solid #087227; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
                             <strong style="color: #155724;">✓ Aucune poule bloquée détectée</strong>
                             <p style="margin: 5px 0 0 0; font-size: 13px; color: #155724;">
                                 Toutes les poules peuvent encore générer des matchs. Vous pouvez quand même moduler les tailles si nécessaire.
@@ -6957,7 +6957,7 @@ function showModulatePoolsModal(dayNumber) {
                         justify-content: center;
                     ">
                         <button onclick="applyPoolRedistribution(${dayNumber})" style="
-                            background: linear-gradient(135deg, #27ae60, #2ecc71);
+                            background: linear-gradient(135deg, #017239, #017239);
                             color: white;
                             border: none;
                             padding: 12px 25px;
@@ -6969,7 +6969,7 @@ function showModulatePoolsModal(dayNumber) {
                             ✓ Appliquer la redistribution
                         </button>
                         <button onclick="closeModulatePoolsModal()" style="
-                            background: #95a5a6;
+                            background: #566566;
                             color: white;
                             border: none;
                             padding: 12px 25px;
@@ -7009,15 +7009,15 @@ function generatePoolSizeValidationStatus(totalPlayers, sizes) {
     const diff = totalPlayers - currentTotal;
     
     if (diff === 0) {
-        return `<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 10px; border-radius: 4px; font-size: 13px; color: #155724;">
+        return `<div style="background: #d4edda; border-left: 4px solid #087227; padding: 10px; border-radius: 4px; font-size: 13px; color: #155724;">
             <strong>✓ Distribution valide</strong> - Total: ${currentTotal}/${totalPlayers} joueurs
         </div>`;
     } else if (diff > 0) {
-        return `<div style="background: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; border-radius: 4px; font-size: 13px; color: #856404;">
+        return `<div style="background: #fff3cd; border-left: 4px solid #8b5700; padding: 10px; border-radius: 4px; font-size: 13px; color: #6c5103;">
             <strong>⚠️ Distribution incomplète</strong> - Il manque ${diff} joueur${diff > 1 ? 's' : ''} (total: ${currentTotal}/${totalPlayers})
         </div>`;
     } else {
-        return `<div style="background: #f8d7da; border-left: 4px solid #e74c3c; padding: 10px; border-radius: 4px; font-size: 13px; color: #721c24;">
+        return `<div style="background: #f8d7da; border-left: 4px solid #d03427; padding: 10px; border-radius: 4px; font-size: 13px; color: #721c24;">
             <strong>⚠️ Trop de joueurs</strong> - Retirez ${Math.abs(diff)} joueur${Math.abs(diff) > 1 ? 's' : ''} (total: ${currentTotal}/${totalPlayers})
         </div>`;
     }
@@ -7050,7 +7050,7 @@ function validatePoolSizes(dayNumber, division) {
         const warningEl = document.getElementById(`redistribution-warning-div${division}-${dayNumber}`);
         if (targetMatches > maxPossibleMatches) {
             warningEl.innerHTML = `
-                <div style="background: #f8d7da; border-left: 4px solid #e74c3c; padding: 10px; border-radius: 4px; font-size: 12px; color: #721c24;">
+                <div style="background: #f8d7da; border-left: 4px solid #d03427; padding: 10px; border-radius: 4px; font-size: 12px; color: #721c24;">
                     <strong>⚠️ Attention :</strong> La plus petite poule a ${minSize} joueurs, donc le maximum de matchs par joueur sera de ${maxPossibleMatches} 
                     (vous demandez ${targetMatches}).
                 </div>

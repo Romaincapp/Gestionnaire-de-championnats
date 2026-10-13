@@ -197,7 +197,7 @@
         
         return `
             <!-- Sélecteur de type de journée (compact et intelligent) -->
-            <div class="day-type-selector" id="day-type-selector-${dayNumber}" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 8px 12px; background: ${isChrono ? 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)' : 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)'}; border-radius: 8px; color: white;">
+            <div class="day-type-selector" id="day-type-selector-${dayNumber}" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 8px 12px; background: ${isChrono ? 'linear-gradient(135deg, #9c5003 0%, #bd4c05 100%)' : 'linear-gradient(135deg, #09679e 0%, #08689d 100%)'}; border-radius: 8px; color: white;">
                 <span style="font-size: 13px; font-weight: 500;">${isChrono ? '⏱️' : '🎾'} Mode:</span>
                 <select id="day-type-select-${dayNumber}" onchange="handleDayTypeChange(${dayNumber}, this.value)" style="padding: 6px 10px; border-radius: 6px; border: none; font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.95); color: #333; min-width: 140px;">
                     <option value="championship" ${!isChrono ? 'selected' : ''}>🏆 Matchs</option>
@@ -220,23 +220,23 @@
                 <!-- Ligne unique de boutons -->
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <!-- Ajout joueurs -->
-                    <button onclick="showAddPlayerModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                    <button onclick="showAddPlayerModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #087f58; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
                         ➕ Joueurs
                     </button>
                     <!-- « 📥 Importer joueurs » est dans la fenêtre « ➕ Joueurs » (section 📥) -->
                     <!-- Plus de boutons « 📋 J1, J2… » : copier les joueurs d'une journée précédente
                          se fait dans « ➕ Joueurs » → « 📥 Reprendre d'une autre journée » -->
                     <!-- Actions matchs -->
-                    <button onclick="showMatchGenerationModal(${dayNumber})" ${dayActionAttrs(dayNumber, 'players')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="showMatchGenerationModal(${dayNumber})" ${dayActionAttrs(dayNumber, 'players')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #236bdd; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🎯 Matchs
                     </button>
-                    <button onclick="togglePoolSection(${dayNumber})" id="show-pool-btn-${dayNumber}" ${dayActionAttrs(dayNumber, 'players|poolsOn')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="togglePoolSection(${dayNumber})" id="show-pool-btn-${dayNumber}" ${dayActionAttrs(dayNumber, 'players|poolsOn')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #9c6304; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🏊 Poules
                     </button>
-                    <button onclick="updateRankingsForDay(${dayNumber})" ${dayActionAttrs(dayNumber, 'matches')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="updateRankingsForDay(${dayNumber})" ${dayActionAttrs(dayNumber, 'matches')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #804fe8; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🏆 Classements
                     </button>
-                    <button onclick="showByeManagementModal(${dayNumber})" ${dayActionAttrs(dayNumber, 'players')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="showByeManagementModal(${dayNumber})" ${dayActionAttrs(dayNumber, 'players')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #077d71; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         👋 BYE
                     </button>
                     <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-${dayNumber}" ${dayActionAttrs(dayNumber, 'matches|unlocked')} title="${forfaitToggleButtonState(window.showForfaitButtons).title}" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: ${forfaitToggleButtonState(window.showForfaitButtons).background}; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
@@ -256,7 +256,7 @@
                     <button onclick="showPrintOptionsModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Options d'impression (feuilles de match, Boccia, récaps)">
                         🖨️
                     </button>
-                    <button onclick="clearDayData(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="clearDayData(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🗑️
                     </button>
                 </div>
@@ -275,8 +275,8 @@
                     <div class="rankings-toggle" style="flex-wrap: wrap; gap: 5px;">
                         <button class="toggle-btn active" onclick="showRankingsForDay(${dayNumber}, 'points')">Par Points</button>
                         <button class="toggle-btn" onclick="showRankingsForDay(${dayNumber}, 'winrate')">Par % Victoires</button>
-                        <button class="toggle-btn" onclick="openRankingInNewWindow(${dayNumber})" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">📺 Afficher</button>
-                        <button class="toggle-btn" onclick="showCompleteDayRanking(${dayNumber})" style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white;">📊 Complet</button>
+                        <button class="toggle-btn" onclick="openRankingInNewWindow(${dayNumber})" style="background: linear-gradient(135deg, #9654b1, #8e44ad); color: white;">📺 Afficher</button>
+                        <button class="toggle-btn" onclick="showCompleteDayRanking(${dayNumber})" style="background: linear-gradient(135deg, #017239, #017239); color: white;">📊 Complet</button>
                     </div>
                 </div>
                 <div id="rankingsContent-${dayNumber}"></div>
@@ -290,10 +290,10 @@
             
             <!-- SECTION CHRONO (affichée si type = chrono) -->
             <div id="chrono-section-${dayNumber}" style="display: ${isChrono ? 'block' : 'none'};">
-                <div class="section" style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);">
+                <div class="section" style="background: linear-gradient(135deg, #057e68 0%, #057e68 100%);">
                     <h2 style="color: white;">⏱️ Gestion des Courses - Journée ${dayNumber}</h2>
                     <div id="chrono-content-${dayNumber}" style="background: white; padding: 20px; border-radius: 10px; margin-top: 15px;">
-                        ${isChrono && typeof renderChronoInterfaceForDay === 'function' ? renderChronoInterfaceForDay(dayNumber) : '<p style="text-align: center; color: #7f8c8d;">Chargement de l\'interface chrono...</p>'}
+                        ${isChrono && typeof renderChronoInterfaceForDay === 'function' ? renderChronoInterfaceForDay(dayNumber) : '<p style="text-align: center; color: #586566;">Chargement de l\'interface chrono...</p>'}
                     </div>
                 </div>
             </div>
@@ -440,9 +440,9 @@
         
         if (selector) {
             if (isChrono) {
-                selector.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
+                selector.style.background = 'linear-gradient(135deg, #9c5003 0%, #bd4c05 100%)';
             } else {
-                selector.style.background = 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
+                selector.style.background = 'linear-gradient(135deg, #09679e 0%, #08689d 100%)';
             }
         }
         
@@ -512,10 +512,10 @@
 
         if (selector) {
             if (type === 'chrono') {
-                selector.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
+                selector.style.background = 'linear-gradient(135deg, #9c5003 0%, #bd4c05 100%)';
                 if (label) label.textContent = 'Chronométrage';
             } else {
-                selector.style.background = 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
+                selector.style.background = 'linear-gradient(135deg, #09679e 0%, #08689d 100%)';
                 if (label) label.textContent = 'Championnat';
             }
         }
@@ -607,7 +607,7 @@
         if (typeof renderMultisportRanking === 'function') {
             container.innerHTML = renderMultisportRanking();
         } else {
-            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Module multisport non chargé</p>';
+            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #586566;">Module multisport non chargé</p>';
         }
     }
     window.updateMultisportRanking = updateMultisportRanking;
@@ -671,16 +671,16 @@
             * { box-sizing: border-box; }
             body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
             .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
-            h1 { text-align: center; color: #667eea; margin: 0; }
-            .update-time { text-align: center; font-size: 0.85em; color: #7f8c8d; margin-top: 5px; margin-bottom: 10px; }
+            h1 { text-align: center; color: #5267d0; margin: 0; }
+            .update-time { text-align: center; font-size: 0.85em; color: #586566; margin-top: 5px; margin-bottom: 10px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; }
+            th { background: linear-gradient(135deg, #5267d0, #764ba2); color: white; padding: 15px; }
             td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; }
             tr:nth-child(1) { background: linear-gradient(135deg, #ffd700, #ffed4a); }
             tr:nth-child(2) { background: linear-gradient(135deg, #c0c0c0, #e0e0e0); }
-            tr:nth-child(3) { background: linear-gradient(135deg, #cd7f32, #daa520); color: white; }
-            .total { font-size: 1.3em; font-weight: bold; color: #27ae60; }
-            .club-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 11px; padding: 3px 10px; border-radius: 12px; }
+            tr:nth-child(3) { background: linear-gradient(135deg, #cd7f32, #daa520); color: #1a2b3c; }
+            .total { font-size: 1.3em; font-weight: bold; color: #017239; }
+            .club-badge { background: linear-gradient(135deg, #5267d0, #764ba2); color: white; font-size: 11px; padding: 3px 10px; border-radius: 12px; }
             .auto-refresh {
                 position: fixed; bottom: 20px; left: 20px; background: rgba(255,255,255,0.95);
                 padding: 10px 15px; border-radius: 25px; color: #2c3e50; font-size: 13px;
@@ -688,7 +688,7 @@
             }
             .refresh-btn {
                 position: fixed; bottom: 20px; right: 20px;
-                background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none;
+                background: linear-gradient(135deg, #017239, #017239); color: white; border: none;
                 padding: 15px 25px; border-radius: 50px; font-size: 16px; cursor: pointer;
                 box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
             }
@@ -1391,7 +1391,7 @@
             const playersCount = championship.days[dayNumber]?.players[i]?.length || 0;
             html += `
                 <div class="division division-${i}">
-                    <h3>${medal} Division ${i} <span id="player-count-${dayNumber}-${i}" style="font-size: 14px; color: #7f8c8d; font-weight: normal;">(${playersCount} joueur${playersCount !== 1 ? 's' : ''})</span></h3>
+                    <h3>${medal} Division ${i} <span id="player-count-${dayNumber}-${i}" style="font-size: 14px; color: #586566; font-weight: normal;">(${playersCount} joueur${playersCount !== 1 ? 's' : ''})</span></h3>
                     <div class="players-list-header" onclick="togglePlayersList(${dayNumber}, ${i})" style="
                         padding: 8px 12px;
                         background: linear-gradient(135deg, #ecf0f1, #d5dbdb);
@@ -1404,7 +1404,7 @@
                         transition: all 0.3s ease;
                     ">
                         <span style="font-weight: 600; color: #2c3e50; font-size: 13px;">👥 Liste des joueurs</span>
-                        <span id="players-list-toggle-${dayNumber}-${i}" style="font-size: 12px; color: #7f8c8d;">▼</span>
+                        <span id="players-list-toggle-${dayNumber}-${i}" style="font-size: 12px; color: #586566;">▼</span>
                     </div>
                     <div class="players-list-container active" id="players-list-container-${dayNumber}-${i}" style="transition: all 0.3s ease;">
                         <div class="players-list" id="division${dayNumber}-${i}-players">

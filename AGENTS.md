@@ -465,6 +465,8 @@ npm run test:darkmode       # Audit du mode sombre : contraste de ~50 écrans/fe
 npm run test:darkmode:mobile # Même audit sur un téléphone (390×844, tactile) + contenu qui déborde de l'écran
 npm run test:a11y            # Clavier : chaque fenêtre (dialog, titre, focus, Tab, Échap) et éléments cliquables
 npm run test:a11y:mobile     # Même contrôle sur un téléphone
+npm run test:contrast        # Contraste du texte en mode clair (WCAG AA 4,5:1) sur les mêmes écrans
+npm run test:contrast:mobile # Même mesure sur un téléphone
 ```
 
 La CI (`.github/workflows/tests.yml`) lance `npm ci` + `npm test` sur chaque PR et
@@ -489,6 +491,19 @@ d'affichage, et ajouter une ligne à `screens` (`tests/e2e/screens.js`, partagé
 ouvre les mêmes écrans et vérifie, sur chaque fenêtre : `role="dialog"`, titre, focus dedans,
 Tab qui y reste, Échap qui la ferme ; sur chaque écran : aucun `[onclick]` inatteignable au
 clavier. Rapport dans `tests/e2e/output-a11y/`.
+
+**Couleurs et contraste** : `styles.css` commence par la palette (`:root`, variables
+`--color-primary`, `--color-success`, `--color-danger`, `--color-warning`, `--color-orange`,
+`--color-accent`, `--color-text`, `--color-text-muted`, `--color-focus`). Toute couleur qui
+porte du texte blanc ou sert de texte sur fond clair atteint 4,5:1 (WCAG AA). Les gabarits JS
+utilisent les mêmes valeurs en hexadécimal (`#09679e` bleu, `#017239` vert, `#d03427` rouge,
+`#8b5700` ocre, `#9c5003` orange, `#586566` gris secondaire…) : les fenêtres `window.open`
+(impression, second écran) ne chargent pas `styles.css`. Les anciennes teintes vives
+(`#3498db`, `#2ecc71`, `#f39c12`, `#7f8c8d`…) sont refusées par
+`tests/unit/colorPalette.test.js`, qui indique la remplaçante. `npm run test:contrast`
+(`tests/e2e/contrast.e2e.js`) mesure chaque texte affiché contre son fond réel (dégradés
+compris, arrêt le plus défavorable) sur les écrans de `screens.js` ; rapport regroupé par
+couple de couleurs dans `tests/e2e/output-contrast/`.
 
 Quand tu corriges un bug, ajoute un test de non-régression dans `tests/unit/` (voir `clearDayData.test.js` ou `interclubRanking.test.js`). Quand tu supprimes du code que tu penses mort, lance `npm test` avant ET après — une suite verte avant qui reste verte après est la vraie preuve que la suppression est sûre, pas juste le grep qui l'a justifiée. Voir `CONTRIBUTING.md` et `tests/helpers/loadApp.js` pour le détail.
 

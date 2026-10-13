@@ -179,7 +179,7 @@
         var club = getPlayerClub(player);
         
         if (club) {
-            return name + ' <span style="color: #7f8c8d; font-size: 0.85em;">(' + escapeHtml(club) + ')</span>';
+            return name + ' <span style="color: #586566; font-size: 0.85em;">(' + escapeHtml(club) + ')</span>';
         }
         return name;
     }
@@ -294,7 +294,7 @@
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeClubManagementModal()">' +
             '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
             '<h3>🏢 Gestion des Clubs</h3>' +
-            '<p style="color: #7f8c8d; font-size: 13px; margin-bottom: 15px;">Gérez la liste des clubs disponibles pour l\'attribution des joueurs.</p>' +
+            '<p style="color: #586566; font-size: 13px; margin-bottom: 15px;">Gérez la liste des clubs disponibles pour l\'attribution des joueurs.</p>' +
             '<div style="margin: 15px 0;">' +
             '<div style="display: flex; gap: 10px;">' +
             '<input type="text" id="newClubName" style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ddd;" placeholder="Nom du nouveau club">' +
@@ -313,7 +313,7 @@
 
     function renderClubsList(clubs) {
         if (clubs.length === 0) {
-            return '<p style="color: #7f8c8d; text-align: center;">Aucun club défini</p>';
+            return '<p style="color: #586566; text-align: center;">Aucun club défini</p>';
         }
         
         var html = '<ul style="list-style: none; padding: 0; margin: 0;">';
@@ -387,7 +387,7 @@
             '<div style="display: flex; gap: 8px;">' +
             '<input type="text" id="apmNewClubName" class="apm-field" style="margin-bottom: 0;" placeholder="Nom du club" ' +
             'onkeypress="if(event.key===\'Enter\')addClubFromAddPlayerModal()">' +
-            '<button onclick="addClubFromAddPlayerModal()" class="apm-primary" style="width: auto; background: #6366f1; white-space: nowrap;">+ Ajouter</button>' +
+            '<button onclick="addClubFromAddPlayerModal()" class="apm-primary" style="width: auto; background: #5c5de8; white-space: nowrap;">+ Ajouter</button>' +
             '</div>';
         if (clubs.length === 0) {
             html += '<p class="apm-hint" style="text-align: center; margin-top: 12px;">Aucun club pour l\'instant</p>';

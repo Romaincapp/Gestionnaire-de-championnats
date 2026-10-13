@@ -1,3 +1,24 @@
+/* ============================================
+   PALETTE (rôles) — chaque couleur qui porte du texte blanc, ou qui sert de
+   texte sur blanc / fonds clairs teintés, atteint au moins 4,5:1 (WCAG AA ;
+   contrôle : npm run test:contrast, garde-fou : tests/unit/colorPalette.test.js).
+   Les gabarits JS utilisent les mêmes valeurs en hexadécimal : les fenêtres
+   d'impression et le second écran (window.open) ne chargent pas ce fichier.
+   ============================================ */
+:root {
+    --color-primary: #09679e;           /* bleu : actions principales, liens, onglet actif */
+    --color-primary-strong: #08689d;    /* bleu foncé (2e couleur des dégradés bleus) */
+    --color-success: #017239;           /* vert : terminé, validé, ajout */
+    --color-danger: #d03427;            /* rouge : suppression, erreur, DNS */
+    --color-warning: #8b5700;           /* ocre : attention, classement */
+    --color-orange: #9c5003;            /* orange brûlé : rangs, mode Poules */
+    --color-accent: #5267d0;            /* indigo : multisport */
+    --color-accent-strong: #764ba2;     /* violet (2e couleur des dégradés multisport) */
+    --color-text: #2c3e50;              /* texte principal */
+    --color-text-muted: #586566;        /* texte secondaire */
+    --color-focus: #1d6fb8;             /* contour de focus clavier */
+}
+
 body   * {
             margin: 0;
             padding: 0;
@@ -23,7 +44,7 @@ body   * {
         }
         
         .header {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
+            background: linear-gradient(135deg, var(--color-text), #34495e);
             color: white;
             padding: 25px;
             text-align: center;
@@ -51,7 +72,7 @@ body   * {
         
         .tab {
             background: #ecf0f1;
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             border: none;
             padding: 12px 20px;
             cursor: pointer;
@@ -64,7 +85,7 @@ body   * {
         
         .tab.active {
             background: white;
-            color: #2c3e50;
+            color: var(--color-text);
             box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
         }
         
@@ -74,18 +95,18 @@ body   * {
         }
         
         .tab.general-ranking {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
+            background: linear-gradient(135deg, var(--color-warning), var(--color-orange));
             color: white;
             font-weight: 600;
         }
         
         .tab.general-ranking.active {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
+            background: linear-gradient(135deg, var(--color-warning), var(--color-orange));
             transform: scale(1.02);
         }
         
         .add-day-btn {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            background: linear-gradient(135deg, var(--color-success), var(--color-success));
             color: white;
             border: none;
             padding: 12px 16px;
@@ -108,7 +129,7 @@ body   * {
             position: absolute;
             top: 2px;
             right: 2px;
-            background: #e74c3c;
+            background: var(--color-danger);
             color: white;
             border: none;
             width: 20px;
@@ -146,11 +167,11 @@ body   * {
             background: #f8f9fa;
             border-radius: 12px;
             padding: 15px;
-            border-left: 5px solid #3498db;
+            border-left: 5px solid var(--color-primary);
         }
         
         .section h2 {
-            color: #2c3e50;
+            color: var(--color-text);
             margin-bottom: 20px;
             font-size: 1.5rem;
             display: flex;
@@ -175,7 +196,7 @@ body   * {
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #1d6fb8;
+            border-color: var(--color-focus);
             box-shadow: 0 0 0 3px rgba(29, 111, 184, 0.45);
         }
 
@@ -183,7 +204,7 @@ body   * {
            éléments cliquables rendus accessibles par a11y.iife.js). Les champs
            gardent leur bordure + halo ci-dessus. */
         :focus-visible {
-            outline: 3px solid #1d6fb8;
+            outline: 3px solid var(--color-focus);
             outline-offset: 2px;
         }
         input:focus-visible, select:focus-visible, textarea:focus-visible {
@@ -195,7 +216,7 @@ body   * {
         }
         
         .btn {
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
             color: white;
             border: none;
             cursor: pointer;
@@ -210,15 +231,15 @@ body   * {
         }
         
         .btn-success {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            background: linear-gradient(135deg, var(--color-success), var(--color-success));
         }
         
         .btn-danger {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            background: linear-gradient(135deg, var(--color-danger), #c0392b);
         }
         
         .btn-warning {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
+            background: linear-gradient(135deg, var(--color-warning), var(--color-orange));
         }
         
         .import-section {
@@ -229,7 +250,7 @@ body   * {
             padding: 20px;
             background: white;
             border-radius: 8px;
-            border: 2px dashed #3498db;
+            border: 2px dashed var(--color-primary);
         }
         
         .import-box {
@@ -241,7 +262,7 @@ body   * {
         
         .import-box h4 {
             margin-bottom: 15px;
-            color: #2c3e50;
+            color: var(--color-text);
         }
         
         .file-input-wrapper {
@@ -257,7 +278,7 @@ body   * {
         
         .file-input-label {
             display: block;
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
             color: white;
             padding: 12px 18px;
             border-radius: 8px;
@@ -277,13 +298,13 @@ body   * {
             padding: 20px;
             background: linear-gradient(135deg, #d5f4e6, #a8e6cf);
             border-radius: 12px;
-            border-left: 5px solid #27ae60;
+            border-left: 5px solid var(--color-success);
         }
         
         .guide-title {
             font-weight: bold;
             font-size: 1.1rem;
-            color: #2c3e50;
+            color: var(--color-text);
             margin-bottom: 10px;
             display: flex;
             align-items: center;
@@ -301,7 +322,7 @@ body   * {
             align-items: center;
             gap: 10px;
             font-size: 14px;
-            color: #2c3e50;
+            color: var(--color-text);
         }
         
         .key {
@@ -350,9 +371,9 @@ body   * {
             border-top: 4px solid;
         }
         
-        .division-1 { border-top-color: #e74c3c; }
-        .division-2 { border-top-color: #f39c12; }
-        .division-3 { border-top-color: #27ae60; }
+        .division-1 { border-top-color: var(--color-danger); }
+        .division-2 { border-top-color: var(--color-warning); }
+        .division-3 { border-top-color: var(--color-success); }
         
         .division h3 {
             margin-bottom: 20px;
@@ -372,7 +393,7 @@ body   * {
         }
         
         .player-tag {
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
             color: white;
             padding: 8px 15px;
             border-radius: 20px;
@@ -392,7 +413,7 @@ body   * {
 
         /* Style pour les joueurs ayant au moins un match BYE */
         .player-tag.player-has-bye {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
+            background: linear-gradient(135deg, var(--color-warning), var(--color-orange));
             box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
         }
 
@@ -408,7 +429,7 @@ body   * {
         }
 
         .edit-player {
-            background: rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.25);
             border: none;
             color: white;
             border-radius: 50%;
@@ -424,12 +445,13 @@ body   * {
         }
 
         .edit-player:hover {
-            background: rgba(255,255,255,0.5);
+            background: rgba(0,0,0,0.4);
             transform: scale(1.1);
         }
 
         .remove-player {
-            background: rgba(255,255,255,0.3);
+            /* foncé plutôt que voile blanc : le × blanc reste lisible (≥ 4,5:1) sur la carte bleue */
+            background: rgba(0,0,0,0.25);
             border: none;
             color: white;
             border-radius: 50%;
@@ -445,7 +467,7 @@ body   * {
         }
 
         .remove-player:hover {
-            background: rgba(255,255,255,0.5);
+            background: rgba(0,0,0,0.4);
             transform: scale(1.1);
         }
 
@@ -458,12 +480,12 @@ body   * {
             padding: 8px 2px;
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-radius: 8px;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid var(--color-primary);
         }
         
         .court-title {
             font-weight: bold;
-            color: #2c3e50;
+            color: var(--color-text);
             margin-bottom: 6px;
             font-size: 15px;
             padding: 0 8px;
@@ -483,7 +505,7 @@ body   * {
             align-items: center;
             margin-bottom: 10px;
             padding: 10px 12px;
-            background: linear-gradient(135deg, #34495e, #2c3e50);
+            background: linear-gradient(135deg, #34495e, var(--color-text));
             color: white;
             border-radius: 8px;
             cursor: pointer;
@@ -555,7 +577,7 @@ body   * {
 
         .player-names {
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--color-text);
             font-size: 14px;
             white-space: nowrap;
             overflow: hidden;
@@ -582,7 +604,7 @@ body   * {
         
         .status-completed {
             background: #a8e6cf;
-            color: #00b894;
+            color: #096b54;
         }
         
         .sets-container {
@@ -614,7 +636,7 @@ body   * {
         
         .set-label {
             font-size: 12px;
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             margin-bottom: 5px;
             font-weight: bold;
         }
@@ -650,7 +672,7 @@ body   * {
             overflow: hidden;
             text-overflow: ellipsis;
             font-size: 13px !important;
-            color: #2c3e50;
+            color: var(--color-text);
             font-weight: 600;
         }
         
@@ -693,7 +715,7 @@ body   * {
         }
         
         .score-input:focus {
-            border-color: #1d6fb8;
+            border-color: var(--color-focus);
             box-shadow: 0 0 0 3px rgba(29, 111, 184, 0.45);
             outline: none;
             background: #f8f9fa;
@@ -702,14 +724,14 @@ body   * {
         
         .set-disabled .score-input {
             background: #f0f0f0;
-            color: #999;
+            color: #626262;
             cursor: not-allowed;
             border-color: #ccc;
         }
         
         .score-separator {
             font-weight: bold;
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             font-size: 14px;
             margin: 0 2px;
         }
@@ -730,12 +752,12 @@ body   * {
         
         .result-completed {
             background: #a8e6cf;
-            color: #00b894;
+            color: #096b54;
         }
         
         .result-forfait {
             background: #fff3cd;
-            color: #856404;
+            color: #6c5103;
         }
         
         .result-draw {
@@ -768,7 +790,7 @@ body   * {
             content: "▼";
             margin-left: 6px;
             font-size: 11px;
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             transition: transform 0.3s ease;
         }
 
@@ -784,7 +806,7 @@ body   * {
         .collapse-score {
             font-size: 12px;
             font-weight: bold;
-            color: #27ae60;
+            color: var(--color-success);
             margin-left: 4px;
             margin-right: 4px;
         }
@@ -824,7 +846,7 @@ body   * {
             content: "▼";
             margin-left: 6px;
             font-size: 11px;
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             transition: transform 0.3s ease;
         }
 
@@ -865,7 +887,7 @@ body   * {
         
         .rankings-title {
             font-size: 1.5rem;
-            color: #2c3e50;
+            color: var(--color-text);
             font-weight: bold;
         }
         
@@ -876,9 +898,9 @@ body   * {
         
         .toggle-btn {
             padding: 8px 16px;
-            border: 2px solid #3498db;
+            border: 2px solid var(--color-primary);
             background: white;
-            color: #3498db;
+            color: var(--color-primary);
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -886,7 +908,7 @@ body   * {
         }
         
         .toggle-btn.active {
-            background: #3498db;
+            background: var(--color-primary);
             color: white;
         }
         
@@ -906,7 +928,7 @@ body   * {
         .ranking-table th {
             background: #f8f9fa;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--color-text);
         }
         
         .ranking-table tr:hover {
@@ -915,27 +937,27 @@ body   * {
         
         .rank-position {
             font-weight: bold;
-            color: #3498db;
+            color: var(--color-primary);
             width: 50px;
         }
         
-        .rank-gold { color: #f39c12; }
-        .rank-silver { color: #95a5a6; }
-        .rank-bronze { color: #e67e22; }
+        .rank-gold { color: var(--color-warning); }
+        .rank-silver { color: #566566; }
+        .rank-bronze { color: var(--color-orange); }
         
         .stat-value {
             font-weight: bold;
-            color: #2c3e50;
+            color: var(--color-text);
         }
         
         /* CLASSEMENT GÉNÉRAL */
         .general-ranking-section {
             background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            border: 2px solid #f39c12;
+            border: 2px solid var(--color-warning);
         }
         
         .general-ranking-section h2 {
-            color: #e67e22;
+            color: var(--color-orange);
         }
         
         .general-stats {
@@ -950,19 +972,19 @@ body   * {
             padding: 20px;
             border-radius: 12px;
             text-align: center;
-            border-left: 4px solid #f39c12;
+            border-left: 4px solid var(--color-warning);
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
         
         .general-stat-number {
             font-size: 2.5rem;
             font-weight: bold;
-            color: #f39c12;
+            color: var(--color-warning);
             margin-bottom: 5px;
         }
         
         .general-stat-label {
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             font-weight: 500;
         }
         
@@ -999,12 +1021,12 @@ body   * {
         
         .player-name-title {
             font-size: 1.8rem;
-            color: #2c3e50;
+            color: var(--color-text);
             font-weight: bold;
         }
         
         .close-modal {
-            background: #e74c3c;
+            background: var(--color-danger);
             color: white;
             border: none;
             width: 35px;
@@ -1027,18 +1049,18 @@ body   * {
             padding: 20px;
             border-radius: 10px;
             text-align: center;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid var(--color-primary);
         }
         
         .overview-number {
             font-size: 2rem;
             font-weight: bold;
-            color: #3498db;
+            color: var(--color-primary);
             margin-bottom: 5px;
         }
         
         .overview-label {
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             font-size: 14px;
         }
         
@@ -1058,18 +1080,18 @@ body   * {
         }
         
         .history-match.win {
-            border-left: 4px solid #27ae60;
+            border-left: 4px solid var(--color-success);
             background: #d5f4e6;
         }
         
         .history-match.loss {
-            border-left: 4px solid #e74c3c;
+            border-left: 4px solid var(--color-danger);
             background: #ffeaa7;
         }
         
         .history-opponent {
             font-weight: bold;
-            color: #2c3e50;
+            color: var(--color-text);
         }
         
         .history-score {
@@ -1078,7 +1100,7 @@ body   * {
         
         .stats {
             margin-top: 30px;
-            background: #2c3e50;
+            background: var(--color-text);
             color: white;
             padding: 25px;
             border-radius: 12px;
@@ -1111,7 +1133,7 @@ body   * {
         
         .empty-state {
             text-align: center;
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             font-style: italic;
             padding: 30px;
         }
@@ -1141,7 +1163,7 @@ body   * {
         
         .modal h3 {
             margin-bottom: 20px;
-            color: #2c3e50;
+            color: var(--color-text);
         }
         
         .modal-buttons {
@@ -1165,15 +1187,15 @@ body   * {
         }
         
         .notification.success {
-            background: #27ae60;
+            background: var(--color-success);
         }
         
         .notification.info {
-            background: #3498db;
+            background: var(--color-primary);
         }
         
         .notification.warning {
-            background: #f39c12;
+            background: var(--color-warning);
         }
         
         @keyframes slideInRight {
@@ -1376,11 +1398,11 @@ body   * {
             transition: transform 0.3s ease;
             display: inline-block;
             font-weight: bold;
-            color: #3498db;
+            color: var(--color-primary);
         }
 
         h2:hover .collapse-icon {
-            color: #2980b9;
+            color: var(--color-primary-strong);
         }
 
 
@@ -1390,13 +1412,13 @@ body   * {
 
 /* Onglet Multisport */
 .tab.multisport-ranking {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
     color: white;
     font-weight: 600;
 }
 
 .tab.multisport-ranking.active {
-    background: linear-gradient(135deg, #764ba2, #667eea);
+    background: linear-gradient(135deg, var(--color-accent-strong), var(--color-accent));
     transform: scale(1.02);
 }
 
@@ -1427,12 +1449,12 @@ body   * {
 }
 
 .day-type-badge.championship {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
     color: white;
 }
 
 .day-type-badge.chrono {
-    background: linear-gradient(135deg, #e67e22, #d35400);
+    background: linear-gradient(135deg, var(--color-orange), #bd4c05);
     color: white;
 }
 
@@ -1467,7 +1489,7 @@ body   * {
 }
 
 .multisport-ranking th {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
     color: white;
     padding: 15px 10px;
     font-weight: 600;
@@ -1494,7 +1516,15 @@ body   * {
 
 .multisport-ranking .rank-3 {
     background: linear-gradient(135deg, #cd7f32, #daa520) !important;
-    color: white;
+    color: #1a2b3c;
+}
+
+/* Podium : fond or / argent / bronze → texte de la ligne en encre foncée (les
+   couleurs d'accent des cellules y descendent sous 4,5:1), sauf pastilles à fond propre. */
+body:not(.dark-mode) .multisport-ranking .rank-1 *:not([style*="background"]),
+body:not(.dark-mode) .multisport-ranking .rank-2 *:not([style*="background"]),
+body:not(.dark-mode) .multisport-ranking .rank-3 *:not([style*="background"]) {
+    color: #1a2b3c !important;
 }
 
 /* Interface Chrono par journée */
@@ -1689,7 +1719,7 @@ body.dark-mode .tabs-container {
 
 body.dark-mode .tab {
     background: #2a2a3d;
-    color: #999;
+    color: #626262;
 }
 
 body.dark-mode .tab.active {
@@ -1710,7 +1740,7 @@ body.dark-mode .content {
 
 body.dark-mode .section {
     background: #252538;
-    border-left-color: #3498db;
+    border-left-color: var(--color-primary);
 }
 
 body.dark-mode .section h2 {
@@ -1769,7 +1799,7 @@ body.dark-mode .tour-section {
 
 body.dark-mode .court-container {
     background: linear-gradient(135deg, #2a2a3d, #1e1e2f);
-    border-left-color: #3498db;
+    border-left-color: var(--color-primary);
 }
 
 body.dark-mode .court-title {
@@ -1806,7 +1836,7 @@ body.dark-mode .court-container .player-name-right {
 }
 
 body.dark-mode .score-separator {
-    color: #999;
+    color: #626262;
 }
 
 body.dark-mode .set-label {
@@ -1873,7 +1903,7 @@ body.dark-mode .ranking-table tr:hover {
 /* General ranking */
 body.dark-mode .general-ranking-section {
     background: linear-gradient(135deg, #3d3520, #2e2815);
-    border-color: #f39c12;
+    border-color: var(--color-warning);
 }
 
 body.dark-mode .general-stat-card {
@@ -1884,7 +1914,7 @@ body.dark-mode .general-stat-card {
 /* Import section */
 body.dark-mode .import-section {
     background: #252538;
-    border-color: #3498db;
+    border-color: var(--color-primary);
 }
 
 body.dark-mode .import-box {
@@ -1898,7 +1928,7 @@ body.dark-mode .import-box h4 {
 /* Guide box */
 body.dark-mode .guide-box {
     background: linear-gradient(135deg, #1a3328, #1a2e25);
-    border-left-color: #27ae60;
+    border-left-color: var(--color-success);
 }
 
 body.dark-mode .guide-title {
@@ -1947,12 +1977,12 @@ body.dark-mode .history-match {
 
 body.dark-mode .history-match.win {
     background: #1a3328;
-    border-left-color: #27ae60;
+    border-left-color: var(--color-success);
 }
 
 body.dark-mode .history-match.loss {
     background: #3d2020;
-    border-left-color: #e74c3c;
+    border-left-color: var(--color-danger);
 }
 
 body.dark-mode .history-opponent {
@@ -1972,12 +2002,12 @@ body.dark-mode .empty-state {
 /* Toggle buttons */
 body.dark-mode .toggle-btn {
     background: #252538;
-    color: #3498db;
-    border-color: #3498db;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 body.dark-mode .toggle-btn.active {
-    background: #3498db;
+    background: var(--color-primary);
     color: white;
 }
 
@@ -2118,7 +2148,7 @@ body.dark-mode .notification {
 
 .app-search-bar input.no-result {
     background: #ffe5e5;
-    border-color: #e74c3c;
+    border-color: var(--color-danger);
 }
 
 .app-search-count {
@@ -2212,8 +2242,8 @@ body.dark-mode .app-search-bar button {
 .apm-icon { font-size: 22px; line-height: 1; }
 .apm-titles { display: flex; flex-direction: column; flex: 1; }
 .apm-title { font-size: 15px; font-weight: 600; }
-.apm-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
-.apm-chevron { color: #94a3b8; font-size: 12px; transition: transform 0.2s ease; }
+.apm-sub { font-size: 12px; color: #54637a; margin-top: 2px; }
+.apm-chevron { color: #566376; font-size: 12px; transition: transform 0.2s ease; }
 .apm-section.open .apm-chevron { transform: rotate(90deg); }
 .apm-section.open .apm-header { background: #eef2ff; }
 .apm-body { display: none; padding: 14px; }
@@ -2243,11 +2273,11 @@ body.dark-mode .app-search-bar button {
     font-size: 14px;
     font-weight: 600;
 }
-.apm-or { text-align: center; color: #94a3b8; font-size: 12px; margin: 10px 0; }
-.apm-hint { font-size: 12px; color: #64748b; margin: 6px 0 0; }
+.apm-or { text-align: center; color: #566376; font-size: 12px; margin: 10px 0; }
+.apm-hint { font-size: 12px; color: #54637a; margin: 6px 0 0; }
 .apm-club-list { list-style: none; padding: 0; margin: 10px 0 0; max-height: 220px; overflow-y: auto; }
 .apm-club-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; border-bottom: 1px solid #eef2f7; font-size: 14px; }
-.apm-club-list button { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; padding: 3px 8px; }
+.apm-club-list button { background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; padding: 3px 8px; }
 
 body.dark-mode .apm-section { background: #1e1e2e; border-color: #333; }
 body.dark-mode .apm-header { background: #252538; color: #e0e0e0; }

@@ -156,7 +156,7 @@
                     <div class="overview-label">Défaites</div>
                 </div>
                 <div class="overview-card" style="background: #fff3cd;">
-                    <div class="overview-number" style="color: #856404;">${stats.forfeits || 0}</div>
+                    <div class="overview-number" style="color: #6c5103;">${stats.forfeits || 0}</div>
                     <div class="overview-label">Forfaits</div>
                 </div>
                 <div class="overview-card">
@@ -218,7 +218,7 @@
                 <div class="history-match ${resultClass}" style="background: ${bgColor};">
                     <div>
                         <div class="history-opponent">VS ${opponent}</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Tour ${match.tour || '-'}</div>
+                        <div style="font-size: 12px; color: #586566;">Tour ${match.tour || '-'}</div>
                     </div>
                     <div class="history-score">
                         ${resultText} ${setsScore}
@@ -229,7 +229,7 @@
         
         const playerMatches = document.getElementById('playerMatches');
         if (playerMatches) {
-            playerMatches.innerHTML = matchesHtml || '<p style="text-align: center; color: #7f8c8d;">Aucun match joué</p>';
+            playerMatches.innerHTML = matchesHtml || '<p style="text-align: center; color: #586566;">Aucun match joué</p>';
         }
         
         const playerModal = document.getElementById('playerModal');
@@ -523,21 +523,21 @@ if (sortBy === 'points') {
 
 playerStats.forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
-    const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
-                      player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+    const diffStyle = player.goalAveragePoints > 0 ? 'color: #017239; font-weight: bold;' :
+                      player.goalAveragePoints < 0 ? 'color: #d03427; font-weight: bold;' : '';
     const escapedPlayerName = escapeForOnclick(player.name);
 
     // Style de la colonne Étape selon le résultat
     let stageStyle = '';
     let stageIcon = '';
     if (player.stageLabel === 'Champion') {
-        stageStyle = 'background: linear-gradient(135deg, #ffd700, #ffed4e); color: #856404; font-weight: bold;';
+        stageStyle = 'background: linear-gradient(135deg, #ffd700, #ffed4e); color: #6c5103; font-weight: bold;';
         stageIcon = '🏆 ';
     } else if (player.stageLabel === 'Finaliste') {
         stageStyle = 'background: linear-gradient(135deg, #c0c0c0, #e8e8e8); color: #555; font-weight: bold;';
         stageIcon = '🥈 ';
     } else if (player.stageLabel === '3ème') {
-        stageStyle = 'background: linear-gradient(135deg, #cd7f32, #daa520); color: white; font-weight: bold;';
+        stageStyle = 'background: linear-gradient(135deg, #cd7f32, #daa520); color: #1a2b3c; font-weight: bold;';
         stageIcon = '🥉 ';
     } else if (player.stageLabel === '4ème') {
         stageStyle = 'background: #f0e68c; color: #666; font-weight: 500;';
@@ -641,7 +641,7 @@ playerStats.forEach((player, index) => {
 
             rankingHtml += `
     <div style="margin-bottom: 40px;">
-        <h3 style="color: #e67e22; margin-bottom: 20px; font-size: 1.4rem;">
+        <h3 style="color: #9c5003; margin-bottom: 20px; font-size: 1.4rem;">
             ${division === 1 ? '🥇' : division === 2 ? '🥈' : '🥉'} Division ${division} - Classement Général
         </h3>
         <table class="ranking-table">
@@ -663,21 +663,21 @@ playerStats.forEach((player, index) => {
 
 generalRanking.divisions[division].forEach((player, index) => {
     const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
-    const diffStyle = player.goalAveragePoints > 0 ? 'color: #27ae60; font-weight: bold;' :
-                      player.goalAveragePoints < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+    const diffStyle = player.goalAveragePoints > 0 ? 'color: #017239; font-weight: bold;' :
+                      player.goalAveragePoints < 0 ? 'color: #d03427; font-weight: bold;' : '';
     const escapedPlayerName = escapeForOnclick(player.name);
 
     // Style de la colonne Étape selon le résultat
     let stageStyle = '';
     let stageIcon = '';
     if (player.stageLabel === 'Champion') {
-        stageStyle = 'background: linear-gradient(135deg, #ffd700, #ffed4e); color: #856404; font-weight: bold;';
+        stageStyle = 'background: linear-gradient(135deg, #ffd700, #ffed4e); color: #6c5103; font-weight: bold;';
         stageIcon = '🏆 ';
     } else if (player.stageLabel === 'Finaliste') {
         stageStyle = 'background: linear-gradient(135deg, #c0c0c0, #e8e8e8); color: #555; font-weight: bold;';
         stageIcon = '🥈 ';
     } else if (player.stageLabel === '3ème') {
-        stageStyle = 'background: linear-gradient(135deg, #cd7f32, #daa520); color: white; font-weight: bold;';
+        stageStyle = 'background: linear-gradient(135deg, #cd7f32, #daa520); color: #1a2b3c; font-weight: bold;';
         stageIcon = '🥉 ';
     } else if (player.stageLabel === '4ème') {
         stageStyle = 'background: #f0e68c; color: #666; font-weight: 500;';
@@ -1103,7 +1103,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                     <div class="overview-label">Défaites</div>
                 </div>
                 <div class="overview-card" style="background: #fff3cd;">
-                    <div class="overview-number" style="color: #856404;">${totals.totalForfaits}</div>
+                    <div class="overview-number" style="color: #6c5103;">${totals.totalForfaits}</div>
                     <div class="overview-label">Forfaits</div>
                 </div>
                 <div class="overview-card">
@@ -1154,11 +1154,11 @@ generalRanking.divisions[division].forEach((player, index) => {
                     align-items: center; 
                     justify-content: center;
                     font-size: 12px;
-                    color: #6c757d;
+                    color: #5b636b;
                     transition: transform 0.2s;
                 }
                 .day-title { font-weight: 600; color: #2c3e50; font-size: 14px; }
-                .day-stats { font-size: 12px; color: #6c757d; }
+                .day-stats { font-size: 12px; color: #5b636b; }
                 .day-points { 
                     font-weight: bold; 
                     font-size: 14px; 
@@ -1184,11 +1184,11 @@ generalRanking.divisions[division].forEach((player, index) => {
                     border-radius: 6px;
                     font-size: 13px;
                 }
-                .match-detail.win { border-left: 3px solid #28a745; }
+                .match-detail.win { border-left: 3px solid #087227; }
                 .match-detail.loss { border-left: 3px solid #dc3545; }
-                .match-detail.draw { border-left: 3px solid #6c757d; }
+                .match-detail.draw { border-left: 3px solid #5b636b; }
                 .match-detail.forfait { border-left: 3px solid #ffc107; }
-                .match-detail.pending { border-left: 3px solid #6c757d; opacity: 0.8; }
+                .match-detail.pending { border-left: 3px solid #5b636b; opacity: 0.8; }
                 .match-opponent { flex: 1; color: #495057; }
                 .match-opponent strong { color: #2c3e50; }
                 .match-score {
@@ -1209,7 +1209,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                     padding: 2px 6px;
                     border-radius: 10px;
                     background: #fff3cd;
-                    color: #856404;
+                    color: #6c5103;
                     margin-left: 6px;
                 }
             </style>
@@ -1223,7 +1223,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                     <div class="day-summary">
                         <div class="day-header" style="background: #fee; opacity: 0.8;">
                             <div class="day-header-left">
-                                <span style="color: #e74c3c;">⚠️</span>
+                                <span style="color: #d03427;">⚠️</span>
                                 <span class="day-title">Journée ${dayStats.day}</span>
                                 <span class="forfait-badge">FORFAIT</span>
                             </div>
@@ -1311,7 +1311,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                                 resultClass = 'pending';
                                 resultIcon = '⏳';
                                 scoreDisplay = `${playerScore || '-'}-${opponentScore || '-'}`;
-                                statusBadge = '<span style="font-size: 10px; color: #f39c12; margin-left: 6px;">en cours</span>';
+                                statusBadge = '<span style="font-size: 10px; color: #8b5700; margin-left: 6px;">en cours</span>';
                             } else {
                                 resultClass = 'pending';
                                 resultIcon = '📅';
@@ -1354,13 +1354,13 @@ generalRanking.divisions[division].forEach((player, index) => {
                                 <span class="day-title">Journée ${dayStats.day}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                ${dayStats.totalMatchesScheduled > dayStats.matchesPlayed ? `<span style="font-size: 11px; padding: 2px 8px; background: #fff3cd; color: #856404; border-radius: 10px;">⏳ ${dayStats.totalMatchesScheduled - dayStats.matchesPlayed} restant${dayStats.totalMatchesScheduled - dayStats.matchesPlayed > 1 ? 's' : ''}</span>` : ''}
+                                ${dayStats.totalMatchesScheduled > dayStats.matchesPlayed ? `<span style="font-size: 11px; padding: 2px 8px; background: #fff3cd; color: #6c5103; border-radius: 10px;">⏳ ${dayStats.totalMatchesScheduled - dayStats.matchesPlayed} restant${dayStats.totalMatchesScheduled - dayStats.matchesPlayed > 1 ? 's' : ''}</span>` : ''}
                                 <span class="day-stats">${dayStats.wins}V/${dayStats.draws || 0}N/${dayStats.losses}D/${dayStats.forfeits || 0}F${dayStats.totalMatchesScheduled > dayStats.matchesPlayed ? ` • ${dayStats.matchesPlayed}/${dayStats.totalMatchesScheduled}` : ` • ${dayStats.matchesPlayed}`}</span>
                                 <span class="day-points ${pointsClass}">${dayStats.totalPoints} pts</span>
                             </div>
                         </div>
                         <div class="day-matches" id="${matchesId}">
-                            ${matchesHtml || '<div style="padding: 10px; color: #6c757d; font-size: 12px;">Aucun match trouvé</div>'}
+                            ${matchesHtml || '<div style="padding: 10px; color: #5b636b; font-size: 12px;">Aucun match trouvé</div>'}
                         </div>
                     </div>
                 `;
@@ -1474,7 +1474,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                     font-size: 11px;
                     line-height: 1.5;
                     color: #2d3748;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #5267d0 0%, #764ba2 100%);
                     padding: 30px;
                     min-height: 100vh;
                 }
@@ -2324,9 +2324,9 @@ function showNameCheckModal() {
 
     let body;
     if (nameCheckGroups.length === 0) {
-        body = '<p style="color:#7f8c8d; text-align:center; padding:20px;">✅ Aucun nom similaire détecté. Les noms des joueurs semblent cohérents.</p>';
+        body = '<p style="color:#586566; text-align:center; padding:20px;">✅ Aucun nom similaire détecté. Les noms des joueurs semblent cohérents.</p>';
     } else {
-        body = '<p style="color:#7f8c8d; font-size:13px;">' + nameCheckGroups.length +
+        body = '<p style="color:#586566; font-size:13px;">' + nameCheckGroups.length +
             ' groupe(s) de noms très similaires détecté(s). Pour chaque ligne, vérifie le nom final suggéré (modifiable) puis clique sur Fusionner : toutes les variantes seront renommées dans toutes les journées.</p>';
 
         nameCheckGroups.forEach((group, gi) => {
@@ -2337,7 +2337,7 @@ function showNameCheckModal() {
 
             // Badge de confiance du groupe selon le score minimal entre variantes
             const score = group.minScore;
-            const badgeColor = score >= 85 ? '#27ae60' : score >= 65 ? '#e67e22' : '#e74c3c';
+            const badgeColor = score >= 85 ? '#017239' : score >= 65 ? '#9c5003' : '#d03427';
             const badgeLabel = score >= 85 ? 'similitude forte' : score >= 65 ? 'à vérifier' : 'incertain';
             const badgeHtml = '<div style="margin-bottom:6px;"><span style="background:' + badgeColor +
                 '; color:white; font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px;">🎯 ' +
@@ -2351,7 +2351,7 @@ function showNameCheckModal() {
                 if (mNorm !== suggestionNorm) {
                     const inclusion = isNameIncludedIn(suggestionNorm, mNorm) || isNameIncludedIn(mNorm, suggestionNorm);
                     const s = nameSimilarityScore(mNorm, suggestionNorm);
-                    scoreHtml = ' — <span style="color:' + (s >= 85 ? '#27ae60' : s >= 65 ? '#e67e22' : '#e74c3c') +
+                    scoreHtml = ' — <span style="color:' + (s >= 85 ? '#017239' : s >= 65 ? '#9c5003' : '#d03427') +
                         '; font-weight:600;">' + s + '%' + (inclusion ? ' (nom inclus, club ajouté ?)' : '') + '</span>';
                 }
                 return '<div style="font-size:12px; color:#555; padding:2px 0;">• <strong>' +
@@ -2363,7 +2363,7 @@ function showNameCheckModal() {
                 badgeHtml + variantsHtml +
                 '<div style="display:flex; gap:8px; align-items:center; margin-top:8px;">' +
                 '<input type="text" id="nameCheckInput-' + gi + '" value="' + escapeHtmlForNameCheck(suggestion) + '" ' +
-                'style="flex:1; padding:8px; border:1px solid #e67e22; border-radius:5px; box-sizing:border-box;">' +
+                'style="flex:1; padding:8px; border:1px solid #9c5003; border-radius:5px; box-sizing:border-box;">' +
                 '<button class="btn btn-warning" style="padding:8px 14px; font-size:13px; white-space:nowrap;" onclick="applyNameCheckMerge(' + gi + ')">🔁 Fusionner</button>' +
                 '</div></div>';
         });
@@ -2412,10 +2412,10 @@ function applyNameCheckMerge(groupIndex) {
     // Marquer la ligne comme traitée
     const groupEl = document.getElementById('nameCheckGroup-' + groupIndex);
     if (groupEl) {
-        groupEl.innerHTML = '<div style="color:#27ae60; font-weight:600; font-size:13px;">✅ Fusionné en « ' +
+        groupEl.innerHTML = '<div style="color:#017239; font-weight:600; font-size:13px;">✅ Fusionné en « ' +
             escapeHtmlForNameCheck(canonical) + ' » (' + changed + ' remplacement(s))</div>';
         groupEl.style.background = '#eafaf1';
-        groupEl.style.borderColor = '#27ae60';
+        groupEl.style.borderColor = '#017239';
     }
 
     showNotification(changed + ' remplacement(s) : noms fusionnés en « ' + canonical + ' »', 'success');

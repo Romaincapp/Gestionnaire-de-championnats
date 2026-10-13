@@ -13,6 +13,16 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎨 Textes lisibles partout (contraste)
+- Les boutons et bandeaux colorés (bleu, vert, rouge, orange, turquoise, violet) prennent une
+  teinte un peu plus foncée de la même couleur : le texte blanc y est désormais lisible
+  (au moins 4,5:1, norme d'accessibilité WCAG AA), même en plein jour dans une salle.
+- Textes gris secondaires, rangs orange, points et pourcentages verts ou bleus plus foncés.
+- Badge « Terminé » des matchs, petits boutons « × » des joueurs et des matchs, pastilles
+  sur les bandeaux de poules, en-tête « Total » et lignes du podium (or / argent / bronze)
+  du classement Multisport corrigés.
+- Mesuré écran par écran : 4 751 textes sous le seuil avant, 0 après.
+
 ### ⌨️ Fenêtres et boutons utilisables au clavier
 - **Échap ferme la fenêtre ouverte** (toutes, plus seulement 3), comme si on cliquait
   sur son bouton « × », « Fermer » ou « Annuler ». Avec deux fenêtres l'une sur l'autre,
