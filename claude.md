@@ -468,6 +468,7 @@ order).
 │   ├── search.iife.js       # In-page 🔍 search bar (CSS Custom Highlight API, never touches the DOM)
 │   ├── darkmode.iife.js     # Dark mode adapter: marks light inline colours (data-dm-bg/fg/bd) so styles.css darkens them — no display function needs to know about dark mode
 │   ├── mobile.iife.js       # Phone: tables wider than their space get class table-scroll-x (horizontal swipe) — narrow screens only
+│   ├── a11y.iife.js         # Keyboard: every shown dialog gets role=dialog, focus in/trap/restore, Escape → its own close button; [onclick] non-buttons get tabindex + Enter/Space
 │   └── init.iife.js         # App bootstrap, loaded last
 └── claude.md                 # This file
 ```

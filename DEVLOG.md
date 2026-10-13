@@ -33,6 +33,127 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Impeccable « polish » : finitions sans changer l'identité
+
+- **Contexte** : passe `polish` demandée après les P1/P2 ; captures ordinateur + téléphone des
+  écrans principaux pour juger du rendu réel.
+- **Fait** : `.btn` sans `text-transform: uppercase` / `letter-spacing` (casse unifiée) ;
+  `.app-search-toggle` sans le padding global des boutons (loupe centrée) ; en-tête plus compact
+  et libellé de type de journée masqué sous 768 px ; dégradé de l'en-tête du classement
+  Multisport porté par la rangée (`!important`, les gabarits posent un fond en ligne) ;
+  38 dégradés à deux arrêts identiques (issus de `colorize`) remplacés par une couleur pleine ;
+  dernier `opacity` sur texte (libellé de type de J1, `index.html`). Conservé volontairement :
+  bordures latérales épaisses (état des séries, identité des panneaux), émojis, palette.
+- **Fichiers/modules touchés** : `styles.css`, `index.html`, `src/*.iife.js` (dégradés)
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md — · TODO.md — · claude.md —
+
+### 2026-10-13 — P2 de l'audit Impeccable : opacité, annonces, animations, alert()
+
+- **Contexte** : P2 restants après le nouvel audit (12/20) et les libellés des champs.
+- **Fait** : (1) `test:contrast` compte l'opacité du texte : 465 textes sous le seuil révélés
+  (lignes atténuées par `opacity`, sous-titres blancs à 85-90 %) → opacités retirées ou
+  remplacées (couleur, bordure en pointillés pour les BYE, liseré pour les journées forfait) :
+  0 ; notifications incluses dans l'audit. (2) `announce()` + zones d'annonce permanentes ;
+  toasts aux couleurs de la palette. (3) `prefers-reduced-motion` : CSS + défilements JS
+  « smooth » neutralisés (`a11y.iife.js`). (4) `window.alert` remplacé par `appAlert`
+  (fenêtre de l'app non bloquante) ; `confirm`/`prompt` volontairement natifs (38 appels dont
+  la réponse est attendue de façon synchrone : les remplacer imposerait de réécrire chaque
+  enchaînement).
+- **Fichiers/modules touchés** : `src/notifications.iife.js`, `src/a11y.iife.js`, `styles.css`,
+  `index.html`, `src/{chrono,matches,multisport,pools,ranking,ui}.iife.js` (opacités),
+  `tests/e2e/contrast.e2e.js`, `tests/unit/notificationsLive.test.js` (nouveau),
+  `tests/unit/a11yKeyboard.test.js`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md — · claude.md —
+- **Suite possible** : relancer `audit` ; `polish` (bordures latérales épaisses, dégradés
+  devenus unis, cartes imbriquées).
+
+### 2026-10-13 — Nouvel audit Impeccable (12/20) puis libellés des champs
+
+- **Contexte** : audit relancé après les 3 P1 : 9/20 → 12/20 (accessibilité 2, perf 3, thème 2,
+  téléphone 3, cohérence 2 ; détecteur 147 → 59 constats). Plus gros manque restant : 2 469 champs
+  visibles sur 4 717 sans nom accessible (dont 2 214 cases de score, placeholder « 0 » seul).
+- **Fait** : `a11y.iife.js` nomme les champs sans libellé à partir du contexte (voir AGENTS.md
+  section 13 quinquies) ; `aria-label` explicite pour 2 champs que le contexte ne nomme pas
+  (fusion de noms, dossard en édition) ; `npm run test:a11y` signale désormais tout champ sans
+  nom : **2 469 → 0**.
+- **Fichiers/modules touchés** : `src/a11y.iife.js`, `src/ranking.iife.js`, `src/multisport.iife.js`,
+  `tests/unit/a11yKeyboard.test.js`, `tests/e2e/a11y.e2e.js`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md — · claude.md —
+- **Suite possible** : P2 de l'audit — textes blanc cassé à 90 % d'opacité à 4,3-4,4:1 (et
+  `test:contrast` qui ignore l'opacité du texte), `alert`/`confirm` natifs, `prefers-reduced-motion`,
+  notifications sans `aria-live` ; puis `polish`.
+
+### 2026-10-13 — Impeccable P1 « adapt » : cibles tactiles et texte minimum (via APEX)
+
+- **Contexte** : 3e et dernière correction P1 de l'audit Impeccable (cases de score 40×32,
+  textes 10 px). Les audits mode sombre lancés après `colorize` avaient aussi relevé 7 défauts,
+  corrigés ici d'abord.
+- **Fait** : (1) mode sombre : `darkmode.iife.js` ignorait le texte inséré après coup dans un
+  élément vide (libellé « - Journée N » de « Ajouter des joueurs ») → premier texte d'un élément
+  désormais revu, une seule fois (le chrono change ses textes 10×/s) ; podium Multisport en blanc
+  en mode sombre (cellules comprises). (2) nouvel audit `npm run test:touch` (téléphone, 48 écrans) :
+  **3 968 → 0** défauts. Section « TACTILE » de `styles.css` (`pointer: coarse`) : cibles ≥ 24 px,
+  cases de score 44 px / 16 px ; textes d'écran 10 px → 11 px (35 endroits, gabarits
+  d'impression exclus).
+- **Fichiers/modules touchés** : `styles.css`, `index.html`, `src/darkmode.iife.js`,
+  `src/{chrono,init,matches,multisport,players,pools,ranking,ui}.iife.js` (tailles de texte),
+  `tests/e2e/touch.e2e.js` (nouveau), `tests/unit/darkModeLateText.test.js` (nouveau),
+  `package.json`, `.gitignore`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ (Tests → Tactile) · TODO.md — · claude.md —
+- **Suite possible** : les 3 P1 de l'audit Impeccable sont faits ; relancer `audit` pour la
+  nouvelle note, puis P2 (`alert`/`confirm` natifs, `prefers-reduced-motion`) et `polish`.
+
+### 2026-10-13 — Impeccable P1 « colorize » : contraste WCAG AA en mode clair (via APEX)
+
+- **Contexte** : 2e correction P1 de l'audit Impeccable (texte blanc sur boutons/bandeaux à
+  2,1-3,8:1, gris secondaire `#7f8c8d` à 3,5:1). Méthode APEX comme pour `harden`.
+- **Fait** : nouvel audit navigateur `npm run test:contrast` (texte affiché vs fond réel, arrêt
+  le plus défavorable des dégradés, 48 écrans) : **4 751 → 0** textes sous le seuil. Teintes
+  remplacées partout par une version plus foncée de même ton (OKLCH, ≥ 5:1 avec le blanc ;
+  ≥ 4,5:1 aussi sur les fonds clairs teintés pour les gris, verts, bleu principal, ocre,
+  orange). Corrections de contexte : badge « Terminé », boutons `.remove-player` /
+  `.edit-player` (voile noir au lieu de blanc), « × » des matchs (opacité 0,9), pastilles des
+  bandeaux de poules, titre et « Total » du classement Multisport, podium en encre foncée
+  (mode clair seulement), chiffres or/bronze. Palette en variables `:root` dans `styles.css`.
+  Garde-fou `tests/unit/colorPalette.test.js` (anciennes teintes refusées).
+- **Fichiers/modules touchés** : `styles.css`, `index.html`, 14 modules `src/*.iife.js`
+  (couleurs seulement), `tests/e2e/contrast.e2e.js` (nouveau), `tests/unit/colorPalette.test.js`
+  (nouveau), `tests/unit/manualResults.test.js` (vert attendu), `package.json`, `.gitignore`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ (Tests → Couleurs et contraste) · TODO.md — · claude.md —
+- **Suite possible** : dernier P1 `adapt` (cases de score 44 px, textes 10 px). Les dégradés
+  bicolores sont devenus presque unis (les deux teintes convergent) : à reprendre dans
+  `polish` si on veut garder un relief.
+
+### 2026-10-13 — Audit Impeccable + P1 « harden » (clavier, fenêtres, focus) via APEX
+
+- **Contexte** : audit du skill de design Impeccable (pbakaus/impeccable) sur l'app :
+  9/20 (accessibilité 1, perf 3, thème 1, téléphone 2, cohérence 2). Correction des P1 une
+  par une, menée avec la méthode APEX (Analyze → Plan → Execute → eXamine, Melvynx/aiblueprint).
+  Première passe : `harden` (fenêtres et clavier).
+- **Fait** : nouveau module `src/a11y.iife.js` (MutationObserver, aucun gabarit modifié) :
+  toute fenêtre affichée (.modal ou calque fixe plein écran) → `role="dialog"`, `aria-modal`,
+  titre, focus dedans, Tab piégé, Échap = son bouton ×/Fermer/Annuler (ou son fond cliquable),
+  focus rendu à la fermeture ; `[onclick]` non natifs → `tabindex`, `role="button"`,
+  Entrée/Espace. Gestionnaire Échap de `init.iife.js` retiré (remplacé). Contour
+  `:focus-visible` et halo des champs renforcés (`styles.css`, `pools.iife.js`). Liste des
+  écrans de l'audit mode sombre extraite dans `tests/e2e/screens.js`, réutilisée par le
+  nouveau `npm run test:a11y` (32 fenêtres vérifiées, 0 défaut).
+- **Fichiers/modules touchés** : `src/a11y.iife.js` (nouveau), `index.html`, `styles.css`,
+  `src/init.iife.js`, `src/pools.iife.js`, `tests/unit/a11yKeyboard.test.js`,
+  `tests/e2e/a11y.e2e.js`, `tests/e2e/screens.js`, `tests/e2e/darkmode.e2e.js`,
+  `tests/helpers/loadApp.js`, `package.json`, `.gitignore`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ (section 13 quinquies) · TODO.md — · claude.md ✅
+- **Suite possible** : P1 restants de l'audit : `colorize` (variables de couleur, texte blanc
+  à 4,5:1 sur les boutons/bandeaux, gris secondaire `#7f8c8d`) puis `adapt` (cases de score
+  44 px, textes 10 px de la génération de matchs). Note : `modal-bye` n'ouvre parfois rien
+  dans les audits navigateur (aucun joueur n'a besoin d'un BYE selon le tirage des matchs).
+
 ### 2026-10-12 — Nettoyage du dépôt public et anonymisation des données
 
 - **Contexte** : le dépôt est mis en avant sur le portfolio de Romain ; les exports JSON

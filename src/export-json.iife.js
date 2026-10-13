@@ -28,7 +28,7 @@
                     <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #555;">Nom du fichier :</label>
                     <input type="text" id="exportFileName" value="${defaultName}"
                            style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
-                    <span style="font-size: 11px; color: #888;">.json</span>
+                    <span style="font-size: 11px; color: #626262;">.json</span>
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                     <button onclick="document.getElementById('exportChampionshipModal').remove()"
@@ -36,7 +36,7 @@
                         Annuler
                     </button>
                     <button onclick="confirmExportChampionship()"
-                            style="padding: 8px 15px; border: none; background: #3498db; color: white; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                            style="padding: 8px 15px; border: none; background: #09679e; color: white; border-radius: 4px; cursor: pointer; font-size: 13px;">
                         Exporter
                     </button>
                 </div>
@@ -363,7 +363,7 @@
                     </div>
                 </div>
                 
-                <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px; color: #856404;">
+                <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px; color: #6c5103;">
                     💡 <strong>Conseil :</strong> Ces valeurs ont été détectées automatiquement depuis le fichier. Modifiez-les si nécessaire.
                 </div>
                 
@@ -371,7 +371,7 @@
                     <button onclick="closeImportConfigModal()" style="padding: 10px 20px; border: 1px solid #ddd; background: #f5f5f5; border-radius: 6px; cursor: pointer; font-size: 13px;">
                         Annuler
                     </button>
-                    <button onclick="applyImportConfig()" style="padding: 10px 20px; border: none; background: #27ae60; color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                    <button onclick="applyImportConfig()" style="padding: 10px 20px; border: none; background: #017239; color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
                         ✅ Importer
                     </button>
                 </div>
@@ -825,7 +825,7 @@
                     align-items: center; z-index: 10000;" onclick="if(event.target===this)closeMultiDayImportModal()">
                     <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
                         <h3>📥 Importer plusieurs journées</h3>
-                        <p style="color: #7f8c8d; font-size: 13px; margin: 10px 0;">
+                        <p style="color: #586566; font-size: 13px; margin: 10px 0;">
                             Sélectionnez plusieurs fichiers JSON (un par journée).<br>
                             Chaque fichier deviendra une journée (J1, J2, J3...).
                         </p>
@@ -834,10 +834,10 @@
                                 onchange="importMultipleDayFiles(event)"
                                 style="display: none;">
                             <button onclick="document.getElementById('multiDayImportInput').click()" 
-                                style="padding: 12px 24px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                                style="padding: 12px 24px; background: #09679e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
                                 📁 Sélectionner les fichiers JSON
                             </button>
-                            <p style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                            <p style="margin-top: 10px; font-size: 12px; color: #586566;">
                                 Astuce : nommez vos fichiers dans l'ordre<br>
                                 (01-jour1.json, 02-jour2.json, 03-jour3.json...)
                             </p>
@@ -1362,7 +1362,7 @@
                         if (noEventsMessage) noEventsMessage.style.display = 'block';
 
                         const participantsList = document.getElementById('participantsList');
-                        if (participantsList) participantsList.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Aucun participant ajouté.</p>';
+                        if (participantsList) participantsList.innerHTML = '<p style="text-align: center; color: #586566; padding: 20px;">Aucun participant ajouté.</p>';
 
                         const overallChronoRanking = document.getElementById('overallChronoRanking');
                         if (overallChronoRanking) overallChronoRanking.style.display = 'none';

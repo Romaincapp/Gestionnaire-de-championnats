@@ -686,7 +686,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                     font-weight: bold;
                     color: #2c3e50;
                     padding: 2mm 0;
-                    border-bottom: 2px solid #9b59b6;
+                    border-bottom: 2px solid #9654b1;
                     margin-bottom: 2mm;
                     height: 8mm;
                 }
@@ -707,7 +707,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                 }
 
                 .match-sheet {
-                    border: 2px solid #9b59b6;
+                    border: 2px solid #9654b1;
                     border-radius: 3px;
                     padding: 3mm;
                     min-height: 0;
@@ -731,7 +731,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
 
                 .match-id {
                     font-weight: bold;
-                    color: #9b59b6;
+                    color: #9654b1;
                 }
 
                 .players-row {
@@ -751,7 +751,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
 
                 .vs-text {
                     font-size: 10px;
-                    color: #9b59b6;
+                    color: #9654b1;
                     font-weight: bold;
                     padding: 0 2mm;
                 }
@@ -769,7 +769,7 @@ function generateSimpleScoreSheetHTML(dayNumber, matchPages) {
                 }
 
                 .score-table th {
-                    background: #9b59b6;
+                    background: #9654b1;
                     color: white;
                     padding: 1.5mm;
                     text-align: center;
@@ -949,7 +949,7 @@ function showPrintOptionsModal(dayNumber) {
         <div style="display: flex; flex-direction: column; gap: 10px;">
             <button id="print-option-sheets" style="
                 padding: 12px;
-                background: linear-gradient(135deg, #3498db, #2980b9);
+                background: linear-gradient(135deg, #09679e, #08689d);
                 color: white;
                 border: none;
                 border-radius: 5px;
@@ -962,7 +962,7 @@ function showPrintOptionsModal(dayNumber) {
             </button>
             <button id="print-option-simple" style="
                 padding: 12px;
-                background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                background: linear-gradient(135deg, #9654b1, #8e44ad);
                 color: white;
                 border: none;
                 border-radius: 5px;
@@ -975,7 +975,7 @@ function showPrintOptionsModal(dayNumber) {
             </button>
             <button id="print-option-boccia" style="
                 padding: 12px;
-                background: linear-gradient(135deg, #16a085, #1abc9c);
+                background: #057e68;
                 color: white;
                 border: none;
                 border-radius: 5px;
@@ -988,7 +988,7 @@ function showPrintOptionsModal(dayNumber) {
             </button>
             <button id="print-option-boccia-blank" style="
                 padding: 12px;
-                background: linear-gradient(135deg, #8e44ad, #9b59b6);
+                background: linear-gradient(135deg, #8e44ad, #9654b1);
                 color: white;
                 border: none;
                 border-radius: 5px;
@@ -1001,7 +1001,7 @@ function showPrintOptionsModal(dayNumber) {
             </button>
             <button id="print-option-petanque" style="
                 padding: 12px;
-                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                background: #017239;
                 color: white;
                 border: none;
                 border-radius: 5px;
@@ -1014,7 +1014,7 @@ function showPrintOptionsModal(dayNumber) {
             </button>
             <button id="print-option-recap" style="
                 padding: 12px;
-                background: linear-gradient(135deg, #f39c12, #e67e22);
+                background: linear-gradient(135deg, #8b5700, #9c5003);
                 color: white;
                 border: none;
                 border-radius: 5px;
@@ -1029,7 +1029,7 @@ function showPrintOptionsModal(dayNumber) {
         <button id="close-modal" style="
             margin-top: 15px;
             padding: 8px 12px;
-            background: #95a5a6;
+            background: #566566;
             color: white;
             border: none;
             border-radius: 5px;
@@ -1109,7 +1109,7 @@ function addPrintMatchesButton() {
         const printButton = document.createElement('button');
         printButton.className = 'btn print-matches-btn';
         printButton.innerHTML = '🖨️ Imprimer';
-        printButton.style.background = 'linear-gradient(135deg, #9b59b6, #8e44ad)';
+        printButton.style.background = 'linear-gradient(135deg, #9654b1, #8e44ad)';
         printButton.style.color = 'white';
         printButton.onclick = () => showPrintOptionsModal(dayNumber);
         printButton.title = 'Options d\'impression (feuilles de match, Boccia, récaps)';
@@ -1265,7 +1265,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                     background: #f0f0f0;
                     padding: 1mm;
                     margin-top: 1mm;
-                    border: 1px solid #999;
+                    border: 1px solid #626262;
                 }
 
                 .players-section {
@@ -1354,7 +1354,7 @@ function generateBocciaSheetHTML(dayNumber, matchPages) {
                 .result-section {
                     margin-top: auto;
                     padding-top: 2mm;
-                    border-top: 1px dashed #999;
+                    border-top: 1px dashed #626262;
                 }
 
                 .result-row {
@@ -1696,7 +1696,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
 
                 /* Cases plus basses que larges : la place va aux textes */
                 .score-cell {
-                    border: 1px solid #999;
+                    border: 1px solid #626262;
                     background: white;
                     height: 7mm;
                 }
@@ -1711,7 +1711,7 @@ function generatePetanqueSheetHTML(dayNumber, matchPages, pointsLimit) {
                 .result-section {
                     margin-top: auto;
                     padding-top: 2mm;
-                    border-top: 1px dashed #999;
+                    border-top: 1px dashed #626262;
                 }
 
                 .result-row {
@@ -1949,7 +1949,7 @@ function generateBlankBocciaHTML(numPages) {
                     background: #f0f0f0;
                     padding: 1mm;
                     margin-top: 1mm;
-                    border: 1px solid #999;
+                    border: 1px solid #626262;
                 }
 
                 .players-section {
@@ -2039,7 +2039,7 @@ function generateBlankBocciaHTML(numPages) {
                 .result-section {
                     margin-top: auto;
                     padding-top: 2mm;
-                    border-top: 1px dashed #999;
+                    border-top: 1px dashed #626262;
                 }
 
                 .result-row {
@@ -2392,7 +2392,7 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
                 }
 
                 .tour-info {
-                    background: #3498db;
+                    background: #09679e;
                     color: white;
                     padding: 8px;
                     margin-bottom: 10px;
@@ -2605,7 +2605,7 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
                 }
 
                 .court-info {
-                    background: #16a085;
+                    background: #057e68;
                     color: white;
                     padding: 8px;
                     margin-bottom: 10px;
@@ -2712,7 +2712,7 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
         if (matches.length === 0) {
             htmlContent += `
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 20px; color: #999;">
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #626262;">
                         Aucun match assigné à ce terrain
                     </td>
                 </tr>
@@ -2848,7 +2848,7 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
                 }
 
                 .pool-info {
-                    background: #3498db;
+                    background: #09679e;
                     color: white;
                     padding: 8px;
                     margin-bottom: 10px;

@@ -13,6 +13,68 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ✨ Finitions
+- Tous les boutons écrits de la même façon (« Appliquer », « Générer poules », « Mettre à jour »
+  au lieu de majuscules espacées sur une partie d'entre eux).
+- Téléphone : titre de l'application plus compact (2 lignes au lieu de 3, le contenu remonte) ;
+  barre « Mode » sur une ligne (le libellé « Championnat / Chronométrage », qui répétait le
+  sélecteur, est masqué).
+- Loupe 🔍 de l'en-tête centrée dans son cercle.
+- En-tête du tableau du classement Multisport d'un seul tenant (il était découpé en blocs).
+
+### 💬 Messages, annonces et animations
+- Les messages d'information (« Aucun fichier sélectionné », « Créez d'abord une série »…)
+  s'affichent dans une fenêtre de l'application, aux couleurs du thème (mode sombre compris),
+  au lieu de la boîte grise du navigateur. Elle ne fige plus la page : le chrono continue de
+  s'afficher pendant qu'un message est ouvert. Entrée, Échap ou OK la ferment.
+- Les notifications (« Série enregistrée »…) sont lues par les lecteurs d'écran, et leurs
+  couleurs sont plus contrastées.
+- Avec le réglage système « réduire les animations », les fenêtres et panneaux apparaissent
+  sans fondu ni glissement, et la page ne défile plus en douceur.
+- Lignes atténuées (joueurs non qualifiés, DNS, séries déjà remplies) et sous-titres sur
+  bandeaux colorés désormais lisibles : ils étaient affaiblis par transparence.
+
+### 🔊 Champs annoncés correctement par les lecteurs d'écran
+- Chaque case de score dit à qui elle appartient : « Score de Gai Séjour 1 contre Les
+  Aquaphiles 2 » au lieu de « champ numérique, zéro » (matchs, poules, phase finale).
+- Les autres champs prennent le libellé affiché à côté (Divisions, Terrains, Club, Date…), ou,
+  dans un tableau, l'en-tête de colonne et le nom de la ligne (« Temps – Lucie Vandamme »).
+- Mesuré sur les 48 écrans : 2 469 champs sans nom avant, 0 après.
+
+### 📱 Plus facile au doigt sur téléphone et tablette
+- Cases de score agrandies à 44×44 px (au lieu de 40×32 en matchs et 50×40 en poules), chiffres en
+  16 px : plus de zoom intempestif de la page en touchant une case sur iPhone.
+- Tous les boutons et éléments touchables font au moins 24×24 px : « × » des onglets de journée,
+  ✏️ et × des joueurs, noms de joueurs cliquables, cases à cocher, en-têtes de matchs repliables.
+- Plus aucun texte d'écran sous 11 px (badges Qualifié / Repêché, choix de génération de matchs,
+  DNS / DISQ, « 3V / 3J » du classement Multisport…). Rien ne change à la souris.
+- Mode sombre : le libellé « - Journée N » de la fenêtre « Ajouter des joueurs » et les points
+  du podium Multisport redeviennent lisibles.
+
+### 🎨 Textes lisibles partout (contraste)
+- Les boutons et bandeaux colorés (bleu, vert, rouge, orange, turquoise, violet) prennent une
+  teinte un peu plus foncée de la même couleur : le texte blanc y est désormais lisible
+  (au moins 4,5:1, norme d'accessibilité WCAG AA), même en plein jour dans une salle.
+- Textes gris secondaires, rangs orange, points et pourcentages verts ou bleus plus foncés.
+- Badge « Terminé » des matchs, petits boutons « × » des joueurs et des matchs, pastilles
+  sur les bandeaux de poules, en-tête « Total » et lignes du podium (or / argent / bronze)
+  du classement Multisport corrigés.
+- Mesuré écran par écran : 4 751 textes sous le seuil avant, 0 après.
+
+### ⌨️ Fenêtres et boutons utilisables au clavier
+- **Échap ferme la fenêtre ouverte** (toutes, plus seulement 3), comme si on cliquait
+  sur son bouton « × », « Fermer » ou « Annuler ». Avec deux fenêtres l'une sur l'autre,
+  seule celle du dessus se ferme.
+- À l'ouverture d'une fenêtre, le curseur va directement dans le premier champ ; **Tab reste
+  dans la fenêtre** au lieu de partir dans la page derrière ; à la fermeture, on retrouve le
+  bouton qui l'avait ouverte. Sur téléphone, le clavier virtuel ne s'ouvre plus tout seul.
+- Les titres repliables (journée, classement général, multisport), les cartes de choix
+  (génération de matchs, pré-remplissage des poules), les lignes de classement et les séries
+  s'atteignent avec Tab et s'ouvrent avec Entrée ou Espace.
+- Contour bleu bien visible autour de l'élément sélectionné au clavier (et halo plus marqué
+  sur les champs, y compris les cases de score), en mode clair comme en mode sombre.
+- Les fenêtres sont annoncées comme telles, avec leur titre, par les lecteurs d'écran.
+
 ### 🔠 Feuilles pétanque et Boccia plus lisibles
 - Titre, terrain (en gras), numéro du match et noms des équipes / joueurs écrits bien plus grands.
 - Pétanque : les cases de score sont un peu moins hautes pour garder la même mise en page.

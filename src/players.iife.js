@@ -601,7 +601,7 @@
                     const byeClass = hasBye ? ' player-has-bye' : '';
                     
                     // Afficher le club s'il existe
-                    const clubBadge = playerClub ? `<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 6px;">${playerClub}</span>` : '';
+                    const clubBadge = playerClub ? `<span style="background: linear-gradient(135deg, #5267d0, #764ba2); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 6px;">${playerClub}</span>` : '';
 
                     return `<div class="player-tag${byeClass}" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayer}')">
                         ${playerName}${clubBadge}

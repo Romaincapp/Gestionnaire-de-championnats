@@ -63,7 +63,7 @@
                 <div style="text-align:center;">
                     <label style="display:block; font-size:12px; color:#555; margin-bottom:5px;">${playerLabel}</label>
                     <input type="number" id="byeScorePlayer" value="5" min="0"
-                           style="width:70px; padding:8px; text-align:center; font-size:18px; border:2px solid #27ae60; border-radius:6px;">
+                           style="width:70px; padding:8px; text-align:center; font-size:18px; border:2px solid #017239; border-radius:6px;">
                 </div>
                 <span style="font-size:22px; font-weight:bold; color:#555; padding-bottom:6px;">-</span>
                 <div style="text-align:center;">
@@ -73,9 +73,9 @@
                 </div>
             </div>
             <div style="display:flex; gap:8px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
-                <button onclick="setByeScorePreset(5,0)" class="btn" style="background:#27ae60; color:white; padding:6px 14px;">5 - 0</button>
-                <button onclick="setByeScorePreset(4,1)" class="btn" style="background:#2ecc71; color:white; padding:6px 14px;">4 - 1</button>
-                <button onclick="setByeScorePreset(3,2)" class="btn" style="background:#95a5a6; color:white; padding:6px 14px;">3 - 2</button>
+                <button onclick="setByeScorePreset(5,0)" class="btn" style="background:#017239; color:white; padding:6px 14px;">5 - 0</button>
+                <button onclick="setByeScorePreset(4,1)" class="btn" style="background:#017239; color:white; padding:6px 14px;">4 - 1</button>
+                <button onclick="setByeScorePreset(3,2)" class="btn" style="background:#566566; color:white; padding:6px 14px;">3 - 2</button>
             </div>
         `;
     }
@@ -132,7 +132,7 @@
                     <button onclick="confirmByeScore(${dayNumber}, ${division}, '${escapedPlayerName}')" class="btn btn-success">
                         ✅ Valider
                     </button>
-                    <button onclick="closeByeScoreModal()" class="btn" style="background:#95a5a6;">Annuler</button>
+                    <button onclick="closeByeScoreModal()" class="btn" style="background:#566566;">Annuler</button>
                 </div>
             </div>
         `);
@@ -167,7 +167,7 @@
                     <button onclick="confirmByeScoreForAll(${dayNumber})" class="btn btn-success">
                         ✅ Ajouter BYE à TOUS
                     </button>
-                    <button onclick="closeByeScoreModal()" class="btn" style="background:#95a5a6;">Annuler</button>
+                    <button onclick="closeByeScoreModal()" class="btn" style="background:#566566;">Annuler</button>
                 </div>
             </div>
         `);
@@ -270,7 +270,7 @@
         .header {
             text-align: center;
             padding: 20px;
-            background: linear-gradient(135deg, #f39c12, #e67e22);
+            background: linear-gradient(135deg, #8b5700, #9c5003);
             border-radius: 15px;
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(243, 156, 18, 0.3);
@@ -297,7 +297,7 @@
             margin: 10px 0;
         }
         .ranking-table th, table th {
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: linear-gradient(135deg, #09679e, #08689d);
             color: white;
             padding: 12px 8px;
             text-align: center;
@@ -337,7 +337,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            background: #017239;
             color: white;
             border: none;
             padding: 15px 25px;
@@ -520,7 +520,7 @@ function showCompleteDayRanking(dayNumber) {
     }
 
     if (!html) {
-        html = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Aucune poule n\'a été générée pour cette journée.</p>';
+        html = '<p style="text-align: center; color: #586566; padding: 20px;">Aucune poule n\'a été générée pour cette journée.</p>';
     }
 
     document.getElementById('completeDayRankingTitle').textContent = `📊 Classement Complet - Journée ${dayNumber}`;
@@ -701,7 +701,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
     poolRankings.forEach(pool => {
         html += `
             <div style="flex: 1; min-width: 180px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                <div style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 8px 12px; font-weight: 600; font-size: 13px;">
+                <div style="background: linear-gradient(135deg, #09679e, #08689d); color: white; padding: 8px 12px; font-weight: 600; font-size: 13px;">
                     Poule ${pool.poolName}
                 </div>
                 <div style="padding: 8px;">
@@ -715,7 +715,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
             html += `
                 <div style="display: flex; justify-content: space-between; padding: 6px 8px; background: ${bgColor}; border-radius: 4px; margin-bottom: 4px; font-size: 12px;">
                     <span style="font-weight: ${isQualified ? '600' : '400'};">${idx + 1}. ${player.name}${checkMark}</span>
-                    <span style="color: #7f8c8d;">${player.points}pts (${player.wins}V/${player.draws || 0}N/${player.losses}D/${player.forfeits || 0}F)</span>
+                    <span style="color: #586566;">${player.points}pts (${player.wins}V/${player.draws || 0}N/${player.losses}D/${player.forfeits || 0}F)</span>
                 </div>
             `;
         });
@@ -735,7 +735,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
     if (finalMatches && finalMatches.length > 0) {
         html += `
             <div style="padding: 15px; background: #fff3cd; border-bottom: 1px solid #eee;">
-                <h4 style="margin: 0 0 12px 0; color: #856404; font-size: 14px;">🎯 Phase Finale</h4>
+                <h4 style="margin: 0 0 12px 0; color: #6c5103; font-size: 14px;">🎯 Phase Finale</h4>
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
         `;
 
@@ -761,7 +761,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
 
             html += `
                 <div style="background: white; border-radius: 8px; padding: 10px; min-width: 150px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                    <div style="font-weight: 600; font-size: 11px; color: #856404; margin-bottom: 8px; text-align: center;">${roundLabel}</div>
+                    <div style="font-weight: 600; font-size: 11px; color: #6c5103; margin-bottom: 8px; text-align: center;">${roundLabel}</div>
             `;
 
             matches.forEach(match => {
@@ -887,12 +887,12 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
                 <td style="padding: 8px; text-align: center; font-weight: 600;">${badge} ${player.position}</td>
                 <td style="padding: 8px; font-weight: ${player.position <= 4 ? '600' : '400'};">
                     ${player.name}
-                    ${player.label && player.position <= 4 ? `<span style="font-size: 10px; color: #666; margin-left: 5px;">(${player.label})</span>` : ''}
+                    ${player.label && player.position <= 4 ? `<span style="font-size: 11px; color: #666; margin-left: 5px;">(${player.label})</span>` : ''}
                 </td>
                 <td style="padding: 8px; text-align: center;">${player.totalPoints || 0}</td>
                 <td style="padding: 8px; text-align: center;">${player.wins || 0}/${player.draws || 0}/${player.losses || 0}/${player.forfeits || 0}</td>
                 <td style="padding: 8px; text-align: center;">${player.pointsWon || 0}/${player.pointsLost || 0}</td>
-                <td style="padding: 8px; text-align: center; color: ${ga >= 0 ? '#27ae60' : '#e74c3c'};">${gaDisplay}</td>
+                <td style="padding: 8px; text-align: center; color: ${ga >= 0 ? '#017239' : '#d03427'};">${gaDisplay}</td>
             </tr>
         `;
     });
@@ -930,7 +930,7 @@ function openCompleteRankingInNewWindow() {
         .header {
             text-align: center;
             padding: 20px;
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            background: #017239;
             border-radius: 15px;
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(39, 174, 96, 0.3);
@@ -1026,7 +1026,7 @@ function showByeManagementModal(dayNumber) {
         // Créer le contenu du modal
         let modalHTML = `
             <div style="max-height: 400px; overflow-y: auto;">
-                <p style="margin-bottom: 15px; color: #e67e22; font-weight: bold;">
+                <p style="margin-bottom: 15px; color: #9c5003; font-weight: bold;">
                     ⚠️ ${playersNeedingBye.length} joueur(s) ont moins de 4 matchs
                 </p>
                 <table style="width: 100%; border-collapse: collapse;">
@@ -1046,7 +1046,7 @@ function showByeManagementModal(dayNumber) {
             const escapedPlayerName = escapeForOnclick(player.name);
             // Style conditionnel : fond orange si le joueur a déjà un BYE
             const rowStyle = player.hasBye
-                ? 'background: linear-gradient(135deg, #f39c12, #e67e22); color: white;'
+                ? 'background: linear-gradient(135deg, #8b5700, #9c5003); color: white;'
                 : (index % 2 === 0 ? 'background: #f8f9fa;' : '');
 
             modalHTML += `
@@ -1056,13 +1056,13 @@ function showByeManagementModal(dayNumber) {
                     </td>
                     <td style="padding: 10px; text-align: center;">D${player.division}</td>
                     <td style="padding: 10px; text-align: center;">${player.currentMatches}/4</td>
-                    <td style="padding: 10px; text-align: center; ${player.hasBye ? 'color: white;' : 'color: #e74c3c;'} font-weight: bold;">
+                    <td style="padding: 10px; text-align: center; ${player.hasBye ? 'color: white;' : 'color: #d03427;'} font-weight: bold;">
                         ${player.missingMatches}
                     </td>
                     <td style="padding: 10px; text-align: center;">
                         <button onclick="showByeScoreModal(${dayNumber}, ${player.division}, '${escapedPlayerName}');"
                                 style="
-                            background: linear-gradient(135deg, #27ae60, #2ecc71);
+                            background: #017239;
                             color: white;
                             border: none;
                             padding: 8px 15px;
@@ -1086,12 +1086,12 @@ function showByeManagementModal(dayNumber) {
                     padding: 15px;
                     background: #d5f4e6;
                     border-radius: 8px;
-                    border-left: 4px solid #27ae60;
+                    border-left: 4px solid #017239;
                 ">
                     <strong>💡 Explication :</strong><br>
                     Un match BYE donne automatiquement 5 points (victoire) + forfait au joueur.<br>
                     Cela compense l'absence de 4ème adversaire avec un nombre impair de joueurs.<br>
-                    <strong style="color: #f39c12;">🎯 Les lignes oranges</strong> indiquent les joueurs ayant déjà au moins un match BYE.
+                    <strong style="color: #8b5700;">🎯 Les lignes oranges</strong> indiquent les joueurs ayant déjà au moins un match BYE.
                 </div>
             </div>
         `;
@@ -1117,7 +1117,7 @@ function showByeManagementModal(dayNumber) {
                     <button onclick="showByeScoreModalForAll(${dayNumber});" class="btn btn-success">
                         ✅ Ajouter BYE à TOUS
                     </button>
-                    <button onclick="closeByeModal()" class="btn" style="background: #95a5a6;">
+                    <button onclick="closeByeModal()" class="btn" style="background: #566566;">
                         Fermer
                     </button>
                 </div>
@@ -1219,13 +1219,7 @@ function showByeManagementModal(dayNumber) {
             });
         }
         
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeBulkModal();
-                closePlayerModal();
-                closeImportModal();
-            }
-        });
+        // Échap : géré pour toutes les fenêtres par a11y.iife.js (ferme celle du dessus)
         
         const playerNameInput = document.getElementById('playerName');
         if (playerNameInput) {
@@ -1292,7 +1286,7 @@ function exportGeneralRankingToHTML() {
                     background: #f8f9fa;
                     border-radius: 12px;
                     padding: 25px;
-                    border-left: 5px solid #3498db;
+                    border-left: 5px solid #09679e;
                 }
                 .section h2 {
                     color: #2c3e50;
@@ -1313,17 +1307,17 @@ function exportGeneralRankingToHTML() {
                     padding: 20px;
                     border-radius: 12px;
                     text-align: center;
-                    border-left: 4px solid #f39c12;
+                    border-left: 4px solid #8b5700;
                     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
                 }
                 .stat-number {
                     font-size: 2.5rem;
                     font-weight: bold;
-                    color: #f39c12;
+                    color: #8b5700;
                     margin-bottom: 5px;
                 }
                 .stat-label {
-                    color: #7f8c8d;
+                    color: #586566;
                     font-weight: 500;
                 }
                 .division {
@@ -1334,9 +1328,9 @@ function exportGeneralRankingToHTML() {
                     border-top: 4px solid;
                     margin-bottom: 20px;
                 }
-                .division-1 { border-top-color: #e74c3c; }
-                .division-2 { border-top-color: #f39c12; }
-                .division-3 { border-top-color: #27ae60; }
+                .division-1 { border-top-color: #d03427; }
+                .division-2 { border-top-color: #8b5700; }
+                .division-3 { border-top-color: #017239; }
                 .division h3 {
                     margin-bottom: 20px;
                     font-size: 1.3rem;
@@ -1362,16 +1356,16 @@ function exportGeneralRankingToHTML() {
                 }
                 .rank-position {
                     font-weight: bold;
-                    color: #3498db;
+                    color: #09679e;
                     width: 50px;
                 }
-                .rank-gold { color: #f39c12; }
-                .rank-silver { color: #95a5a6; }
-                .rank-bronze { color: #e67e22; }
+                .rank-gold { color: #8b5700; }
+                .rank-silver { color: #566566; }
+                .rank-bronze { color: #9c5003; }
                 .footer {
                     text-align: center;
                     padding: 20px;
-                    color: #7f8c8d;
+                    color: #586566;
                     font-size: 14px;
                 }
             </style>
@@ -1512,7 +1506,7 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
             }
 
             html += `
-                <div style="padding: 5px 15px; background: white; border-radius: 5px; color: #16a085; font-weight: bold;">
+                <div style="padding: 5px 15px; background: white; border-radius: 5px; color: #057e68; font-weight: bold;">
                     ${medal} Division ${div}: ${courtText}
                 </div>
             `;

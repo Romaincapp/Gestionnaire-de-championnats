@@ -4,10 +4,37 @@
 (function(global) {
     'use strict';
 
+    // Lecteurs d'écran : une zone d'annonce permanente et invisible (une zone créée
+    // avec son texte n'est pas lue de façon fiable). Info / succès : annonce polie ;
+    // avertissement / erreur : annonce prioritaire.
+    function liveRegion(assertive) {
+        const id = assertive ? 'a11yLiveAlert' : 'a11yLiveStatus';
+        let region = document.getElementById(id);
+        if (!region && document.body) {
+            region = document.createElement('div');
+            region.id = id;
+            region.setAttribute('role', assertive ? 'alert' : 'status');
+            region.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
+            region.setAttribute('aria-atomic', 'true');
+            region.style.cssText = 'position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; ' +
+                'overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;';
+            document.body.appendChild(region);
+        }
+        return region;
+    }
+    function announce(message, assertive) {
+        const region = liveRegion(!!assertive);
+        if (!region) return;
+        region.textContent = '';
+        // vider puis remplir au tour suivant : un message identique est relu
+        setTimeout(function() { region.textContent = String(message); }, 50);
+    }
+
     function showNotification(message, type = 'info') {
         if (typeof document === 'undefined') {
             return;
         }
+        announce(message, type === 'error' || type === 'warning');
 
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
@@ -26,7 +53,7 @@
         // Styles par type
         switch(type) {
             case 'success':
-                notification.style.backgroundColor = '#4CAF50';
+                notification.style.backgroundColor = '#017239';
                 notification.style.color = 'white';
                 break;
             case 'warning':
@@ -34,11 +61,11 @@
                 notification.style.color = 'black';
                 break;
             case 'error':
-                notification.style.backgroundColor = '#F44336';
+                notification.style.backgroundColor = '#d03427';
                 notification.style.color = 'white';
                 break;
             default:
-                notification.style.backgroundColor = '#2196F3';
+                notification.style.backgroundColor = '#09679e';
                 notification.style.color = 'white';
         }
 
@@ -117,8 +144,73 @@
         }
     }
 
+    // ============================================
+    // MESSAGES (window.alert) DANS L'APPLICATION
+    // ============================================
+    // Les ~90 alert(...) des modules ouvrent une fenêtre de l'app au lieu de la
+    // boîte native : aux couleurs du thème (mode sombre compris), annoncée aux
+    // lecteurs d'écran (role="alertdialog"), et sans bloquer la page — une boîte
+    // native gèle l'affichage, chrono compris, tant qu'on ne l'a pas fermée.
+    // OK reçoit le focus (Entrée ferme, comme la boîte native ; Échap aussi, via
+    // a11y.iife.js), puis le focus revient où il était. confirm() / prompt()
+    // restent natifs : leur réponse est attendue de façon synchrone par le code.
+    const nativeAlert = typeof global.alert === 'function' ? global.alert.bind(global) : null;
+    let alertCount = 0;
+
+    function appAlert(message) {
+        if (typeof document === 'undefined' || !document.body) {
+            if (nativeAlert) nativeAlert(message);
+            return;
+        }
+        const previousFocus = document.activeElement;
+        const id = 'appAlertMessage-' + (++alertCount);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'app-alert';
+        overlay.setAttribute('role', 'alertdialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', 'Message');
+        overlay.setAttribute('aria-describedby', id);
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
+            'background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; ' +
+            'z-index: 10050; padding: 16px; box-sizing: border-box;';
+
+        const panel = document.createElement('div');
+        panel.style.cssText = 'background: white; color: #2c3e50; border-radius: 10px; padding: 20px; ' +
+            'width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);';
+
+        const text = document.createElement('p');
+        text.id = id;
+        text.textContent = message === undefined ? '' : String(message);
+        text.style.cssText = 'margin: 0 0 16px; white-space: pre-line; font-size: 15px; line-height: 1.5; ' +
+            'overflow-wrap: anywhere; max-height: 60vh; overflow-y: auto;';
+
+        const actions = document.createElement('div');
+        actions.style.cssText = 'text-align: right;';
+        const ok = document.createElement('button');
+        ok.type = 'button';
+        ok.textContent = 'OK';
+        ok.style.cssText = 'background: #09679e; color: white; border: none; border-radius: 6px; ' +
+            'padding: 10px 28px; font-size: 15px; font-weight: bold; cursor: pointer;';
+        ok.onclick = function() {
+            overlay.remove();
+            if (previousFocus && previousFocus.isConnected && typeof previousFocus.focus === 'function') {
+                try { previousFocus.focus({ preventScroll: true }); } catch (e) { previousFocus.focus(); }
+            }
+        };
+        actions.appendChild(ok);
+        panel.appendChild(text);
+        panel.appendChild(actions);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        ok.focus();
+    }
+
     // Exposer sur window
+    global.appAlert = appAlert;
+    global.alert = appAlert;
     global.showNotification = showNotification;
+    global.announce = announce;
     global.reportSaveFailure = reportSaveFailure;
     global.reportSaveSuccess = reportSaveSuccess;
 

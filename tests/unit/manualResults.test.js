@@ -192,7 +192,7 @@ describe('cache de course', () => {
 
 describe('série terminée avec des DNS / DISQ (signalé par l\'utilisateur)', () => {
     const card = () => document.querySelector('#chrono-content-1 .chrono-serie-card');
-    const isGreen = (el) => /#27ae60|rgb\(39, 174, 96\)/.test(el.style.borderLeft || el.getAttribute('style'));
+    const isGreen = (el) => /#017239|rgb\(1, 114, 57\)/.test(el.style.borderLeft || el.getAttribute('style'));
 
     test('temps + DNS + DISQ : série terminée, carte verte « 5/5 »', () => {
         fillAndSave({ 'Emma Roux': '35.10', 'Chloe Durand': 'DNS', 'Alice Martin': '31.05', 'Bruno Petit': 'DISQ', 'David Leroy': '34.00' });

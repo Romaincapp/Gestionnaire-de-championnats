@@ -46,7 +46,7 @@
                 <button class="tab general-ranking" onclick="switchToGeneralRanking()" data-tab="general" id="generalRankingTab">
                     🏆 Classement
                 </button>
-                <button class="tab multisport-ranking" onclick="switchToMultisportRanking()" data-tab="multisport" id="multisportTab" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: none;">
+                <button class="tab multisport-ranking" onclick="switchToMultisportRanking()" data-tab="multisport" id="multisportTab" style="background: linear-gradient(135deg, #5267d0, #764ba2); color: white; display: none;">
                     🏅 Multisport
                 </button>
             </div>
@@ -54,7 +54,7 @@
 
         <div class="content">
             <!-- CONFIGURATION (Championship uniquement — masquée sur une journée Chrono, voir updateDayTypeUI) -->
-            <div id="championshipConfigBar" style="background: linear-gradient(135deg, #16a085, #1abc9c); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: white;">
+            <div id="championshipConfigBar" style="background: #057e68; padding: 12px; border-radius: 8px; margin-bottom: 15px; color: white;">
                 <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: center;">
                     <div id="divisionConfigContainer" style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-weight: bold; font-size: 14px;">⚙️ Divisions:</span>
@@ -80,7 +80,7 @@
                             <option value="10">10</option>
                         </select>
                     </div>
-                    <button id="applyConfigBtn" class="btn" onclick="applyConfiguration()" style="background: white; color: #16a085; font-weight: bold; padding: 6px 15px; font-size: 13px;">
+                    <button id="applyConfigBtn" class="btn" onclick="applyConfiguration()" style="background: white; color: #057e68; font-weight: bold; padding: 6px 15px; font-size: 13px;">
                         ✅ Appliquer
                     </button>
                 </div>
@@ -92,13 +92,13 @@
             <!-- CONTENU JOURNÉE -->
             <div class="tab-content day-content active" id="day-1">
                 <!-- Sélecteur de type de journée pour J1 (sera initialisé par JS) -->
-                <div class="day-type-selector" id="day-type-selector-1" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 8px 12px; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border-radius: 8px; color: white;">
+                <div class="day-type-selector" id="day-type-selector-1" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 8px 12px; background: linear-gradient(135deg, #09679e 0%, #08689d 100%); border-radius: 8px; color: white;">
                     <span style="font-size: 13px; font-weight: 500;">🎾 Mode:</span>
                     <select id="day-type-select-1" onchange="handleDayTypeChange(1, this.value)" style="padding: 6px 10px; border-radius: 6px; border: none; font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.95); color: #333; min-width: 140px;">
                         <option value="championship" selected>🏆 Matchs</option>
                         <option value="chrono">⏱️ Courses</option>
                     </select>
-                    <span id="day-type-label-1" style="font-size: 11px; opacity: 0.9; margin-left: auto;">Championnat</span>
+                    <span id="day-type-label-1" style="font-size: 11px; margin-left: auto;">Championnat</span>
                 </div>
                 
                 <div id="championship-section-1" style="display: block;">
@@ -112,23 +112,23 @@
                     <!-- Ligne unique de boutons -->
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <!-- Ajout joueurs -->
-                        <button onclick="showAddPlayerModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        <button onclick="showAddPlayerModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #087f58; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
                             ➕ Joueurs
                         </button>
                         <!-- Actions matchs -->
-                        <button onclick="showMatchGenerationModal(1)" data-day="1" data-needs="players" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        <button onclick="showMatchGenerationModal(1)" data-day="1" data-needs="players" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #236bdd; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             🎯 Matchs
                         </button>
-                        <button onclick="togglePoolSection(1)" id="show-pool-btn-1" data-day="1" data-needs="players|poolsOn" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        <button onclick="togglePoolSection(1)" id="show-pool-btn-1" data-day="1" data-needs="players|poolsOn" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #9c6304; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             🏊 Poules
                         </button>
-                        <button onclick="updateRankingsForDay(1)" data-day="1" data-needs="matches" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        <button onclick="updateRankingsForDay(1)" data-day="1" data-needs="matches" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #804fe8; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             🏆 Classements
                         </button>
-                        <button onclick="showByeManagementModal(1)" data-day="1" data-needs="players" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        <button onclick="showByeManagementModal(1)" data-day="1" data-needs="players" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #077d71; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             👋 BYE
                         </button>
-                        <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-1" data-day="1" data-needs="matches|unlocked" title="Supprimer un match, corriger le nom d'un joueur dans un match, déclarer un forfait" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        <button onclick="toggleForfaitButtons()" id="forfait-toggle-btn-1" data-day="1" data-needs="matches|unlocked" title="Supprimer un match, corriger le nom d'un joueur dans un match, déclarer un forfait" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #54637a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             🔓 Modifier les matchs
                         </button>
                         <!-- Séparateur visuel -->
@@ -143,7 +143,7 @@
                         <button onclick="showPrintOptionsModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Options d'impression (feuilles de match, Boccia, récaps)">
                             🖨️
                         </button>
-                        <button onclick="clearAllData()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        <button onclick="clearAllData()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             🗑️
                         </button>
                     </div>
@@ -174,8 +174,8 @@
                         <div class="rankings-toggle" style="flex-wrap: wrap; gap: 5px;">
                             <button class="toggle-btn active" onclick="showRankings('points')">Par Points</button>
                             <button class="toggle-btn" onclick="showRankings('winrate')">Par % Victoires</button>
-                            <button class="toggle-btn" onclick="openRankingInNewWindow(1)" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">📺 Afficher</button>
-                            <button class="toggle-btn" onclick="showCompleteDayRanking(1)" style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white;">📊 Complet</button>
+                            <button class="toggle-btn" onclick="openRankingInNewWindow(1)" style="background: linear-gradient(135deg, #9654b1, #8e44ad); color: white;">📺 Afficher</button>
+                            <button class="toggle-btn" onclick="showCompleteDayRanking(1)" style="background: #017239; color: white;">📊 Complet</button>
                         </div>
                     </div>
                     <div id="rankingsContent-1"></div>
@@ -189,10 +189,10 @@
                 
                 <!-- SECTION CHRONO pour J1 -->
                 <div id="chrono-section-1" style="display: none;">
-                    <div class="section" style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);">
+                    <div class="section" style="background: #057e68;">
                         <h2 style="color: white;">⏱️ Gestion des Courses - Journée 1</h2>
                         <div id="chrono-content-1" style="background: white; padding: 20px; border-radius: 10px; margin-top: 15px;">
-                            <p style="text-align: center; color: #7f8c8d;">Chargement de l'interface chrono...</p>
+                            <p style="text-align: center; color: #586566;">Chargement de l'interface chrono...</p>
                         </div>
                     </div>
                 </div>
@@ -215,19 +215,19 @@
                         <button class="btn btn-warning" onclick="updateGeneralRanking()" style="padding: 8px 12px; font-size: 13px;">
                             🔄 Mettre à jour
                         </button>
-                        <button class="btn" onclick="openRankingInNewWindow('general')" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); padding: 8px 12px; font-size: 13px;">
+                        <button class="btn" onclick="openRankingInNewWindow('general')" style="background: linear-gradient(135deg, #9654b1, #8e44ad); padding: 8px 12px; font-size: 13px;">
                             📺 Afficher
                         </button>
                         <button class="btn btn-success" onclick="exportGeneralRanking()" style="padding: 8px 12px; font-size: 13px;">
                             📊 JSON
                         </button>
-                        <button class="btn" onclick="exportGeneralRankingToPDF()" style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 8px 12px; font-size: 13px;">
+                        <button class="btn" onclick="exportGeneralRankingToPDF()" style="background: linear-gradient(135deg, #d03427, #c0392b); padding: 8px 12px; font-size: 13px;">
                             📄 PDF
                         </button>
-                        <button class="btn" onclick="exportGeneralRankingToHTML()" style="background: linear-gradient(135deg, #27ae60, #2ecc71); padding: 8px 12px; font-size: 13px;">
+                        <button class="btn" onclick="exportGeneralRankingToHTML()" style="background: #017239; padding: 8px 12px; font-size: 13px;">
                             📄 HTML
                         </button>
-                        <button class="btn" onclick="showNameCheckModal()" style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 8px 12px; font-size: 13px;" title="Détecte les fautes de frappe dans les noms des joueurs et propose de les fusionner">
+                        <button class="btn" onclick="showNameCheckModal()" style="background: linear-gradient(135deg, #8b5700, #9c5003); padding: 8px 12px; font-size: 13px;" title="Détecte les fautes de frappe dans les noms des joueurs et propose de les fusionner">
                             🔍 Vérifier les noms
                         </button>
                     </div>
@@ -250,7 +250,7 @@
                     </h2>
                     
                     <div id="multisport-hub-content">
-                        <div class="multisport-info" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                        <div class="multisport-info" style="background: linear-gradient(135deg, #5267d0 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
                             <p style="margin: 0; font-size: 14px;">
                                 🎯 Ce classement combine les journées <strong>Matchs</strong> et <strong>Courses</strong> sur un barème commun.
                                 <br>🏅 Chaque journée : la position au classement rapporte <strong>25 pts au 1er, 19 au 2ème, 17, 15, 12, 10, 8, 6, 4, 2</strong> (0 au-delà). Pour les matchs, le barème s'applique <strong>par division</strong>.
@@ -261,7 +261,7 @@
                             <button class="btn btn-warning" onclick="updateMultisportRanking()" style="padding: 8px 12px; font-size: 13px;">
                                 🔄 Mettre à jour
                             </button>
-                            <button class="btn" onclick="openMultisportRankingInNewWindow()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; padding: 8px 12px; font-size: 13px;">
+                            <button class="btn" onclick="openMultisportRankingInNewWindow()" style="background: linear-gradient(135deg, #9654b1, #8e44ad); color: white; padding: 8px 12px; font-size: 13px;">
                                 📺 Afficher
                             </button>
                             <button class="btn btn-success" onclick="exportMultisportRanking()" style="padding: 8px 12px; font-size: 13px;">
@@ -292,14 +292,14 @@
                     </label>
                 </div>
             </div>
-            <p style="margin: 15px 0; color: #7f8c8d; font-size: 14px;">
+            <p style="margin: 15px 0; color: #586566; font-size: 14px;">
                 ⚠️ L'import remplacera complètement le championnat actuel
             </p>
             <div style="margin: 20px 0; padding: 15px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;">
                 <p style="margin: 0 0 10px 0; font-size: 13px; color: #0369a1;">
                     📁 <strong>Import multi-journées :</strong> Sélectionnez plusieurs fichiers JSON (un par journée)
                 </p>
-                <button onclick="showMultiDayImportModal(); closeImportModal();" class="btn" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; width: 100%;">
+                <button onclick="showMultiDayImportModal(); closeImportModal();" class="btn" style="background: linear-gradient(135deg, #0977a9, #0475b1); color: white; width: 100%;">
                     📂 Importer plusieurs journées
                 </button>
             </div>
@@ -308,7 +308,7 @@
                     ➕ <strong>Ajouter à la suite :</strong> les journées du ou des fichiers sont ajoutées après celles déjà présentes, sans rien remplacer (une « Journée 1 » d'un autre projet devient la journée suivante). Matchs et Courses peuvent être mélangés.
                 </p>
                 <input type="file" id="appendDaysInput" accept=".json" multiple onchange="appendDaysFromFiles(event)" style="display: none;">
-                <button onclick="openAppendDaysPicker()" class="btn" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; width: 100%;">
+                <button onclick="openAppendDaysPicker()" class="btn" style="background: linear-gradient(135deg, #028138, #068137); color: white; width: 100%;">
                     ➕ Ajouter à la suite du championnat
                 </button>
             </div>
@@ -322,7 +322,7 @@
     <!-- Modal Ajout Joueurs -->
     <div id="addPlayerModal" class="modal">
         <div class="modal-content" style="max-width: 480px;">
-            <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">➕ Ajouter des joueurs <span id="addPlayerDayLabel" style="font-size: 14px; color: #64748b;"></span></h3>
+            <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">➕ Ajouter des joueurs <span id="addPlayerDayLabel" style="font-size: 14px; color: #54637a;"></span></h3>
 
             <!-- Accordéon : une seule section ouverte à la fois (toggleAddPlayerSection) -->
             <div class="apm-section" id="apm-section-single">
@@ -347,7 +347,7 @@
                         </div>
                     </div>
                     <input type="text" id="addPlayerClubCustom" class="apm-field" placeholder="Nom du nouveau club" style="display: none;">
-                    <button onclick="addPlayerFromModal()" class="apm-primary" style="background: #10b981;">➕ Ajouter le joueur</button>
+                    <button onclick="addPlayerFromModal()" class="apm-primary" style="background: #087f58;">➕ Ajouter le joueur</button>
                 </div>
             </div>
 
@@ -360,11 +360,11 @@
                 <div class="apm-body">
                     <label class="apm-label" for="modalBulkDivision">Division des joueurs collés</label>
                     <select id="modalBulkDivision" class="apm-field"></select>
-                    <button onclick="showBulkFromModal()" class="apm-primary" style="background: #8b5cf6;">📋 Coller une liste de noms</button>
+                    <button onclick="showBulkFromModal()" class="apm-primary" style="background: #804fe8;">📋 Coller une liste de noms</button>
                     <div class="apm-or">ou</div>
                     <div class="file-input-wrapper" style="display: block;">
                         <input type="file" id="modalFileInput" accept=".xlsx,.xls,.csv" onchange="handleModalFileInput(event)">
-                        <label for="modalFileInput" class="apm-primary" style="background: #3b82f6; display: block; text-align: center;">📁 Importer un fichier CSV / Excel</label>
+                        <label for="modalFileInput" class="apm-primary" style="background: #236bdd; display: block; text-align: center;">📁 Importer un fichier CSV / Excel</label>
                     </div>
                     <p class="apm-hint">Fichier : colonne A = nom, colonne B = division.</p>
                 </div>
@@ -378,7 +378,7 @@
                 </button>
                 <div class="apm-body">
                     <p class="apm-hint" style="margin: 0 0 10px;">Copie les joueurs (ou participants Courses) d'une journée précédente dans celle-ci.</p>
-                    <button onclick="importPlayersFromAddPlayerModal()" class="apm-primary" style="background: #0ea5e9;">📥 Choisir la journée à reprendre</button>
+                    <button onclick="importPlayersFromAddPlayerModal()" class="apm-primary" style="background: #0977a9;">📥 Choisir la journée à reprendre</button>
                 </div>
             </div>
 
@@ -400,11 +400,11 @@
     <div id="bulkModal" class="modal">
         <div class="modal-content" style="max-width: 600px; max-height: 85vh; display: flex; flex-direction: column;">
             <h3 style="margin-top: 0;">Ajouter plusieurs joueurs</h3>
-            <p style="margin-bottom: 12px; color: #7f8c8d; font-size: 14px;">
+            <p style="margin-bottom: 12px; color: #586566; font-size: 14px;">
                 Collez la liste des noms (un par ligne) pour la <strong id="selectedDivision">Division 1</strong> :
             </p>
             <div style="margin-bottom: 12px;">
-                <label style="font-size: 12px; color: #64748b; margin-right: 8px;">Club (optionnel) :</label>
+                <label style="font-size: 12px; color: #54637a; margin-right: 8px;">Club (optionnel) :</label>
                 <select id="bulkClubSelect" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; min-width: 150px;">
                     <option value="">-- Aucun --</option>
                 </select>
@@ -437,8 +437,8 @@
     <div id="editTimeModal" class="modal">
         <div class="modal-content" style="max-width: 600px;">
             <h3>✏️ Éditer les performances</h3>
-            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f39c12;">
-                <p style="margin: 0; font-size: 14px; color: #856404;">
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #8b5700;">
+                <p style="margin: 0; font-size: 14px; color: #6c5103;">
                     <strong>⚠️ Attention:</strong> Vous modifiez manuellement les données de performance. Ces changements remplaceront les valeurs chronométrées automatiquement.
                 </p>
             </div>
@@ -447,24 +447,24 @@
                     <strong>Participant:</strong> <span id="editTimeParticipantName" style="color: #2c3e50;"></span>
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <strong>Dossard:</strong> <span id="editTimeParticipantBib" style="color: #e67e22; font-weight: bold;"></span>
+                    <strong>Dossard:</strong> <span id="editTimeParticipantBib" style="color: #9c5003; font-weight: bold;"></span>
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <strong>Temps actuel:</strong> <span id="editTimeCurrentTime" style="color: #27ae60; font-family: monospace; font-weight: bold;"></span>
+                    <strong>Temps actuel:</strong> <span id="editTimeCurrentTime" style="color: #017239; font-family: monospace; font-weight: bold;"></span>
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <strong>Tours actuels:</strong> <span id="editTimeCurrentLaps" style="color: #3498db; font-weight: bold;"></span>
+                    <strong>Tours actuels:</strong> <span id="editTimeCurrentLaps" style="color: #09679e; font-weight: bold;"></span>
                 </div>
                 <div>
-                    <strong>Distance par tour:</strong> <span id="editTimeDistancePerLap" style="color: #16a085; font-weight: bold;"></span>
+                    <strong>Distance par tour:</strong> <span id="editTimeDistancePerLap" style="color: #057e68; font-weight: bold;"></span>
                 </div>
             </div>
             <div style="display: grid; gap: 15px;">
                 <div>
                     <label style="font-weight: bold; display: block; margin-bottom: 5px;">🔄 Nombre de tours:</label>
-                    <input type="number" id="editTimeLaps" min="0" value="0" style="width: 100%; padding: 12px; border-radius: 5px; border: 2px solid #3498db; text-align: center; font-size: 20px; font-weight: bold;">
-                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px; text-align: center;">
-                        Distance totale: <span id="editTimeTotalDistance" style="font-weight: bold; color: #27ae60;">0 km</span>
+                    <input type="number" id="editTimeLaps" min="0" value="0" style="width: 100%; padding: 12px; border-radius: 5px; border: 2px solid #09679e; text-align: center; font-size: 20px; font-weight: bold;">
+                    <div style="font-size: 12px; color: #586566; margin-top: 5px; text-align: center;">
+                        Distance totale: <span id="editTimeTotalDistance" style="font-weight: bold; color: #017239;">0 km</span>
                     </div>
                 </div>
 
@@ -472,25 +472,25 @@
                     <label style="font-weight: bold; display: block; margin-bottom: 5px;">⏱️ Nouveau temps:</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;">
                         <div>
-                            <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">Heures</label>
+                            <label style="font-size: 12px; color: #586566; display: block; margin-bottom: 3px;">Heures</label>
                             <input type="number" id="editTimeHours" min="0" max="23" value="0" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; text-align: center; font-size: 18px; font-weight: bold;">
                         </div>
                         <div>
-                            <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">Minutes</label>
+                            <label style="font-size: 12px; color: #586566; display: block; margin-bottom: 3px;">Minutes</label>
                             <input type="number" id="editTimeMinutes" min="0" max="59" value="0" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; text-align: center; font-size: 18px; font-weight: bold;">
                         </div>
                         <div>
-                            <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">Secondes</label>
+                            <label style="font-size: 12px; color: #586566; display: block; margin-bottom: 3px;">Secondes</label>
                             <input type="number" id="editTimeSeconds" min="0" max="59" value="0" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; text-align: center; font-size: 18px; font-weight: bold;">
                         </div>
                         <div>
-                            <label style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">Centièmes</label>
+                            <label style="font-size: 12px; color: #586566; display: block; margin-bottom: 3px;">Centièmes</label>
                             <input type="number" id="editTimeCentiseconds" min="0" max="99" value="0" style="width: 100%; padding: 10px; border-radius: 5px; border: 2px solid #ddd; text-align: center; font-size: 18px; font-weight: bold;">
                         </div>
                     </div>
                 </div>
                 <div style="background: #e8f4f8; padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 5px;">Aperçu du nouveau temps:</div>
+                    <div style="font-size: 12px; color: #586566; margin-bottom: 5px;">Aperçu du nouveau temps:</div>
                     <div id="editTimePreview" style="font-size: 32px; font-weight: bold; color: #2c3e50; font-family: monospace;">00:00:00.00</div>
                 </div>
             </div>
@@ -509,14 +509,14 @@
 
             <!-- Étape 1 : Choix du mode (réorganiser ou pré-remplir) -->
             <div id="preFillModeSelection" style="display: block;">
-                <div style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                <div style="background: linear-gradient(135deg, #8b5700, #9c5003); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
                     <p style="margin: 0; font-size: 14px;">Comment souhaitez-vous remplir cette journée ?</p>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                     <!-- Réorganiser les joueurs existants -->
                     <div onclick="selectPreFillMode('reorganize')" style="
-                        background: linear-gradient(135deg, #3498db, #2980b9);
+                        background: linear-gradient(135deg, #09679e, #08689d);
                         color: white;
                         padding: 25px;
                         border-radius: 10px;
@@ -525,7 +525,7 @@
                         border: 3px solid transparent;
                     " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 20px rgba(52,152,219,0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                         <h4 style="margin: 0 0 10px 0; font-size: 20px;">🔄 Réorganiser les joueurs de la journée précédente</h4>
-                        <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+                        <p style="margin: 0; font-size: 14px;">
                             Reprend TOUS les joueurs de la journée précédente et les réorganise entre les divisions.<br>
                             <strong>✅ Garde tous les joueurs</strong> - Idéal pour redistribuer sans perdre personne
                         </p>
@@ -533,7 +533,7 @@
 
                     <!-- Pré-remplir depuis le classement -->
                     <div onclick="selectPreFillMode('prefill')" style="
-                        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                        background: linear-gradient(135deg, #9654b1, #8e44ad);
                         color: white;
                         padding: 25px;
                         border-radius: 10px;
@@ -542,7 +542,7 @@
                         border: 3px solid transparent;
                     " onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 20px rgba(155,89,182,0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                         <h4 style="margin: 0 0 10px 0; font-size: 20px;">📊 Pré-remplir depuis le classement général</h4>
-                        <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+                        <p style="margin: 0; font-size: 14px;">
                             Utilise le classement général pour remplir cette journée.<br>
                             <strong>⚠️ Peut exclure certains joueurs</strong> selon la stratégie choisie
                         </p>
@@ -556,14 +556,14 @@
 
             <!-- Étape 2 : Choix de la stratégie -->
             <div id="preFillStrategySelection" style="display: none;">
-                <div style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                <div style="background: linear-gradient(135deg, #8b5700, #9c5003); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
                     <p style="margin: 0; font-size: 14px;">Choisissez comment répartir les joueurs dans les divisions</p>
                 </div>
 
             <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                 <!-- Stratégie Par Niveau -->
                 <div onclick="applyPreFillStrategy('by-level')" style="
-                    background: linear-gradient(135deg, #3498db, #2980b9);
+                    background: linear-gradient(135deg, #09679e, #08689d);
                     color: white;
                     padding: 20px;
                     border-radius: 10px;
@@ -580,7 +580,7 @@
 
                 <!-- Stratégie Serpent -->
                 <div onclick="applyPreFillStrategy('snake')" style="
-                    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                    background: linear-gradient(135deg, #9654b1, #8e44ad);
                     color: white;
                     padding: 20px;
                     border-radius: 10px;
@@ -597,7 +597,7 @@
 
                 <!-- Stratégie Mixte -->
                 <div onclick="applyPreFillStrategy('balanced')" style="
-                    background: linear-gradient(135deg, #27ae60, #2ecc71);
+                    background: #017239;
                     color: white;
                     padding: 20px;
                     border-radius: 10px;
@@ -614,7 +614,7 @@
 
                 <!-- Stratégie Équilibrer (Promotions/Relégations) -->
                 <div onclick="applyPreFillStrategy('rebalance')" style="
-                    background: linear-gradient(135deg, #e67e22, #d35400);
+                    background: linear-gradient(135deg, #9c5003, #bd4c05);
                     color: white;
                     padding: 20px;
                     border-radius: 10px;
@@ -644,35 +644,35 @@
 
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
                 <div onclick="selectMatchGenerationType('round-robin')"
-                     style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; text-align: center;"
+                     style="background: linear-gradient(135deg, #09679e, #08689d); color: white; padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; text-align: center;"
                      onmouseover="this.style.transform='scale(1.02)';"
                      onmouseout="this.style.transform='scale(1)';">
                     <div style="font-size: 12px; font-weight: 600;">🔄 Round-Robin</div>
-                    <div style="font-size: 10px; opacity: 0.9;">Tous vs tous</div>
+                    <div style="font-size: 11px;">Tous vs tous</div>
                 </div>
 
                 <div onclick="selectMatchGenerationType('optimized')"
-                     style="background: linear-gradient(135deg, #e67e22, #d35400); color: white; padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; text-align: center;"
+                     style="background: linear-gradient(135deg, #9c5003, #bd4c05); color: white; padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; text-align: center;"
                      onmouseover="this.style.transform='scale(1.02)';"
                      onmouseout="this.style.transform='scale(1)';">
                     <div style="font-size: 12px; font-weight: 600;">🎲 Optimisé 4-10</div>
-                    <div style="font-size: 10px; opacity: 0.9;">Schémas optimisés</div>
+                    <div style="font-size: 11px;">Schémas optimisés</div>
                 </div>
 
                 <div onclick="selectMatchGenerationType('court')"
-                     style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; text-align: center;"
+                     style="background: #057e68; color: white; padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; text-align: center;"
                      onmouseover="this.style.transform='scale(1.02)';"
                      onmouseout="this.style.transform='scale(1)';">
                     <div style="font-size: 12px; font-weight: 600;">🎾 Par Terrain</div>
-                    <div style="font-size: 10px; opacity: 0.9;">Répartis par court</div>
+                    <div style="font-size: 11px;">Répartis par court</div>
                 </div>
 
                 <div onclick="selectMatchGenerationType('swiss')"
-                     style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; text-align: center;"
+                     style="background: #017239; color: white; padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; text-align: center;"
                      onmouseover="this.style.transform='scale(1.02)';"
                      onmouseout="this.style.transform='scale(1)';">
                     <div style="font-size: 12px; font-weight: 600;">🏆 Swiss System</div>
-                    <div style="font-size: 10px; opacity: 0.9;">Par niveau (J2+)</div>
+                    <div style="font-size: 11px;">Par niveau (J2+)</div>
                 </div>
             </div>
 
@@ -685,16 +685,16 @@
     <!-- Modal Classement Complet de Journée -->
     <div id="completeDayRankingModal" class="modal">
         <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #3498db;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #09679e;">
                 <h3 id="completeDayRankingTitle" style="margin: 0; color: #2c3e50;">📊 Classement Complet - Journée 1</h3>
-                <button onclick="closeCompleteDayRankingModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d;">×</button>
+                <button onclick="closeCompleteDayRankingModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #586566;">×</button>
             </div>
             <div id="completeDayRankingContent">
                 <!-- Contenu généré dynamiquement -->
             </div>
             <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; position: sticky; bottom: 0; background: white;">
                 <button onclick="closeCompleteDayRankingModal()" class="btn btn-secondary" style="padding: 8px 20px;">Fermer</button>
-                <button onclick="openCompleteRankingInNewWindow()" class="btn" style="padding: 8px 20px; background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">📺 Afficher</button>
+                <button onclick="openCompleteRankingInNewWindow()" class="btn" style="padding: 8px 20px; background: linear-gradient(135deg, #9654b1, #8e44ad); color: white;">📺 Afficher</button>
             </div>
         </div>
     </div>
@@ -732,6 +732,7 @@
         <script src="src/search.iife.js"></script>
         <script src="src/darkmode.iife.js"></script>
         <script src="src/mobile.iife.js"></script>
+        <script src="src/a11y.iife.js"></script>
 
         <!-- 7. Initialisation (dépend de tout) -->
         <script src="src/init.iife.js"></script>

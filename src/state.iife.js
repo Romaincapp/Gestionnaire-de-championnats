@@ -131,8 +131,8 @@
     var FORFAIT_TOGGLE_TITLE = 'Supprimer un match, corriger le nom d\'un joueur dans un match, déclarer un forfait';
     function forfaitToggleButtonState(unlocked) {
         return unlocked
-            ? { label: '🔒 Verrouiller', background: '#e74c3c', title: 'Masquer à nouveau suppression, noms modifiables et forfaits' }
-            : { label: '🔓 Modifier les matchs', background: '#64748b', title: FORFAIT_TOGGLE_TITLE };
+            ? { label: '🔒 Verrouiller', background: '#d03427', title: 'Masquer à nouveau suppression, noms modifiables et forfaits' }
+            : { label: '🔓 Modifier les matchs', background: '#54637a', title: FORFAIT_TOGGLE_TITLE };
     }
 
     function toggleForfaitButtons() {

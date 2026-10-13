@@ -998,11 +998,11 @@
                                         title="Supprimer ce match"
                                         style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
                                                width: 18px; height: 18px; z-index: 10;
-                                               background: #e74c3c; color: white; border: none; border-radius: 50%;
+                                               background: #d03427; color: white; border: none; border-radius: 50%;
                                                font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
-                                               opacity: 0.6; transition: opacity 0.2s;"
+                                               opacity: 0.9; transition: opacity 0.2s;"
                                         onmouseover="this.style.opacity='1'"
-                                        onmouseout="this.style.opacity='0.6'">×</button>` : ''}
+                                        onmouseout="this.style.opacity='0.9'">×</button>` : ''}
                                 ${match.completed || collapsedSummary ? `<div class="match-header" onclick="toggleMatchCollapse(this.parentElement)" style="cursor: pointer;">
                                     ${match.completed ? `<div class="player-names">${collapsedSummary}</div>` : ''}
                                     ${match.completed ? `<div class="match-status ${statusClass}">${statusText}</div>` : ''}
@@ -1013,7 +1013,7 @@
                                             ${window.showForfaitButtons ? 
                                                 `<input type="text" class="player-name-input" value="${match.player1}" 
                                                         onchange="editMatchPlayerName(${dayNumber}, ${division}, ${globalIndex}, 'player1', this.value)"
-                                                        style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">` 
+                                                        style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">` 
                                                 : `<span class="player-name-left">${match.player1}</span>`}
                                             <div class="score-center">
                                                 <input type="number" class="score-input"
@@ -1031,17 +1031,17 @@
                                             ${window.showForfaitButtons ? 
                                                 `<input type="text" class="player-name-input" value="${match.player2}" 
                                                         onchange="editMatchPlayerName(${dayNumber}, ${division}, ${globalIndex}, 'player2', this.value)"
-                                                        style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #3498db; border-radius: 4px; background: white;">` 
+                                                        style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">` 
                                                 : `<span class="player-name-right">${match.player2}</span>`}
                                         </div>
                                         ${!match.completed && window.showForfaitButtons ? `
                                         <div style="display: flex; gap: 4px; justify-content: center; margin-top: 6px;">
                                             <button onclick="declareForfait('regular', ${dayNumber}, ${division}, ${globalIndex}, 'player1')"
-                                                    style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                                                    style="padding: 2px 6px; font-size: 11px; background: #d03427; color: white;
                                                            border: none; border-radius: 3px; cursor: pointer;"
                                                     title="Forfait ${match.player1}">F1</button>
                                             <button onclick="declareForfait('regular', ${dayNumber}, ${division}, ${globalIndex}, 'player2')"
-                                                    style="padding: 2px 6px; font-size: 10px; background: #e74c3c; color: white;
+                                                    style="padding: 2px 6px; font-size: 11px; background: #d03427; color: white;
                                                            border: none; border-radius: 3px; cursor: pointer;"
                                                     title="Forfait ${match.player2}">F2</button>
                                         </div>
@@ -1286,7 +1286,7 @@
                     <h3 style="margin: 0 0 20px 0; color: #2c3e50; text-align: center;">
                         Ajouter un match - ${poolName}
                     </h3>
-                    <p style="color: #7f8c8d; font-size: 14px; text-align: center; margin-bottom: 20px;">
+                    <p style="color: #586566; font-size: 14px; text-align: center; margin-bottom: 20px;">
                         Division ${division} - Journée ${dayNumber}
                     </p>
 
@@ -1302,7 +1302,7 @@
                         </select>
                     </div>
 
-                    <div style="text-align: center; margin: 10px 0; font-weight: bold; color: #3498db;">
+                    <div style="text-align: center; margin: 10px 0; font-weight: bold; color: #09679e;">
                         VS
                     </div>
 
@@ -1320,11 +1320,11 @@
 
                     <div style="display: flex; gap: 10px; justify-content: center;">
                         <button onclick="document.getElementById('add-pool-match-modal').remove()" style="
-                            padding: 10px 25px; background: #95a5a6; color: white;
+                            padding: 10px 25px; background: #566566; color: white;
                             border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
                         ">Annuler</button>
                         <button onclick="addManualPoolMatch(${dayNumber}, ${division}, ${poolIndex})" style="
-                            padding: 10px 25px; background: #27ae60; color: white;
+                            padding: 10px 25px; background: #017239; color: white;
                             border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
                         ">Ajouter</button>
                     </div>
@@ -1451,7 +1451,7 @@
                 setTimeout(() => {
                     if (matchElement) {
                         matchElement.style.background = '#d5f4e6';
-                        matchElement.style.borderColor = '#27ae60';
+                        matchElement.style.borderColor = '#017239';
                     }
                 }, 200);
 
@@ -1805,12 +1805,12 @@
             <div id="renamePlayerChoiceModal" onclick="if (event.target === this) resolveRenamePlayerChoice(null)" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10001; padding: 16px;">
                 <div style="background: white; border-radius: 12px; padding: 22px; max-width: 440px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
                     <h3 style="margin: 0 0 8px; color: #2c3e50;">✏️ Renommer « ${esc(oldName)} » en « ${esc(newName)} »</h3>
-                    <p style="margin: 0 0 16px; color: #64748b; font-size: 14px;">« ${esc(oldName)} » ${others}.</p>
-                    <button id="renameChoiceAll" onclick="resolveRenamePlayerChoice('all')" style="display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 10px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
-                        <strong>✏️ Renommer partout</strong><br><span style="font-size: 12px; opacity: 0.9;">Même joueur (faute de frappe…) : « ${esc(newName)} » remplace « ${esc(oldName)} » dans tous les matchs et au listing de la journée</span>
+                    <p style="margin: 0 0 16px; color: #54637a; font-size: 14px;">« ${esc(oldName)} » ${others}.</p>
+                    <button id="renameChoiceAll" onclick="resolveRenamePlayerChoice('all')" style="display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 10px; background: #236bdd; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                        <strong>✏️ Renommer partout</strong><br><span style="font-size: 12px;">Même joueur (faute de frappe…) : « ${esc(newName)} » remplace « ${esc(oldName)} » dans tous les matchs et au listing de la journée</span>
                     </button>
-                    <button id="renameChoiceSingle" onclick="resolveRenamePlayerChoice('single')" style="display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 14px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
-                        <strong>➕ Nouveau joueur</strong><br><span style="font-size: 12px; opacity: 0.9;">Autre joueur : « ${esc(newName)} » remplace « ${esc(oldName)} » dans ce match seulement et rejoint le listing</span>
+                    <button id="renameChoiceSingle" onclick="resolveRenamePlayerChoice('single')" style="display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 14px; background: #087f58; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                        <strong>➕ Nouveau joueur</strong><br><span style="font-size: 12px;">Autre joueur : « ${esc(newName)} » remplace « ${esc(oldName)} » dans ce match seulement et rejoint le listing</span>
                     </button>
                     <div style="text-align: right;"><button onclick="resolveRenamePlayerChoice(null)" class="btn btn-secondary">Annuler</button></div>
                 </div>
