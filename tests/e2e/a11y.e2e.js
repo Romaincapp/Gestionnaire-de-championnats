@@ -11,7 +11,8 @@
 //   - focus placé dans la fenêtre, et qui y reste après 25 Tab / 25 Maj+Tab ;
 //   - Échap ferme la fenêtre (par son propre bouton) et le focus n'est pas perdu
 //     dans une fenêtre restée ouverte.
-// Sur chaque écran : aucun élément [onclick] non natif inatteignable au clavier.
+// Sur chaque écran : aucun élément [onclick] non natif inatteignable au clavier,
+// aucun champ (case de score, liste, texte) sans nom accessible.
 // Rapport : tests/e2e/output-a11y/. Code de sortie 1 au moindre défaut.
 // ============================================
 const { chromium } = require('playwright-core');
@@ -37,7 +38,17 @@ function inspect() {
         if (getComputedStyle(el).position === 'fixed' || !el.getClientRects().length) return false;
         return !el.hasAttribute('tabindex');
     }).map(el => el.tagName.toLowerCase() + ' « ' + el.textContent.replace(/\s+/g, ' ').trim().slice(0, 40) + ' »');
-    if (!top) return { count: 0, unreachable };
+    // champs visibles sans nom accessible (libellé relié, aria-label, title)
+    const unnamed = [...document.querySelectorAll('input:not([type="hidden"]):not([type="button"]):not([type="submit"]), select, textarea')]
+        .filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && !el.closest('#appSearchBar') &&
+            !((el.labels && el.labels.length) || el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.title))
+        .map(el => {
+            const box = el.parentElement;
+            const ctx = box ? box.textContent.replace(/\s+/g, ' ').trim().slice(0, 40) : '';
+            return el.tagName.toLowerCase() + (el.type ? '[' + el.type + ']' : '') + (el.id ? '#' + el.id : '') +
+                (el.placeholder ? ' ph=« ' + el.placeholder.split('\n')[0].slice(0, 20) + ' »' : '') + ' dans « ' + ctx + ' »';
+        });
+    if (!top) return { count: 0, unreachable, unnamed };
     const label = top.getAttribute('aria-labelledby');
     const titleEl = label && document.getElementById(label);
     return {
@@ -48,6 +59,7 @@ function inspect() {
         focusInside: top.contains(document.activeElement),
         focusTag: document.activeElement ? document.activeElement.tagName.toLowerCase() : '',
         unreachable,
+        unnamed,
     };
 }
 
@@ -80,6 +92,8 @@ async function main() {
         const issues = [];
         const before = await page.evaluate(inspect);
         before.unreachable.slice(0, 10).forEach(u => issues.push('inatteignable au clavier : ' + u));
+        before.unnamed.slice(0, 15).forEach(u => issues.push('champ sans nom accessible : ' + u));
+        if (before.unnamed.length > 15) issues.push(`… et ${before.unnamed.length - 15} autre(s) champ(s) sans nom`);
         if (before.count) {
             dialogsChecked++;
             if (before.role !== 'dialog') issues.push('role="dialog" absent');

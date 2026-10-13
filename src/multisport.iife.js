@@ -890,7 +890,7 @@
         var safeCategory = (p.category || '').replace(/"/g, '&quot;');
         row.innerHTML =
             '<div style="display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap;">' +
-            '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width: 55px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px; text-align: center;">' +
+            '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" aria-label="Dossard" style="width: 55px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px; text-align: center;">' +
             '<input type="text" id="edit-pname-' + dayNumber + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="flex: 1; min-width: 120px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px;">' +
             '<input type="text" id="edit-pclub-' + dayNumber + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 110px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px;">' +
             '<input type="text" id="edit-pcategory-' + dayNumber + '-' + participantId + '" list="categoryListRow-' + dayNumber + '-' + participantId + '" value="' + safeCategory + '" placeholder="Catégorie" style="width: 100px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px;">' +

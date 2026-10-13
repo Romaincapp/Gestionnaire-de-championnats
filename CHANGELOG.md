@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🔊 Champs annoncés correctement par les lecteurs d'écran
+- Chaque case de score dit à qui elle appartient : « Score de Gai Séjour 1 contre Les
+  Aquaphiles 2 » au lieu de « champ numérique, zéro » (matchs, poules, phase finale).
+- Les autres champs prennent le libellé affiché à côté (Divisions, Terrains, Club, Date…), ou,
+  dans un tableau, l'en-tête de colonne et le nom de la ligne (« Temps – Lucie Vandamme »).
+- Mesuré sur les 48 écrans : 2 469 champs sans nom avant, 0 après.
+
 ### 📱 Plus facile au doigt sur téléphone et tablette
 - Cases de score agrandies à 44×44 px (au lieu de 40×32 en matchs et 50×40 en poules), chiffres en
   16 px : plus de zoom intempestif de la page en touchant une case sur iPhone.

@@ -200,3 +200,64 @@ test('Tab dans la barre de recherche n\'est pas ramené dans la fenêtre ouverte
     const e = key(document.activeElement, 'Tab');
     expect(e.defaultPrevented).toBe(false);
 });
+
+test('chaque case de score porte le nom de son joueur et de son adversaire', async () => {
+    const host = document.createElement('div');
+    host.innerHTML = `
+        <div class="match"><div class="set-scores">
+            <span class="player-name-left">Gai Séjour 1</span>
+            <div class="score-center">
+                <input type="number" class="score-input" placeholder="0" onchange="updateMatchScore(1, 1, 0, 'score1', this.value)">
+                <input type="number" class="score-input" placeholder="0" onchange="updateMatchScore(1, 1, 0, 'score2', this.value)">
+            </div>
+            <span class="player-name-right">Les Aquaphiles 2</span>
+        </div></div>
+        <div class="score-container">
+            <input type="text" value="Équipe A" onchange="editPoolMatchPlayerName(1, 1, 'm1', 'player1', this.value)">
+            <div class="score-center"><input type="number" onchange="updatePoolMatchScore(1, 'm1', 'score1', this.value, 1)"></div>
+            <input type="text" value="Équipe B" onchange="editPoolMatchPlayerName(1, 1, 'm1', 'player2', this.value)">
+        </div>`;
+    document.body.appendChild(host);
+    await tick();
+    const [s1, s2] = host.querySelectorAll('.score-input');
+    expect(s1.getAttribute('aria-label')).toBe('Score de Gai Séjour 1 contre Les Aquaphiles 2');
+    expect(s2.getAttribute('aria-label')).toBe('Score de Les Aquaphiles 2 contre Gai Séjour 1');
+    // mode « Modifier les matchs » : noms lus dans les champs, champs de nom nommés
+    const pool = host.querySelector('.score-container');
+    expect(pool.querySelector('input[type="number"]').getAttribute('aria-label')).toBe('Score de Équipe A contre Équipe B');
+    expect(pool.querySelector('input[type="text"]').getAttribute('aria-label')).toBe('Nom du joueur 1 du match');
+});
+
+test('autres champs : libellé voisin relié, en-tête de colonne, placeholder parlant ; jamais « 0 »', async () => {
+    const host = document.createElement('div');
+    host.innerHTML = `
+        <div><label>Nombre de divisions :</label><input type="number" id="divs"></div>
+        <div><strong>Distance :</strong><input type="number" id="dist-x"></div>
+        <table><thead><tr><th>Couloir</th><th>Nageur</th><th>Temps</th></tr></thead>
+            <tbody><tr><td>3</td><td>Lucie Vandamme</td><td><input type="text" class="t"></td></tr></tbody></table>
+        <input type="text" class="ph" placeholder="Nom du participant">
+        <input type="number" class="zero" placeholder="0">
+        <label>Déjà relié <input type="text" class="wrapped"></label>`;
+    document.body.appendChild(host);
+    await tick();
+    expect(document.getElementById('divs').labels[0].textContent).toBe('Nombre de divisions :');
+    expect(document.getElementById('dist-x').getAttribute('aria-label')).toBe('Distance');
+    expect(host.querySelector('.t').getAttribute('aria-label')).toBe('Temps – Lucie Vandamme');
+    expect(host.querySelector('.ph').getAttribute('aria-label')).toBe('Nom du participant');
+    expect(host.querySelector('.zero').hasAttribute('aria-label')).toBe(false);
+    expect(host.querySelector('.wrapped').hasAttribute('aria-label')).toBe(false);   // déjà nommé par son <label>
+});
+
+test('un bloc voisin avec boutons ou un placeholder d\'exemple ne servent pas de nom', async () => {
+    const host = document.createElement('div');
+    host.innerHTML = `
+        <div><div>👥 Participants disponibles (149)<button>➕ Ajouter</button></div><input type="text" class="a"></div>
+        <textarea class="b" placeholder="Joueur 1
+Joueur 2"></textarea>
+        <input type="text" class="c" placeholder="ex: Solo, Équipe...">`;
+    document.body.appendChild(host);
+    await tick();
+    expect(host.querySelector('.a').hasAttribute('aria-label')).toBe(false);
+    expect(host.querySelector('.b').getAttribute('aria-label')).toBe('Liste, une entrée par ligne (ex. Joueur 1)');
+    expect(host.querySelector('.c').hasAttribute('aria-label')).toBe(false);
+});

@@ -380,9 +380,18 @@ son parent. Les tableaux qui tiennent et tout l'affichage ordinateur restent int
 - **les éléments cliquables non natifs** (`[onclick]` sur div/span/h2/td/tr…) : `tabindex="0"`,
   `role="button"` (pas sur `<tr>`), Entrée / Espace = clic. Ignorés : fonds de fenêtre,
   `onclick="event.stopPropagation()"`, barre de recherche, notifications
+- **les champs sans libellé** (`data-a11y-name` posé une fois) : `aria-label` déduit du contexte,
+  dans l'ordre — case de score (`onchange` avec `'score1'`/`'score2'`) « Score de A contre B »
+  (noms lus dans `.player-name-left/right` ou les champs de nom du mode « Modifier ») ; champ de
+  nom (`'player1'`/`'player2'`) « Nom du joueur 1 du match » ; `<label>` voisin non relié (relié
+  par `for` si le champ a un id) ou texte court voisin sans bouton ; en-tête de colonne + nom de la
+  ligne dans un tableau (« Temps – Lucie Vandamme ») ; placeholder parlant (pas « 0 », pas
+  « ex: … » ; sur plusieurs lignes → « Liste, une entrée par ligne (ex. …) »). Un champ que le
+  contexte ne nomme pas reçoit un `aria-label` dans son gabarit
 
 Pour une nouvelle fenêtre : rien à faire si elle a un titre `h1`-`h4` et un bouton « × »,
-« Fermer » ou « Annuler ». Pour un nouvel élément cliquable, préférer un vrai `<button>`.
+« Fermer » ou « Annuler ». Pour un nouveau champ : un `<label for>` (ou `aria-label`) ; sinon
+`npm run test:a11y` le signale (« champ sans nom accessible »). Pour un nouvel élément cliquable, préférer un vrai `<button>`.
 Contour de focus : `:focus-visible` dans `styles.css` (bleu `#1d6fb8`, `#7cc4ff` en sombre).
 - `getOpenDialogs()`, `closeTopDialog()`, `refreshA11y()` (exposées, pour les tests)
 - Contrôle en vrai navigateur : `npm run test:a11y` et `npm run test:a11y:mobile` (voir 🧪 Tests)
@@ -491,7 +500,7 @@ d'affichage, et ajouter une ligne à `screens` (`tests/e2e/screens.js`, partagé
 `npm run test:a11y`) pour toute nouvelle fenêtre. `npm run test:a11y` (`tests/e2e/a11y.e2e.js`)
 ouvre les mêmes écrans et vérifie, sur chaque fenêtre : `role="dialog"`, titre, focus dedans,
 Tab qui y reste, Échap qui la ferme ; sur chaque écran : aucun `[onclick]` inatteignable au
-clavier. Rapport dans `tests/e2e/output-a11y/`.
+clavier, aucun champ sans nom accessible. Rapport dans `tests/e2e/output-a11y/`.
 
 **Couleurs et contraste** : `styles.css` commence par la palette (`:root`, variables
 `--color-primary`, `--color-success`, `--color-danger`, `--color-warning`, `--color-orange`,

@@ -14,7 +14,10 @@
 //     Annuler) ou son fond cliquable — donc avec sa logique de fermeture —,
 //     focus rendu à l'élément d'origine à la fermeture ;
 //   - élément cliquable non natif ([onclick] sur div/span/h2/td/tr...) :
-//     tabindex="0", role="button" (sauf <tr>), Entrée/Espace = clic.
+//     tabindex="0", role="button" (sauf <tr>), Entrée/Espace = clic ;
+//   - champ sans libellé : nom accessible (aria-label) déduit du contexte —
+//     case de score « Score de A contre B », champ de nom de joueur, libellé
+//     voisin non relié, en-tête de colonne, placeholder parlant.
 // Aucune fonction d'affichage n'a besoin de connaître ce module.
 (function(global) {
     'use strict';
@@ -208,6 +211,89 @@
         });
     }
 
+    // ---- champs sans libellé (cases de score, champs à placeholder, cellules de tableau)
+    var FIELDS = 'input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]), select, textarea';
+
+    function hasName(el) {
+        return (el.labels && el.labels.length) || el.getAttribute('aria-label') ||
+            el.getAttribute('aria-labelledby') || el.getAttribute('title');
+    }
+    function cleanText(t) {
+        return (t || '').replace(/\s+/g, ' ').replace(/\s*:\s*$/, '').trim();
+    }
+    // Nom d'un joueur du match : « Gai Séjour 1 » (nom affiché) ou champ de nom en mode « Modifier ».
+    function playerOf(container, side) {
+        var span = container.querySelector(side === 1 ? '.player-name-left' : '.player-name-right');
+        if (span) return cleanText(span.textContent);
+        var field = container.querySelector('input[onchange*="\'player' + side + '\'"]');
+        return field ? cleanText(field.value) : '';
+    }
+    function scoreName(el) {
+        var m = (el.getAttribute('onchange') || '').match(/'score([12])'/);
+        if (!m) return '';
+        var side = +m[1];
+        for (var box = el.parentElement; box && box !== document.body; box = box.parentElement) {
+            var me = playerOf(box, side), other = playerOf(box, 3 - side);
+            if (me || other) {
+                return 'Score de ' + (me || 'joueur ' + side) + (other ? ' contre ' + other : '');
+            }
+        }
+        return 'Score du joueur ' + side;
+    }
+    function playerFieldName(el) {
+        var m = (el.getAttribute('onchange') || '').match(/'player([12])'/);
+        return m ? 'Nom du joueur ' + m[1] + ' du match' : '';
+    }
+    // Libellé posé juste avant le champ (<label>, <strong>, <span> court) sans être relié.
+    function nearbyLabel(el) {
+        var prev = el.previousElementSibling;
+        if (!prev && el.parentElement) prev = el.parentElement.previousElementSibling;
+        if (!prev || prev.matches(FIELDS) || prev.querySelector(FIELDS + ', button, a[href], [onclick]')) return null;
+        if (!/^(LABEL|STRONG|B|SPAN|DIV|SMALL)$/.test(prev.tagName)) return null;
+        var text = cleanText(prev.textContent);
+        // un vrai <label> reste le libellé quelle que soit sa longueur ; ailleurs, texte court
+        return text && (prev.tagName === 'LABEL' || text.length <= 60) ? { el: prev, text: text } : null;
+    }
+    // Champ dans un tableau : en-tête de sa colonne + première cellule de sa ligne.
+    function tableName(el) {
+        var cell = el.closest('td');
+        var row = cell && cell.parentElement;
+        var table = row && row.closest('table');
+        if (!table) return '';
+        var head = table.querySelector('thead tr') || table.querySelector('tr');
+        var th = head && head !== row ? head.children[cell.cellIndex] : null;
+        var col = th ? cleanText(th.textContent) : '';
+        var first = row.cells[0] !== cell ? cleanText(row.cells[0].textContent) : '';
+        if (row.cells[1] && row.cells[1] !== cell && /^\d+$/.test(first)) first = cleanText(row.cells[1].textContent);
+        return [col, first].filter(Boolean).join(' – ');
+    }
+    // Placeholder parlant (« Nom du participant ») ; un exemple (« ex: Solo… ») n'est pas un nom ;
+    // une liste d'exemples sur plusieurs lignes (« Joueur 1⏎Joueur 2 ») décrit une saisie par ligne.
+    function placeholderName(ph) {
+        if (!/[A-Za-zÀ-ÿ]{3}/.test(ph) || /^\s*(ex\b|exemple|e\.g\.)/i.test(ph)) return '';
+        var lines = ph.split('\n').map(cleanText).filter(Boolean);
+        if (lines.length > 1) return 'Liste, une entrée par ligne (ex. ' + lines[0] + ')';
+        return lines[0] || '';
+    }
+    function nameField(el) {
+        if (el.hasAttribute('data-a11y-name') || hasName(el)) return;
+        el.setAttribute('data-a11y-name', '');
+        var name = scoreName(el) || playerFieldName(el);
+        if (!name) {
+            var near = nearbyLabel(el);
+            if (near && near.el.tagName === 'LABEL' && !near.el.htmlFor && el.id) { near.el.htmlFor = el.id; return; }
+            if (near) name = near.text;
+        }
+        if (!name) name = tableName(el);
+        if (!name) name = placeholderName(el.placeholder || '');
+        if (name) el.setAttribute('aria-label', name);
+    }
+    function nameFields(root) {
+        if (!root || root.nodeType !== 1) return;
+        if (root.matches(FIELDS)) nameField(root);
+        Array.prototype.forEach.call(root.querySelectorAll(FIELDS), nameField);
+    }
+
     function onKeydown(event) {
         if (event.defaultPrevented) return;
         var target = event.target;
@@ -234,6 +320,7 @@
     function start() {
         if (!document.body) return;
         enhanceClickables(document.body);
+        nameFields(document.body);
         syncDialogs();
         document.addEventListener('keydown', onKeydown);
         if (typeof MutationObserver !== 'function') return;
@@ -248,7 +335,7 @@
                 }
                 // le chrono remplace du texte 10 fois par seconde : seuls les éléments comptent
                 Array.prototype.forEach.call(m.addedNodes, function(n) {
-                    if (n.nodeType === 1) { changed = true; enhanceClickables(n); }
+                    if (n.nodeType === 1) { changed = true; enhanceClickables(n); nameFields(n); }
                 });
                 Array.prototype.forEach.call(m.removedNodes, function(n) {
                     if (n.nodeType === 1) changed = true;
@@ -263,7 +350,7 @@
 
     global.getOpenDialogs = function() { return openDialogs.map(function(d) { return d.el; }); };
     global.closeTopDialog = closeTopDialog;
-    global.refreshA11y = function() { enhanceClickables(document.body); syncDialogs(); };
+    global.refreshA11y = function() { enhanceClickables(document.body); nameFields(document.body); syncDialogs(); };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start);

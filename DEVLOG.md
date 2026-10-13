@@ -33,6 +33,23 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Nouvel audit Impeccable (12/20) puis libellés des champs
+
+- **Contexte** : audit relancé après les 3 P1 : 9/20 → 12/20 (accessibilité 2, perf 3, thème 2,
+  téléphone 3, cohérence 2 ; détecteur 147 → 59 constats). Plus gros manque restant : 2 469 champs
+  visibles sur 4 717 sans nom accessible (dont 2 214 cases de score, placeholder « 0 » seul).
+- **Fait** : `a11y.iife.js` nomme les champs sans libellé à partir du contexte (voir AGENTS.md
+  section 13 quinquies) ; `aria-label` explicite pour 2 champs que le contexte ne nomme pas
+  (fusion de noms, dossard en édition) ; `npm run test:a11y` signale désormais tout champ sans
+  nom : **2 469 → 0**.
+- **Fichiers/modules touchés** : `src/a11y.iife.js`, `src/ranking.iife.js`, `src/multisport.iife.js`,
+  `tests/unit/a11yKeyboard.test.js`, `tests/e2e/a11y.e2e.js`
+- **Commit(s)** : voir branche `claude/upbeat-hopper-8x2hjp`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md — · claude.md —
+- **Suite possible** : P2 de l'audit — textes blanc cassé à 90 % d'opacité à 4,3-4,4:1 (et
+  `test:contrast` qui ignore l'opacité du texte), `alert`/`confirm` natifs, `prefers-reduced-motion`,
+  notifications sans `aria-live` ; puis `polish`.
+
 ### 2026-10-13 — Impeccable P1 « adapt » : cibles tactiles et texte minimum (via APEX)
 
 - **Contexte** : 3e et dernière correction P1 de l'audit Impeccable (cases de score 40×32,

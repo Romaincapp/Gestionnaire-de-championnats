@@ -2362,7 +2362,7 @@ function showNameCheckModal() {
             body += '<div id="nameCheckGroup-' + gi + '" style="border:1px solid #e0e0e0; border-radius:8px; padding:12px; margin:10px 0; background:#fbfbfd;">' +
                 badgeHtml + variantsHtml +
                 '<div style="display:flex; gap:8px; align-items:center; margin-top:8px;">' +
-                '<input type="text" id="nameCheckInput-' + gi + '" value="' + escapeHtmlForNameCheck(suggestion) + '" ' +
+                '<input type="text" id="nameCheckInput-' + gi + '" aria-label="Nom retenu pour la fusion" value="' + escapeHtmlForNameCheck(suggestion) + '" ' +
                 'style="flex:1; padding:8px; border:1px solid #9c5003; border-radius:5px; box-sizing:border-box;">' +
                 '<button class="btn btn-warning" style="padding:8px 14px; font-size:13px; white-space:nowrap;" onclick="applyNameCheckMerge(' + gi + ')">🔁 Fusionner</button>' +
                 '</div></div>';
