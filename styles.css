@@ -29,7 +29,7 @@ body   * {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.5;
             color: #333;
-            background: linear-gradient(135deg, #0a64da 0%, #2020c7 100%);
+            background: #e9ecef;
             min-height: 100vh;
             padding: 10px;
         }
@@ -39,7 +39,7 @@ body   * {
             margin: 0 auto;
             background: white;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             overflow: hidden;
         }
         

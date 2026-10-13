@@ -9,7 +9,7 @@ try {
     // Barre d'adresse du téléphone assortie au fond de la page
     function updateThemeColor(isDark) {
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', isDark ? '#1a1a2e' : '#0a64da');
+        if (meta) meta.setAttribute('content', isDark ? '#1a1a2e' : '#2c3e50');
     }
 
     function toggleDarkMode() {
