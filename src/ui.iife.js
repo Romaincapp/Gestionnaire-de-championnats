@@ -227,8 +227,8 @@
                     <!-- Plus de boutons « 📋 J1, J2… » : copier les joueurs d'une journée précédente
                          se fait dans « ➕ Joueurs » → « 📥 Reprendre d'une autre journée » -->
                     <!-- Actions matchs -->
-                    <button onclick="showMatchGenerationModal(${dayNumber})" ${dayActionAttrs(dayNumber, 'players')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #236bdd; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                        🎯 Matchs
+                    <button onclick="showMatchGenerationModal(${dayNumber}, this)" data-match-gen-day="${dayNumber}" aria-haspopup="menu" aria-expanded="false" ${dayActionAttrs(dayNumber, 'players')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #236bdd; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        🎯 Matchs ▾
                     </button>
                     <button onclick="togglePoolSection(${dayNumber})" id="show-pool-btn-${dayNumber}" ${dayActionAttrs(dayNumber, 'players|poolsOn')} style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #9c6304; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         🏊 Poules

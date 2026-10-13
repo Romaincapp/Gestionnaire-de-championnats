@@ -201,8 +201,8 @@ le 2026-09).
 
 **Fonctions exposées** :
 - `updateMatchesDisplay(dayNumber)` - Met à jour l'affichage des matchs
-- `showMatchGenerationModal(dayNumber)` - Affiche la modale de génération
-- `closeMatchGenerationModal()` - Ferme la modale
+- `showMatchGenerationModal(dayNumber, bouton?)` (alias `toggleMatchGenerationMenu`) - Ouvre/ferme le **menu déroulant** « 🎯 Matchs ▾ » sous le bouton (plus de fenêtre `#matchGenerationModal` depuis 2026-10-13) : Round-Robin, Optimisé 4-10, Par terrain, Système suisse → `selectMatchGenerationType(type)`. Sans bouton, retrouve `[data-match-gen-day="N"]`. Flèches / Début / Fin, Échap (focus rendu au bouton), clic extérieur ou second clic ferment. Défini dans `init.iife.js`
+- `closeMatchGenerationModal(restoreFocus)` - Ferme le menu
 - `generateMatchesForDay(dayNumber)` - Génère les matchs (round-robin)
 - `generateMatchesSwissSystem(dayNumber)` - Génère les matchs (système suisse)
 - `updateMatchScore(dayNumber, division, matchIndex, scoreField, value)` - Met à jour un score
@@ -418,7 +418,7 @@ Contour de focus : `:focus-visible` dans `styles.css` (bleu `#1d6fb8`, `#7cc4ff`
    chrono en cours après un rechargement de page)
 2. **20 fonctions UI diverses** qui n'avaient pas de module dédié : gestion
    des BYE (`addByeMatchForPlayer`, `showByeScoreModal`, `confirmByeScore`,
-   `showByeManagementModal`, `addByeToAll`...), modale de génération de
+   `showByeManagementModal`, `addByeToAll`...), menu déroulant de génération de
    matchs (`showMatchGenerationModal`, `selectMatchGenerationType`),
    fenêtres de classement (`openRankingInNewWindow`,
    `showCompleteDayRanking`, `openCompleteRankingInNewWindow`,

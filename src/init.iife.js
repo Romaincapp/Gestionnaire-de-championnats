@@ -185,22 +185,120 @@
     }
     window.confirmByeScoreForAll = confirmByeScoreForAll;
 
-    // ========== MODAL GÉNÉRATION DE MATCHS ==========
+    // ========== MENU GÉNÉRATION DE MATCHS ==========
+    // Menu déroulant sous le bouton « 🎯 Matchs » (remplace l'ancienne fenêtre).
     let currentMatchGenerationDay = 1;
+    let matchGenerationAnchor = null;
 
-    function showMatchGenerationModal(dayNumber) {
+    const MATCH_GENERATION_TYPES = [
+        { type: 'round-robin', icon: '🔄', label: 'Round-Robin', hint: 'Tous contre tous' },
+        { type: 'optimized', icon: '🎲', label: 'Optimisé 4-10', hint: 'Schémas optimisés' },
+        { type: 'court', icon: '🎾', label: 'Par terrain', hint: 'Répartis par terrain' },
+        { type: 'swiss', icon: '🏆', label: 'Système suisse', hint: 'Par niveau (J2+)' }
+    ];
+
+    function getMatchGenerationMenu() {
+        let menu = document.getElementById('matchGenerationMenu');
+        if (menu) return menu;
+        menu = document.createElement('div');
+        menu.id = 'matchGenerationMenu';
+        menu.className = 'match-generation-menu';
+        menu.setAttribute('role', 'menu');
+        menu.setAttribute('aria-label', 'Génération de matchs');
+        menu.hidden = true;
+        menu.innerHTML = MATCH_GENERATION_TYPES.map(t => `
+            <button type="button" role="menuitem" data-type="${t.type}" onclick="selectMatchGenerationType('${t.type}')">
+                <span class="mgm-icon" aria-hidden="true">${t.icon}</span>
+                <span class="mgm-text"><span class="mgm-label">${t.label}</span><span class="mgm-hint">${t.hint}</span></span>
+            </button>`).join('');
+        menu.addEventListener('keydown', onMatchGenerationMenuKeydown);
+        document.body.appendChild(menu);
+        return menu;
+    }
+
+    function isMatchGenerationMenuOpen() {
+        const menu = document.getElementById('matchGenerationMenu');
+        return !!menu && !menu.hidden;
+    }
+
+    function positionMatchGenerationMenu() {
+        const menu = document.getElementById('matchGenerationMenu');
+        if (!menu || menu.hidden || !matchGenerationAnchor) return;
+        const r = matchGenerationAnchor.getBoundingClientRect();
+        const width = menu.offsetWidth || 220;
+        const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
+        menu.style.left = (left + window.scrollX) + 'px';
+        menu.style.top = (r.bottom + 4 + window.scrollY) + 'px';
+    }
+
+    function showMatchGenerationModal(dayNumber, anchor) {
+        const btn = anchor || document.querySelector(`[data-match-gen-day="${dayNumber}"]`);
+        if (isMatchGenerationMenuOpen() && matchGenerationAnchor === btn && currentMatchGenerationDay === dayNumber) {
+            closeMatchGenerationModal();
+            return;
+        }
+        closeMatchGenerationModal(false);
         currentMatchGenerationDay = dayNumber;
-        document.getElementById('matchGenerationModal').style.display = 'block';
+        matchGenerationAnchor = btn || null;
+        const menu = getMatchGenerationMenu();
+        menu.hidden = false;
+        if (matchGenerationAnchor) matchGenerationAnchor.setAttribute('aria-expanded', 'true');
+        positionMatchGenerationMenu();
+        const first = menu.querySelector('[role="menuitem"]');
+        if (first) first.focus();
+        // Ajouté après le clic d'ouverture, pour ne pas le refermer aussitôt
+        setTimeout(() => {
+            document.addEventListener('mousedown', onMatchGenerationOutsideClick, true);
+            window.addEventListener('resize', positionMatchGenerationMenu);
+        }, 0);
     }
     window.showMatchGenerationModal = showMatchGenerationModal;
+    window.toggleMatchGenerationMenu = showMatchGenerationModal;
 
-    function closeMatchGenerationModal() {
-        document.getElementById('matchGenerationModal').style.display = 'none';
+    function closeMatchGenerationModal(restoreFocus) {
+        const menu = document.getElementById('matchGenerationMenu');
+        if (menu) menu.hidden = true;
+        document.removeEventListener('mousedown', onMatchGenerationOutsideClick, true);
+        window.removeEventListener('resize', positionMatchGenerationMenu);
+        if (matchGenerationAnchor) {
+            matchGenerationAnchor.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) matchGenerationAnchor.focus();
+        }
     }
     window.closeMatchGenerationModal = closeMatchGenerationModal;
 
+    function onMatchGenerationOutsideClick(event) {
+        const menu = document.getElementById('matchGenerationMenu');
+        if (!menu || menu.contains(event.target)) return;
+        if (matchGenerationAnchor && matchGenerationAnchor.contains(event.target)) return; // le bouton gère la bascule
+        closeMatchGenerationModal(false);
+    }
+
+    function onMatchGenerationMenuKeydown(event) {
+        const items = Array.from(event.currentTarget.querySelectorAll('[role="menuitem"]'));
+        const i = items.indexOf(document.activeElement);
+        let next = null;
+        switch (event.key) {
+            case 'ArrowDown': next = items[(i + 1) % items.length]; break;
+            case 'ArrowUp': next = items[(i - 1 + items.length) % items.length]; break;
+            case 'Home': next = items[0]; break;
+            case 'End': next = items[items.length - 1]; break;
+            case 'Escape':
+                event.preventDefault();
+                event.stopPropagation();
+                closeMatchGenerationModal(true);
+                return;
+            case 'Tab':
+                closeMatchGenerationModal(false);
+                return;
+            default: return;
+        }
+        event.preventDefault();
+        if (next) next.focus();
+    }
+
     function selectMatchGenerationType(type) {
-        closeMatchGenerationModal();
+        closeMatchGenerationModal(false);
         const day = currentMatchGenerationDay;
         switch(type) {
             case 'round-robin':

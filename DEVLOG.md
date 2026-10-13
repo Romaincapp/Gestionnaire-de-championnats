@@ -33,6 +33,14 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — « 🎯 Matchs » : menu déroulant au lieu d'une fenêtre
+
+- **Contexte** : la fenêtre « Génération de Matchs » (4 grosses tuiles colorées) jugée lourde ; demande d'un menu déroulant plus sobre sous le bouton.
+- **Fait** : `#matchGenerationModal` supprimé de `index.html` ; `showMatchGenerationModal(jour, bouton)` ouvre un menu (`role="menu"`, créé une fois dans `body`, positionné sous le bouton) — clavier (flèches, Échap → focus rendu), clic extérieur / second clic ferment. Bouton renommé « 🎯 Matchs ▾ » avec `aria-haspopup`/`aria-expanded` (index.html + gabarit `ui.iife.js`). Styles clair/sombre dans `styles.css`. Test `matchGenerationMenu.test.js` ; écran `menu-generation-matchs` dans `tests/e2e/screens.js`. test:a11y / darkmode / contrast / touch à 0 défaut.
+- **Fichiers/modules touchés** : `src/init.iife.js`, `src/ui.iife.js`, `index.html`, `styles.css`, `tests/unit/matchGenerationMenu.test.js`, `tests/e2e/screens.js`
+- **Commit(s)** : voir branche `claude/youthful-wozniak-xe2vdr`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md — · claude.md —
+
 ### 2026-10-13 — Barre « Mode » sobre
 
 - **Contexte** : après le fond de page, la barre « 🎾 Mode : Matchs/Courses » en dégradé bleu (orange en Courses) restait trop voyante.
