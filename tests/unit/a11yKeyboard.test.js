@@ -171,3 +171,32 @@ test('Échap dans la barre de recherche ne ferme pas la fenêtre ouverte', async
     key(document.getElementById('q'), 'Escape');
     expect(window.closeY).not.toHaveBeenCalled();
 });
+
+test('Échap ne clique jamais « ↩️ Annuler » (annulation d\'une action) ; ✖️ (avec sélecteur de variante) ferme', async () => {
+    window.undo = jest.fn();
+    window.closeZ = jest.fn();
+    overlay('<div><div><button onclick="undo()">↩️ Annuler</button></div><h4>Historique</h4><button onclick="closeZ()" title="Fermer">✖️</button></div>');
+    await tick();
+    key(document.body, 'Escape');
+    expect(window.undo).not.toHaveBeenCalled();
+    expect(window.closeZ).toHaveBeenCalledTimes(1);
+});
+
+test('le panneau de l\'historique de course n\'est pas une fenêtre, même sur très petit écran', async () => {
+    const panel = overlay('<div><button onclick="undo()">↩️ Annuler</button></div>', 'id="raceActionHistoryPanel"');
+    await tick();
+    expect(window.getOpenDialogs()).not.toContain(panel);
+    expect(panel.hasAttribute('role')).toBe(false);
+});
+
+test('Tab dans la barre de recherche n\'est pas ramené dans la fenêtre ouverte', async () => {
+    overlay('<div><input id="in-dlg"><button>Fermer</button></div>');
+    const bar = document.createElement('div');
+    bar.id = 'appSearchBar';
+    bar.innerHTML = '<input id="q2"><button id="next">↓</button>';
+    document.body.appendChild(bar);
+    await tick();
+    document.getElementById('q2').focus();
+    const e = key(document.activeElement, 'Tab');
+    expect(e.defaultPrevented).toBe(false);
+});

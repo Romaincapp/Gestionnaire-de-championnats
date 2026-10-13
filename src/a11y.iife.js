@@ -24,9 +24,15 @@
         'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
     var TEXT_FIELD = 'input:not([type]), input[type="text"], input[type="number"], input[type="search"], ' +
         'input[type="email"], input[type="tel"], input[type="time"], textarea, select';
-    var CLOSE_SYMBOL = /^[×✕✖✗]$/;
-    var CLOSE_WORD = /^(fermer|annuler)$/i;
-    var IGNORED = '#appSearchBar, .notification';
+    // ✖️ = ✖ + sélecteur de variante (U+FE0F)
+    var CLOSE_SYMBOL = /^[×✕✖✗❌]\uFE0F?$/;
+    // « Fermer » / « Annuler », éventuellement précédé d'un symbole de fermeture
+    // (« ❌ Annuler ») — pas de n'importe quel émoji : « ↩️ Annuler » annule une
+    // action de course (undoRaceAction), il ne ferme rien.
+    var CLOSE_WORD = /^(?:[×✕✖✗❌]\uFE0F?\s*)?(fermer|annuler)$/i;
+    // barre de recherche, notifications, panneau latéral de l'historique de course
+    // (étroit sur ordinateur, mais ≥ 90 % de l'écran sur un très petit téléphone)
+    var IGNORED = '#appSearchBar, .notification, #raceActionHistoryPanel';
 
     var openDialogs = [];   // [{ el, returnFocus }] dans l'ordre d'ouverture
     var titleCount = 0;
@@ -144,7 +150,8 @@
         });
         var text = function(el) { return el.textContent.replace(/\s+/g, ' ').trim(); };
         return controls.find(function(el) { return CLOSE_SYMBOL.test(text(el)); }) ||
-            controls.find(function(el) { return CLOSE_WORD.test(text(el).replace(/^[^\wÀ-ÿ]+/, '')); }) ||
+            controls.find(function(el) { return CLOSE_WORD.test(text(el)); }) ||
+            controls.find(function(el) { return CLOSE_WORD.test((el.getAttribute('title') || '').trim()); }) ||
             null;
     }
 
@@ -211,6 +218,8 @@
             return;
         }
         if (event.key === 'Tab') {
+            // la barre de recherche s'utilise par-dessus une fenêtre ouverte
+            if (target && target.closest && target.closest(IGNORED)) return;
             var top = openDialogs[openDialogs.length - 1];
             if (top && isDialog(top.el)) trapTab(event, top.el);
             return;
