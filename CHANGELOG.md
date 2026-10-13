@@ -23,6 +23,7 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 - Badges des terrains par division : avec moins de terrains que de divisions (ex. 1 terrain pour
   3 divisions), les divisions se partagent les terrains au lieu d'afficher « Terrains 2-1 » ;
   la dernière division ne dépasse plus le nombre de terrains (4 terrains / 3 divisions → 1-2, 3, 4).
+- Barre « Mode » : l'émoji passe à ⏱️ en mode Courses (la journée 1 gardait 🎾).
 
 ### ✨ Finitions
 - Tous les boutons écrits de la même façon (« Appliquer », « Générer poules », « Mettre à jour »

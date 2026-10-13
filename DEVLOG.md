@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Émoji de la barre « Mode » qui suit le type de journée
+
+- **Contexte** : en mode Courses, la J1 affichait toujours « 🎾 Mode » (émoji en dur dans `index.html`, jamais mis à jour).
+- **Fait** : émoji dans `<span id="day-type-icon-N">` (J1 statique et gabarit des journées générées) ; `handleDayTypeChange`
+  et `initializeDayTypeSelectorForDay1` le passent à ⏱️ (Courses) / 🎾 (Matchs). Test `dayTypeIcon.test.js`.
+- **Fichiers/modules touchés** : `index.html`, `src/ui.iife.js`, `tests/unit/dayTypeIcon.test.js`
+- **Commit(s)** : voir branche `claude/dreamy-carson-cszy17`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md — · TODO.md — · claude.md —
+
 ### 2026-10-13 — Barre « Mode » sobre
 
 - **Contexte** : après le fond de page, la barre « 🎾 Mode : Matchs/Courses » en dégradé bleu (orange en Courses) restait trop voyante.
