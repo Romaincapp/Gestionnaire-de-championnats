@@ -173,6 +173,7 @@ Un sous-ensemble représentatif :
 **Rôle** : Gestion des joueurs (journées Championship). ~19 fonctions exposées,
 dont notamment :
 - `addPlayer()`, `addPlayerToDay(dayNumber)`, `removePlayer(dayNumber, division, index)`, `editPlayer(dayNumber, division, index)`, `playerHasByeMatch(dayNumber, division, playerName)`, `addBulkPlayers()`
+- **« ➕ Joueurs ▾ »** : menu déroulant `toggleAddPlayerMenu(day, bouton)` / `selectAddPlayerChoice(day, 'single'|'bulk'|'import'|'clubs')` (dans `init.iife.js`, comme « 🎯 Matchs ▾ ») : 👤 / 📋 / 🏢 ouvrent `showAddPlayerModal` sur la section choisie, 📥 ouvre directement `showImportPlayersModal(day)`. Les deux menus utilisent `toggleActionMenu(id, bouton, label, items, key)` / `closeActionMenu(restoreFocus)` (classe `.action-menu` dans `styles.css`) : à réutiliser pour tout nouveau menu de barre d'actions
 - `showAddPlayerModal(dayNumber)`, `toggleAddPlayerSection(name, forceOpen)` (accordéon `single` / `bulk` / `import` / `clubs`, une section ouverte à la fois, toutes fermées à l'ouverture de la fenêtre), `importPlayersFromAddPlayerModal()` (section 📥 : ferme la fenêtre et ouvre `showImportPlayersModal(jour)` ; le bouton « 📥 Importer joueurs » n'est plus dans la barre d'actions des journées Matchs), `closeAddPlayerModal()`, `addPlayerFromModal()`, `showBulkInput()`, `closeBulkModal()`, `showEditPlayerModal()`, `saveEditedPlayer()`, `updatePlayersDisplay()`
 
 **Correction** : `copyPlayersFromPreviousDay()` et `updatePlayerCount()` sont
@@ -201,7 +202,7 @@ le 2026-09).
 
 **Fonctions exposées** :
 - `updateMatchesDisplay(dayNumber)` - Met à jour l'affichage des matchs
-- `showMatchGenerationModal(dayNumber, bouton?)` (alias `toggleMatchGenerationMenu`) - Ouvre/ferme le **menu déroulant** « 🎯 Matchs ▾ » sous le bouton (plus de fenêtre `#matchGenerationModal` depuis 2026-10-13) : Round-Robin, Optimisé 4-10, Par terrain, Système suisse → `selectMatchGenerationType(type)`. Sans bouton, retrouve `[data-match-gen-day="N"]`. Flèches / Début / Fin, Échap (focus rendu au bouton), clic extérieur ou second clic ferment. Défini dans `init.iife.js`
+- `showMatchGenerationModal(dayNumber, bouton?)` (alias `toggleMatchGenerationMenu`) - Ouvre/ferme le **menu déroulant** (`toggleActionMenu`, voir section 7) « 🎯 Matchs ▾ » sous le bouton (plus de fenêtre `#matchGenerationModal` depuis 2026-10-13) : Round-Robin, Optimisé 4-10, Par terrain, Système suisse → `selectMatchGenerationType(type)`. Sans bouton, retrouve `[data-match-gen-day="N"]`. Flèches / Début / Fin, Échap (focus rendu au bouton), clic extérieur ou second clic ferment. Défini dans `init.iife.js`
 - `closeMatchGenerationModal(restoreFocus)` - Ferme le menu
 - `generateMatchesForDay(dayNumber)` - Génère les matchs (round-robin)
 - `generateMatchesSwissSystem(dayNumber)` - Génère les matchs (système suisse)

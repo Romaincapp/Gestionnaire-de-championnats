@@ -185,96 +185,32 @@
     }
     window.confirmByeScoreForAll = confirmByeScoreForAll;
 
-    // ========== MENU GÉNÉRATION DE MATCHS ==========
-    // Menu déroulant sous le bouton « 🎯 Matchs » (remplace l'ancienne fenêtre).
-    let currentMatchGenerationDay = 1;
-    let matchGenerationAnchor = null;
+    // ========== MENUS DÉROULANTS DES BARRES D'ACTIONS ==========
+    // Menu sous un bouton (« 🎯 Matchs ▾ », « ➕ Joueurs ▾ ») au lieu d'une fenêtre.
+    // Un seul menu ouvert à la fois ; chaque item est un vrai <button role="menuitem">.
+    let openMenu = null; // { menu, anchor, key }
 
-    const MATCH_GENERATION_TYPES = [
-        { type: 'round-robin', icon: '🔄', label: 'Round-Robin', hint: 'Tous contre tous' },
-        { type: 'optimized', icon: '🎲', label: 'Optimisé 4-10', hint: 'Schémas optimisés' },
-        { type: 'court', icon: '🎾', label: 'Par terrain', hint: 'Répartis par terrain' },
-        { type: 'swiss', icon: '🏆', label: 'Système suisse', hint: 'Par niveau (J2+)' }
-    ];
-
-    function getMatchGenerationMenu() {
-        let menu = document.getElementById('matchGenerationMenu');
-        if (menu) return menu;
-        menu = document.createElement('div');
-        menu.id = 'matchGenerationMenu';
-        menu.className = 'match-generation-menu';
-        menu.setAttribute('role', 'menu');
-        menu.setAttribute('aria-label', 'Génération de matchs');
-        menu.hidden = true;
-        menu.innerHTML = MATCH_GENERATION_TYPES.map(t => `
-            <button type="button" role="menuitem" data-type="${t.type}" onclick="selectMatchGenerationType('${t.type}')">
-                <span class="mgm-icon" aria-hidden="true">${t.icon}</span>
-                <span class="mgm-text"><span class="mgm-label">${t.label}</span><span class="mgm-hint">${t.hint}</span></span>
-            </button>`).join('');
-        menu.addEventListener('keydown', onMatchGenerationMenuKeydown);
-        document.body.appendChild(menu);
-        return menu;
+    function escapeMenuHtml(text) {
+        return String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     }
 
-    function isMatchGenerationMenuOpen() {
-        const menu = document.getElementById('matchGenerationMenu');
-        return !!menu && !menu.hidden;
-    }
-
-    function positionMatchGenerationMenu() {
-        const menu = document.getElementById('matchGenerationMenu');
-        if (!menu || menu.hidden || !matchGenerationAnchor) return;
-        const r = matchGenerationAnchor.getBoundingClientRect();
+    function positionActionMenu() {
+        if (!openMenu || !openMenu.anchor) return;
+        const { menu, anchor } = openMenu;
+        const r = anchor.getBoundingClientRect();
         const width = menu.offsetWidth || 220;
         const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
         menu.style.left = (left + window.scrollX) + 'px';
         menu.style.top = (r.bottom + 4 + window.scrollY) + 'px';
     }
 
-    function showMatchGenerationModal(dayNumber, anchor) {
-        const btn = anchor || document.querySelector(`[data-match-gen-day="${dayNumber}"]`);
-        if (isMatchGenerationMenuOpen() && matchGenerationAnchor === btn && currentMatchGenerationDay === dayNumber) {
-            closeMatchGenerationModal();
-            return;
-        }
-        closeMatchGenerationModal(false);
-        currentMatchGenerationDay = dayNumber;
-        matchGenerationAnchor = btn || null;
-        const menu = getMatchGenerationMenu();
-        menu.hidden = false;
-        if (matchGenerationAnchor) matchGenerationAnchor.setAttribute('aria-expanded', 'true');
-        positionMatchGenerationMenu();
-        const first = menu.querySelector('[role="menuitem"]');
-        if (first) first.focus();
-        // Ajouté après le clic d'ouverture, pour ne pas le refermer aussitôt
-        setTimeout(() => {
-            document.addEventListener('mousedown', onMatchGenerationOutsideClick, true);
-            window.addEventListener('resize', positionMatchGenerationMenu);
-        }, 0);
-    }
-    window.showMatchGenerationModal = showMatchGenerationModal;
-    window.toggleMatchGenerationMenu = showMatchGenerationModal;
-
-    function closeMatchGenerationModal(restoreFocus) {
-        const menu = document.getElementById('matchGenerationMenu');
-        if (menu) menu.hidden = true;
-        document.removeEventListener('mousedown', onMatchGenerationOutsideClick, true);
-        window.removeEventListener('resize', positionMatchGenerationMenu);
-        if (matchGenerationAnchor) {
-            matchGenerationAnchor.setAttribute('aria-expanded', 'false');
-            if (restoreFocus) matchGenerationAnchor.focus();
-        }
-    }
-    window.closeMatchGenerationModal = closeMatchGenerationModal;
-
-    function onMatchGenerationOutsideClick(event) {
-        const menu = document.getElementById('matchGenerationMenu');
-        if (!menu || menu.contains(event.target)) return;
-        if (matchGenerationAnchor && matchGenerationAnchor.contains(event.target)) return; // le bouton gère la bascule
-        closeMatchGenerationModal(false);
+    function onActionMenuOutsideClick(event) {
+        if (!openMenu || openMenu.menu.contains(event.target)) return;
+        if (openMenu.anchor && openMenu.anchor.contains(event.target)) return; // le bouton gère la bascule
+        closeActionMenu(false);
     }
 
-    function onMatchGenerationMenuKeydown(event) {
+    function onActionMenuKeydown(event) {
         const items = Array.from(event.currentTarget.querySelectorAll('[role="menuitem"]'));
         const i = items.indexOf(document.activeElement);
         let next = null;
@@ -286,16 +222,121 @@
             case 'Escape':
                 event.preventDefault();
                 event.stopPropagation();
-                closeMatchGenerationModal(true);
+                closeActionMenu(true);
                 return;
             case 'Tab':
-                closeMatchGenerationModal(false);
+                closeActionMenu(false);
                 return;
             default: return;
         }
         event.preventDefault();
         if (next) next.focus();
     }
+
+    function closeActionMenu(restoreFocus) {
+        document.removeEventListener('mousedown', onActionMenuOutsideClick, true);
+        window.removeEventListener('resize', positionActionMenu);
+        if (!openMenu) return;
+        const { menu, anchor } = openMenu;
+        openMenu = null;
+        menu.hidden = true;
+        if (anchor) {
+            anchor.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) anchor.focus();
+        }
+    }
+    window.closeActionMenu = closeActionMenu;
+
+    // id : id du menu ; label : nom accessible ; items : [{ icon, label, hint, onclick }]
+    // (onclick = code à exécuter, comme un attribut onclick) ; key : identifie
+    // l'appelant (jour), un second clic sur le même bouton referme le menu.
+    function toggleActionMenu(id, anchor, label, items, key) {
+        if (openMenu && openMenu.menu.id === id && openMenu.anchor === anchor && openMenu.key === key) {
+            closeActionMenu(false);
+            return;
+        }
+        closeActionMenu(false);
+        let menu = document.getElementById(id);
+        if (!menu) {
+            menu = document.createElement('div');
+            menu.id = id;
+            menu.className = 'action-menu';
+            menu.setAttribute('role', 'menu');
+            menu.addEventListener('keydown', onActionMenuKeydown);
+            document.body.appendChild(menu);
+        }
+        menu.setAttribute('aria-label', label);
+        menu.innerHTML = items.map(item => `
+            <button type="button" role="menuitem"${item.type ? ` data-type="${escapeMenuHtml(item.type)}"` : ''} onclick="closeActionMenu(false); ${escapeMenuHtml(item.onclick)}">
+                <span class="am-icon" aria-hidden="true">${item.icon}</span>
+                <span class="am-text"><span class="am-label">${escapeMenuHtml(item.label)}</span><span class="am-hint">${escapeMenuHtml(item.hint)}</span></span>
+            </button>`).join('');
+        menu.hidden = false;
+        openMenu = { menu, anchor: anchor || null, key };
+        if (anchor) anchor.setAttribute('aria-expanded', 'true');
+        positionActionMenu();
+        const first = menu.querySelector('[role="menuitem"]');
+        if (first) first.focus();
+        // Ajouté après le clic d'ouverture, pour ne pas le refermer aussitôt
+        setTimeout(() => {
+            if (!openMenu || openMenu.menu !== menu) return;
+            document.addEventListener('mousedown', onActionMenuOutsideClick, true);
+            window.addEventListener('resize', positionActionMenu);
+        }, 0);
+    }
+    window.toggleActionMenu = toggleActionMenu;
+
+    // ----- « 🎯 Matchs ▾ » -----
+    let currentMatchGenerationDay = 1;
+
+    const MATCH_GENERATION_TYPES = [
+        { type: 'round-robin', icon: '🔄', label: 'Round-Robin', hint: 'Tous contre tous' },
+        { type: 'optimized', icon: '🎲', label: 'Optimisé 4-10', hint: 'Schémas optimisés' },
+        { type: 'court', icon: '🎾', label: 'Par terrain', hint: 'Répartis par terrain' },
+        { type: 'swiss', icon: '🏆', label: 'Système suisse', hint: 'Par niveau (J2+)' }
+    ];
+
+    function showMatchGenerationModal(dayNumber, anchor) {
+        currentMatchGenerationDay = dayNumber;
+        const btn = anchor || document.querySelector(`[data-match-gen-day="${dayNumber}"]`);
+        toggleActionMenu('matchGenerationMenu', btn, 'Génération de matchs',
+            MATCH_GENERATION_TYPES.map(t => Object.assign({ onclick: `selectMatchGenerationType('${t.type}')` }, t)),
+            dayNumber);
+    }
+    window.showMatchGenerationModal = showMatchGenerationModal;
+    window.toggleMatchGenerationMenu = showMatchGenerationModal;
+
+    function closeMatchGenerationModal(restoreFocus) {
+        if (openMenu && openMenu.menu.id === 'matchGenerationMenu') closeActionMenu(restoreFocus);
+    }
+    window.closeMatchGenerationModal = closeMatchGenerationModal;
+
+    // ----- « ➕ Joueurs ▾ » -----
+    const ADD_PLAYER_CHOICES = [
+        { type: 'single', icon: '👤', label: 'Un joueur', hint: 'Nom, club et division' },
+        { type: 'bulk', icon: '📋', label: 'Plusieurs joueurs', hint: 'Coller une liste ou un fichier' },
+        { type: 'import', icon: '📥', label: "D'une autre journée", hint: 'Reprendre ses joueurs' },
+        { type: 'clubs', icon: '🏢', label: 'Gérer les clubs', hint: 'Ajouter ou supprimer un club' }
+    ];
+
+    function toggleAddPlayerMenu(dayNumber, anchor) {
+        const btn = anchor || document.querySelector(`[data-add-player-day="${dayNumber}"]`);
+        toggleActionMenu('addPlayerMenu', btn, 'Ajouter des joueurs',
+            ADD_PLAYER_CHOICES.map(c => Object.assign({ onclick: `selectAddPlayerChoice(${dayNumber}, '${c.type}')` }, c)),
+            dayNumber);
+    }
+    window.toggleAddPlayerMenu = toggleAddPlayerMenu;
+
+    function selectAddPlayerChoice(dayNumber, choice) {
+        closeActionMenu(false);
+        if (choice === 'import') {
+            if (typeof showImportPlayersModal === 'function') showImportPlayersModal(dayNumber);
+            return;
+        }
+        showAddPlayerModal(dayNumber);
+        toggleAddPlayerSection(choice, true);
+    }
+    window.selectAddPlayerChoice = selectAddPlayerChoice;
 
     function selectMatchGenerationType(type) {
         closeMatchGenerationModal(false);

@@ -16,6 +16,8 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 ### 🎨 Apparence
 - « 🎯 Matchs ▾ » ouvre un menu déroulant sous le bouton (Round-Robin, Optimisé 4-10, Par terrain,
   Système suisse) au lieu d'une fenêtre au milieu de l'écran ; utilisable au clavier (flèches, Échap).
+- « ➕ Joueurs ▾ » aussi : Un joueur, Plusieurs joueurs, D'une autre journée, Gérer les clubs ; la fenêtre
+  s'ouvre directement sur la partie choisie.
 - Fond de page plus sobre : gris clair uni au lieu du dégradé bleu (aussi dans l'export HTML du
   classement général) ; barre d'adresse du téléphone assortie à l'en-tête.
 - Barre « Mode » (Matchs / Courses) plus discrète : gris clair, le type de journée reste signalé par
