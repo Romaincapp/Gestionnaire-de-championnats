@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — Badges terrains : plus de « Terrains 2-1 » avec moins de terrains que de divisions
+
+- **Contexte** : 3 divisions sur 1 terrain → badges « Division 2: Terrains 2-1 », « Division 3: Terrains 3-1 ».
+- **Fait** : `getCourtsForDivision` répartit les terrains sans jamais dépasser leur nombre : surplus aux
+  premières divisions (4 terrains / 3 divisions → 1-2, 3, 4, la division 3 était « 5-4 » avant) ; moins
+  de terrains que de divisions → partage à tour de rôle (1 terrain → tout le monde sur le terrain 1).
+  Corrige aussi le nombre de terrains (`count` ≤ 0) utilisé par la génération par terrain.
+- **Fichiers/modules touchés** : `src/config.iife.js`, `tests/unit/courtsForDivision.test.js`
+- **Commit(s)** : voir branche `claude/dreamy-carson-cszy17`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md — (pas de changement d'API) · TODO.md — · claude.md —
+
 ### 2026-10-13 — Impeccable « polish » : finitions sans changer l'identité
 
 - **Contexte** : passe `polish` demandée après les P1/P2 ; captures ordinateur + téléphone des

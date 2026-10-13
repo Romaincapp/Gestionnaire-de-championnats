@@ -45,16 +45,26 @@
         return (championship && championship.config && championship.config.numberOfCourts) || config.numberOfCourts || 4;
     }
 
+    // Répartit les terrains entre divisions : chaque division a au moins un
+    // terrain, les premières divisions reçoivent le surplus (4 terrains / 3
+    // divisions → 1-2, 3, 4). Moins de terrains que de divisions : les
+    // divisions se partagent les terrains à tour de rôle (1 terrain → toutes
+    // sur le terrain 1), au lieu de plages impossibles comme « Terrains 2-1 ».
     function getCourtsForDivision(division) {
-        var numCourts = getNumberOfCourts();
-        var numDivisions = getNumberOfDivisions();
-        var courtsPerDivision = Math.ceil(numCourts / numDivisions);
-        var firstCourt = (division - 1) * courtsPerDivision + 1;
-        var lastCourt = Math.min(division * courtsPerDivision, numCourts);
+        var numCourts = Math.max(1, getNumberOfCourts());
+        var numDivisions = Math.max(1, getNumberOfDivisions());
+        if (numCourts < numDivisions) {
+            var shared = ((division - 1) % numCourts) + 1;
+            return { first: shared, last: shared, count: 1 };
+        }
+        var base = Math.floor(numCourts / numDivisions);
+        var extra = numCourts % numDivisions;
+        var firstCourt = (division - 1) * base + Math.min(division - 1, extra) + 1;
+        var count = base + (division <= extra ? 1 : 0);
         return {
             first: firstCourt,
-            last: lastCourt,
-            count: lastCourt - firstCourt + 1
+            last: firstCourt + count - 1,
+            count: count
         };
     }
 
