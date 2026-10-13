@@ -112,8 +112,8 @@
                     <!-- Ligne unique de boutons -->
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <!-- Ajout joueurs -->
-                        <button onclick="showAddPlayerModal(1)" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #087f58; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                            ➕ Joueurs
+                        <button onclick="toggleAddPlayerMenu(1, this)" data-add-player-day="1" aria-haspopup="menu" aria-expanded="false" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #087f58; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            ➕ Joueurs ▾
                         </button>
                         <!-- Actions matchs -->
                         <button onclick="showMatchGenerationModal(1, this)" data-match-gen-day="1" aria-haspopup="menu" aria-expanded="false" data-day="1" data-needs="players" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #236bdd; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">

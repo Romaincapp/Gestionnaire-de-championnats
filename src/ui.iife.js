@@ -220,8 +220,8 @@
                 <!-- Ligne unique de boutons -->
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <!-- Ajout joueurs -->
-                    <button onclick="showAddPlayerModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #087f58; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                        ➕ Joueurs
+                    <button onclick="toggleAddPlayerMenu(${dayNumber}, this)" data-add-player-day="${dayNumber}" aria-haspopup="menu" aria-expanded="false" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #087f58; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        ➕ Joueurs ▾
                     </button>
                     <!-- « 📥 Importer joueurs » est dans la fenêtre « ➕ Joueurs » (section 📥) -->
                     <!-- Plus de boutons « 📋 J1, J2… » : copier les joueurs d'une journée précédente

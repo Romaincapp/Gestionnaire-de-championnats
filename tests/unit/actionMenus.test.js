@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  *
- * « 🎯 Matchs » ouvre un menu déroulant sous le bouton (plus de fenêtre) :
+ * « 🎯 Matchs ▾ » et « ➕ Joueurs ▾ » ouvrent un menu déroulant sous le bouton (plus de fenêtre) :
  * choix du type, fermeture par Échap / clic extérieur / second clic.
  */
 const { loadModules, DEFAULT_ORDER } = require('../helpers/loadApp');
@@ -77,4 +77,53 @@ test('appel sans bouton (ancienne signature) retrouve le bouton de la journée',
     window.showMatchGenerationModal(2);
     expect(menu().hidden).toBe(false);
     expect(btn().getAttribute('aria-expanded')).toBe('true');
+});
+
+describe('« ➕ Joueurs ▾ »', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const BODY = fs.readFileSync(path.join(__dirname, '..', '..', 'index.html'), 'utf8')
+        .replace(/^[\s\S]*<body[^>]*>/, '').replace(/<\/body>[\s\S]*$/, '').replace(/<script[\s\S]*?<\/script>/g, '');
+    const pmenu = () => document.getElementById('addPlayerMenu');
+    const pbtn = () => document.querySelector('[data-add-player-day="1"]');
+
+    beforeEach(() => {
+        document.body.innerHTML = BODY;
+        championship.config = { numberOfDivisions: 2, numberOfCourts: 4 };
+        championship.days = { 1: { dayType: 'championship', players: { 1: [], 2: [] }, matches: { 1: [], 2: [] } } };
+        window.showImportPlayersModal = jest.fn();
+    });
+
+    test('le bouton ouvre un menu de 4 choix, plus de fenêtre directe', () => {
+        pbtn().click();
+        expect(pmenu().hidden).toBe(false);
+        expect([...pmenu().querySelectorAll('[role="menuitem"]')].map((b) => b.dataset.type))
+            .toEqual(['single', 'bulk', 'import', 'clubs']);
+        expect(document.getElementById('addPlayerModal').style.display).not.toBe('block');
+        expect(pbtn().getAttribute('aria-expanded')).toBe('true');
+    });
+
+    test.each(['single', 'bulk', 'clubs'])('%s ouvre la fenêtre sur la bonne section', (type) => {
+        pbtn().click();
+        pmenu().querySelector(`[data-type="${type}"]`).click();
+        expect(pmenu().hidden).toBe(true);
+        expect(document.getElementById('addPlayerModal').style.display).toBe('block');
+        expect([...document.querySelectorAll('#addPlayerModal .apm-section.open')].map((s) => s.id))
+            .toEqual([`apm-section-${type}`]);
+    });
+
+    test('« D\'une autre journée » ouvre directement la reprise des joueurs', () => {
+        pbtn().click();
+        pmenu().querySelector('[data-type="import"]').click();
+        expect(window.showImportPlayersModal).toHaveBeenCalledWith(1);
+        expect(document.getElementById('addPlayerModal').style.display).not.toBe('block');
+    });
+
+    test('ouvrir un menu ferme l\'autre', () => {
+        pbtn().click();
+        document.querySelector('[data-match-gen-day="1"]').click();
+        expect(pmenu().hidden).toBe(true);
+        expect(menu().hidden).toBe(false);
+        expect(pbtn().getAttribute('aria-expanded')).toBe('false');
+    });
 });

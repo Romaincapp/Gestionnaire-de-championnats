@@ -33,6 +33,14 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-13 — « ➕ Joueurs » : menu déroulant, menu générique
+
+- **Contexte** : suite du menu « 🎯 Matchs ▾ » (PR #116), même demande pour « ➕ Joueurs ».
+- **Fait** : code du menu rendu générique dans `init.iife.js` (`toggleActionMenu` / `closeActionMenu`, un seul menu ouvert à la fois, classe `.action-menu`). « ➕ Joueurs ▾ » (`toggleAddPlayerMenu`) : 👤 Un joueur / 📋 Plusieurs joueurs / 🏢 Gérer les clubs ouvrent la fenêtre sur la section choisie, 📥 D'une autre journée ouvre directement `showImportPlayersModal`. La fenêtre et son accordéon restent inchangés. Test renommé `actionMenus.test.js` ; écran `menu-ajout-joueurs` dans `screens.js`. test:a11y / darkmode (+ mobile) / contrast / touch à 0 défaut.
+- **Fichiers/modules touchés** : `src/init.iife.js`, `src/ui.iife.js`, `index.html`, `styles.css`, `tests/unit/actionMenus.test.js`, `tests/e2e/screens.js`
+- **Commit(s)** : voir branche `claude/youthful-wozniak-xe2vdr`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md — · claude.md —
+
 ### 2026-10-13 — « 🎯 Matchs » : menu déroulant au lieu d'une fenêtre
 
 - **Contexte** : la fenêtre « Génération de Matchs » (4 grosses tuiles colorées) jugée lourde ; demande d'un menu déroulant plus sobre sous le bouton.
