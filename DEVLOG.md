@@ -58,10 +58,12 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
   `tests/helpers/loadApp.js`
 - **Commit(s)** : branche `claude/intelligent-dijkstra-1e6wb9`
 - **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md — · claude.md ✅ · README ✅
-- **Suite possible** : les récapitulatifs imprimés (par tour / terrain / poule) gardent une
-  seule colonne « Score » à remplir à la main ; pas d'import CSV de scores (n'existait pas) ;
-  la feuille Boccia/Pétanque reste indépendante du format. Un e2e dédié au mode sets
-  (`tests/e2e/`) serait utile avant une compétition réelle.
+- **Ajouté ensuite (même session)** : `npm run test:sets` (`tests/e2e/sets.e2e.js`, 10 étapes en
+  vrai navigateur, stable sur 2 passages) ; récapitulatifs imprimés en mode sets (en-tête
+  « Sets », mention du format) + tests Jest des feuilles.
+- **Suite possible** : pas d'import CSV de scores (n'existait pas) ; feuilles Boccia/Pétanque
+  indépendantes du format. À trancher : une victoire par forfait/BYE avec sets pré-remplis
+  à 11-0 rapporte beaucoup de points de jeu (+22 en BO3), ce qui pèse dans le départage.
 
 ### 2026-10-20 — « 📥 Importer ▾ » : menu déroulant
 

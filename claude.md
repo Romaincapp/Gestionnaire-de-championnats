@@ -416,9 +416,12 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 npm test                    # Jest suite (tests/unit/), jsdom environment
 npm run check:duplicates    # standalone duplicate-function-definition check
 npm run test:e2e            # end-to-end swimming day in a real browser (HEADED=1 to watch)
+npm run test:sets           # end-to-end set scores (BO3/BO5: rounds, pools, knockout, forfeit, ranking, print, tennisdetable import)
 ```
 
 `npm run test:e2e` (`tests/e2e/natation.e2e.js`, Playwright) replays a full swimming day through the real UI with the 150 real-format lines of `tests/fixtures/natation test 2.json` (names anonymised): add swimmers, create events, generate series, races (clicks, keyboard, undo, DNS, DISQ after finish, page reload mid-race), per-event ranking, second screens, export → re-import in a fresh browser, print. Not run in CI (needs a browser); run it after any change to the Chrono/swimming/ranking flow — its first run found 4 real bugs that 150+ unit tests had missed. Browser: `CHROME_PATH`, else `/opt/pw-browsers/chromium` (Claude Code sessions), else installed Google Chrome. Screenshots + report in `tests/e2e/output/` (gitignored).
+
+`npm run test:sets` (`tests/e2e/sets.e2e.js`, same harness) covers the set-score format: « 🎯 Score » selector, set-by-set entry with Enter, incomplete-set warning, forfeit, BO5 pool and knockout, ranking columns, printed sheets/recaps, tennisdetable import (no `config`), and a day left in 2-score mode. Run it after any change to `scoring.iife.js` or the score inputs/rankings. Output in `tests/e2e/output-sets/` (gitignored).
 
 CI (`.github/workflows/tests.yml`) runs `npm ci` + `npm test` on every PR and every push to `main` — a red check there is a real regression, not something to merge around. `npm test` already includes the duplicate-function check (`noDuplicateFunctions.test.js`), so running `npm test` alone is enough day to day — `check:duplicates` is only useful for its more readable standalone CLI output when triaging a specific file.
 

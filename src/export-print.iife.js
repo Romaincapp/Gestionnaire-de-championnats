@@ -2331,6 +2331,15 @@ function printRecapByPool(dayNumber) {
     showNotification(`🏊 ${totalPools} feuilles récapitulatives par pool générées !`, 'success');
 }
 
+// Récapitulatifs : en mode sets, on reporte les sets gagnés (le détail est sur la feuille de match)
+function recapScoreHeader(dayNumber) {
+    return global.isSetsMode(dayNumber) ? 'Sets' : 'Score';
+}
+
+function recapScoreSubtitle(dayNumber) {
+    return global.isSetsMode(dayNumber) ? ` • Sets gagnés (${global.scoringLabel(global.getDayScoring(dayNumber))})` : '';
+}
+
 // Générer le HTML pour les récaps par tour (sans terrains)
 function generateRecapByTourHTML(dayNumber, matchesByTour) {
     const currentDate = new Date().toLocaleDateString('fr-FR', {
@@ -2485,7 +2494,7 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
             <div class="page">
                 <div class="page-header">
                     <div class="page-title">📋 RÉCAPITULATIF ${tourKey.toUpperCase()}</div>
-                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}</div>
+                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}${recapScoreSubtitle(dayNumber)}</div>
                 </div>
 
                 <div class="tour-info">
@@ -2497,8 +2506,8 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
                         <tr>
                             <th style="width: 12%;">Match</th>
                             <th style="width: 35%;">Joueur 1</th>
-                            <th style="width: 8%;">Score</th>
-                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
                             <th style="width: 35%;">Joueur 2</th>
                         </tr>
                     </thead>
@@ -2694,7 +2703,7 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
             <div class="page">
                 <div class="page-header">
                     <div class="page-title">🏟️ RÉCAPITULATIF TERRAIN ${court}</div>
-                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}</div>
+                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}${recapScoreSubtitle(dayNumber)}</div>
                 </div>
 
                 <div class="court-info">
@@ -2706,8 +2715,8 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
                         <tr>
                             <th style="width: 12%;">Match</th>
                             <th style="width: 35%;">Joueur 1</th>
-                            <th style="width: 8%;">Score</th>
-                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
                             <th style="width: 35%;">Joueur 2</th>
                         </tr>
                     </thead>
@@ -2929,7 +2938,7 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
             <div class="page">
                 <div class="page-header">
                     <div class="page-title">🏊 RÉCAPITULATIF ${poolData.poolName.toUpperCase()}</div>
-                    <div class="page-subtitle">Division ${poolData.division} • Journée ${dayNumber} • ${currentDate}</div>
+                    <div class="page-subtitle">Division ${poolData.division} • Journée ${dayNumber} • ${currentDate}${recapScoreSubtitle(dayNumber)}</div>
                 </div>
 
                 <div class="pool-info">
@@ -2941,8 +2950,8 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
                         <tr>
                             <th style="width: 12%;">Match</th>
                             <th style="width: 35%;">Joueur 1</th>
-                            <th style="width: 8%;">Score</th>
-                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
                             <th style="width: 35%;">Joueur 2</th>
                         </tr>
                     </thead>

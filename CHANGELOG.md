@@ -25,7 +25,8 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   sets, départage par la **différence de points de jeu** ; colonnes « Sets G/P », « Diff
   sets », « Pts jeu ± ». Détail des sets dans les résultats (« 2-1 : 11-8 9-11 11-5 »), la
   fiche joueur et le tableau final.
-- Feuilles de match imprimées « avec sets » : une colonne par set du format.
+- Feuilles de match imprimées « avec sets » : une colonne par set du format. Récapitulatifs
+  (par tour, terrain, poule) : colonnes « Sets » et mention « Sets gagnés (BO3 · 11 pts) ».
 - Import d'un export **tennisdetable** : les sets sont repris (la journée passe en BO3) au lieu
   d'être réduits au nombre de sets gagnés ; un fichier sans configuration ne fait plus planter
   l'ajout de journée.
