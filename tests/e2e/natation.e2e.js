@@ -445,7 +445,7 @@ async function openFresh(browser) {
     const fresh = await openFresh(browser);
     await fresh.page.selectOption('#day-type-select-1', 'chrono');
     await fresh.page.waitForTimeout(400);
-    const [chooser] = await Promise.all([fresh.page.waitForEvent('filechooser'), fresh.page.getByRole('button', { name: '📥 Importer', exact: true }).first().click()]);
+    const [chooser] = await Promise.all([fresh.page.waitForEvent('filechooser'), (async () => { await fresh.page.getByRole('button', { name: '📥 Importer ▾' }).first().click(); await fresh.page.getByRole('menuitem', { name: /Une compétition/ }).click(); })()]);
     await chooser.setFiles(file);
     await fresh.page.waitForTimeout(1200);
     check(JSON.stringify(await snapshotOf(fresh.page)) === JSON.stringify(orig), 'réimport : épreuves, séries, couloirs, statuts et résultats identiques');
