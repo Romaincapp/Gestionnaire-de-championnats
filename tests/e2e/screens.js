@@ -106,6 +106,7 @@ function buildScreens(page, info) {
         ['modal-renommer-joueur', call(`switchTab(3); toggleForfaitButtons(); editMatchPlayerName(3, 1, 0, 'player1', 'Nouveau Nom')`)],
         ['menu-generation-matchs', call('switchTab(3); showMatchGenerationModal(3)')],
         ['menu-ajout-joueurs', call('switchTab(3); toggleAddPlayerMenu(3)')],
+        ['menu-import', call('switchTab(3); toggleImportMenu(3, null, "championship")')],
         ['modal-bye', call('switchTab(3); showByeManagementModal(3)')],
         ['modal-bye-score', call(`switchTab(3); showByeScoreModal(3, 1, ${JSON.stringify(info.player3)})`)],
         ['modal-impression', call('switchTab(3); showPrintOptionsModal(3)')],
