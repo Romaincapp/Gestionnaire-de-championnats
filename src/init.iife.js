@@ -338,6 +338,26 @@
     }
     window.selectAddPlayerChoice = selectAddPlayerChoice;
 
+    // ----- « 📥 Importer ▾ » (journées Matchs et Courses) -----
+    const IMPORT_CHOICES = {
+        championship: [
+            { icon: '📄', label: 'Un championnat', hint: 'Remplace tout le championnat', onclick: 'showImportModal()' },
+            { icon: '📂', label: 'Plusieurs journées', hint: 'Un fichier par journée (remplace tout)', onclick: 'showMultiDayImportModal()' },
+            { icon: '➕', label: 'Ajouter à la suite', hint: 'Ajoute des journées après les vôtres', onclick: 'openAppendDaysPicker()' }
+        ],
+        chrono: [
+            { icon: '👥', label: "Participants d'une autre journée", hint: 'Reprendre ses participants', onclick: 'showImportPlayersModal(%d)' },
+            { icon: '📄', label: 'Une compétition', hint: 'Fichier JSON exporté de cette journée', onclick: 'importChronoDataForDay(%d)' }
+        ]
+    };
+
+    function toggleImportMenu(dayNumber, anchor, kind) {
+        const items = (IMPORT_CHOICES[kind] || IMPORT_CHOICES.championship)
+            .map(c => Object.assign({}, c, { onclick: c.onclick.replace('%d', dayNumber) }));
+        toggleActionMenu('importMenu', anchor, 'Importer', items, kind + dayNumber);
+    }
+    window.toggleImportMenu = toggleImportMenu;
+
     function selectMatchGenerationType(type) {
         closeMatchGenerationModal(false);
         const day = currentMatchGenerationDay;

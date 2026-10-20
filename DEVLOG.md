@@ -33,6 +33,11 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-20 — « 📥 Importer ▾ » : menu déroulant
+
+- Journées Matchs : Un championnat / Plusieurs journées / Ajouter à la suite. Journées Courses : les deux boutons « Importer » fusionnés (participants d'une autre journée / compétition JSON).
+- `toggleImportMenu(day, bouton, 'championship'|'chrono')` dans `init.iife.js` (réutilise `toggleActionMenu`). Fichiers : `init.iife.js`, `ui.iife.js`, `index.html`, `multisport.iife.js`, `tests/e2e/screens.js`.
+
 ### 2026-10-13 — « ➕ Joueurs » : menu déroulant, menu générique
 
 - **Contexte** : suite du menu « 🎯 Matchs ▾ » (PR #116), même demande pour « ➕ Joueurs ».
