@@ -123,13 +123,29 @@
         return r;
     }
 
-    function fullSets(s, n, winnerSide) {
-        const sets = emptySetScores(s);
-        for (let i = 0; i < n; i++) {
-            const w = s.pointsPerSet || '';
-            sets[i] = winnerSide === 1 ? { s1: w, s2: s.pointsPerSet ? 0 : '' } : { s1: s.pointsPerSet ? 0 : '', s2: w };
+    /**
+     * Détail des sets d'un score en sets gagnés (ex. 2-1) : chaque set gagné vaut
+     * pointsPerSet-loserPoints (11-0, 11-5…). Les sets sont alternés pour que le set
+     * décisif soit le dernier (2-1 → G P G). null si « libre » (loserPoints null) ou
+     * sans points par set : on garde alors seulement les sets gagnés.
+     */
+    function buildSetScores(scoring, sets1, sets2, loserPoints) {
+        const s = normalizeScoring(scoring);
+        if (s.mode !== 'sets' || !s.pointsPerSet || loserPoints === null || loserPoints === undefined || loserPoints === '') return null;
+        const lose = Math.max(0, parseInt(loserPoints) || 0);
+        const result = emptySetScores(s);
+        let a = parseInt(sets1) || 0, b = parseInt(sets2) || 0;
+        const p1First = a >= b; // le vainqueur gagne le 1er set et le set décisif
+        for (let i = 0; i < result.length && (a > 0 || b > 0); i++) {
+            const p1Turn = (i % 2 === 0) === p1First ? a > 0 : b === 0;
+            if (p1Turn) { result[i] = { s1: s.pointsPerSet, s2: lose }; a--; }
+            else { result[i] = { s1: lose, s2: s.pointsPerSet }; b--; }
         }
-        return sets;
+        return result;
+    }
+
+    function fullSets(s, n, winnerSide) {
+        return buildSetScores(s, winnerSide === 1 ? n : 0, winnerSide === 1 ? 0 : n, 0) || emptySetScores(s);
     }
 
     /**
@@ -649,6 +665,7 @@
     global.byeResult = byeResult;
     global.forfeitResult = forfeitResult;
     global.assignResult = assignResult;
+    global.buildSetScores = buildSetScores;
     global.byeFieldsForDay = byeFieldsForDay;
     global.formatScoreDetail = formatScoreDetail;
     global.setDetailSuffix = setDetailSuffix;

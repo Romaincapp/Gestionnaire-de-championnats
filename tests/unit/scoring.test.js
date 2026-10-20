@@ -170,3 +170,29 @@ describe('migrateLegacySets (format tennisdetable)', () => {
         expect(m).toEqual({ score1: '3', score2: '1' });
     });
 });
+
+describe('buildSetScores (points des sets d\'un BYE : 11-0, 11-5, libre)', () => {
+    const sets = r => r && r.filter(x => x.s1 !== '').map(x => `${x.s1}-${x.s2}`);
+
+    test('victoire nette 2-0 en 11-0 et en 11-5', () => {
+        expect(sets(buildSetScores(BO3, 2, 0, 0))).toEqual(['11-0', '11-0']);
+        expect(sets(buildSetScores(BO3, 2, 0, 5))).toEqual(['11-5', '11-5']);
+    });
+
+    test('2-1 : sets alternés, le set décisif en dernier', () => {
+        expect(sets(buildSetScores(BO3, 2, 1, 5))).toEqual(['11-5', '5-11', '11-5']);
+        expect(sets(buildSetScores(BO3, 1, 2, 5))).toEqual(['5-11', '11-5', '5-11']);
+        expect(sets(buildSetScores(BO5, 3, 0, 0))).toEqual(['11-0', '11-0', '11-0']);
+    });
+
+    test('le détail redonne bien le même score en sets', () => {
+        const m = { player1: 'A', player2: 'BYE', setScores: buildSetScores(BO5, 3, 2, 5) };
+        expect(computeMatchResult(m, BO5)).toMatchObject({ score1: 3, score2: 2, winner: 'A', gamePoints1: 43, gamePoints2: 37 });
+    });
+
+    test('libre ou sans points par set : pas de détail', () => {
+        expect(buildSetScores(BO3, 2, 0, null)).toBeNull();
+        expect(buildSetScores({ mode: 'sets', setsToWin: 2 }, 2, 0, 0)).toBeNull();
+        expect(buildSetScores(SCORING_SIMPLE, 5, 0, 0)).toBeNull();
+    });
+});

@@ -86,8 +86,9 @@ Application web de gestion de championnats de tennis de table.
    passer au set suivant. Dès qu'un joueur a gagné assez de sets, le match est validé et les
    sets restants sont grisés. Un set incomplet (ex. 9-7 en 11 points) est signalé en orange,
    sans bloquer la saisie.
-3. Pas de match nul en sets. BYE et forfait donnent 2-0 en BO3 (3-0 en BO5…), avec des sets
-   à 11-0 si les points par set sont fixés.
+3. Pas de match nul en sets. BYE et forfait donnent 2-0 en BO3 (3-0 en BO5…). Pour un BYE
+   ajouté avec « 👋 BYE », la fenêtre propose les points de chaque set : **11-0**, **11-5** ou
+   **Libre** (sets gagnés seulement, sans points de jeu). Le BYE reste modifiable ensuite.
 4. Classement : points (V=3, D=1), puis victoires, **différence de sets**, puis **différence
    de points de jeu** (somme des sets). Le tableau affiche « Sets G/P », « Diff sets » et
    « Pts jeu ± ».

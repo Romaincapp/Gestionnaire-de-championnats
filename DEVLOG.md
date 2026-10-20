@@ -62,8 +62,10 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
   vrai navigateur, stable sur 2 passages) ; récapitulatifs imprimés en mode sets (en-tête
   « Sets », mention du format) + tests Jest des feuilles.
 - **Suite possible** : pas d'import CSV de scores (n'existait pas) ; feuilles Boccia/Pétanque
-  indépendantes du format. À trancher : une victoire par forfait/BYE avec sets pré-remplis
-  à 11-0 rapporte beaucoup de points de jeu (+22 en BO3), ce qui pèse dans le départage.
+  indépendantes du format. Tranché par l'utilisateur : le BYE est modifiable, la fenêtre BYE
+  propose les points des sets (11-0 par défaut, 11-5, ou Libre = sets gagnés sans points de jeu)
+  via `buildSetScores()` (`scoring.iife.js`) ; forfaits et BYE générés automatiquement restent
+  à 11-0, modifiables. Tests : `byeSetPoints.test.js`, étape 8 bis de `test:sets`.
 
 ### 2026-10-20 — « 📥 Importer ▾ » : menu déroulant
 

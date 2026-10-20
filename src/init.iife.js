@@ -15,7 +15,10 @@
     // GESTION DES MATCHS BYE MANUELS
     // ======================================
 
-    function addByeMatchForPlayer(dayNumber, division, playerName, score1, score2) {
+    // setLoserPoints (mode sets) : points du perdant dans chaque set, au choix dans la
+    // fenêtre BYE — 0 → 11-0, 5 → 11-5, '' → libre (sets gagnés seulement, sans détail).
+    // undefined (appel sans choix) : 11-0 pour une victoire nette, comme les BYE automatiques.
+    function addByeMatchForPlayer(dayNumber, division, playerName, score1, score2, setLoserPoints) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
@@ -41,9 +44,10 @@
             winner: winner,
             isBye: true
         };
-        // Victoire nette en mode sets : détail des sets pré-rempli (ex. 11-0 11-0)
-        if (byeDefault.setScores && s1 === byeDefault.score1 && s2 === byeDefault.score2) {
-            byeMatch.setScores = byeDefault.setScores;
+        if (global.isSetsMode(dayNumber)) {
+            const loserPoints = setLoserPoints === undefined ? (s1 === byeDefault.score1 && s2 === byeDefault.score2 ? 0 : null) : setLoserPoints;
+            const setScores = global.buildSetScores(global.getDayScoring(dayNumber), s1, s2, loserPoints);
+            if (setScores) byeMatch.setScores = setScores;
         }
 
         dayData.matches[division].push(byeMatch);
@@ -74,6 +78,19 @@
             `<button onclick="setByeScorePreset(${a},${b})" class="btn" style="background:${i < presets.length - 1 ? '#017239' : '#566566'}; color:white; padding:6px 14px;">${a} - ${b}</button>`
         ).join('\n                ');
         const unit = isSets ? `<p style="text-align:center; font-size:12px; color:#555; margin:-8px 0 12px;">Score en sets gagnés (${global.scoringLabel(scoring)})</p>` : '';
+        // Mode sets avec points par set : points de chaque set (11-0, 11-5 ou libre), modifiables ensuite
+        const pps = isSets ? scoring.pointsPerSet : null;
+        const setPointsChoice = pps ? `
+            <div style="text-align:center; margin:-6px 0 20px;">
+                <div id="byeSetPointsLabel" style="font-size:12px; color:#555; margin-bottom:6px;">Points de chaque set</div>
+                <input type="hidden" id="byeSetLoserPoints" value="0">
+                <div role="group" aria-labelledby="byeSetPointsLabel" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                    ${[['0', `${pps} - 0`], ['5', `${pps} - 5`], ['', 'Libre']].map(([v, label], i) =>
+                        `<button type="button" class="btn bye-set-points" data-value="${v}" aria-pressed="${i === 0}" onclick="setByeSetPointsPreset('${v}')"
+                                 style="padding:6px 14px; border:2px solid #017239; ${i === 0 ? 'background:#017239; color:white;' : 'background:white; color:#017239;'}">${label}</button>`
+                    ).join('')}
+                </div>
+            </div>` : '';
         return `
             <div style="display:flex; align-items:flex-end; justify-content:center; gap:15px; margin-bottom:20px;">
                 <div style="text-align:center;">
@@ -92,7 +109,27 @@
             <div style="display:flex; gap:8px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
                 ${presetButtons}
             </div>
+            ${setPointsChoice}
         `;
+    }
+
+    function setByeSetPointsPreset(value) {
+        const hidden = document.getElementById('byeSetLoserPoints');
+        if (hidden) hidden.value = value;
+        document.querySelectorAll('#byeScoreModal .bye-set-points').forEach(btn => {
+            const active = btn.dataset.value === value;
+            btn.setAttribute('aria-pressed', String(active));
+            btn.style.background = active ? '#017239' : 'white';
+            btn.style.color = active ? 'white' : '#017239';
+        });
+    }
+    window.setByeSetPointsPreset = setByeSetPointsPreset;
+
+    // Choix « points de chaque set » de la fenêtre BYE (undefined si absent : mode 2 scores / points libres)
+    function readByeSetLoserPoints() {
+        const hidden = document.getElementById('byeSetLoserPoints');
+        if (!hidden) return undefined;
+        return hidden.value === '' ? null : parseInt(hidden.value, 10);
     }
 
     function setByeScorePreset(s1, s2) {
@@ -159,8 +196,9 @@
         const o = document.getElementById('byeScoreOpponent');
         const s1 = p ? p.value : undefined;
         const s2 = o ? o.value : undefined;
+        const setLoserPoints = readByeSetLoserPoints();
         closeByeScoreModal();
-        addByeMatchForPlayer(dayNumber, division, playerName, s1, s2);
+        addByeMatchForPlayer(dayNumber, division, playerName, s1, s2, setLoserPoints);
         setTimeout(() => showByeManagementModal(dayNumber), 100);
     }
     window.confirmByeScore = confirmByeScore;
@@ -194,8 +232,9 @@
         const o = document.getElementById('byeScoreOpponent');
         const s1 = p ? p.value : undefined;
         const s2 = o ? o.value : undefined;
+        const setLoserPoints = readByeSetLoserPoints();
         closeByeScoreModal();
-        addByeToAll(dayNumber, s1, s2);
+        addByeToAll(dayNumber, s1, s2, setLoserPoints);
         setTimeout(() => showByeManagementModal(dayNumber), 100);
     }
     window.confirmByeScoreForAll = confirmByeScoreForAll;
@@ -1328,7 +1367,7 @@ function showByeManagementModal(dayNumber) {
     }
     window.closeByeModal = closeByeModal;
 
-    function addByeToAll(dayNumber, score1, score2) {
+    function addByeToAll(dayNumber, score1, score2, setLoserPoints) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
@@ -1369,7 +1408,7 @@ function showByeManagementModal(dayNumber) {
                 const missingMatches = 4 - matchCount;
 
                 for (let i = 0; i < missingMatches; i++) {
-                    addByeMatchForPlayer(dayNumber, division, playerName, score1, score2);
+                    addByeMatchForPlayer(dayNumber, division, playerName, score1, score2, setLoserPoints);
                     addedCount++;
                 }
             });

@@ -20,7 +20,8 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 - Saisie **set par set** dans les matchs par tours, les poules et la phase finale : Entrée
   passe au set suivant, le match est validé dès qu'il est gagné, les sets inutiles sont grisés,
   un set incomplet est signalé (sans blocage). Pas de match nul en sets.
-- BYE et forfaits suivent le format (2-0 en BO3, 3-0 en BO5…).
+- BYE et forfaits suivent le format (2-0 en BO3, 3-0 en BO5…). La fenêtre « 🎯 Score du match
+  BYE » propose aussi les points de chaque set : 11-0, 11-5 ou Libre (sets gagnés seulement).
 - Classements (journée, général, poules, qualification, multisport) : après la différence de
   sets, départage par la **différence de points de jeu** ; colonnes « Sets G/P », « Diff
   sets », « Pts jeu ± ». Détail des sets dans les résultats (« 2-1 : 11-8 9-11 11-5 »), la

@@ -202,6 +202,34 @@ const countSetHeaders = html => (html.match(/<th>SET \d<\/th>/g) || []).length;
     await snap(page, 'poule-finale-bo5');
 
     // ---------------------------------------------------------------
+    step('8 bis. BYE : choix des points de chaque set (11-0 / 11-5 / Libre)');
+    const byeOf = name => state(page, n => {
+        const m = championship.days[1].matches[1].filter(x => x.isBye && x.player1 === n).pop();
+        return m && JSON.parse(JSON.stringify(m));
+    }, name);
+    await page.evaluate(() => showByeScoreModal(1, 1, 'Chloé'));
+    await page.waitForTimeout(300);
+    const choices = await page.locator('#byeScoreModal .bye-set-points').allInnerTexts();
+    check(choices.map(t => t.trim()).join(' | ') === '11 - 0 | 11 - 5 | Libre', 'choix proposés (BO5 · 11 pts) : ' + choices.join(' | '));
+    await snap(page, 'fenetre-bye');
+    await page.locator('#byeScoreModal .bye-set-points', { hasText: '11 - 5' }).click();
+    await page.locator('#byeScoreModal').getByRole('button', { name: '✅ Valider' }).click();
+    await page.waitForTimeout(400);
+    const bye1 = await byeOf('Chloé');
+    const bye1Sets = (bye1 && bye1.setScores || []).filter(x => x.s1 !== '').map(x => `${x.s1}-${x.s2}`);
+    check(bye1 && bye1.score1 === 3 && bye1.winner === 'Chloé' && bye1Sets.join(' ') === '11-5 11-5 11-5', 'BYE 3-0 en 11-5 : ' + bye1Sets.join(' '));
+    await page.evaluate(() => closeByeModal()); // la gestion des BYE se rouvre après validation
+    await page.evaluate(() => showByeScoreModal(1, 1, 'David'));
+    await page.waitForTimeout(300);
+    await page.locator('#byeScoreModal .bye-set-points', { hasText: 'Libre' }).click();
+    await page.locator('#byeScoreModal').getByRole('button', { name: '✅ Valider' }).click();
+    await page.waitForTimeout(400);
+    const bye2 = await byeOf('David');
+    // La grille affichée ajoute des sets vides (saisie possible ensuite) : aucun ne doit être rempli
+    check(bye2 && bye2.score1 === 3 && bye2.winner === 'David' && (bye2.setScores || []).every(x => x.s1 === '' && x.s2 === ''), 'BYE « Libre » : 3-0 sans détail des sets');
+    await page.evaluate(() => closeByeModal());
+
+    // ---------------------------------------------------------------
     step('9. Journée restée en 2 scores (J2) : cases historiques, nul permis');
     await page.evaluate(() => addNewDay());
     await page.waitForTimeout(500);
