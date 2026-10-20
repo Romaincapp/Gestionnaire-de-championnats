@@ -183,6 +183,17 @@
         return fields;
     }
 
+    /** Différence de points de jeu d'une ligne de classement (0 en mode 2 scores). */
+    function gamePointsDiff(stats) {
+        return (stats && (stats.gamePointsWon || 0) - (stats.gamePointsLost || 0)) || 0;
+    }
+
+    /** Score encaissé par forfait pour une journée : 5 (2 scores) ou setsToWin (sets). */
+    function forfeitPenaltyForDay(dayNumber) {
+        const r = forfeitResult(getDayScoring(dayNumber), 'player1');
+        return parseInt(r.score2) || 0;
+    }
+
     /** "2-1 (11-8 9-11 11-5)" en mode sets avec détail, sinon "s1-s2". */
     function formatScoreDetail(match, placeholder) {
         const empty = placeholder === undefined ? '-' : placeholder;
@@ -196,6 +207,20 @@
             .map(set => `${set.s1}-${set.s2}`)
             .join(' ');
         return `${summary} (${detail})`;
+    }
+
+    /**
+     * Détail des sets vu par un joueur, à coller après un score résumé :
+     * " : 11-8 9-11 11-5" (ou "" sans détail). isPlayer1=false inverse chaque set.
+     */
+    function setDetailSuffix(match, isPlayer1, separator) {
+        if (!hasSetDetail(match)) return '';
+        const p1 = isPlayer1 !== false;
+        const detail = match.setScores
+            .filter(set => set && !isBlank(set.s1) && !isBlank(set.s2))
+            .map(set => p1 ? `${set.s1}-${set.s2}` : `${set.s2}-${set.s1}`)
+            .join(' ');
+        return `${separator === undefined ? ' : ' : separator}${detail}`;
     }
 
     /** Avertissements non bloquants sur un set (multi-sport : on ne refuse jamais). */
@@ -303,6 +328,35 @@
                 Object.values(div && div.rounds || {}).forEach(round => (round && round.matches || []).forEach(fn));
             });
         }
+    }
+
+    /**
+     * Normalise le format de score d'une journée importée ou chargée :
+     *  - migre l'ancien `sets` de tennisdetable (la journée passe alors en BO3 11 pts) ;
+     *  - applique `fallbackScoring` (défaut du fichier importé) si la journée n'a pas de format ;
+     *  - nettoie setScores (entrées invalides, longueur adaptée au format).
+     * Retourne true si des sets au format tennisdetable ont été migrés.
+     */
+    function normalizeDayScoring(day, fallbackScoring) {
+        if (!day || day.dayType === 'chrono') return false;
+        let legacy = false;
+        forEachDayMatch(day, m => { if (migrateLegacySets(m)) legacy = true; });
+        if (!day.scoring) {
+            if (legacy) day.scoring = Object.assign({}, DEFAULT_SETS);
+            else if (fallbackScoring) day.scoring = normalizeScoring(fallbackScoring);
+        }
+        if (day.scoring) day.scoring = normalizeScoring(day.scoring);
+        const s = day.scoring || SIMPLE;
+        forEachDayMatch(day, m => {
+            if (m.setScores === undefined) return;
+            if (!Array.isArray(m.setScores)) { delete m.setScores; return; }
+            m.setScores = m.setScores.map(set => ({
+                s1: set && !isBlank(set.s1) ? String(set.s1) : '',
+                s2: set && !isBlank(set.s2) ? String(set.s2) : '',
+            }));
+            if (s.mode === 'sets') ensureSetScores(m, s);
+        });
+        return legacy;
     }
 
     // ======================================
@@ -597,12 +651,16 @@
     global.assignResult = assignResult;
     global.byeFieldsForDay = byeFieldsForDay;
     global.formatScoreDetail = formatScoreDetail;
+    global.setDetailSuffix = setDetailSuffix;
     global.setValidationWarnings = setValidationWarnings;
     global.gamePointsFor = gamePointsFor;
+    global.gamePointsDiff = gamePointsDiff;
+    global.forfeitPenaltyForDay = forfeitPenaltyForDay;
     global.compareRankingStats = compareRankingStats;
     global.migrateLegacySets = migrateLegacySets;
     global.scoringLabel = scoringLabel;
     global.forEachDayMatch = forEachDayMatch;
+    global.normalizeDayScoring = normalizeDayScoring;
     global.renderDayScoringControl = renderDayScoringControl;
     global.refreshDayScoringControl = refreshDayScoringControl;
     global.changeDayScoringFromControl = changeDayScoringFromControl;

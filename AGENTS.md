@@ -26,7 +26,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 ├── script.js               # Legacy — dark mode uniquement (37 lignes), PAS la logique de l'app
 ├── AGENTS.md               # Cette documentation
 ├── claude.md                # Guide d'architecture pour agents IA (structure de données, patterns critiques)
-├── src/                    # Toute la logique applicative (19 modules IIFE, ~30k lignes)
+├── src/                    # Toute la logique applicative (20 modules IIFE, ~31k lignes)
 │   ├── config.iife.js      # Configuration (divisions, terrains)
 │   ├── utils.iife.js       # Fonctions utilitaires
 │   ├── notifications.iife.js # Système de notifications
@@ -35,6 +35,7 @@ pour un exemple de dérive doc/code qui a causé de faux diagnostics).
 │   ├── multisport.iife.js  # Sélecteur de type par journée, UI Chrono par journée, classement combiné (le plus gros module fonctionnellement, ~3700 lignes)
 │   ├── players.iife.js     # Gestion des joueurs (journées Championship)
 │   ├── ui.iife.js          # Onglets/journées, addNewDay/removeDay/clearDayData, pont Chrono↔raceData
+│   ├── scoring.iife.js     # Format de score par journée (2 scores / sets best-of N), règle de fin de match commune, saisie set par set, voir section 8 bis
 │   ├── matches.iife.js     # Mode CHAMPIONSHIP (matchs par tours)
 │   ├── pools.iife.js       # Mode POOL (poules + phase finale) — le plus gros fichier, ~7200 lignes
 │   ├── ranking.iife.js     # Classements et statistiques Championship
@@ -197,6 +198,24 @@ dont notamment :
 exposées depuis ce fichier (elles ont bougé vers `players.iife.js`,
 `pools.iife.js` ou `export-json.iife.js` au fil du temps — vérifié par grep
 le 2026-09).
+
+### 8 bis. scoring.iife.js (format de score par journée)
+**Rôle** : 2 scores (historique, nul permis) ou **sets best-of N** (BO3/BO5/BO7, points par set
+optionnels). Config : `day.scoring` (`{mode:'simple'}` ou `{mode:'sets', setsToWin, pointsPerSet}`),
+sinon `config.defaultScoring`, sinon 2 scores. En mode sets, `match.setScores = [{s1, s2}]` porte le
+détail et `score1`/`score2` = **sets gagnés** (résumé) : tout le code qui lit `score1/score2/winner/
+completed` reste valable.
+
+**Fonctions exposées** (extraits) :
+- `getDayScoring(day)`, `isSetsMode(day)`, `normalizeScoring(s)`, `scoringLabel(s)`
+- `applyMatchResult(match, scoring)` / `computeMatchResult` - **règle de fin de match unique** des 3 contextes (`checkMatchCompletion`, `checkPoolMatchCompletion`, `checkManualMatchCompletion` l'appellent)
+- `byeFieldsForDay(day, défautSimple, côtéGagnant)`, `forfeitResult(scoring, 'player1'|'player2')`, `assignResult`, `forfeitPenaltyForDay(day)` - BYE/forfait/journée manquée selon le format
+- `renderSetScoreInputs(type, day, div, ref, match, {onkeydown})` - grille de sets (null en mode 2 scores : l'appelant garde ses 2 cases) ; `updateSetScore(type, day, div, ref, set, côté, valeur)`, `onSetScoreInput(input)`, `handleSetsKeydown(event, match, day)` (appelé en tête de `handleEnterKey` / `handlePoolMatchEnter` / `handleManualMatchEnter`)
+- `setDayScoring(day, scoring)`, `changeDayScoringFromControl(day)`, `renderDayScoringControl(day)`, `refreshDayScoringControl(day)` - sélecteur « 🎯 Score » de l'en-tête de journée
+- `gamePointsFor(match, isPlayer1)`, `gamePointsDiff(stats)` - points de jeu (départage après la différence de sets)
+- `formatScoreDetail(match)`, `setDetailSuffix(match, isPlayer1)` - affichage « 2-1 : 11-8 9-11 11-5 »
+- `migrateLegacySets(match)`, `normalizeDayScoring(day, défaut)` - reprise de l'ancien `sets[{player1Score, player2Score}]` de tennisdetable (import JSON et chargement localStorage)
+- `forEachDayMatch(dayData, fn)` - parcourt matchs par tours, de poule, `finalPhase` et rounds de `manualFinalPhase`
 
 ### 9. matches.iife.js (Mode Championship)
 **Rôle** : Gestion des matchs par tours
@@ -463,7 +482,7 @@ chargement réel (voir `<script>` dans `index.html`) :
 1. config, utils, notifications
 2. state, clubs
 3. multisport, players, ui
-4. matches, pools, ranking
+4. scoring, matches, pools, ranking
 5. export-json, export-print, chrono, search, darkmode, mobile, a11y
 6. init (bootstrap), puis `script.js` (interrupteur du mode sombre)
 

@@ -9,7 +9,7 @@
 const { loadModules } = require('../helpers/loadApp');
 
 beforeAll(() => {
-    loadModules(['config', 'utils', 'notifications', 'state', 'export-print']);
+    loadModules(['config', 'utils', 'notifications', 'state', 'scoring', 'export-print']);
 });
 
 const m = (tour, n) => ({ matchId: `T${tour}-M${n}`, tour, player1: 'A', player2: 'B', type: 'Round-Robin' });

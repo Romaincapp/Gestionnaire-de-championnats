@@ -2158,7 +2158,7 @@ function generatePoolMatchHTML(match, dayNumber) {
     const statusText = match.completed ? 'Terminé' : 'En cours';
     const score1 = match.score1 || 0;
     const score2 = match.score2 || 0;
-    const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}` : '';
+    const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span> ${match.player2}` : '';
 
     return `
         <div class="pool-match ${matchStatus} ${match.isCollapsed ? 'collapsed' : ''}" data-match-id="${match.id}" data-division="${match.division}" style="
@@ -2259,7 +2259,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                 background: ${match.forfaitBy ? '#fff3cd' : '#a8e6cf'};
                 color: ${match.forfaitBy ? '#6c5103' : '#096b54'};
             ">
-                ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2})
+                ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2}${global.setDetailSuffix(match)})
             </div>` : ''}
             ${match.completed && match.winner === null ? `
             <div class="match-result" style="
@@ -2911,7 +2911,7 @@ if (!document.getElementById('player-summary-animations')) {
 
 function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers = null, dayNumber = null, division = null) {
     const playerStats = pool.map(player => {
-        let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
+        let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0, gameWon = 0, gameLost = 0;
 
         poolMatches.forEach(match => {
             if (!match.completed) return;
@@ -2944,6 +2944,8 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                     pointsWon += score2;
                     pointsLost += score1;
                 }
+                const gp = global.gamePointsFor(match, isPlayer1); // mode sets : points de jeu
+                if (gp) { gameWon += gp.won; gameLost += gp.lost; }
             }
         });
 
@@ -2956,6 +2958,8 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
             pointsWon,
             pointsLost,
             diff: pointsWon - pointsLost,
+            gamePointsWon: gameWon,
+            gamePointsLost: gameLost,
             points: wins * 3 + draws * 2 + losses * 1
         };
     });
@@ -2964,6 +2968,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
     playerStats.sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
         if (b.diff !== a.diff) return b.diff - a.diff;
+        if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
         return b.pointsWon - a.pointsWon;
     });
 
@@ -3295,7 +3300,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
 
     pools.forEach((pool, poolIndex) => {
         const playerStats = pool.map(player => {
-            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
+            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0, gameWon = 0, gameLost = 0;
 
             const poolMatches = matches.filter(m => m.poolIndex === poolIndex && m.completed);
 
@@ -3328,6 +3333,8 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
                         pointsWon += score2;
                         pointsLost += score1;
                     }
+                    const gp = global.gamePointsFor(match, isPlayer1); // mode sets : points de jeu
+                    if (gp) { gameWon += gp.won; gameLost += gp.lost; }
                 }
             });
 
@@ -3335,6 +3342,8 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
                 name: player,
                 wins, draws, losses, forfeits, pointsWon, pointsLost,
                 diff: pointsWon - pointsLost,
+                gamePointsWon: gameWon,
+                gamePointsLost: gameLost,
                 points: wins * 3 + draws * 2 + losses * 1,
                 poolIndex: poolIndex,
                 poolName: String.fromCharCode(65 + poolIndex)
@@ -3345,6 +3354,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
         playerStats.sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
             if (b.diff !== a.diff) return b.diff - a.diff;
+            if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
             return b.pointsWon - a.pointsWon;
         });
 
@@ -3390,6 +3400,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
             runnersUp.sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
                 if (b.diff !== a.diff) return b.diff - a.diff;
+                if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
                 return b.pointsWon - a.pointsWon;
             });
 
@@ -4746,7 +4757,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
     const isActive = !match.isBye;
     const score1 = match.score1 || 0;
     const score2 = match.score2 || 0;
-    const scoreDisplay = isCompleted && !match.isBye ? `<span class="collapse-score">${score1}-${score2}</span>` : '';
+    const scoreDisplay = isCompleted && !match.isBye ? `<span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span>` : '';
     return `
         <div class="manual-match ${match.isCollapsed ? 'collapsed' : ''}" style="
             background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
@@ -4870,7 +4881,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     color: ${isCompleted ? (match.forfaitBy ? '#6c5103' : (match.winner === null ? '#1565c0' : '#155724')) : '#6c5103'};
                     font-size: 13px;
                 ">
-                    ${isCompleted && match.winner ? `${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} gagne${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2})` :
+                    ${isCompleted && match.winner ? `${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} gagne${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2}${global.setDetailSuffix(match)})` :
                       isCompleted && match.winner === null ? `🤝 Match nul (${score1}-${score2})` : 'En attente des scores'}
                 </div>
             `}

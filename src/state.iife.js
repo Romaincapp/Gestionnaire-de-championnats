@@ -105,6 +105,12 @@
                 // Ne JAMAIS faire championship = {...} qui casse les références des autres modules
                 Object.keys(championship).forEach(function(key) { delete championship[key]; });
                 Object.assign(championship, loaded);
+                // Format de score par journée + migration des sets de tennisdetable (même clé localStorage)
+                if (typeof global.normalizeDayScoring === 'function' && championship.days) {
+                    Object.keys(championship.days).forEach(function(n) {
+                        global.normalizeDayScoring(championship.days[n], championship.config && championship.config.defaultScoring);
+                    });
+                }
                 // S'assurer que la config a les valeurs par défaut
                 if (!championship.config) {
                     championship.config = { numberOfDivisions: DEFAULT_CONFIG.numberOfDivisions, numberOfCourts: DEFAULT_CONFIG.numberOfCourts };

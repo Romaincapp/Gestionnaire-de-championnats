@@ -988,7 +988,7 @@
                         
                         const score1 = match.score1 || 0;
                         const score2 = match.score2 || 0;
-                        const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}` : '';
+                        const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span> ${match.player2}` : '';
 
                         html += `
                             <div class="match ${matchStatus}" data-match-id="d${dayNumber}-div${division}-m${globalIndex}" style="position: relative;">
@@ -1053,7 +1053,7 @@
                             const forfaitText = match.forfaitBy ? ' (forfait)' : '';
                             html += `
                                 <div class="match-result result-completed ${match.forfaitBy ? 'result-forfait' : ''}">
-                                    ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${forfaitText} (${score1}-${score2})
+                                    ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${forfaitText} (${score1}-${score2}${global.setDetailSuffix(match)})
                                 </div>
                             `;
                         } else if (match.completed && match.winner === null) {
@@ -1502,7 +1502,7 @@
                 matchHeader.appendChild(playerNamesElement);
             }
             // Mettre à jour le contenu avec le format collapsed
-            playerNamesElement.innerHTML = `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}`;
+            playerNamesElement.innerHTML = `${match.player1} <span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span> ${match.player2}`;
 
             // Créer ou mettre à jour le badge de statut
             let statusElement = matchHeader.querySelector('.match-status');
@@ -1525,7 +1525,7 @@
                 } else {
                     resultElement.className = 'match-result result-completed';
                 }
-                resultElement.textContent = `🏆 ${match.winner} remporte le match (${score1}-${score2})`;
+                resultElement.textContent = `🏆 ${match.winner} remporte le match (${score1}-${score2}${global.setDetailSuffix(match)})`;
             }
         } else {
             // Match non terminé - supprimer header et résultat s'ils existent

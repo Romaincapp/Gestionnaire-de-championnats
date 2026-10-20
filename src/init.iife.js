@@ -410,6 +410,14 @@
     }
     window.openRankingInNewWindow = openRankingInNewWindow;
 
+
+    // Mode sets : points de chaque set devant le nombre de sets gagnés (« 11 9 11 · 2 »)
+    function setPointsLine(match, side) {
+        if (!global.hasSetDetail(match)) return '';
+        const pts = match.setScores.filter(set => set && set.s1 !== '' && set.s2 !== '').map(set => set[side]).join(' ');
+        return `<span style="color: #5b636b; font-weight: normal; margin-right: 6px;">${pts}</span>`;
+    }
+
     function refreshRankingWindow(dayOrGeneral) {
         const isGeneral = dayOrGeneral === 'general';
         const title = isGeneral ? 'Classement Général' : `Classement Journée ${dayOrGeneral}`;
@@ -725,7 +733,7 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
                 (m.player1 === player || m.player2 === player)
             );
 
-            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
+            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0, gameWon = 0, gameLost = 0;
 
             playerPoolMatches.forEach(match => {
                 if (match.completed) {
@@ -754,6 +762,8 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
                         pointsWon += score2;
                         pointsLost += score1;
                     }
+                    const gp = global.gamePointsFor(match, isPlayer1); // mode sets : points de jeu
+                    if (gp) { gameWon += gp.won; gameLost += gp.lost; }
                 }
             });
 
@@ -767,6 +777,8 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
                 pointsWon,
                 pointsLost,
                 goalAverage: pointsWon - pointsLost,
+                gamePointsWon: gameWon,
+                gamePointsLost: gameLost,
                 matchesPlayed: wins + draws + losses + forfeits
             });
         });
@@ -775,6 +787,7 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
         rankings.sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
             if (b.goalAverage !== a.goalAverage) return b.goalAverage - a.goalAverage;
+            if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
             if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
             return a.name.localeCompare(b.name);
         });
@@ -946,11 +959,11 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
                     <div style="background: ${isComplete ? '#f8f9fa' : '#fff'}; padding: 6px; border-radius: 4px; margin-bottom: 4px; font-size: 11px; border: 1px solid ${isComplete ? '#dee2e6' : '#ffc107'};">
                         <div style="display: flex; justify-content: space-between; ${winner === match.player1 ? 'font-weight: 600;' : ''}">
                             <span>${match.player1 || '?'}</span>
-                            <span>${match.score1 || '-'}</span>
+                            <span>${setPointsLine(match, 's1')}${match.score1 || '-'}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; ${winner === match.player2 ? 'font-weight: 600;' : ''}">
                             <span>${match.player2 || '?'}</span>
-                            <span>${match.score2 || '-'}</span>
+                            <span>${setPointsLine(match, 's2')}${match.score2 || '-'}</span>
                         </div>
                     </div>
                 `;

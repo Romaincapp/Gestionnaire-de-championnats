@@ -1625,6 +1625,8 @@
                 wins: stats.wins,
                 matchesPlayed: stats.matchesPlayed,
                 goalAverage: stats.pointsWon - stats.pointsLost,
+                gamePointsWon: stats.gamePointsWon || 0,
+                gamePointsLost: stats.gamePointsLost || 0,
                 pointsWon: stats.pointsWon,
                 stageWeight: stage ? stage.stageWeight : 0
             });
@@ -1634,6 +1636,8 @@
             if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
             if (b.wins !== a.wins) return b.wins - a.wins;
             if (b.goalAverage !== a.goalAverage) return b.goalAverage - a.goalAverage;
+            // Même départage que le classement de journée (mode sets : points de jeu)
+            if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
             if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
             return a.name.localeCompare(b.name);
         });

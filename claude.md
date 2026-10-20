@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A third, read-only **Multisport tab** appears automatically whenever the championship contains at least one day of each type (or at least one Chrono day) — it shows a combined ranking across both day types. There is no longer a global mode toggle.
 
-Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in 18 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
+Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in 19 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
 
 ## Running the Application
 
@@ -45,6 +45,8 @@ Single global `championship` object, keyed by day:
       dayType: 'championship' | 'chrono',   // per-day type, see above
       players: { [division]: [playerNames] },   // Championship-type day
       matches: { [division]: [matchObjects] },  // Championship-type day
+      scoring: { mode: 'simple' } |             // score format of the day (absent = simple),
+               { mode: 'sets', setsToWin: 2|3|4, pointsPerSet: 11|null },  // see "Score format" below
       pools: {                          // Optional, when pool mode enabled
         enabled: boolean,
         divisions: {
@@ -96,6 +98,28 @@ here has been removed — mode is now chosen per day via a type selector
 See issue #65 for the cleanup of the old global Chrono menu.
 - Each mode has its own localStorage key (or its own sub-object per day)
 - Each mode has its own save functions
+
+### 1 bis. Score format per day: 2 scores or sets (CRITICAL)
+
+Each Championship-type day has a score format (`day.scoring`, fallback `config.defaultScoring`,
+fallback `{mode:'simple'}`), chosen with the « 🎯 Score » selector in the day header and copied
+to new days by `addNewDay()`. Logic in `src/scoring.iife.js`.
+- **simple** (historical): `score1`/`score2`, draws allowed.
+- **sets** (best-of `2*setsToWin-1`): per-set detail in `match.setScores = [{s1, s2}, ...]`;
+  `score1`/`score2` hold **sets won** and are recomputed from `setScores`. No draws.
+
+Rules:
+- **Never write a winner/completion rule by hand**: call `applyMatchResult(match, getDayScoring(day))`
+  (the 3 completion functions already do). Never hardcode BYE/forfeit scores: use
+  `byeFieldsForDay()` / `forfeitResult()` (5-0 in simple mode, `setsToWin`-0 in sets mode).
+- `setScores` ≠ the legacy tennisdetable `sets: [{player1Score, player2Score}]`, which
+  `migrateLegacySets()` / `normalizeDayScoring()` convert on import and on localStorage load
+  (the day then becomes BO3 11 pts). The old code used to `delete match.sets` after
+  converting: never do that again, it loses the per-set detail.
+- Rankings: `pointsWon/pointsLost` = sets in sets mode, so goal average = set difference;
+  the next tiebreak is the game-point difference (`gamePointsWon/Lost`, `gamePointsDiff()`),
+  added after the goal-average comparison in every ranking sort (day, general, pools,
+  qualification, multisport day order).
 
 ### 2. Match Collection Pattern (CRITICAL)
 
@@ -459,6 +483,7 @@ order).
 │   ├── multisport.iife.js   # Per-day type selector, Multisport combined ranking, per-day Chrono UI (the largest, most-load-bearing module — ~3700 lines)
 │   ├── players.iife.js      # Player management (Championship-type days)
 │   ├── ui.iife.js           # Tabs/days, addNewDay/removeDay/clearDayData, Chrono↔raceData bridge (startChronoRaceForDay, saveRaceResultsToDay)
+│   ├── scoring.iife.js      # Score format per day (2 scores / sets best-of N), shared match-result rule, set-by-set input
 │   ├── matches.iife.js      # Match generation & scoring (Championship-type days)
 │   ├── pools.iife.js        # Pool system + knockout phases (largest file, ~7200 lines)
 │   ├── ranking.iife.js      # Championship rankings/statistics
