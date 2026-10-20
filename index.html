@@ -281,43 +281,10 @@
     </div>
 
     <!-- MODALS -->
-    <div id="importModal" class="modal">
-        <div class="modal-content">
-            <h3>Importer un Championnat</h3>
-            <div style="margin-bottom: 20px;">
-                <div class="file-input-wrapper">
-                    <input type="file" id="importFileInput" accept=".json">
-                    <label for="importFileInput" class="file-input-label">
-                        📁 Choisir un fichier JSON
-                    </label>
-                </div>
-            </div>
-            <p style="margin: 15px 0; color: #586566; font-size: 14px;">
-                ⚠️ L'import remplacera complètement le championnat actuel
-            </p>
-            <div style="margin: 20px 0; padding: 15px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;">
-                <p style="margin: 0 0 10px 0; font-size: 13px; color: #0369a1;">
-                    📁 <strong>Import multi-journées :</strong> Sélectionnez plusieurs fichiers JSON (un par journée)
-                </p>
-                <button onclick="showMultiDayImportModal(); closeImportModal();" class="btn" style="background: linear-gradient(135deg, #0977a9, #0475b1); color: white; width: 100%;">
-                    📂 Importer plusieurs journées
-                </button>
-            </div>
-            <div style="margin: 20px 0; padding: 15px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
-                <p style="margin: 0 0 10px 0; font-size: 13px; color: #15803d;">
-                    ➕ <strong>Ajouter à la suite :</strong> les journées du ou des fichiers sont ajoutées après celles déjà présentes, sans rien remplacer (une « Journée 1 » d'un autre projet devient la journée suivante). Matchs et Courses peuvent être mélangés.
-                </p>
-                <input type="file" id="appendDaysInput" accept=".json" multiple onchange="appendDaysFromFiles(event)" style="display: none;">
-                <button onclick="openAppendDaysPicker()" class="btn" style="background: linear-gradient(135deg, #028138, #068137); color: white; width: 100%;">
-                    ➕ Ajouter à la suite du championnat
-                </button>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn btn-danger" onclick="closeImportModal()">Annuler</button>
-                <button class="btn btn-success" onclick="processImport()">Importer</button>
-            </div>
-        </div>
-    </div>
+    <!-- Sélecteurs de fichiers du menu « 📥 Importer ▾ » (choisir un fichier lance l'import directement) -->
+    <input type="file" id="importFileInput" accept=".json" aria-label="Importer un championnat (JSON)" style="display: none;">
+    <input type="file" id="multiDayImportInput" accept=".json" multiple aria-label="Importer plusieurs journées (JSON)" onchange="importMultipleDayFiles(event)" style="display: none;">
+    <input type="file" id="appendDaysInput" accept=".json" multiple aria-label="Ajouter des journées à la suite (JSON)" onchange="appendDaysFromFiles(event)" style="display: none;">
 
     <!-- Modal Ajout Joueurs -->
     <div id="addPlayerModal" class="modal">
