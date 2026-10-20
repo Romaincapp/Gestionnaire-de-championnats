@@ -11,7 +11,7 @@ const { loadModules } = require('../helpers/loadApp');
 beforeAll(() => {
     loadModules([
         'config', 'utils', 'notifications', 'state', 'clubs', 'multisport',
-        'players', 'ui', 'matches', 'pools', 'ranking',
+        'players', 'ui', 'scoring', 'matches', 'pools', 'ranking',
     ]);
 });
 

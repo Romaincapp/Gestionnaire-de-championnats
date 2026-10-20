@@ -445,8 +445,7 @@
                             player1: player,
                             player2: 'BYE',
                             tour: tourIndex + 1,
-                            score1: 5,
-                            score2: 0,
+                            ...global.byeFieldsForDay(dayNumber, 5),
                             completed: true,
                             winner: player,
                             isBye: true
@@ -679,8 +678,7 @@
                                 player2: 'BYE',
                                 tour: tourIndex + 1,
                                 court: court,
-                                score1: 5,
-                                score2: 0,
+                                ...global.byeFieldsForDay(dayNumber, 5),
                                 completed: true,
                                 winner: player,
                                 isBye: true
@@ -1568,42 +1566,11 @@
     function checkMatchCompletion(dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
 
-        // Si l'ancien format avec sets existe, le convertir
-        if (match.sets && !match.hasOwnProperty('score1')) {
-            let player1Sets = 0;
-            let player2Sets = 0;
-            match.sets.forEach((set) => {
-                if (set.player1Score !== '' && set.player2Score !== '') {
-                    const score1 = parseInt(set.player1Score);
-                    const score2 = parseInt(set.player2Score);
-                    if (score1 > score2) player1Sets++;
-                    else if (score2 > score1) player2Sets++;
-                }
-            });
-            match.score1 = player1Sets;
-            match.score2 = player2Sets;
-            delete match.sets;
-        }
+        // Ancien format tennisdetable (sets: [{player1Score, player2Score}]) → setScores, sans perte
+        if (global.migrateLegacySets) global.migrateLegacySets(match);
 
-        match.completed = false;
-        match.winner = null;
-
-        if (match.score1 !== '' && match.score2 !== '') {
-            const score1 = parseInt(match.score1);
-            const score2 = parseInt(match.score2);
-
-            if (score1 > score2) {
-                match.completed = true;
-                match.winner = match.player1;
-            } else if (score2 > score1) {
-                match.completed = true;
-                match.winner = match.player2;
-            } else {
-                // En cas d'égalité, le match est terminé mais sans vainqueur
-                match.completed = true;
-                match.winner = null;
-            }
-        }
+        // Règle de fin de match commune aux 3 contextes (voir scoring.iife.js)
+        global.applyMatchResult(match, global.getDayScoring(dayNumber));
     }
 
     // Déclarer un forfait pour un match (régulier, poule ou phase finale)
@@ -1641,15 +1608,9 @@
         match.forfaitBy = forfaitPlayer; // 'player1' ou 'player2'
         match.completed = true;
 
-        if (forfaitPlayer === 'player1') {
-            match.score1 = 0;
-            match.score2 = 5;
-            match.winner = match.player2;
-        } else {
-            match.score1 = 5;
-            match.score2 = 0;
-            match.winner = match.player1;
-        }
+        // 0-5 / 5-0 en mode 2 scores, 0-setsToWin en mode sets (voir scoring.iife.js)
+        global.assignResult(match, global.forfeitResult(global.getDayScoring(dayNumber), forfaitPlayer));
+        match.winner = forfaitPlayer === 'player1' ? match.player2 : match.player1;
 
         saveToLocalStorage();
 

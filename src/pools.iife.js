@@ -1595,8 +1595,7 @@ function generateRoundRobinMatches(pool, poolIndex, division, dayNumber, startMa
                         poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                         division: division,
                         dayNumber: dayNumber,
-                        score1: 5,
-                        score2: 0,
+                        ...global.byeFieldsForDay(dayNumber, 5, 1),
                         completed: true,
                         winner: player1,
                         isPoolMatch: true,
@@ -1612,8 +1611,7 @@ function generateRoundRobinMatches(pool, poolIndex, division, dayNumber, startMa
                         poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                         division: division,
                         dayNumber: dayNumber,
-                        score1: 0,
-                        score2: 5,
+                        ...global.byeFieldsForDay(dayNumber, 5, 2),
                         completed: true,
                         winner: player2,
                         isPoolMatch: true,
@@ -1754,8 +1752,8 @@ function generateLimitedMatches(pool, poolIndex, division, dayNumber, matchesPer
                     poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                     division: division,
                     dayNumber: dayNumber,
-                    score1: '0',
-                    score2: '0',
+                    // Mode 2 scores : 0-0 historique (BYE non compté) ; mode sets : victoire setsToWin-0
+                    ...(global.isSetsMode(dayNumber) ? global.byeFieldsForDay(dayNumber, 0, 1) : { score1: '0', score2: '0' }),
                     completed: true,
                     winner: player1,
                     isPoolMatch: true,
@@ -1770,8 +1768,7 @@ function generateLimitedMatches(pool, poolIndex, division, dayNumber, matchesPer
                     poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                     division: division,
                     dayNumber: dayNumber,
-                    score1: '0',
-                    score2: '0',
+                    ...(global.isSetsMode(dayNumber) ? global.byeFieldsForDay(dayNumber, 0, 2) : { score1: '0', score2: '0' }),
                     completed: true,
                     winner: player2,
                     isPoolMatch: true,
@@ -2438,25 +2435,8 @@ function checkPoolMatchCompletion(dayNumber, matchId, division) {
 
     const wasCompleted = match.completed;
 
-    if (match.score1 !== '' && match.score2 !== '') {
-        const score1 = parseInt(match.score1);
-        const score2 = parseInt(match.score2);
-
-        if (score1 > score2) {
-            match.completed = true;
-            match.winner = match.player1;
-        } else if (score2 > score1) {
-            match.completed = true;
-            match.winner = match.player2;
-        } else {
-            match.completed = true;
-            match.winner = null;
-        }
-    } else {
-        // Si l'un des scores est vide, remettre le match en attente
-        match.completed = false;
-        match.winner = null;
-    }
+    // Règle de fin de match commune aux 3 contextes (voir scoring.iife.js)
+    global.applyMatchResult(match, global.getDayScoring(dayNumber));
 
     // Notification du changement d'état
     if (!wasCompleted && match.completed) {
@@ -4250,8 +4230,9 @@ function generateFirstRoundDirect(dayNumber, division, qualified, roundName, pre
             player2: player2.name,
             player1Seed: player1.seed,
             player2Seed: player2.seed || null,
-            score1: player2.isBye ? 3 : (player1.isBye ? 0 : ''),
-            score2: player2.isBye ? 0 : (player1.isBye ? 3 : ''),
+            ...(player2.isBye ? global.byeFieldsForDay(dayNumber, 3, 1)
+                : player1.isBye ? global.byeFieldsForDay(dayNumber, 3, 2)
+                : { score1: '', score2: '' }),
             completed: isByeMatch,
             winner: winner,
             roundName: roundName,
@@ -4308,8 +4289,7 @@ function generateFirstRound(dayNumber, division, qualified, roundName) {
             player2: player2.name,
             player1Seed: player1.seed,
             player2Seed: player2.seed || null,
-            score1: player2.isBye ? 3 : '',
-            score2: player2.isBye ? 0 : '',
+            ...(player2.isBye ? global.byeFieldsForDay(dayNumber, 3, 1) : { score1: '', score2: '' }),
             completed: player2.isBye || false,
             winner: player2.isBye ? player1.name : null,
             roundName: roundName,
@@ -5120,7 +5100,7 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
         const wasCompleted = match.completed;
 
         // Vérifier la complétion du match
-        checkManualMatchCompletion(match);
+        checkManualMatchCompletion(match, dayNumber);
 
         // Vérifier si le tour est terminé (pour débloquer le suivant)
         if (matchDivision && matchRoundName) {
@@ -5177,30 +5157,13 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
     }
 }
 
-function checkManualMatchCompletion(match) {
+function checkManualMatchCompletion(match, dayNumber) {
     if (match.isBye) return;
 
     const wasCompleted = match.completed;
 
-    if (match.score1 !== '' && match.score2 !== '') {
-        const score1 = parseInt(match.score1);
-        const score2 = parseInt(match.score2);
-
-        if (score1 > score2) {
-            match.completed = true;
-            match.winner = match.player1;
-        } else if (score2 > score1) {
-            match.completed = true;
-            match.winner = match.player2;
-        } else {
-            match.completed = true;
-            match.winner = null;
-        }
-    } else {
-        // Si l'un des scores est vide, remettre le match en attente
-        match.completed = false;
-        match.winner = null;
-    }
+    // Règle de fin de match commune aux 3 contextes (voir scoring.iife.js)
+    global.applyMatchResult(match, global.getDayScoring(dayNumber || championship.currentDay));
 
     if (!wasCompleted && match.completed) {
         showNotification(`🏆 ${match.winner || 'Match nul'} remporte le match !`, 'success');

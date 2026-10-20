@@ -19,11 +19,13 @@
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
-        // Scores : utiliser ceux fournis, sinon victoire automatique par défaut (5-0)
-        let s1 = (score1 !== undefined && score1 !== null && score1 !== '') ? parseInt(score1, 10) : 5;
-        let s2 = (score2 !== undefined && score2 !== null && score2 !== '') ? parseInt(score2, 10) : 0;
-        if (isNaN(s1)) s1 = 5;
-        if (isNaN(s2)) s2 = 0;
+        // Scores : utiliser ceux fournis, sinon victoire automatique par défaut
+        // (5-0 en mode 2 scores, setsToWin-0 en mode sets — voir scoring.iife.js)
+        const byeDefault = global.byeFieldsForDay(dayNumber, 5);
+        let s1 = (score1 !== undefined && score1 !== null && score1 !== '') ? parseInt(score1, 10) : byeDefault.score1;
+        let s2 = (score2 !== undefined && score2 !== null && score2 !== '') ? parseInt(score2, 10) : byeDefault.score2;
+        if (isNaN(s1)) s1 = byeDefault.score1;
+        if (isNaN(s2)) s2 = byeDefault.score2;
 
         // Déterminer le vainqueur en fonction des scores choisis
         const winner = s1 >= s2 ? playerName : "BYE";
@@ -39,6 +41,10 @@
             winner: winner,
             isBye: true
         };
+        // Victoire nette en mode sets : détail des sets pré-rempli (ex. 11-0 11-0)
+        if (byeDefault.setScores && s1 === byeDefault.score1 && s2 === byeDefault.score2) {
+            byeMatch.setScores = byeDefault.setScores;
+        }
 
         dayData.matches[division].push(byeMatch);
 
@@ -57,12 +63,22 @@
 
     // Construit le HTML commun (inputs de score + presets) partagé par les
     // deux modales (un seul joueur / tous les joueurs).
-    function buildByeScoreInputs(playerLabel) {
+    function buildByeScoreInputs(playerLabel, dayNumber) {
+        // Mode sets : score en sets gagnés (BO3 → 2-0 / 2-1), sinon presets historiques
+        const scoring = global.getDayScoring(dayNumber);
+        const isSets = scoring.mode === 'sets';
+        const presets = isSets
+            ? Array.from({ length: scoring.setsToWin }, (_, i) => [scoring.setsToWin, i])
+            : [[5, 0], [4, 1], [3, 2]];
+        const presetButtons = presets.map(([a, b], i) =>
+            `<button onclick="setByeScorePreset(${a},${b})" class="btn" style="background:${i < presets.length - 1 ? '#017239' : '#566566'}; color:white; padding:6px 14px;">${a} - ${b}</button>`
+        ).join('\n                ');
+        const unit = isSets ? `<p style="text-align:center; font-size:12px; color:#555; margin:-8px 0 12px;">Score en sets gagnés (${global.scoringLabel(scoring)})</p>` : '';
         return `
             <div style="display:flex; align-items:flex-end; justify-content:center; gap:15px; margin-bottom:20px;">
                 <div style="text-align:center;">
                     <label style="display:block; font-size:12px; color:#555; margin-bottom:5px;">${playerLabel}</label>
-                    <input type="number" id="byeScorePlayer" value="5" min="0"
+                    <input type="number" id="byeScorePlayer" value="${presets[0][0]}" min="0"
                            style="width:70px; padding:8px; text-align:center; font-size:18px; border:2px solid #017239; border-radius:6px;">
                 </div>
                 <span style="font-size:22px; font-weight:bold; color:#555; padding-bottom:6px;">-</span>
@@ -72,10 +88,9 @@
                            style="width:70px; padding:8px; text-align:center; font-size:18px; border:2px solid #bbb; border-radius:6px;">
                 </div>
             </div>
+            ${unit}
             <div style="display:flex; gap:8px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
-                <button onclick="setByeScorePreset(5,0)" class="btn" style="background:#017239; color:white; padding:6px 14px;">5 - 0</button>
-                <button onclick="setByeScorePreset(4,1)" class="btn" style="background:#017239; color:white; padding:6px 14px;">4 - 1</button>
-                <button onclick="setByeScorePreset(3,2)" class="btn" style="background:#566566; color:white; padding:6px 14px;">3 - 2</button>
+                ${presetButtons}
             </div>
         `;
     }
@@ -127,7 +142,7 @@
                 <p style="margin-bottom:15px; color:#555;">
                     Choisissez le score attribué à <strong>${playerName}</strong> (D${division}) pour son match BYE.
                 </p>
-                ${buildByeScoreInputs(playerName)}
+                ${buildByeScoreInputs(playerName, dayNumber)}
                 <div class="modal-buttons">
                     <button onclick="confirmByeScore(${dayNumber}, ${division}, '${escapedPlayerName}')" class="btn btn-success">
                         ✅ Valider
@@ -142,8 +157,8 @@
     function confirmByeScore(dayNumber, division, playerName) {
         const p = document.getElementById('byeScorePlayer');
         const o = document.getElementById('byeScoreOpponent');
-        const s1 = p ? p.value : 5;
-        const s2 = o ? o.value : 0;
+        const s1 = p ? p.value : undefined;
+        const s2 = o ? o.value : undefined;
         closeByeScoreModal();
         addByeMatchForPlayer(dayNumber, division, playerName, s1, s2);
         setTimeout(() => showByeManagementModal(dayNumber), 100);
@@ -162,7 +177,7 @@
                     Ce score sera appliqué à <strong>tous</strong> les matchs BYE ajoutés automatiquement
                     (le joueur figure à gauche, le BYE à droite).
                 </p>
-                ${buildByeScoreInputs('Joueur')}
+                ${buildByeScoreInputs('Joueur', dayNumber)}
                 <div class="modal-buttons">
                     <button onclick="confirmByeScoreForAll(${dayNumber})" class="btn btn-success">
                         ✅ Ajouter BYE à TOUS
@@ -177,8 +192,8 @@
     function confirmByeScoreForAll(dayNumber) {
         const p = document.getElementById('byeScorePlayer');
         const o = document.getElementById('byeScoreOpponent');
-        const s1 = p ? p.value : 5;
-        const s2 = o ? o.value : 0;
+        const s1 = p ? p.value : undefined;
+        const s2 = o ? o.value : undefined;
         closeByeScoreModal();
         addByeToAll(dayNumber, s1, s2);
         setTimeout(() => showByeManagementModal(dayNumber), 100);

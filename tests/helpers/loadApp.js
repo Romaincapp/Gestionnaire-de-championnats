@@ -15,7 +15,7 @@ const SRC_DIR = path.join(__dirname, '..', '..', 'src');
 // Le charger explicitement si un test en a besoin.
 const DEFAULT_ORDER = [
     'config', 'utils', 'notifications', 'state', 'clubs', 'multisport',
-    'players', 'ui', 'matches', 'pools', 'ranking',
+    'players', 'ui', 'scoring', 'matches', 'pools', 'ranking',
     'export-json', 'export-print', 'chrono', 'search', 'darkmode', 'mobile', 'a11y',
 ];
 
