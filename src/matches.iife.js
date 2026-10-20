@@ -1013,7 +1013,8 @@
                                                         onchange="editMatchPlayerName(${dayNumber}, ${division}, ${globalIndex}, 'player1', this.value)"
                                                         style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">` 
                                                 : `<span class="player-name-left">${match.player1}</span>`}
-                                            <div class="score-center">
+                                            ${global.renderSetScoreInputs('regular', dayNumber, division, globalIndex, match,
+                                                { onkeydown: `handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})` }) || `<div class="score-center">
                                                 <input type="number" class="score-input"
                                                        placeholder="0" min="0"
                                                        value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
@@ -1025,7 +1026,7 @@
                                                        value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
                                                        onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score2', this.value)"
                                                        onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
-                                            </div>
+                                            </div>`}
                                             ${window.showForfaitButtons ? 
                                                 `<input type="text" class="player-name-input" value="${match.player2}" 
                                                         onchange="editMatchPlayerName(${dayNumber}, ${division}, ${globalIndex}, 'player2', this.value)"
@@ -1190,11 +1191,7 @@
     }
     window.toggleMatchCollapse = toggleMatchCollapse;
 
-    function updateSetScore(dayNumber, division, matchIndex, setIndex, scoreField, value) {
-        championship.days[dayNumber].matches[division][matchIndex].sets[setIndex][scoreField] = value;
-        saveToLocalStorage();
-    }
-    window.updateSetScore = updateSetScore;
+    // Saisie set par set : updateSetScore() est dans scoring.iife.js
 
     function updateMatchScore(dayNumber, division, matchIndex, scoreField, value) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
@@ -1410,12 +1407,15 @@
 
     function handleEnterKey(event, dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
-        const shouldValidate = event.key === 'Enter' ||
+        // Mode sets : la grille gère Entrée (set suivant) et décide quand valider
+        const setsOutcome = global.handleSetsKeydown(event, match, dayNumber);
+        if (setsOutcome === 'handled') return;
+        const shouldValidate = setsOutcome === 'validate' || event.key === 'Enter' ||
                                (event.key === 'Tab' && match.score1 !== undefined && match.score1 !== '' &&
                                 match.score2 !== undefined && match.score2 !== '');
 
         if (shouldValidate) {
-            if (event.key === 'Tab' && (match.score1 === undefined || match.score1 === '' ||
+            if (setsOutcome !== 'validate' && event.key === 'Tab' && (match.score1 === undefined || match.score1 === '' ||
                                          match.score2 === undefined || match.score2 === '')) {
                 return; // Laisser Tab naviguer normalement si scores incomplets
             }

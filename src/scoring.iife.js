@@ -283,6 +283,304 @@
         return `BO${maxSets(s)}${s.pointsPerSet ? ` · ${s.pointsPerSet} pts` : ''}`;
     }
 
+    /**
+     * Parcourt tous les matchs d'une journée (match collection pattern, voir claude.md) :
+     * matchs par tours, matchs de poule, ancienne finalPhase et rounds de manualFinalPhase.
+     */
+    function forEachDayMatch(dayData, fn) {
+        if (!dayData) return;
+        Object.values(dayData.matches || {}).forEach(list => (list || []).forEach(fn));
+        const divisions = dayData.pools && dayData.pools.divisions;
+        if (divisions) {
+            Object.values(divisions).forEach(div => {
+                (div && div.matches || []).forEach(fn);
+                (div && div.finalPhase || []).forEach(fn);
+            });
+        }
+        const finals = dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions;
+        if (finals) {
+            Object.values(finals).forEach(div => {
+                Object.values(div && div.rounds || {}).forEach(round => (round && round.matches || []).forEach(fn));
+            });
+        }
+    }
+
+    // ======================================
+    // SÉLECTEUR DE FORMAT DANS L'EN-TÊTE DE JOURNÉE
+    // ======================================
+
+    function scoringToKey(scoring) {
+        const s = normalizeScoring(scoring);
+        return s.mode === 'sets' ? `sets-${s.setsToWin}` : 'simple';
+    }
+
+    function renderDayScoringControl(dayNumber) {
+        const s = getDayScoring(dayNumber);
+        const key = scoringToKey(s);
+        const opt = (value, label) => `<option value="${value}" ${key === value ? 'selected' : ''}>${label}</option>`;
+        const ppsOpt = (value, label) => `<option value="${value}" ${String(s.pointsPerSet || '') === String(value) ? 'selected' : ''}>${label}</option>`;
+        return `
+            <label for="day-scoring-select-${dayNumber}" style="font-size: 13px; font-weight: 500;">🎯 Score:</label>
+            <select id="day-scoring-select-${dayNumber}" onchange="changeDayScoringFromControl(${dayNumber})" title="Format de score des matchs de cette journée" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ced4da; font-size: 13px; cursor: pointer; background: white; color: #333;">
+                ${opt('simple', '2 scores')}
+                ${opt('sets-2', 'Sets · BO3')}
+                ${opt('sets-3', 'Sets · BO5')}
+                ${opt('sets-4', 'Sets · BO7')}
+            </select>
+            <select id="day-scoring-pps-${dayNumber}" onchange="changeDayScoringFromControl(${dayNumber})" aria-label="Points par set" title="Points par set (pour pré-remplir BYE/forfait et signaler un set incomplet)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ced4da; font-size: 13px; cursor: pointer; background: white; color: #333; display: ${s.mode === 'sets' ? 'inline-block' : 'none'};">
+                ${ppsOpt('', 'Points libres')}
+                ${ppsOpt(11, '11 pts')}
+                ${ppsOpt(15, '15 pts')}
+                ${ppsOpt(21, '21 pts')}
+                ${ppsOpt(25, '25 pts')}
+            </select>`;
+    }
+
+    function refreshDayScoringControl(dayNumber) {
+        const ctl = document.getElementById(`day-scoring-ctl-${dayNumber}`);
+        if (!ctl) return;
+        const day = global.championship && global.championship.days ? global.championship.days[dayNumber] : null;
+        ctl.innerHTML = renderDayScoringControl(dayNumber);
+        ctl.style.display = day && day.dayType === 'chrono' ? 'none' : 'inline-flex';
+    }
+
+    function changeDayScoringFromControl(dayNumber) {
+        const select = document.getElementById(`day-scoring-select-${dayNumber}`);
+        const pps = document.getElementById(`day-scoring-pps-${dayNumber}`);
+        if (!select) return;
+        let scoring = SIMPLE;
+        if (select.value.indexOf('sets-') === 0) {
+            const previous = getDayScoring(dayNumber);
+            const ppsValue = pps && pps.style.display !== 'none' ? pps.value
+                : (previous.mode === 'sets' ? previous.pointsPerSet : DEFAULT_SETS.pointsPerSet);
+            scoring = { mode: 'sets', setsToWin: parseInt(select.value.slice(5)), pointsPerSet: ppsValue };
+        }
+        if (!setDayScoring(dayNumber, scoring)) refreshDayScoringControl(dayNumber); // annulé : remettre l'ancien choix
+    }
+
+    /**
+     * Change le format de score d'une journée. Les scores déjà saisis sont conservés
+     * (en passant en sets, score1/score2 deviennent des sets gagnés). Retourne false si
+     * l'utilisateur annule.
+     */
+    function setDayScoring(dayNumber, scoring, options) {
+        const champ = global.championship;
+        const day = champ && champ.days ? champ.days[dayNumber] : null;
+        if (!day) return false;
+        const next = normalizeScoring(scoring);
+        const prev = getDayScoring(dayNumber);
+        if (JSON.stringify(prev) === JSON.stringify(next)) return true;
+
+        let scored = 0;
+        forEachDayMatch(day, m => {
+            if (m.isBye || m.isByeMatch) return;
+            if ((m.score1 !== '' && m.score1 !== undefined) || hasSetDetail(m)) scored++;
+        });
+        const skipConfirm = options && options.confirm === false;
+        if (scored > 0 && !skipConfirm && typeof global.confirm === 'function') {
+            const msg = prev.mode !== next.mode
+                ? `${scored} match(s) ont déjà un score.\n\nPasser en « ${scoringLabel(next)} » : les scores saisis sont conservés` +
+                  (next.mode === 'sets' ? ' et lus comme des sets gagnés.' : ' (le détail des sets est gardé mais n\'est plus affiché).') +
+                  '\n\nContinuer ?'
+                : `${scored} match(s) ont déjà un score.\n\nPasser en « ${scoringLabel(next)} » ? Les sets déjà saisis sont conservés.`;
+            if (!global.confirm(msg)) return false;
+        }
+
+        day.scoring = next;
+        // Recalculer vainqueurs/états avec la nouvelle règle (BYE/forfaits inclus)
+        forEachDayMatch(day, m => {
+            if (m.isBye || m.isByeMatch || m.forfaitBy) return;
+            if (next.mode === 'sets') ensureSetScores(m, next);
+            applyMatchResult(m, next);
+        });
+
+        if (typeof global.saveToLocalStorage === 'function') global.saveToLocalStorage();
+        refreshDayScoringControl(dayNumber);
+        if (typeof global.updateMatchesDisplay === 'function') global.updateMatchesDisplay(dayNumber);
+        if (day.pools && day.pools.enabled) {
+            if (typeof global.updatePoolsDisplay === 'function') global.updatePoolsDisplay(dayNumber);
+            if (typeof global.updateManualFinalPhaseDisplay === 'function') global.updateManualFinalPhaseDisplay(dayNumber);
+        }
+        if (typeof global.showNotification === 'function') {
+            global.showNotification(`🎯 Journée ${dayNumber} : score en ${scoringLabel(next)}`, 'success');
+        }
+        return true;
+    }
+
+    // ======================================
+    // SAISIE SET PAR SET (matchs par tours, poules, phase finale)
+    // ======================================
+    // type : 'regular' (ref = index dans matches[div]), 'pool' (ref = id), 'final' (ref = id)
+
+    function findMatchByRef(type, dayNumber, division, ref) {
+        const day = global.championship && global.championship.days ? global.championship.days[dayNumber] : null;
+        if (!day) return null;
+        if (type === 'regular') return (day.matches && day.matches[division] || [])[ref] || null;
+        if (type === 'pool') {
+            const divs = day.pools && day.pools.divisions || {};
+            const inDiv = divs[division] && (divs[division].matches || []).find(m => m.id == ref);
+            if (inDiv) return inDiv;
+            for (const d of Object.values(divs)) {
+                const m = (d && d.matches || []).find(x => x.id == ref);
+                if (m) return m;
+            }
+            return null;
+        }
+        if (type === 'final') {
+            const finals = day.pools && day.pools.manualFinalPhase && day.pools.manualFinalPhase.divisions || {};
+            for (const d of Object.values(finals)) {
+                for (const round of Object.values(d && d.rounds || {})) {
+                    const m = (round && round.matches || []).find(x => x.id == ref);
+                    if (m) return m;
+                }
+            }
+        }
+        return null;
+    }
+
+    function escapeAttr(v) {
+        return String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    function refArg(ref) {
+        return typeof ref === 'number' ? String(ref) : `'${String(ref).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+    }
+
+    /** Index du set qui décide le match (-1 si pas encore décidé). */
+    function decisiveSetIndex(setScores, scoring) {
+        let a = 0, b = 0;
+        for (let i = 0; i < setScores.length; i++) {
+            const set = setScores[i];
+            if (!set || isBlank(set.s1) || isBlank(set.s2)) continue;
+            const x = parseInt(set.s1), y = parseInt(set.s2);
+            if (x > y) a++; else if (y > x) b++;
+            if (a >= scoring.setsToWin || b >= scoring.setsToWin) return i;
+        }
+        return -1;
+    }
+
+    /**
+     * Grille de saisie des sets (mode sets) — null en mode 2 scores : l'appelant garde
+     * alors ses deux cases historiques.
+     */
+    function renderSetScoreInputs(type, dayNumber, division, ref, match, options) {
+        const s = getDayScoring(dayNumber);
+        if (s.mode !== 'sets') return null;
+        const sets = ensureSetScores(match, s).slice(0, maxSets(s));
+        const decisive = decisiveSetIndex(sets, s);
+        const r = computeMatchResult(match, s);
+        const opts = options || {};
+        const args = `'${type}', ${dayNumber}, ${division}, ${refArg(ref)}`;
+        const cells = sets.map((set, i) => {
+            const unused = decisive >= 0 && i > decisive;
+            const input = (side) => `<input type="number" class="score-input set-score-input" min="0" placeholder="0"
+                       data-set="${i}" data-side="${side}" aria-label="Set ${i + 1}, ${escapeAttr(side === 1 ? match.player1 : match.player2)}"
+                       value="${escapeAttr(isBlank(set[`s${side}`]) ? '' : set[`s${side}`])}" ${unused ? 'disabled' : ''}
+                       oninput="onSetScoreInput(this)"
+                       onchange="updateSetScore(${args}, ${i}, ${side}, this.value)"
+                       onkeydown="${opts.onkeydown || ''}"${opts.inputStyle ? ` style="${opts.inputStyle}"` : ''}>`;
+            return `<span class="set-score-cell${unused ? ' set-unused' : ''}" data-set-cell="${i}">
+                    <span class="set-label">S${i + 1}</span>
+                    ${input(1)}<span class="score-separator">-</span>${input(2)}
+                </span>`;
+        }).join('');
+        const summary = hasSetDetail(match) || !isBlank(match.score1) ? `${r.score1}-${r.score2}` : '';
+        return `<div class="score-center set-score-grid" data-sets-to-win="${s.setsToWin}" data-points-per-set="${s.pointsPerSet || ''}">
+                ${cells}
+                <span class="sets-summary" title="Sets gagnés">${summary}</span>
+            </div>`;
+    }
+
+    function readGrid(grid) {
+        const sets = [];
+        grid.querySelectorAll('.set-score-input').forEach(input => {
+            const i = parseInt(input.dataset.set);
+            sets[i] = sets[i] || { s1: '', s2: '' };
+            sets[i][`s${input.dataset.side}`] = input.value.trim();
+        });
+        return sets;
+    }
+
+    /** Mise à jour visuelle pendant la frappe : résumé des sets, sets inutiles grisés, alertes. */
+    function onSetScoreInput(input) {
+        const grid = input && input.closest('.set-score-grid');
+        if (!grid) return;
+        const s = normalizeScoring({ mode: 'sets', setsToWin: grid.dataset.setsToWin, pointsPerSet: grid.dataset.pointsPerSet });
+        const sets = readGrid(grid);
+        const decisive = decisiveSetIndex(sets, s);
+        grid.querySelectorAll('.set-score-cell').forEach(cell => {
+            const i = parseInt(cell.dataset.setCell);
+            const unused = decisive >= 0 && i > decisive;
+            cell.classList.toggle('set-unused', unused);
+            cell.querySelectorAll('input').forEach(inp => { inp.disabled = unused; });
+            const warnings = setValidationWarnings(sets[i], s);
+            cell.classList.toggle('set-warning', warnings.length > 0);
+            cell.title = warnings.join(' · ');
+        });
+        const r = computeMatchResult({ setScores: sets, score1: '', score2: '' }, s);
+        const summary = grid.querySelector('.sets-summary');
+        if (summary) summary.textContent = hasSetDetail({ setScores: sets }) ? `${r.score1}-${r.score2}` : '';
+    }
+
+    function storeSets(match, sets, scoring) {
+        ensureSetScores(match, scoring);
+        sets.forEach((set, i) => { if (set) match.setScores[i] = { s1: set.s1, s2: set.s2 }; });
+        if (!hasSetDetail(match)) { match.score1 = ''; match.score2 = ''; }
+        if (match.forfaitBy) delete match.forfaitBy; // scores modifiés à la main : plus un forfait
+    }
+
+    /** onchange d'une case de set : enregistre sans valider (la validation se fait à Entrée). */
+    function updateSetScore(type, dayNumber, division, ref, setIndex, side, value) {
+        const match = findMatchByRef(type, dayNumber, division, ref);
+        if (!match || match.isBye) return;
+        const s = getDayScoring(dayNumber);
+        ensureSetScores(match, s);
+        match.setScores[setIndex] = match.setScores[setIndex] || { s1: '', s2: '' };
+        match.setScores[setIndex][`s${side}`] = String(value).trim();
+        storeSets(match, [], s);
+        if (hasSetDetail(match)) {
+            const r = computeMatchResult(match, s);
+            match.score1 = r.score1;
+            match.score2 = r.score2;
+        }
+        if (typeof global.saveToLocalStorage === 'function') global.saveToLocalStorage();
+    }
+
+    /**
+     * Gestion clavier d'une grille de sets, appelée en tête des handlers Entrée/Tab des
+     * 3 contextes. Recopie la grille (DOM) dans match.setScores puis retourne :
+     *   'validate' → l'appelant valide le match comme d'habitude
+     *   'handled'  → focus déplacé vers le set suivant, rien d'autre à faire
+     *   'natural'  → laisser le navigateur faire (Tab vers la case suivante, autre touche)
+     */
+    function handleSetsKeydown(event, match, dayNumber) {
+        const grid = event.target && event.target.closest ? event.target.closest('.set-score-grid') : null;
+        if (!grid || (event.key !== 'Enter' && event.key !== 'Tab')) return 'natural';
+        const s = getDayScoring(dayNumber);
+        storeSets(match, readGrid(grid), s);
+        const r = computeMatchResult(match, s);
+        if (hasSetDetail(match)) { match.score1 = r.score1; match.score2 = r.score2; }
+
+        const inputs = Array.from(grid.querySelectorAll('.set-score-input'));
+        const pos = inputs.indexOf(event.target);
+        const after = inputs.slice(pos + 1).filter(inp => !inp.disabled);
+
+        if (event.key === 'Tab') {
+            // Valider seulement en quittant un match décidé (dernière case utile)
+            if (!event.shiftKey && r.completed && after.every(inp => inp.value.trim() === '')) {
+                event.preventDefault();
+                return 'validate';
+            }
+            return 'natural';
+        }
+
+        event.preventDefault();
+        if (r.completed) return 'validate';
+        const next = after.find(inp => inp.value.trim() === '') || after[0];
+        if (next) { next.focus(); if (next.select) next.select(); return 'handled'; }
+        return 'validate';
+    }
+
     global.SCORING_SIMPLE = SIMPLE;
     global.SCORING_DEFAULT_SETS = DEFAULT_SETS;
     global.normalizeScoring = normalizeScoring;
@@ -304,5 +602,15 @@
     global.compareRankingStats = compareRankingStats;
     global.migrateLegacySets = migrateLegacySets;
     global.scoringLabel = scoringLabel;
+    global.forEachDayMatch = forEachDayMatch;
+    global.renderDayScoringControl = renderDayScoringControl;
+    global.refreshDayScoringControl = refreshDayScoringControl;
+    global.changeDayScoringFromControl = changeDayScoringFromControl;
+    global.setDayScoring = setDayScoring;
+    global.findMatchByRef = findMatchByRef;
+    global.renderSetScoreInputs = renderSetScoreInputs;
+    global.onSetScoreInput = onSetScoreInput;
+    global.updateSetScore = updateSetScore;
+    global.handleSetsKeydown = handleSetsKeydown;
 
 })(window);

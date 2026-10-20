@@ -2209,7 +2209,8 @@ function generatePoolMatchHTML(match, dayNumber) {
                           title="Cliquez pour voir les statistiques"
                           onmouseover="this.style.color='#09679e'"
                           onmouseout="this.style.color='#2c3e50'">${match.player1}</span>`}
-                <div class="score-center">
+                ${global.renderSetScoreInputs('pool', dayNumber, match.division, String(match.id), match,
+                    { onkeydown: `handlePoolMatchEnter(event, ${dayNumber}, '${match.id}', ${match.division})` }) || `<div class="score-center">
                     <input type="number"
                            value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
                            placeholder="0"
@@ -2223,7 +2224,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                            onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value, ${match.division})"
                            onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}', ${match.division})"
                            style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #096cde; border-radius: 6px;">
-                </div>
+                </div>`}
                 ${window.showForfaitButtons ? 
                     `<input type="text" value="${match.player2}" 
                             onchange="editPoolMatchPlayerName(${dayNumber}, ${match.division}, '${match.id}', 'player2', this.value)"
@@ -2341,6 +2342,12 @@ function handlePoolMatchEnter(event, dayNumber, matchId, division) {
         return;
     }
 
+    // Mode sets : la grille gère Entrée (set suivant) et décide quand valider ;
+    // match.setScores/score1/score2 sont alors déjà à jour (voir scoring.iife.js)
+    const setsOutcome = global.handleSetsKeydown(event, match, dayNumber);
+    if (setsOutcome === 'handled') return;
+    if (matchContainer.querySelector('.set-score-grid') && setsOutcome !== 'validate') return;
+
     const inputs = matchContainer.querySelectorAll('input[type="number"]');
     const input1 = inputs[0];
     const input2 = inputs[1];
@@ -2351,18 +2358,18 @@ function handlePoolMatchEnter(event, dayNumber, matchId, division) {
     }
 
     // Lire les valeurs actuelles du DOM
-    const score1Value = input1.value.trim();
-    const score2Value = input2.value.trim();
+    const score1Value = setsOutcome === 'validate' ? String(match.score1) : input1.value.trim();
+    const score2Value = setsOutcome === 'validate' ? String(match.score2) : input2.value.trim();
     console.log('📊 Scores du DOM:', score1Value, '-', score2Value);
 
     // Déterminer si on doit valider selon les valeurs du DOM
     const bothScoresFilled = score1Value !== '' && score2Value !== '';
-    const shouldValidate = event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
+    const shouldValidate = setsOutcome === 'validate' || event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
     console.log('✅ Should validate:', shouldValidate, '(bothFilled:', bothScoresFilled, ')');
 
     if (shouldValidate) {
         // Si Tab sur scores incomplets, laisser la navigation naturelle
-        if (event.key === 'Tab' && !bothScoresFilled) {
+        if (setsOutcome !== 'validate' && event.key === 'Tab' && !bothScoresFilled) {
             console.log('⏩ Tab avec scores incomplets - navigation naturelle');
             return;
         }
@@ -4818,7 +4825,8 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
                                 style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
                         : `<span class="player-name-left">${match.player1}</span>`}
-                    <div class="score-center">
+                    ${global.renderSetScoreInputs('final', dayNumber, division, String(match.id), match,
+                        { onkeydown: `handleManualMatchEnter(event, '${match.id}', ${dayNumber})` }) || `<div class="score-center">
                         <input type="number"
                                value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
                                placeholder="0"
@@ -4832,7 +4840,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                                onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
                                onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
                                style="width: 45px; height: 40px; text-align: center; border: 2px solid #096cde; border-radius: 4px; font-size: 16px; font-weight: bold;">
-                    </div>
+                    </div>`}
                     ${window.showForfaitButtons ? 
                         `<input type="text" value="${match.player2}" 
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player2', this.value)"
@@ -5063,6 +5071,12 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
         return;
     }
 
+    // Mode sets : la grille gère Entrée (set suivant) et décide quand valider ;
+    // match.setScores/score1/score2 sont alors déjà à jour (voir scoring.iife.js)
+    const setsOutcome = global.handleSetsKeydown(event, match, dayNumber);
+    if (setsOutcome === 'handled') return;
+    if (matchContainer.querySelector('.set-score-grid') && setsOutcome !== 'validate') return;
+
     const inputs = matchContainer.querySelectorAll('input[type="number"]');
     const input1 = inputs[0];
     const input2 = inputs[1];
@@ -5073,18 +5087,18 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
     }
 
     // Lire les valeurs actuelles du DOM
-    const score1Value = input1.value.trim();
-    const score2Value = input2.value.trim();
+    const score1Value = setsOutcome === 'validate' ? String(match.score1) : input1.value.trim();
+    const score2Value = setsOutcome === 'validate' ? String(match.score2) : input2.value.trim();
     console.log('📊 Scores du DOM:', score1Value, '-', score2Value);
 
     // Déterminer si on doit valider selon les valeurs du DOM
     const bothScoresFilled = score1Value !== '' && score2Value !== '';
-    const shouldValidate = event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
+    const shouldValidate = setsOutcome === 'validate' || event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
     console.log('✅ Should validate:', shouldValidate, '(bothFilled:', bothScoresFilled, ')');
 
     if (shouldValidate) {
         // Si Tab sur scores incomplets, laisser la navigation naturelle
-        if (event.key === 'Tab' && !bothScoresFilled) {
+        if (setsOutcome !== 'validate' && event.key === 'Tab' && !bothScoresFilled) {
             console.log('⏩ Tab avec scores incomplets - navigation naturelle');
             return;
         }
@@ -5931,141 +5945,6 @@ function addScoreInputStyles() {
     document.head.appendChild(style);
 }
 
-// Fonction pour mettre à jour le HTML de génération des matchs avec de plus gros champs
-function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) {
-    const isCompleted = match.completed;
-    const isActive = !match.isBye;
-    
-    return `
-        <div class="manual-match" style="
-            background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
-            border: 2px solid ${isCompleted ? '#087227' : isActive ? '#096cde' : '#5b636b'};
-            border-radius: 10px;
-            padding: 15px;
-            ${match.isBye ? 'border-style: dashed;' : ''}
-        ">
-            <div class="match-header" style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 12px;
-            ">
-                <div class="match-title" style="
-                    font-size: 13px;
-                    color: #5b636b;
-                    font-weight: bold;
-                ">
-                    Match ${match.position}
-                </div>
-                <div class="match-status" style="
-                    font-size: 12px;
-                    padding: 4px 10px;
-                    border-radius: 15px;
-                    font-weight: bold;
-                    background: ${isCompleted ? '#d4edda' : isActive ? '#cce5ff' : '#e2e3e5'};
-                    color: ${isCompleted ? '#155724' : isActive ? '#004085' : '#5b636b'};
-                ">
-                    ${isCompleted ? 'Terminé ✅' : match.isBye ? 'Qualifié ⚡' : 'En cours 🎯'}
-                </div>
-            </div>
-            
-            <div class="players" style="
-                font-weight: bold;
-                color: #2c3e50;
-                margin-bottom: ${match.isBye ? '0' : '18px'};
-                font-size: 16px;
-                text-align: center;
-            ">
-                ${match.player1Seed ? `#${match.player1Seed}` : ''} ${match.player1}
-                ${!match.isBye ? ` VS ${match.player2Seed ? `#${match.player2Seed}` : ''} ${match.player2}` : ''}
-            </div>
-            
-            ${match.isBye ? `
-                <div style="
-                    text-align: center;
-                    color: #087227;
-                    font-style: italic;
-                    padding: 10px;
-                ">
-                    Qualifié automatiquement
-                </div>
-            ` : `
-                <div class="score-container" style="
-                    margin-bottom: 15px;
-                    padding: 15px;
-                    background: #f8f9fa;
-                    border: 1px solid #dee2e6;
-                    border-radius: 8px;
-                ">
-                    ${window.showForfaitButtons ? 
-                        `<input type="text" value="${match.player1}" 
-                                onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
-                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
-                        : `<span class="player-name-left">${match.player1}</span>`}
-                    <div class="score-center">
-                        <input type="number"
-                               value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
-                               placeholder="0"
-                               min="0"
-                               max="30"
-                               onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
-                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="
-                                   width: 55px;
-                                   height: 45px;
-                                   text-align: center;
-                                   border: 2px solid #096cde;
-                                   border-radius: 8px;
-                                   font-size: 18px;
-                                   font-weight: bold;
-                                   background: white;
-                                   padding: 8px 4px;
-                               ">
-                        <span style="color: #495057; font-weight: bold; font-size: 16px;">-</span>
-                        <input type="number"
-                               value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
-                               placeholder="0"
-                               min="0"
-                               max="30"
-                               onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
-                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="
-                                   width: 55px;
-                                   height: 45px;
-                                   text-align: center;
-                                   border: 2px solid #096cde;
-                                   border-radius: 8px;
-                                   font-size: 18px;
-                                   font-weight: bold;
-                                   background: white;
-                                   padding: 8px 4px;
-                               ">
-                    </div>
-                    ${window.showForfaitButtons ? 
-                        `<input type="text" value="${match.player2}" 
-                                onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player2', this.value)"
-                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
-                        : `<span class="player-name-right">${match.player2}</span>`}
-                </div>
-                
-                <div class="match-result" style="
-                    text-align: center;
-                    padding: 10px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    background: ${isCompleted ? '#d4edda' : '#fff3cd'};
-                    color: ${isCompleted ? '#155724' : '#6c5103'};
-                    font-size: 14px;
-                ">
-                    ${isCompleted && match.winner ? `🏆 ${match.winner} gagne` : 'En attente des scores'}
-                </div>
-            `}
-        </div>
-    `;
-}
-
-// Remplacer la fonction existante
-window.generateManualMatchHTML = generateManualMatchHTMLImproved;
 
 // ======================================
 // VÉRIFICATION ET CORRECTION DU NOMBRE DE MATCHS
