@@ -102,7 +102,6 @@ function buildScreens(page, info) {
         ['modal-ajout-joueurs-clubs', call(`switchTab(3); showAddPlayerModal(3); toggleAddPlayerSection('clubs', true)`)],
         ['modal-saisie-multiple', call(`switchTab(3); document.getElementById('bulkModal').style.display = 'block'`)],
         ['modal-modifier-joueur', call(`switchTab(3); showEditPlayerModal(3, 1, 0, ${JSON.stringify(info.player3)}, '')`)],
-        ['modal-import', call('showImportModal()')],
         ['modal-renommer-joueur', call(`switchTab(3); toggleForfaitButtons(); editMatchPlayerName(3, 1, 0, 'player1', 'Nouveau Nom')`)],
         ['menu-generation-matchs', call('switchTab(3); showMatchGenerationModal(3)')],
         ['menu-ajout-joueurs', call('switchTab(3); toggleAddPlayerMenu(3)')],
@@ -133,7 +132,6 @@ function buildScreens(page, info) {
         ['modal-chrono-series-auto', call('switchTab(2); showSwimmingImportModal && showSwimmingImportModal(2)')],
         ['modal-chrono-detail-nageur', call(`switchToMultisportRanking(); showPlayerChronoDetail(encodeURIComponent(${JSON.stringify(info.swimmer)}))`)],
         ['modal-harmonisation-noms', call('switchToMultisportRanking(); showNameHarmonizationModal()')],
-        ['modal-import-multi-journees', call('showMultiDayImportModal && showMultiDayImportModal()')],
         ['course-live', call(`switchTab(2); startChronoRaceForDay(2, ${JSON.stringify(info.serie2)})`)],
         ['course-live-chrono-lance', async () => {
             await page.evaluate(`switchTab(2); startChronoRaceForDay(2, ${JSON.stringify(info.serie2)})`);

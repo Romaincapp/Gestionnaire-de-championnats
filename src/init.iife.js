@@ -341,8 +341,8 @@
     // ----- « 📥 Importer ▾ » (journées Matchs et Courses) -----
     const IMPORT_CHOICES = {
         championship: [
-            { icon: '📄', label: 'Un championnat', hint: 'Remplace tout le championnat', onclick: 'showImportModal()' },
-            { icon: '📂', label: 'Plusieurs journées', hint: 'Un fichier par journée (remplace tout)', onclick: 'showMultiDayImportModal()' },
+            { icon: '📄', label: 'Un championnat', hint: 'Remplace tout le championnat', onclick: 'openChampionshipImportPicker()' },
+            { icon: '📂', label: 'Plusieurs journées', hint: 'Un fichier par journée (remplace tout)', onclick: 'openMultiDayImportPicker()' },
             { icon: '➕', label: 'Ajouter à la suite', hint: 'Ajoute des journées après les vôtres', onclick: 'openAppendDaysPicker()' }
         ],
         chrono: [
@@ -1358,7 +1358,7 @@ function showByeManagementModal(dayNumber) {
         const importFileInput = document.getElementById('importFileInput');
         if (importFileInput) importFileInput.addEventListener('change', handleChampionshipImport);
         
-        ['bulkModal', 'importModal'].forEach(modalId => {
+        ['bulkModal'].forEach(modalId => {
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.addEventListener('click', function(event) {

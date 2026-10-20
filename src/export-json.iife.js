@@ -132,28 +132,6 @@
         };
     }
 
-    function showImportModal() {
-        const modal = document.getElementById('importModal');
-        if (modal) {
-            modal.style.display = 'block';
-            const fileInput = document.getElementById('importFileInput');
-            if (fileInput) fileInput.value = '';
-        }
-    }
-    window.showImportModal = showImportModal;
-
-    function closeImportModal() {
-        const modal = document.getElementById('importModal');
-        if (modal) {
-            modal.style.display = 'none';
-            const fileInput = document.getElementById('importFileInput');
-            if (fileInput) fileInput.value = '';
-            // Ne pas réinitialiser importedChampionshipData ici pour permettre à l'utilisateur de cliquer sur "Importer" plus tard
-            // global.importedChampionshipData = null;
-        }
-    }
-    window.closeImportModal = closeImportModal;
-
     function handleChampionshipImport(event) {
         console.log('handleChampionshipImport appelé', event);
         const file = event.target.files[0];
@@ -691,7 +669,6 @@
             // Réinitialiser les données importées après un import réussi
             global.importedChampionshipData = null;
 
-            closeImportModal();
             const _divs = championship.config?.numberOfDivisions || championship.config?.numDivisions || '?';
             const _courts = championship.config?.numberOfCourts || championship.config?.numCourts || '?';
             const _days = Object.keys(championship.days || {}).length;
@@ -802,58 +779,12 @@
             });
 
             refreshAfterDaysImport(1);
-            closeMultiDayImportModal();
             alert(daysImportSummary(report, 'importée(s)'));
             showNotification(report.added.length + ' journée(s) importée(s) avec succès !', 'success');
             return report;
         });
     }
     window.importMultipleDayFiles = importMultipleDayFiles;
-
-    /**
-     * Affiche la modal d'import multi-fichiers
-     */
-    function showMultiDayImportModal() {
-        // Créer la modal si elle n'existe pas
-        let modal = document.getElementById('multiDayImportModal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'multiDayImportModal';
-            modal.innerHTML = `
-                <div id="multiDayImportModalContent" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                    background: rgba(0,0,0,0.5); display: flex; justify-content: center; 
-                    align-items: center; z-index: 10000;" onclick="if(event.target===this)closeMultiDayImportModal()">
-                    <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
-                        <h3>📥 Importer plusieurs journées</h3>
-                        <p style="color: #586566; font-size: 13px; margin: 10px 0;">
-                            Sélectionnez plusieurs fichiers JSON (un par journée).<br>
-                            Chaque fichier deviendra une journée (J1, J2, J3...).
-                        </p>
-                        <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
-                            <input type="file" id="multiDayImportInput" accept=".json" multiple 
-                                onchange="importMultipleDayFiles(event)"
-                                style="display: none;">
-                            <button onclick="document.getElementById('multiDayImportInput').click()" 
-                                style="padding: 12px 24px; background: #09679e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
-                                📁 Sélectionner les fichiers JSON
-                            </button>
-                            <p style="margin-top: 10px; font-size: 12px; color: #586566;">
-                                Astuce : nommez vos fichiers dans l'ordre<br>
-                                (01-jour1.json, 02-jour2.json, 03-jour3.json...)
-                            </p>
-                        </div>
-                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                            <button onclick="closeMultiDayImportModal()" class="btn btn-secondary">Fermer</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-        
-        modal.style.display = 'block';
-    }
-    window.showMultiDayImportModal = showMultiDayImportModal;
 
     // ============================================
     // AJOUTER À LA SUITE : importe les journées d'un ou plusieurs fichiers
@@ -1272,7 +1203,6 @@
                 return report;
             }
 
-            closeImportModal();
             refreshAfterDaysImport(report.added[0].dayNumber);
             alert(daysImportSummary(report, 'ajoutée(s)'));
             showNotification(report.added.length + ' journée(s) ajoutée(s) à la suite', 'success');
@@ -1281,17 +1211,27 @@
     }
     window.appendDaysFromFiles = appendDaysFromFiles;
 
+    function openChampionshipImportPicker() {
+        var input = document.getElementById('importFileInput');
+        if (!input) return;
+        input.value = '';
+        input.click();
+    }
+    window.openChampionshipImportPicker = openChampionshipImportPicker;
+
+    function openMultiDayImportPicker() {
+        var input = document.getElementById('multiDayImportInput');
+        if (!input) return;
+        input.value = '';
+        input.click();
+    }
+    window.openMultiDayImportPicker = openMultiDayImportPicker;
+
     function openAppendDaysPicker() {
         var input = document.getElementById('appendDaysInput');
         if (input) input.click();
     }
     window.openAppendDaysPicker = openAppendDaysPicker;
-
-    function closeMultiDayImportModal() {
-        const modal = document.getElementById('multiDayImportModal');
-        if (modal) modal.style.display = 'none';
-    }
-    window.closeMultiDayImportModal = closeMultiDayImportModal;
 
     function clearAllData() {
         const stats = calculateChampionshipStats();
