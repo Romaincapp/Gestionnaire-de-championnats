@@ -15,15 +15,20 @@
     // GESTION DES MATCHS BYE MANUELS
     // ======================================
 
-    function addByeMatchForPlayer(dayNumber, division, playerName, score1, score2) {
+    // setLoserPoints (mode sets) : points du perdant dans chaque set, au choix dans la
+    // fenêtre BYE — 0 → 11-0, 5 → 11-5, '' → libre (sets gagnés seulement, sans détail).
+    // undefined (appel sans choix) : 11-0 pour une victoire nette, comme les BYE automatiques.
+    function addByeMatchForPlayer(dayNumber, division, playerName, score1, score2, setLoserPoints) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
-        // Scores : utiliser ceux fournis, sinon victoire automatique par défaut (5-0)
-        let s1 = (score1 !== undefined && score1 !== null && score1 !== '') ? parseInt(score1, 10) : 5;
-        let s2 = (score2 !== undefined && score2 !== null && score2 !== '') ? parseInt(score2, 10) : 0;
-        if (isNaN(s1)) s1 = 5;
-        if (isNaN(s2)) s2 = 0;
+        // Scores : utiliser ceux fournis, sinon victoire automatique par défaut
+        // (5-0 en mode 2 scores, setsToWin-0 en mode sets — voir scoring.iife.js)
+        const byeDefault = global.byeFieldsForDay(dayNumber, 5);
+        let s1 = (score1 !== undefined && score1 !== null && score1 !== '') ? parseInt(score1, 10) : byeDefault.score1;
+        let s2 = (score2 !== undefined && score2 !== null && score2 !== '') ? parseInt(score2, 10) : byeDefault.score2;
+        if (isNaN(s1)) s1 = byeDefault.score1;
+        if (isNaN(s2)) s2 = byeDefault.score2;
 
         // Déterminer le vainqueur en fonction des scores choisis
         const winner = s1 >= s2 ? playerName : "BYE";
@@ -39,6 +44,11 @@
             winner: winner,
             isBye: true
         };
+        if (global.isSetsMode(dayNumber)) {
+            const loserPoints = setLoserPoints === undefined ? (s1 === byeDefault.score1 && s2 === byeDefault.score2 ? 0 : null) : setLoserPoints;
+            const setScores = global.buildSetScores(global.getDayScoring(dayNumber), s1, s2, loserPoints);
+            if (setScores) byeMatch.setScores = setScores;
+        }
 
         dayData.matches[division].push(byeMatch);
 
@@ -57,12 +67,35 @@
 
     // Construit le HTML commun (inputs de score + presets) partagé par les
     // deux modales (un seul joueur / tous les joueurs).
-    function buildByeScoreInputs(playerLabel) {
+    function buildByeScoreInputs(playerLabel, dayNumber) {
+        // Mode sets : score en sets gagnés (BO3 → 2-0 / 2-1), sinon presets historiques
+        const scoring = global.getDayScoring(dayNumber);
+        const isSets = scoring.mode === 'sets';
+        const presets = isSets
+            ? Array.from({ length: scoring.setsToWin }, (_, i) => [scoring.setsToWin, i])
+            : [[5, 0], [4, 1], [3, 2]];
+        const presetButtons = presets.map(([a, b], i) =>
+            `<button onclick="setByeScorePreset(${a},${b})" class="btn" style="background:${i < presets.length - 1 ? '#017239' : '#566566'}; color:white; padding:6px 14px;">${a} - ${b}</button>`
+        ).join('\n                ');
+        const unit = isSets ? `<p style="text-align:center; font-size:12px; color:#555; margin:-8px 0 12px;">Score en sets gagnés (${global.scoringLabel(scoring)})</p>` : '';
+        // Mode sets avec points par set : points de chaque set (11-0, 11-5 ou libre), modifiables ensuite
+        const pps = isSets ? scoring.pointsPerSet : null;
+        const setPointsChoice = pps ? `
+            <div style="text-align:center; margin:-6px 0 20px;">
+                <div id="byeSetPointsLabel" style="font-size:12px; color:#555; margin-bottom:6px;">Points de chaque set</div>
+                <input type="hidden" id="byeSetLoserPoints" value="0">
+                <div role="group" aria-labelledby="byeSetPointsLabel" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                    ${[['0', `${pps} - 0`], ['5', `${pps} - 5`], ['', 'Libre']].map(([v, label], i) =>
+                        `<button type="button" class="btn bye-set-points" data-value="${v}" aria-pressed="${i === 0}" onclick="setByeSetPointsPreset('${v}')"
+                                 style="padding:6px 14px; border:2px solid #017239; ${i === 0 ? 'background:#017239; color:white;' : 'background:white; color:#017239;'}">${label}</button>`
+                    ).join('')}
+                </div>
+            </div>` : '';
         return `
             <div style="display:flex; align-items:flex-end; justify-content:center; gap:15px; margin-bottom:20px;">
                 <div style="text-align:center;">
                     <label style="display:block; font-size:12px; color:#555; margin-bottom:5px;">${playerLabel}</label>
-                    <input type="number" id="byeScorePlayer" value="5" min="0"
+                    <input type="number" id="byeScorePlayer" value="${presets[0][0]}" min="0"
                            style="width:70px; padding:8px; text-align:center; font-size:18px; border:2px solid #017239; border-radius:6px;">
                 </div>
                 <span style="font-size:22px; font-weight:bold; color:#555; padding-bottom:6px;">-</span>
@@ -72,12 +105,31 @@
                            style="width:70px; padding:8px; text-align:center; font-size:18px; border:2px solid #bbb; border-radius:6px;">
                 </div>
             </div>
+            ${unit}
             <div style="display:flex; gap:8px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
-                <button onclick="setByeScorePreset(5,0)" class="btn" style="background:#017239; color:white; padding:6px 14px;">5 - 0</button>
-                <button onclick="setByeScorePreset(4,1)" class="btn" style="background:#017239; color:white; padding:6px 14px;">4 - 1</button>
-                <button onclick="setByeScorePreset(3,2)" class="btn" style="background:#566566; color:white; padding:6px 14px;">3 - 2</button>
+                ${presetButtons}
             </div>
+            ${setPointsChoice}
         `;
+    }
+
+    function setByeSetPointsPreset(value) {
+        const hidden = document.getElementById('byeSetLoserPoints');
+        if (hidden) hidden.value = value;
+        document.querySelectorAll('#byeScoreModal .bye-set-points').forEach(btn => {
+            const active = btn.dataset.value === value;
+            btn.setAttribute('aria-pressed', String(active));
+            btn.style.background = active ? '#017239' : 'white';
+            btn.style.color = active ? 'white' : '#017239';
+        });
+    }
+    window.setByeSetPointsPreset = setByeSetPointsPreset;
+
+    // Choix « points de chaque set » de la fenêtre BYE (undefined si absent : mode 2 scores / points libres)
+    function readByeSetLoserPoints() {
+        const hidden = document.getElementById('byeSetLoserPoints');
+        if (!hidden) return undefined;
+        return hidden.value === '' ? null : parseInt(hidden.value, 10);
     }
 
     function setByeScorePreset(s1, s2) {
@@ -127,7 +179,7 @@
                 <p style="margin-bottom:15px; color:#555;">
                     Choisissez le score attribué à <strong>${playerName}</strong> (D${division}) pour son match BYE.
                 </p>
-                ${buildByeScoreInputs(playerName)}
+                ${buildByeScoreInputs(playerName, dayNumber)}
                 <div class="modal-buttons">
                     <button onclick="confirmByeScore(${dayNumber}, ${division}, '${escapedPlayerName}')" class="btn btn-success">
                         ✅ Valider
@@ -142,10 +194,11 @@
     function confirmByeScore(dayNumber, division, playerName) {
         const p = document.getElementById('byeScorePlayer');
         const o = document.getElementById('byeScoreOpponent');
-        const s1 = p ? p.value : 5;
-        const s2 = o ? o.value : 0;
+        const s1 = p ? p.value : undefined;
+        const s2 = o ? o.value : undefined;
+        const setLoserPoints = readByeSetLoserPoints();
         closeByeScoreModal();
-        addByeMatchForPlayer(dayNumber, division, playerName, s1, s2);
+        addByeMatchForPlayer(dayNumber, division, playerName, s1, s2, setLoserPoints);
         setTimeout(() => showByeManagementModal(dayNumber), 100);
     }
     window.confirmByeScore = confirmByeScore;
@@ -162,7 +215,7 @@
                     Ce score sera appliqué à <strong>tous</strong> les matchs BYE ajoutés automatiquement
                     (le joueur figure à gauche, le BYE à droite).
                 </p>
-                ${buildByeScoreInputs('Joueur')}
+                ${buildByeScoreInputs('Joueur', dayNumber)}
                 <div class="modal-buttons">
                     <button onclick="confirmByeScoreForAll(${dayNumber})" class="btn btn-success">
                         ✅ Ajouter BYE à TOUS
@@ -177,10 +230,11 @@
     function confirmByeScoreForAll(dayNumber) {
         const p = document.getElementById('byeScorePlayer');
         const o = document.getElementById('byeScoreOpponent');
-        const s1 = p ? p.value : 5;
-        const s2 = o ? o.value : 0;
+        const s1 = p ? p.value : undefined;
+        const s2 = o ? o.value : undefined;
+        const setLoserPoints = readByeSetLoserPoints();
         closeByeScoreModal();
-        addByeToAll(dayNumber, s1, s2);
+        addByeToAll(dayNumber, s1, s2, setLoserPoints);
         setTimeout(() => showByeManagementModal(dayNumber), 100);
     }
     window.confirmByeScoreForAll = confirmByeScoreForAll;
@@ -394,6 +448,14 @@
         refreshRankingWindow(dayOrGeneral);
     }
     window.openRankingInNewWindow = openRankingInNewWindow;
+
+
+    // Mode sets : points de chaque set devant le nombre de sets gagnés (« 11 9 11 · 2 »)
+    function setPointsLine(match, side) {
+        if (!global.hasSetDetail(match)) return '';
+        const pts = match.setScores.filter(set => set && set.s1 !== '' && set.s2 !== '').map(set => set[side]).join(' ');
+        return `<span style="color: #5b636b; font-weight: normal; margin-right: 6px;">${pts}</span>`;
+    }
 
     function refreshRankingWindow(dayOrGeneral) {
         const isGeneral = dayOrGeneral === 'general';
@@ -710,7 +772,7 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
                 (m.player1 === player || m.player2 === player)
             );
 
-            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
+            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0, gameWon = 0, gameLost = 0;
 
             playerPoolMatches.forEach(match => {
                 if (match.completed) {
@@ -739,6 +801,8 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
                         pointsWon += score2;
                         pointsLost += score1;
                     }
+                    const gp = global.gamePointsFor(match, isPlayer1); // mode sets : points de jeu
+                    if (gp) { gameWon += gp.won; gameLost += gp.lost; }
                 }
             });
 
@@ -752,6 +816,8 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
                 pointsWon,
                 pointsLost,
                 goalAverage: pointsWon - pointsLost,
+                gamePointsWon: gameWon,
+                gamePointsLost: gameLost,
                 matchesPlayed: wins + draws + losses + forfeits
             });
         });
@@ -760,6 +826,7 @@ function calculatePoolRankings(pools, poolMatches, dayNumber, division) {
         rankings.sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
             if (b.goalAverage !== a.goalAverage) return b.goalAverage - a.goalAverage;
+            if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
             if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
             return a.name.localeCompare(b.name);
         });
@@ -931,11 +998,11 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
                     <div style="background: ${isComplete ? '#f8f9fa' : '#fff'}; padding: 6px; border-radius: 4px; margin-bottom: 4px; font-size: 11px; border: 1px solid ${isComplete ? '#dee2e6' : '#ffc107'};">
                         <div style="display: flex; justify-content: space-between; ${winner === match.player1 ? 'font-weight: 600;' : ''}">
                             <span>${match.player1 || '?'}</span>
-                            <span>${match.score1 || '-'}</span>
+                            <span>${setPointsLine(match, 's1')}${match.score1 || '-'}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; ${winner === match.player2 ? 'font-weight: 600;' : ''}">
                             <span>${match.player2 || '?'}</span>
-                            <span>${match.score2 || '-'}</span>
+                            <span>${setPointsLine(match, 's2')}${match.score2 || '-'}</span>
                         </div>
                     </div>
                 `;
@@ -1300,7 +1367,7 @@ function showByeManagementModal(dayNumber) {
     }
     window.closeByeModal = closeByeModal;
 
-    function addByeToAll(dayNumber, score1, score2) {
+    function addByeToAll(dayNumber, score1, score2, setLoserPoints) {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
@@ -1341,7 +1408,7 @@ function showByeManagementModal(dayNumber) {
                 const missingMatches = 4 - matchCount;
 
                 for (let i = 0; i < missingMatches; i++) {
-                    addByeMatchForPlayer(dayNumber, division, playerName, score1, score2);
+                    addByeMatchForPlayer(dayNumber, division, playerName, score1, score2, setLoserPoints);
                     addedCount++;
                 }
             });

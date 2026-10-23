@@ -33,6 +33,53 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-23 — Session de navigateur persistante pour les tests
+
+- **Contexte** : demande de l'utilisateur d'utiliser par défaut une session de navigateur unique
+  (façon « dev-browser ») pour tous les tests en vrai navigateur.
+- **Fait** : `scripts/dev-browser.sh` (`npm run browser:start` / `browser:stop`) lance un Chromium
+  persistant (CDP port 9222, PID et profil dans `tests/e2e/output-devbrowser/`). `openBrowser()`
+  dans `tests/e2e/screens.js` : avec `CDP_URL`, les 6 scripts e2e s'y connectent (un contexte par
+  test), sinon lancement classique (CI inchangée). Règle ajoutée dans `claude.md`.
+- **Fichiers/modules touchés** : `scripts/dev-browser.sh`, `tests/e2e/*.e2e.js`, `tests/e2e/screens.js`,
+  `package.json`, `.gitignore`, `claude.md`, `AGENTS.md`
+- **Commit(s)** : branche `claude/intelligent-dijkstra-1e6wb9`
+- **Doc à jour ?** : CHANGELOG — (outillage) · AGENTS.md ✅ · TODO.md — · claude.md ✅
+
+### 2026-10-20 — Scores en sets (best-of N) par journée
+
+- **Contexte** : préparer la fusion avec tennisdetable (scores en 3 sets) ; le gestionnaire ne
+  savait faire que 2 scores et supprimait les sets des vieilles données (`delete match.sets`).
+  Issue #59 (« Matchs en 5 sets »). Plan validé avec l'utilisateur : format par journée, saisie
+  set par set, best-of configurable, départage points > V > diff sets > diff points de jeu.
+- **Fait** : nouveau module `scoring.iife.js` (format `day.scoring`, `setScores`, règle de fin de
+  match unique `applyMatchResult` pour matchs/poules/phase finale, BYE/forfait/pénalité de
+  journée manquée selon le format, grille de saisie + clavier, sélecteur « 🎯 Score », migration
+  du format tennisdetable à l'import et au chargement). Classements : points de jeu en départage
+  partout (journée, général, poules, qualification, ordre multisport) + colonnes dédiées.
+  Affichages avec détail des sets, feuilles imprimées à N colonnes. `generateManualMatchHTMLImproved`
+  (code mort) supprimé. Corrigés au passage : import d'un fichier sans `config` (plantait
+  `addNewDay`), `calculateGeneralRanking` non exposée (export HTML du général, pré-remplissage
+  des poules).
+- **Vérifié** : 497 tests Jest ; e2e natation, a11y, darkmode, contrast, touch (+ mobile) à 0 ;
+  import de tous les `examples/*.json` : classements identiques à avant (mode 2 scores) ;
+  scénarios navigateur BO3/BO5 en matchs, poules, phase finale, import tennisdetable.
+- **Fichiers/modules touchés** : `src/scoring.iife.js` (nouveau), `src/matches.iife.js`,
+  `src/pools.iife.js`, `src/ranking.iife.js`, `src/init.iife.js`, `src/export-json.iife.js`,
+  `src/export-print.iife.js`, `src/multisport.iife.js`, `src/ui.iife.js`, `src/state.iife.js`,
+  `index.html`, `styles.css`, `tests/unit/scoring.test.js`, `tests/unit/setsRanking.test.js`,
+  `tests/helpers/loadApp.js`
+- **Commit(s)** : branche `claude/intelligent-dijkstra-1e6wb9`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md — · claude.md ✅ · README ✅
+- **Ajouté ensuite (même session)** : `npm run test:sets` (`tests/e2e/sets.e2e.js`, 10 étapes en
+  vrai navigateur, stable sur 2 passages) ; récapitulatifs imprimés en mode sets (en-tête
+  « Sets », mention du format) + tests Jest des feuilles.
+- **Suite possible** : pas d'import CSV de scores (n'existait pas) ; feuilles Boccia/Pétanque
+  indépendantes du format. Tranché par l'utilisateur : le BYE est modifiable, la fenêtre BYE
+  propose les points des sets (11-0 par défaut, 11-5, ou Libre = sets gagnés sans points de jeu)
+  via `buildSetScores()` (`scoring.iife.js`) ; forfaits et BYE générés automatiquement restent
+  à 11-0, modifiables. Tests : `byeSetPoints.test.js`, étape 8 bis de `test:sets`.
+
 ### 2026-10-20 — « 📥 Importer ▾ » : menu déroulant
 
 - Journées Matchs : Un championnat / Plusieurs journées / Ajouter à la suite. Journées Courses : les deux boutons « Importer » fusionnés (participants d'une autre journée / compétition JSON).

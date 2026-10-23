@@ -408,7 +408,7 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
         for (let slot = 0; slot < 4; slot++) {
             const match = pageMatches[slot];
             htmlContent += match
-                ? generateCompactMatchSheet(match)
+                ? generateCompactMatchSheet(match, sheetSetCount(dayNumber))
                 : `<div class="match-slot-empty"></div>`;
         }
         
@@ -423,8 +423,16 @@ function generateMatchSheetHTML(dayNumber, matchPages) {
     return htmlContent;
 }
 
+// Nombre de colonnes SET de la feuille : celui du format de la journée (BO5 → 5),
+// 3 par défaut pour une journée en 2 scores (feuille historique)
+function sheetSetCount(dayNumber) {
+    const scoring = global.getDayScoring(dayNumber);
+    return scoring.mode === 'sets' ? global.maxSetsForScoring(scoring) : 3;
+}
+
 // Générer une feuille de match compacte
-function generateCompactMatchSheet(match) {
+function generateCompactMatchSheet(match, numSets) {
+    const sets = Array.from({ length: numSets || 3 }, (_, i) => i + 1);
     const divisionName = match.division === 1 ? 'D1🥇' : 
                         match.division === 2 ? 'D2🥈' : 'D3🥉';
     
@@ -450,25 +458,19 @@ function generateCompactMatchSheet(match) {
                     <thead>
                         <tr>
                             <th>JOUEUR</th>
-                            <th>SET 1</th>
-                            <th>SET 2</th>
-                            <th>SET 3</th>
+                            ${sets.map(n => `<th>SET ${n}</th>`).join('')}
                             <th>TOTAL</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td class="player-col">${match.player1}</td>
-                            <td class="score-col"></td>
-                            <td class="score-col"></td>
-                            <td class="score-col"></td>
+                            ${sets.map(() => '<td class="score-col"></td>').join('')}
                             <td class="total-col"></td>
                         </tr>
                         <tr>
                             <td class="player-col">${match.player2}</td>
-                            <td class="score-col"></td>
-                            <td class="score-col"></td>
-                            <td class="score-col"></td>
+                            ${sets.map(() => '<td class="score-col"></td>').join('')}
                             <td class="total-col"></td>
                         </tr>
                     </tbody>
@@ -909,6 +911,9 @@ function showPrintOptionsModal(dayNumber) {
 
     // Détecter le mode
     const isPoolMode = dayData.pools && dayData.pools.enabled;
+    // Format de score de la journée : met en avant la feuille correspondante
+    const daySetsMode = global.isSetsMode(dayNumber);
+    const dayFormatBadge = ' <span style="font-size: 11px; background: #1a2b3c; color: #ffffff; padding: 1px 6px; border-radius: 8px;">✓ format de la journée</span>';
 
     // Créer le modal
     const modal = document.createElement('div');
@@ -958,7 +963,7 @@ function showPrintOptionsModal(dayNumber) {
                 text-align: left;
                 transition: transform 0.2s;
             " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                📋 Feuilles de match avec sets (5 par page)
+                📋 Feuilles de match avec sets — ${sheetSetCount(dayNumber)} sets (5 par page)${daySetsMode ? dayFormatBadge : ''}
             </button>
             <button id="print-option-simple" style="
                 padding: 12px;
@@ -971,7 +976,7 @@ function showPrintOptionsModal(dayNumber) {
                 text-align: left;
                 transition: transform 0.2s;
             " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                📝 Feuilles 2 scores (5 par page)
+                📝 Feuilles 2 scores (5 par page)${daySetsMode ? '' : dayFormatBadge}
             </button>
             <button id="print-option-boccia" style="
                 padding: 12px;
@@ -2326,6 +2331,15 @@ function printRecapByPool(dayNumber) {
     showNotification(`🏊 ${totalPools} feuilles récapitulatives par pool générées !`, 'success');
 }
 
+// Récapitulatifs : en mode sets, on reporte les sets gagnés (le détail est sur la feuille de match)
+function recapScoreHeader(dayNumber) {
+    return global.isSetsMode(dayNumber) ? 'Sets' : 'Score';
+}
+
+function recapScoreSubtitle(dayNumber) {
+    return global.isSetsMode(dayNumber) ? ` • Sets gagnés (${global.scoringLabel(global.getDayScoring(dayNumber))})` : '';
+}
+
 // Générer le HTML pour les récaps par tour (sans terrains)
 function generateRecapByTourHTML(dayNumber, matchesByTour) {
     const currentDate = new Date().toLocaleDateString('fr-FR', {
@@ -2480,7 +2494,7 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
             <div class="page">
                 <div class="page-header">
                     <div class="page-title">📋 RÉCAPITULATIF ${tourKey.toUpperCase()}</div>
-                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}</div>
+                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}${recapScoreSubtitle(dayNumber)}</div>
                 </div>
 
                 <div class="tour-info">
@@ -2492,8 +2506,8 @@ function generateRecapByTourHTML(dayNumber, matchesByTour) {
                         <tr>
                             <th style="width: 12%;">Match</th>
                             <th style="width: 35%;">Joueur 1</th>
-                            <th style="width: 8%;">Score</th>
-                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
                             <th style="width: 35%;">Joueur 2</th>
                         </tr>
                     </thead>
@@ -2689,7 +2703,7 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
             <div class="page">
                 <div class="page-header">
                     <div class="page-title">🏟️ RÉCAPITULATIF TERRAIN ${court}</div>
-                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}</div>
+                    <div class="page-subtitle">Journée ${dayNumber} • ${currentDate}${recapScoreSubtitle(dayNumber)}</div>
                 </div>
 
                 <div class="court-info">
@@ -2701,8 +2715,8 @@ function generateRecapByCourtHTML(dayNumber, matchesByCourt, numCourts, byTerrai
                         <tr>
                             <th style="width: 12%;">Match</th>
                             <th style="width: 35%;">Joueur 1</th>
-                            <th style="width: 8%;">Score</th>
-                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
                             <th style="width: 35%;">Joueur 2</th>
                         </tr>
                     </thead>
@@ -2924,7 +2938,7 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
             <div class="page">
                 <div class="page-header">
                     <div class="page-title">🏊 RÉCAPITULATIF ${poolData.poolName.toUpperCase()}</div>
-                    <div class="page-subtitle">Division ${poolData.division} • Journée ${dayNumber} • ${currentDate}</div>
+                    <div class="page-subtitle">Division ${poolData.division} • Journée ${dayNumber} • ${currentDate}${recapScoreSubtitle(dayNumber)}</div>
                 </div>
 
                 <div class="pool-info">
@@ -2936,8 +2950,8 @@ function generateRecapByPoolHTML(dayNumber, matchesByPool) {
                         <tr>
                             <th style="width: 12%;">Match</th>
                             <th style="width: 35%;">Joueur 1</th>
-                            <th style="width: 8%;">Score</th>
-                            <th style="width: 8%;">Score</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
+                            <th style="width: 8%;">${recapScoreHeader(dayNumber)}</th>
                             <th style="width: 35%;">Joueur 2</th>
                         </tr>
                     </thead>

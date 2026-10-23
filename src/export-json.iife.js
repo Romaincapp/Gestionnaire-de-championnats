@@ -71,7 +71,7 @@
         fileName = fileName.replace(/\.json$/i, '');
 
         const championshipData = {
-            version: "2.0",
+            version: "2.1",
             exportDate: new Date().toISOString(),
             championshipName: fileName,
             championship: championship,
@@ -149,7 +149,7 @@
                     global.importedChampionshipData = data;
                 } else if (data.players && data.matches) {
                     global.importedChampionshipData = {
-                        version: "2.0",
+                        version: "2.1",
                         exportDate: data.timestamp || new Date().toISOString(),
                         championship: {
                             currentDay: 1,
@@ -498,6 +498,12 @@
                 championship.currentDay = 1;
             }
 
+            // Fichier sans config (export tennisdetable, très ancien export) : config par défaut,
+            // sinon addNewDay() et tout ce qui lit championship.config plantent ensuite
+            if (!championship.config) {
+                championship.config = { numberOfDivisions: 3, numberOfCourts: 4 };
+            }
+
             // Appliquer la configuration (numberOfDivisions, numberOfCourts)
             if (championship.config) {
                 // Normaliser les noms de propriétés (anciens exports utilisaient numDivisions, nouveaux utilisent numberOfDivisions)
@@ -530,8 +536,12 @@
             // Utiliser le nombre de divisions de la configuration importée (supporter les deux noms)
             const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
+            let legacySetDays = 0;
             Object.keys(championship.days).forEach(dayNumber => {
                 const day = championship.days[dayNumber];
+
+                // Format de score (2 scores / sets) + migration des sets de tennisdetable
+                if (global.normalizeDayScoring(day, championship.config && championship.config.defaultScoring)) legacySetDays++;
 
                 // Initialiser les structures si manquantes
                 if (!day.players) {
@@ -673,7 +683,8 @@
             const _courts = championship.config?.numberOfCourts || championship.config?.numCourts || '?';
             const _days = Object.keys(championship.days || {}).length;
             showNotification(
-                `✅ Import réussi — ${_days} journée${_days > 1 ? 's' : ''}, ${_divs} division${_divs > 1 ? 's' : ''}, ${_courts} terrain${_courts > 1 ? 's' : ''}`,
+                `✅ Import réussi — ${_days} journée${_days > 1 ? 's' : ''}, ${_divs} division${_divs > 1 ? 's' : ''}, ${_courts} terrain${_courts > 1 ? 's' : ''}` +
+                    (legacySetDays ? ` — scores en sets repris (${legacySetDays} journée${legacySetDays > 1 ? 's' : ''} en BO3)` : ''),
                 'success'
             );
 
@@ -1080,6 +1091,9 @@
             if (!day.chronoData) day.chronoData = emptyChronoData();
 
             renumberDayReferences(day, dayNumber, 0);
+            if (global.normalizeDayScoring(day, fileConfig && fileConfig.defaultScoring)) {
+                report.warnings.push('J' + dayNumber + ' : scores en sets (format tennis de table) repris, journée en mode « Sets · BO3 ».');
+            }
             var paused = pauseRunningSeries(day.chronoData);
             if (paused.length) {
                 report.warnings.push('J' + dayNumber + ' : série(s) exportée(s) chrono en marche, mises en pause : ' + paused.join(', ') + '. Vérifiez leurs temps.');

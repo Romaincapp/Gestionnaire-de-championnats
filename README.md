@@ -9,6 +9,8 @@ Application web de gestion de championnats de tennis de table.
 - Génération automatique de matchs (round-robin)
 - Système de tours
 - Saisie des scores en temps réel
+- Format de score **par journée** : 2 scores (pétanque, badminton en 1 set…) ou **sets**
+  (tennis de table, badminton, volley…) en BO3, BO5 ou BO7, avec points par set optionnels
 - Système suisse pour les classements
 
 ### 🏆 Mode POOL  
@@ -76,6 +78,25 @@ Application web de gestion de championnats de tennis de table.
 2. Entrer les points
 3. Le classement se met à jour automatiquement
 
+### Scores en sets (tennis de table, badminton…)
+1. Dans la barre en haut de la journée, choisir **« 🎯 Score : Sets · BO3 »** (ou BO5, BO7)
+   et les points par set (11, 15, 21, 25, ou « Points libres »). Les journées ajoutées
+   ensuite reprennent ce format.
+2. Chaque match affiche une case par set (S1, S2, S3…) : saisir 11-8, puis **Entrée** pour
+   passer au set suivant. Dès qu'un joueur a gagné assez de sets, le match est validé et les
+   sets restants sont grisés. Un set incomplet (ex. 9-7 en 11 points) est signalé en orange,
+   sans bloquer la saisie.
+3. Pas de match nul en sets. BYE et forfait donnent 2-0 en BO3 (3-0 en BO5…). Pour un BYE
+   ajouté avec « 👋 BYE », la fenêtre propose les points de chaque set : **11-0**, **11-5** ou
+   **Libre** (sets gagnés seulement, sans points de jeu). Le BYE reste modifiable ensuite.
+4. Classement : points (V=3, D=1), puis victoires, **différence de sets**, puis **différence
+   de points de jeu** (somme des sets). Le tableau affiche « Sets G/P », « Diff sets » et
+   « Pts jeu ± ».
+5. Les feuilles de match imprimées « avec sets » ont autant de colonnes que le format
+   (5 en BO5).
+6. Un export JSON de l'ancienne application **tennisdetable** s'importe directement : ses
+   sets sont repris et la journée passe en BO3 · 11 pts.
+
 ### Voir les classements
 1. Cliquer sur l'onglet "🏆 Classement Général"
 2. Ou utiliser les boutons de classement par journée
@@ -97,6 +118,7 @@ src/
 ├── multisport.iife.js   # Sélecteur de type par journée, UI Chrono par journée, classement combiné
 ├── players.iife.js      # Gestion joueurs
 ├── ui.iife.js           # Onglets/journées
+├── scoring.iife.js      # Format de score par journée (2 scores / sets)
 ├── matches.iife.js      # Mode Championship
 ├── pools.iife.js        # Mode POOL
 ├── ranking.iife.js      # Classements

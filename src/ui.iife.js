@@ -38,6 +38,8 @@
             players: players,
             matches: matches,
             dayType: 'championship', // Par défaut: mode championship
+            // Même format de score que la journée précédente (2 scores / sets, voir scoring.iife.js)
+            scoring: typeof global.getDayScoring === 'function' ? global.getDayScoring(Math.max(...existingDays)) : { mode: 'simple' },
             chronoData: {
                 events: [],
                 series: [],
@@ -203,6 +205,7 @@
                     <option value="championship" ${!isChrono ? 'selected' : ''}>🏆 Matchs</option>
                     <option value="chrono" ${isChrono ? 'selected' : ''}>⏱️ Courses</option>
                 </select>
+                <span class="day-scoring-ctl" id="day-scoring-ctl-${dayNumber}" style="display: ${isChrono ? 'none' : 'inline-flex'}; align-items: center; gap: 6px; flex-wrap: wrap;">${typeof global.renderDayScoringControl === 'function' ? global.renderDayScoringControl(dayNumber) : ''}</span>
                 <span id="day-type-label-${dayNumber}" style="font-size: 11px; margin-left: auto; color: #586566;">
                     ${isChrono ? 'Chronométrage' : 'Championnat'}
                 </span>
@@ -453,6 +456,8 @@
         if (label) {
             label.textContent = isChrono ? 'Chronométrage' : 'Championnat';
         }
+
+        if (typeof global.refreshDayScoringControl === 'function') global.refreshDayScoringControl(dayNumber);
         
         // Afficher/masquer les sections
         const chronoSection = document.getElementById(`chrono-section-${dayNumber}`);
@@ -519,6 +524,9 @@
                 if (label) label.textContent = 'Championnat';
             }
         }
+
+        // Le format de score ne concerne que les journées Matchs
+        if (typeof global.refreshDayScoringControl === 'function') global.refreshDayScoringControl(dayNumber);
 
         // Rafraîchir l'affichage chrono si on passe en mode chrono
         if (type === 'chrono' && typeof refreshChronoDisplay === 'function') {

@@ -64,6 +64,10 @@
         let pointsWon = 0;
         let pointsLost = 0;
         let matchesPlayed = 0;
+        // Mode sets : pointsWon/pointsLost comptent des sets ; les points de jeu (somme
+        // des sets) servent de départage suivant (voir compareRankingStats, scoring.iife.js)
+        let gamePointsWon = 0;
+        let gamePointsLost = 0;
 
         playerMatches.forEach(match => {
             // Appeler checkMatchCompletion seulement pour les matchs classiques (pas pour les matchs de poules)
@@ -107,6 +111,12 @@
                     pointsWon += score2;
                     pointsLost += score1;
                 }
+
+                const gp = global.gamePointsFor(match, isPlayer1);
+                if (gp) {
+                    gamePointsWon += gp.won;
+                    gamePointsLost += gp.lost;
+                }
             }
         });
 
@@ -121,6 +131,8 @@
             forfeits,
             pointsWon,
             pointsLost,
+            gamePointsWon,
+            gamePointsLost,
             winRate,
             totalPoints,
             matches: playerMatches
@@ -206,7 +218,7 @@
                 const score2 = parseInt(match.score2) || 0;
                 const playerScore = isPlayer1 ? score1 : score2;
                 const opponentScore = isPlayer1 ? score2 : score1;
-                setsScore = `(${playerScore}-${opponentScore})`;
+                setsScore = `(${playerScore}-${opponentScore}${global.setDetailSuffix(match, isPlayer1)})`;
             }
 
             const bgColor = resultClass === 'win' ? '#d4edda' :
@@ -454,6 +466,9 @@ if (sortBy === 'points') {
         // 3. Différence de points (PP - PC)
         if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
 
+        // 3b. Mode sets : différence de points de jeu (somme des sets)
+        if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
+
         // 4. Points Pour
         if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
 
@@ -477,6 +492,9 @@ if (sortBy === 'points') {
         // 3. Différence de points
         if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
 
+        // 3b. Mode sets : différence de points de jeu (somme des sets)
+        if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
+
         // 4. Points Pour
         if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
 
@@ -489,6 +507,8 @@ if (sortBy === 'points') {
             // La position dans CE classement de division donne les points multisport.
             // N'apparaît qu'en mode multisport ; sans impact sur les modes purs.
             const isMulti = typeof window.isMultisportMode === 'function' && window.isMultisportMode();
+            // Mode sets : PP/PC = sets gagnés/perdus, plus une colonne de points de jeu
+            const isSetsDay = global.isSetsMode(dayNumber);
             let msPointsByName = {};
             if (isMulti && typeof window.getMatchsDayDivisionOrder === 'function') {
                 const msOrder = window.getMatchsDayDivisionOrder(dayNumber, division);
@@ -513,8 +533,9 @@ if (sortBy === 'points') {
                     ${isMulti ? '<th title="Points multisport de la journée (barème 25/19/17…)">🏅 Multi</th>' : ''}
                     <th>V/N/D/F</th>
                     <th>% Vict.</th>
-                    <th>PP/PC</th>
-                    <th>Diff</th>
+                    ${isSetsDay ? '<th title="Sets gagnés / perdus">Sets G/P</th>' : '<th>PP/PC</th>'}
+                    ${isSetsDay ? '<th title="Différence de sets">Diff sets</th>' : '<th>Diff</th>'}
+                    ${isSetsDay ? '<th title="Différence de points de jeu (somme des sets), départage suivant">Pts jeu ±</th>' : ''}
                     <th>Matchs</th>
                 </tr>
             </thead>
@@ -562,6 +583,7 @@ playerStats.forEach((player, index) => {
             <td>${player.winRate}%</td>
             <td>${player.pointsWon}/${player.pointsLost}</td>
             <td style="${diffStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
+            ${isSetsDay ? `<td title="${player.gamePointsWon}/${player.gamePointsLost}">${global.gamePointsDiff(player) > 0 ? '+' : ''}${global.gamePointsDiff(player)}</td>` : ''}
             <td>${player.matchesPlayed}</td>
         </tr>
     `;
@@ -586,6 +608,9 @@ playerStats.forEach((player, index) => {
     window.updateRankingsForDay = updateRankingsForDay;
     // Exposé pour le module multisport (calcul des points de journée par barème).
     window.calculatePlayerStats = calculatePlayerStats;
+    // Appelé aussi depuis init.iife.js (export HTML du général) et pools.iife.js
+    // (pré-remplissage des poules) : sans cette exposition, ReferenceError.
+    window.calculateGeneralRanking = function() { return calculateGeneralRanking(); };
 
     // CLASSEMENT GÉNÉRAL
     function updateGeneralRanking() {
@@ -797,6 +822,8 @@ generalRanking.divisions[division].forEach((player, index) => {
                                 totalForfaits: 0,
                                 totalPointsWon: 0,
                                 totalPointsLost: 0,
+                                totalGamePointsWon: 0,
+                                totalGamePointsLost: 0,
                                 totalMatchesPlayed: 0,
                                 winRates: [],
                                 firstDay: playerFirstAppearance[playerName]
@@ -806,11 +833,11 @@ generalRanking.divisions[division].forEach((player, index) => {
                             const allDays = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b);
                             const missedDays = allDays.filter(d => d < playerFirstAppearance[playerName]);
 
-                            missedDays.forEach(() => {
+                            missedDays.forEach(missedDay => {
                                 // 4 forfaits par journée manquée = 0 points, -20 goal average (5 buts encaissés par match)
                                 playersData[playerName].totalForfaits += 4;
                                 playersData[playerName].totalPoints += 0; // 4 forfaits × 0 point
-                                playersData[playerName].totalPointsLost += 20; // 4 forfaits × 5 buts encaissés
+                                playersData[playerName].totalPointsLost += 4 * global.forfeitPenaltyForDay(missedDay); // 4 forfaits × score d'un forfait (5 buts, ou setsToWin sets)
                                 playersData[playerName].totalMatchesPlayed += 4;
                                 playersData[playerName].winRates.push(0); // 0% de victoire pour une journée forfait
                             });
@@ -829,6 +856,8 @@ generalRanking.divisions[division].forEach((player, index) => {
                             playersData[playerName].totalForfaits += dayStats.forfeits || 0;  // Forfaits par match
                             playersData[playerName].totalPointsWon += dayStats.pointsWon;
                             playersData[playerName].totalPointsLost += dayStats.pointsLost;
+                            playersData[playerName].totalGamePointsWon += dayStats.gamePointsWon || 0;
+                            playersData[playerName].totalGamePointsLost += dayStats.gamePointsLost || 0;
                             playersData[playerName].totalMatchesPlayed += dayStats.matchesPlayed;
                             playersData[playerName].winRates.push(dayStats.winRate);
 
@@ -854,11 +883,11 @@ generalRanking.divisions[division].forEach((player, index) => {
                 const lastDay = playerLastAppearance[playerName];
                 const missedDaysBetween = allDays.filter(d => d > firstDay && d < lastDay && !playerDays.includes(d));
                 
-                missedDaysBetween.forEach(() => {
+                missedDaysBetween.forEach(missedDay => {
                     // 4 forfaits par journée manquée = 0 points, -20 goal average
                     playersData[playerName].totalForfaits += 4;
                     playersData[playerName].totalPoints += 0;
-                    playersData[playerName].totalPointsLost += 20;
+                    playersData[playerName].totalPointsLost += 4 * global.forfeitPenaltyForDay(missedDay);
                     playersData[playerName].totalMatchesPlayed += 4;
                     playersData[playerName].winRates.push(0);
                 });
@@ -867,11 +896,11 @@ generalRanking.divisions[division].forEach((player, index) => {
             // Étape 4: Ajouter les forfaits pour les journées manquées APRÈS la dernière apparition
             Object.keys(playersData).forEach(playerName => {
                 const missedDaysAfter = allDays.filter(d => d > playerLastAppearance[playerName]);
-                missedDaysAfter.forEach(() => {
+                missedDaysAfter.forEach(missedDay => {
                     // 4 forfaits par journée manquée = 0 points, -20 goal average
                     playersData[playerName].totalForfaits += 4;
                     playersData[playerName].totalPoints += 0;
-                    playersData[playerName].totalPointsLost += 20;
+                    playersData[playerName].totalPointsLost += 4 * global.forfeitPenaltyForDay(missedDay);
                     playersData[playerName].totalMatchesPlayed += 4;
                     playersData[playerName].winRates.push(0);
                 });
@@ -891,6 +920,8 @@ generalRanking.divisions[division].forEach((player, index) => {
             avgWinRate: player.winRates.length > 0 ?
                 Math.round(player.winRates.reduce((a, b) => a + b, 0) / player.winRates.length) : 0,
             goalAveragePoints: player.totalPointsWon - player.totalPointsLost,
+            gamePointsWon: player.totalGamePointsWon || 0,
+            gamePointsLost: player.totalGamePointsLost || 0,
             // Ajouter les informations d'étape finale
             stageWeight: bestStage ? bestStage.stageWeight : 0,
             stageLabel: bestStage ? bestStage.stageLabel : '-',
@@ -913,6 +944,9 @@ generalRanking.divisions[division].forEach((player, index) => {
 
         // 4. Différence de points (PP - PC)
         if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
+
+        // 4b. Mode sets : différence de points de jeu (somme des sets)
+        if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
 
         // 5. Points Pour
         if (b.totalPointsWon !== a.totalPointsWon) return b.totalPointsWon - a.totalPointsWon;
@@ -1325,15 +1359,15 @@ generalRanking.divisions[division].forEach((player, index) => {
                         } else if (match.winner === null) {
                             resultClass = 'draw';
                             resultIcon = '🤝';
-                            scoreDisplay = `${playerScore}-${opponentScore}`;
+                            scoreDisplay = `${playerScore}-${opponentScore}${global.setDetailSuffix(match, isPlayer1)}`;
                         } else if (match.winner === playerName) {
                             resultClass = 'win';
                             resultIcon = '🏆';
-                            scoreDisplay = `${playerScore}-${opponentScore}`;
+                            scoreDisplay = `${playerScore}-${opponentScore}${global.setDetailSuffix(match, isPlayer1)}`;
                         } else {
                             resultClass = 'loss';
                             resultIcon = '❌';
-                            scoreDisplay = `${playerScore}-${opponentScore}`;
+                            scoreDisplay = `${playerScore}-${opponentScore}${global.setDetailSuffix(match, isPlayer1)}`;
                         }
                         
                         return `

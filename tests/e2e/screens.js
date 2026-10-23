@@ -21,6 +21,15 @@ function launchOptions() {
     return Object.assign(base, { channel: 'chrome' });
 }
 
+// Navigateur des tests : la session persistante si CDP_URL est défini (voir
+// scripts/dev-browser.sh : un seul Chromium qui reste ouvert entre les tests, chaque
+// test y ouvre son propre contexte, fermé à la fin), sinon un Chromium lancé pour le test.
+async function openBrowser(options) {
+    const { chromium } = require('playwright-core');
+    if (process.env.CDP_URL) return chromium.connectOverCDP(process.env.CDP_URL);
+    return chromium.launch(options || launchOptions());
+}
+
 // Charge les trois journées de test dans la page (déjà ouverte sur APP).
 async function prepareApp(page) {
 
@@ -157,4 +166,4 @@ function buildScreens(page, info) {
     return screens;
 }
 
-module.exports = { ROOT, APP, launchOptions, prepareApp, readInfo, buildScreens };
+module.exports = { openBrowser, ROOT, APP, launchOptions, prepareApp, readInfo, buildScreens };

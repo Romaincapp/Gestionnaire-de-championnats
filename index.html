@@ -98,6 +98,8 @@
                         <option value="championship" selected>🏆 Matchs</option>
                         <option value="chrono">⏱️ Courses</option>
                     </select>
+                    <!-- Format de score (2 scores / sets), rempli par refreshDayScoringControl(1) -->
+                    <span class="day-scoring-ctl" id="day-scoring-ctl-1" style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;"></span>
                     <span id="day-type-label-1" style="font-size: 11px; margin-left: auto; color: #586566;">Championnat</span>
                 </div>
                 
@@ -639,6 +641,7 @@
         <script src="src/multisport.iife.js"></script>
         <script src="src/players.iife.js"></script>
         <script src="src/ui.iife.js"></script>
+        <script src="src/scoring.iife.js"></script>
         <script src="src/matches.iife.js"></script>
         <script src="src/pools.iife.js"></script>
         <script src="src/ranking.iife.js"></script>

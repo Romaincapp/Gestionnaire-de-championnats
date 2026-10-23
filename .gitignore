@@ -12,3 +12,5 @@ tests/e2e/output-a11y-mobile/
 tests/e2e/output-contrast/
 tests/e2e/output-contrast-mobile/
 tests/e2e/output-touch/
+tests/e2e/output-sets/
+tests/e2e/output-devbrowser/

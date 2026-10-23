@@ -1595,8 +1595,7 @@ function generateRoundRobinMatches(pool, poolIndex, division, dayNumber, startMa
                         poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                         division: division,
                         dayNumber: dayNumber,
-                        score1: 5,
-                        score2: 0,
+                        ...global.byeFieldsForDay(dayNumber, 5, 1),
                         completed: true,
                         winner: player1,
                         isPoolMatch: true,
@@ -1612,8 +1611,7 @@ function generateRoundRobinMatches(pool, poolIndex, division, dayNumber, startMa
                         poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                         division: division,
                         dayNumber: dayNumber,
-                        score1: 0,
-                        score2: 5,
+                        ...global.byeFieldsForDay(dayNumber, 5, 2),
                         completed: true,
                         winner: player2,
                         isPoolMatch: true,
@@ -1754,8 +1752,8 @@ function generateLimitedMatches(pool, poolIndex, division, dayNumber, matchesPer
                     poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                     division: division,
                     dayNumber: dayNumber,
-                    score1: '0',
-                    score2: '0',
+                    // Mode 2 scores : 0-0 historique (BYE non compté) ; mode sets : victoire setsToWin-0
+                    ...(global.isSetsMode(dayNumber) ? global.byeFieldsForDay(dayNumber, 0, 1) : { score1: '0', score2: '0' }),
                     completed: true,
                     winner: player1,
                     isPoolMatch: true,
@@ -1770,8 +1768,7 @@ function generateLimitedMatches(pool, poolIndex, division, dayNumber, matchesPer
                     poolName: `Poule ${String.fromCharCode(65 + poolIndex)}`,
                     division: division,
                     dayNumber: dayNumber,
-                    score1: '0',
-                    score2: '0',
+                    ...(global.isSetsMode(dayNumber) ? global.byeFieldsForDay(dayNumber, 0, 2) : { score1: '0', score2: '0' }),
                     completed: true,
                     winner: player2,
                     isPoolMatch: true,
@@ -2161,7 +2158,7 @@ function generatePoolMatchHTML(match, dayNumber) {
     const statusText = match.completed ? 'Terminé' : 'En cours';
     const score1 = match.score1 || 0;
     const score2 = match.score2 || 0;
-    const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}` : '';
+    const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span> ${match.player2}` : '';
 
     return `
         <div class="pool-match ${matchStatus} ${match.isCollapsed ? 'collapsed' : ''}" data-match-id="${match.id}" data-division="${match.division}" style="
@@ -2212,7 +2209,8 @@ function generatePoolMatchHTML(match, dayNumber) {
                           title="Cliquez pour voir les statistiques"
                           onmouseover="this.style.color='#09679e'"
                           onmouseout="this.style.color='#2c3e50'">${match.player1}</span>`}
-                <div class="score-center">
+                ${global.renderSetScoreInputs('pool', dayNumber, match.division, String(match.id), match,
+                    { onkeydown: `handlePoolMatchEnter(event, ${dayNumber}, '${match.id}', ${match.division})` }) || `<div class="score-center">
                     <input type="number"
                            value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
                            placeholder="0"
@@ -2226,7 +2224,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                            onchange="updatePoolMatchScore(${dayNumber}, '${match.id}', 'score2', this.value, ${match.division})"
                            onkeydown="handlePoolMatchEnter(event, ${dayNumber}, '${match.id}', ${match.division})"
                            style="width: 50px; height: 40px; text-align: center; padding: 6px; font-weight: bold; font-size: 16px; border: 2px solid #096cde; border-radius: 6px;">
-                </div>
+                </div>`}
                 ${window.showForfaitButtons ? 
                     `<input type="text" value="${match.player2}" 
                             onchange="editPoolMatchPlayerName(${dayNumber}, ${match.division}, '${match.id}', 'player2', this.value)"
@@ -2261,7 +2259,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                 background: ${match.forfaitBy ? '#fff3cd' : '#a8e6cf'};
                 color: ${match.forfaitBy ? '#6c5103' : '#096b54'};
             ">
-                ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2})
+                ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2}${global.setDetailSuffix(match)})
             </div>` : ''}
             ${match.completed && match.winner === null ? `
             <div class="match-result" style="
@@ -2344,6 +2342,12 @@ function handlePoolMatchEnter(event, dayNumber, matchId, division) {
         return;
     }
 
+    // Mode sets : la grille gère Entrée (set suivant) et décide quand valider ;
+    // match.setScores/score1/score2 sont alors déjà à jour (voir scoring.iife.js)
+    const setsOutcome = global.handleSetsKeydown(event, match, dayNumber);
+    if (setsOutcome === 'handled') return;
+    if (matchContainer.querySelector('.set-score-grid') && setsOutcome !== 'validate') return;
+
     const inputs = matchContainer.querySelectorAll('input[type="number"]');
     const input1 = inputs[0];
     const input2 = inputs[1];
@@ -2354,18 +2358,18 @@ function handlePoolMatchEnter(event, dayNumber, matchId, division) {
     }
 
     // Lire les valeurs actuelles du DOM
-    const score1Value = input1.value.trim();
-    const score2Value = input2.value.trim();
+    const score1Value = setsOutcome === 'validate' ? String(match.score1) : input1.value.trim();
+    const score2Value = setsOutcome === 'validate' ? String(match.score2) : input2.value.trim();
     console.log('📊 Scores du DOM:', score1Value, '-', score2Value);
 
     // Déterminer si on doit valider selon les valeurs du DOM
     const bothScoresFilled = score1Value !== '' && score2Value !== '';
-    const shouldValidate = event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
+    const shouldValidate = setsOutcome === 'validate' || event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
     console.log('✅ Should validate:', shouldValidate, '(bothFilled:', bothScoresFilled, ')');
 
     if (shouldValidate) {
         // Si Tab sur scores incomplets, laisser la navigation naturelle
-        if (event.key === 'Tab' && !bothScoresFilled) {
+        if (setsOutcome !== 'validate' && event.key === 'Tab' && !bothScoresFilled) {
             console.log('⏩ Tab avec scores incomplets - navigation naturelle');
             return;
         }
@@ -2438,25 +2442,8 @@ function checkPoolMatchCompletion(dayNumber, matchId, division) {
 
     const wasCompleted = match.completed;
 
-    if (match.score1 !== '' && match.score2 !== '') {
-        const score1 = parseInt(match.score1);
-        const score2 = parseInt(match.score2);
-
-        if (score1 > score2) {
-            match.completed = true;
-            match.winner = match.player1;
-        } else if (score2 > score1) {
-            match.completed = true;
-            match.winner = match.player2;
-        } else {
-            match.completed = true;
-            match.winner = null;
-        }
-    } else {
-        // Si l'un des scores est vide, remettre le match en attente
-        match.completed = false;
-        match.winner = null;
-    }
+    // Règle de fin de match commune aux 3 contextes (voir scoring.iife.js)
+    global.applyMatchResult(match, global.getDayScoring(dayNumber));
 
     // Notification du changement d'état
     if (!wasCompleted && match.completed) {
@@ -2924,7 +2911,7 @@ if (!document.getElementById('player-summary-animations')) {
 
 function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers = null, dayNumber = null, division = null) {
     const playerStats = pool.map(player => {
-        let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
+        let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0, gameWon = 0, gameLost = 0;
 
         poolMatches.forEach(match => {
             if (!match.completed) return;
@@ -2957,6 +2944,8 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                     pointsWon += score2;
                     pointsLost += score1;
                 }
+                const gp = global.gamePointsFor(match, isPlayer1); // mode sets : points de jeu
+                if (gp) { gameWon += gp.won; gameLost += gp.lost; }
             }
         });
 
@@ -2969,6 +2958,8 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
             pointsWon,
             pointsLost,
             diff: pointsWon - pointsLost,
+            gamePointsWon: gameWon,
+            gamePointsLost: gameLost,
             points: wins * 3 + draws * 2 + losses * 1
         };
     });
@@ -2977,6 +2968,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
     playerStats.sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
         if (b.diff !== a.diff) return b.diff - a.diff;
+        if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
         return b.pointsWon - a.pointsWon;
     });
 
@@ -3308,7 +3300,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
 
     pools.forEach((pool, poolIndex) => {
         const playerStats = pool.map(player => {
-            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0;
+            let wins = 0, draws = 0, losses = 0, forfeits = 0, pointsWon = 0, pointsLost = 0, gameWon = 0, gameLost = 0;
 
             const poolMatches = matches.filter(m => m.poolIndex === poolIndex && m.completed);
 
@@ -3341,6 +3333,8 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
                         pointsWon += score2;
                         pointsLost += score1;
                     }
+                    const gp = global.gamePointsFor(match, isPlayer1); // mode sets : points de jeu
+                    if (gp) { gameWon += gp.won; gameLost += gp.lost; }
                 }
             });
 
@@ -3348,6 +3342,8 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
                 name: player,
                 wins, draws, losses, forfeits, pointsWon, pointsLost,
                 diff: pointsWon - pointsLost,
+                gamePointsWon: gameWon,
+                gamePointsLost: gameLost,
                 points: wins * 3 + draws * 2 + losses * 1,
                 poolIndex: poolIndex,
                 poolName: String.fromCharCode(65 + poolIndex)
@@ -3358,6 +3354,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
         playerStats.sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
             if (b.diff !== a.diff) return b.diff - a.diff;
+            if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
             return b.pointsWon - a.pointsWon;
         });
 
@@ -3403,6 +3400,7 @@ function getQualifiedPlayersFromPools(pools, matches, qualifiedPerPool, advanced
             runnersUp.sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
                 if (b.diff !== a.diff) return b.diff - a.diff;
+                if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
                 return b.pointsWon - a.pointsWon;
             });
 
@@ -4250,8 +4248,9 @@ function generateFirstRoundDirect(dayNumber, division, qualified, roundName, pre
             player2: player2.name,
             player1Seed: player1.seed,
             player2Seed: player2.seed || null,
-            score1: player2.isBye ? 3 : (player1.isBye ? 0 : ''),
-            score2: player2.isBye ? 0 : (player1.isBye ? 3 : ''),
+            ...(player2.isBye ? global.byeFieldsForDay(dayNumber, 3, 1)
+                : player1.isBye ? global.byeFieldsForDay(dayNumber, 3, 2)
+                : { score1: '', score2: '' }),
             completed: isByeMatch,
             winner: winner,
             roundName: roundName,
@@ -4308,8 +4307,7 @@ function generateFirstRound(dayNumber, division, qualified, roundName) {
             player2: player2.name,
             player1Seed: player1.seed,
             player2Seed: player2.seed || null,
-            score1: player2.isBye ? 3 : '',
-            score2: player2.isBye ? 0 : '',
+            ...(player2.isBye ? global.byeFieldsForDay(dayNumber, 3, 1) : { score1: '', score2: '' }),
             completed: player2.isBye || false,
             winner: player2.isBye ? player1.name : null,
             roundName: roundName,
@@ -4759,7 +4757,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
     const isActive = !match.isBye;
     const score1 = match.score1 || 0;
     const score2 = match.score2 || 0;
-    const scoreDisplay = isCompleted && !match.isBye ? `<span class="collapse-score">${score1}-${score2}</span>` : '';
+    const scoreDisplay = isCompleted && !match.isBye ? `<span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span>` : '';
     return `
         <div class="manual-match ${match.isCollapsed ? 'collapsed' : ''}" style="
             background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
@@ -4838,7 +4836,8 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
                                 style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
                         : `<span class="player-name-left">${match.player1}</span>`}
-                    <div class="score-center">
+                    ${global.renderSetScoreInputs('final', dayNumber, division, String(match.id), match,
+                        { onkeydown: `handleManualMatchEnter(event, '${match.id}', ${dayNumber})` }) || `<div class="score-center">
                         <input type="number"
                                value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
                                placeholder="0"
@@ -4852,7 +4851,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                                onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
                                onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
                                style="width: 45px; height: 40px; text-align: center; border: 2px solid #096cde; border-radius: 4px; font-size: 16px; font-weight: bold;">
-                    </div>
+                    </div>`}
                     ${window.showForfaitButtons ? 
                         `<input type="text" value="${match.player2}" 
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player2', this.value)"
@@ -4882,7 +4881,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                     color: ${isCompleted ? (match.forfaitBy ? '#6c5103' : (match.winner === null ? '#1565c0' : '#155724')) : '#6c5103'};
                     font-size: 13px;
                 ">
-                    ${isCompleted && match.winner ? `${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} gagne${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2})` :
+                    ${isCompleted && match.winner ? `${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} gagne${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2}${global.setDetailSuffix(match)})` :
                       isCompleted && match.winner === null ? `🤝 Match nul (${score1}-${score2})` : 'En attente des scores'}
                 </div>
             `}
@@ -5083,6 +5082,12 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
         return;
     }
 
+    // Mode sets : la grille gère Entrée (set suivant) et décide quand valider ;
+    // match.setScores/score1/score2 sont alors déjà à jour (voir scoring.iife.js)
+    const setsOutcome = global.handleSetsKeydown(event, match, dayNumber);
+    if (setsOutcome === 'handled') return;
+    if (matchContainer.querySelector('.set-score-grid') && setsOutcome !== 'validate') return;
+
     const inputs = matchContainer.querySelectorAll('input[type="number"]');
     const input1 = inputs[0];
     const input2 = inputs[1];
@@ -5093,18 +5098,18 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
     }
 
     // Lire les valeurs actuelles du DOM
-    const score1Value = input1.value.trim();
-    const score2Value = input2.value.trim();
+    const score1Value = setsOutcome === 'validate' ? String(match.score1) : input1.value.trim();
+    const score2Value = setsOutcome === 'validate' ? String(match.score2) : input2.value.trim();
     console.log('📊 Scores du DOM:', score1Value, '-', score2Value);
 
     // Déterminer si on doit valider selon les valeurs du DOM
     const bothScoresFilled = score1Value !== '' && score2Value !== '';
-    const shouldValidate = event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
+    const shouldValidate = setsOutcome === 'validate' || event.key === 'Enter' || (event.key === 'Tab' && bothScoresFilled);
     console.log('✅ Should validate:', shouldValidate, '(bothFilled:', bothScoresFilled, ')');
 
     if (shouldValidate) {
         // Si Tab sur scores incomplets, laisser la navigation naturelle
-        if (event.key === 'Tab' && !bothScoresFilled) {
+        if (setsOutcome !== 'validate' && event.key === 'Tab' && !bothScoresFilled) {
             console.log('⏩ Tab avec scores incomplets - navigation naturelle');
             return;
         }
@@ -5120,7 +5125,7 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
         const wasCompleted = match.completed;
 
         // Vérifier la complétion du match
-        checkManualMatchCompletion(match);
+        checkManualMatchCompletion(match, dayNumber);
 
         // Vérifier si le tour est terminé (pour débloquer le suivant)
         if (matchDivision && matchRoundName) {
@@ -5177,30 +5182,13 @@ function handleManualMatchEnter(event, matchId, dayNumber) {
     }
 }
 
-function checkManualMatchCompletion(match) {
+function checkManualMatchCompletion(match, dayNumber) {
     if (match.isBye) return;
 
     const wasCompleted = match.completed;
 
-    if (match.score1 !== '' && match.score2 !== '') {
-        const score1 = parseInt(match.score1);
-        const score2 = parseInt(match.score2);
-
-        if (score1 > score2) {
-            match.completed = true;
-            match.winner = match.player1;
-        } else if (score2 > score1) {
-            match.completed = true;
-            match.winner = match.player2;
-        } else {
-            match.completed = true;
-            match.winner = null;
-        }
-    } else {
-        // Si l'un des scores est vide, remettre le match en attente
-        match.completed = false;
-        match.winner = null;
-    }
+    // Règle de fin de match commune aux 3 contextes (voir scoring.iife.js)
+    global.applyMatchResult(match, global.getDayScoring(dayNumber || championship.currentDay));
 
     if (!wasCompleted && match.completed) {
         showNotification(`🏆 ${match.winner || 'Match nul'} remporte le match !`, 'success');
@@ -5968,141 +5956,6 @@ function addScoreInputStyles() {
     document.head.appendChild(style);
 }
 
-// Fonction pour mettre à jour le HTML de génération des matchs avec de plus gros champs
-function generateManualMatchHTMLImproved(dayNumber, division, match, roundName) {
-    const isCompleted = match.completed;
-    const isActive = !match.isBye;
-    
-    return `
-        <div class="manual-match" style="
-            background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
-            border: 2px solid ${isCompleted ? '#087227' : isActive ? '#096cde' : '#5b636b'};
-            border-radius: 10px;
-            padding: 15px;
-            ${match.isBye ? 'border-style: dashed;' : ''}
-        ">
-            <div class="match-header" style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 12px;
-            ">
-                <div class="match-title" style="
-                    font-size: 13px;
-                    color: #5b636b;
-                    font-weight: bold;
-                ">
-                    Match ${match.position}
-                </div>
-                <div class="match-status" style="
-                    font-size: 12px;
-                    padding: 4px 10px;
-                    border-radius: 15px;
-                    font-weight: bold;
-                    background: ${isCompleted ? '#d4edda' : isActive ? '#cce5ff' : '#e2e3e5'};
-                    color: ${isCompleted ? '#155724' : isActive ? '#004085' : '#5b636b'};
-                ">
-                    ${isCompleted ? 'Terminé ✅' : match.isBye ? 'Qualifié ⚡' : 'En cours 🎯'}
-                </div>
-            </div>
-            
-            <div class="players" style="
-                font-weight: bold;
-                color: #2c3e50;
-                margin-bottom: ${match.isBye ? '0' : '18px'};
-                font-size: 16px;
-                text-align: center;
-            ">
-                ${match.player1Seed ? `#${match.player1Seed}` : ''} ${match.player1}
-                ${!match.isBye ? ` VS ${match.player2Seed ? `#${match.player2Seed}` : ''} ${match.player2}` : ''}
-            </div>
-            
-            ${match.isBye ? `
-                <div style="
-                    text-align: center;
-                    color: #087227;
-                    font-style: italic;
-                    padding: 10px;
-                ">
-                    Qualifié automatiquement
-                </div>
-            ` : `
-                <div class="score-container" style="
-                    margin-bottom: 15px;
-                    padding: 15px;
-                    background: #f8f9fa;
-                    border: 1px solid #dee2e6;
-                    border-radius: 8px;
-                ">
-                    ${window.showForfaitButtons ? 
-                        `<input type="text" value="${match.player1}" 
-                                onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
-                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
-                        : `<span class="player-name-left">${match.player1}</span>`}
-                    <div class="score-center">
-                        <input type="number"
-                               value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
-                               placeholder="0"
-                               min="0"
-                               max="30"
-                               onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
-                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="
-                                   width: 55px;
-                                   height: 45px;
-                                   text-align: center;
-                                   border: 2px solid #096cde;
-                                   border-radius: 8px;
-                                   font-size: 18px;
-                                   font-weight: bold;
-                                   background: white;
-                                   padding: 8px 4px;
-                               ">
-                        <span style="color: #495057; font-weight: bold; font-size: 16px;">-</span>
-                        <input type="number"
-                               value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
-                               placeholder="0"
-                               min="0"
-                               max="30"
-                               onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
-                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="
-                                   width: 55px;
-                                   height: 45px;
-                                   text-align: center;
-                                   border: 2px solid #096cde;
-                                   border-radius: 8px;
-                                   font-size: 18px;
-                                   font-weight: bold;
-                                   background: white;
-                                   padding: 8px 4px;
-                               ">
-                    </div>
-                    ${window.showForfaitButtons ? 
-                        `<input type="text" value="${match.player2}" 
-                                onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player2', this.value)"
-                                style="flex: 1; min-width: 80px; padding: 6px 10px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">`
-                        : `<span class="player-name-right">${match.player2}</span>`}
-                </div>
-                
-                <div class="match-result" style="
-                    text-align: center;
-                    padding: 10px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    background: ${isCompleted ? '#d4edda' : '#fff3cd'};
-                    color: ${isCompleted ? '#155724' : '#6c5103'};
-                    font-size: 14px;
-                ">
-                    ${isCompleted && match.winner ? `🏆 ${match.winner} gagne` : 'En attente des scores'}
-                </div>
-            `}
-        </div>
-    `;
-}
-
-// Remplacer la fonction existante
-window.generateManualMatchHTML = generateManualMatchHTMLImproved;
 
 // ======================================
 // VÉRIFICATION ET CORRECTION DU NOMBRE DE MATCHS

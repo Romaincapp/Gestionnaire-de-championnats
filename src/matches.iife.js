@@ -445,8 +445,7 @@
                             player1: player,
                             player2: 'BYE',
                             tour: tourIndex + 1,
-                            score1: 5,
-                            score2: 0,
+                            ...global.byeFieldsForDay(dayNumber, 5),
                             completed: true,
                             winner: player,
                             isBye: true
@@ -679,8 +678,7 @@
                                 player2: 'BYE',
                                 tour: tourIndex + 1,
                                 court: court,
-                                score1: 5,
-                                score2: 0,
+                                ...global.byeFieldsForDay(dayNumber, 5),
                                 completed: true,
                                 winner: player,
                                 isBye: true
@@ -990,7 +988,7 @@
                         
                         const score1 = match.score1 || 0;
                         const score2 = match.score2 || 0;
-                        const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}` : '';
+                        const collapsedSummary = match.completed ? `${match.player1} <span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span> ${match.player2}` : '';
 
                         html += `
                             <div class="match ${matchStatus}" data-match-id="d${dayNumber}-div${division}-m${globalIndex}" style="position: relative;">
@@ -1015,7 +1013,8 @@
                                                         onchange="editMatchPlayerName(${dayNumber}, ${division}, ${globalIndex}, 'player1', this.value)"
                                                         style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white;">` 
                                                 : `<span class="player-name-left">${match.player1}</span>`}
-                                            <div class="score-center">
+                                            ${global.renderSetScoreInputs('regular', dayNumber, division, globalIndex, match,
+                                                { onkeydown: `handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})` }) || `<div class="score-center">
                                                 <input type="number" class="score-input"
                                                        placeholder="0" min="0"
                                                        value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
@@ -1027,7 +1026,7 @@
                                                        value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
                                                        onchange="updateMatchScore(${dayNumber}, ${division}, ${globalIndex}, 'score2', this.value)"
                                                        onkeydown="handleEnterKey(event, ${dayNumber}, ${division}, ${globalIndex})">
-                                            </div>
+                                            </div>`}
                                             ${window.showForfaitButtons ? 
                                                 `<input type="text" class="player-name-input" value="${match.player2}" 
                                                         onchange="editMatchPlayerName(${dayNumber}, ${division}, ${globalIndex}, 'player2', this.value)"
@@ -1054,7 +1053,7 @@
                             const forfaitText = match.forfaitBy ? ' (forfait)' : '';
                             html += `
                                 <div class="match-result result-completed ${match.forfaitBy ? 'result-forfait' : ''}">
-                                    ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${forfaitText} (${score1}-${score2})
+                                    ${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} remporte le match${forfaitText} (${score1}-${score2}${global.setDetailSuffix(match)})
                                 </div>
                             `;
                         } else if (match.completed && match.winner === null) {
@@ -1192,11 +1191,7 @@
     }
     window.toggleMatchCollapse = toggleMatchCollapse;
 
-    function updateSetScore(dayNumber, division, matchIndex, setIndex, scoreField, value) {
-        championship.days[dayNumber].matches[division][matchIndex].sets[setIndex][scoreField] = value;
-        saveToLocalStorage();
-    }
-    window.updateSetScore = updateSetScore;
+    // Saisie set par set : updateSetScore() est dans scoring.iife.js
 
     function updateMatchScore(dayNumber, division, matchIndex, scoreField, value) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
@@ -1412,12 +1407,15 @@
 
     function handleEnterKey(event, dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
-        const shouldValidate = event.key === 'Enter' ||
+        // Mode sets : la grille gère Entrée (set suivant) et décide quand valider
+        const setsOutcome = global.handleSetsKeydown(event, match, dayNumber);
+        if (setsOutcome === 'handled') return;
+        const shouldValidate = setsOutcome === 'validate' || event.key === 'Enter' ||
                                (event.key === 'Tab' && match.score1 !== undefined && match.score1 !== '' &&
                                 match.score2 !== undefined && match.score2 !== '');
 
         if (shouldValidate) {
-            if (event.key === 'Tab' && (match.score1 === undefined || match.score1 === '' ||
+            if (setsOutcome !== 'validate' && event.key === 'Tab' && (match.score1 === undefined || match.score1 === '' ||
                                          match.score2 === undefined || match.score2 === '')) {
                 return; // Laisser Tab naviguer normalement si scores incomplets
             }
@@ -1504,7 +1502,7 @@
                 matchHeader.appendChild(playerNamesElement);
             }
             // Mettre à jour le contenu avec le format collapsed
-            playerNamesElement.innerHTML = `${match.player1} <span class="collapse-score">${score1}-${score2}</span> ${match.player2}`;
+            playerNamesElement.innerHTML = `${match.player1} <span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span> ${match.player2}`;
 
             // Créer ou mettre à jour le badge de statut
             let statusElement = matchHeader.querySelector('.match-status');
@@ -1527,7 +1525,7 @@
                 } else {
                     resultElement.className = 'match-result result-completed';
                 }
-                resultElement.textContent = `🏆 ${match.winner} remporte le match (${score1}-${score2})`;
+                resultElement.textContent = `🏆 ${match.winner} remporte le match (${score1}-${score2}${global.setDetailSuffix(match)})`;
             }
         } else {
             // Match non terminé - supprimer header et résultat s'ils existent
@@ -1568,42 +1566,11 @@
     function checkMatchCompletion(dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
 
-        // Si l'ancien format avec sets existe, le convertir
-        if (match.sets && !match.hasOwnProperty('score1')) {
-            let player1Sets = 0;
-            let player2Sets = 0;
-            match.sets.forEach((set) => {
-                if (set.player1Score !== '' && set.player2Score !== '') {
-                    const score1 = parseInt(set.player1Score);
-                    const score2 = parseInt(set.player2Score);
-                    if (score1 > score2) player1Sets++;
-                    else if (score2 > score1) player2Sets++;
-                }
-            });
-            match.score1 = player1Sets;
-            match.score2 = player2Sets;
-            delete match.sets;
-        }
+        // Ancien format tennisdetable (sets: [{player1Score, player2Score}]) → setScores, sans perte
+        if (global.migrateLegacySets) global.migrateLegacySets(match);
 
-        match.completed = false;
-        match.winner = null;
-
-        if (match.score1 !== '' && match.score2 !== '') {
-            const score1 = parseInt(match.score1);
-            const score2 = parseInt(match.score2);
-
-            if (score1 > score2) {
-                match.completed = true;
-                match.winner = match.player1;
-            } else if (score2 > score1) {
-                match.completed = true;
-                match.winner = match.player2;
-            } else {
-                // En cas d'égalité, le match est terminé mais sans vainqueur
-                match.completed = true;
-                match.winner = null;
-            }
-        }
+        // Règle de fin de match commune aux 3 contextes (voir scoring.iife.js)
+        global.applyMatchResult(match, global.getDayScoring(dayNumber));
     }
 
     // Déclarer un forfait pour un match (régulier, poule ou phase finale)
@@ -1641,15 +1608,9 @@
         match.forfaitBy = forfaitPlayer; // 'player1' ou 'player2'
         match.completed = true;
 
-        if (forfaitPlayer === 'player1') {
-            match.score1 = 0;
-            match.score2 = 5;
-            match.winner = match.player2;
-        } else {
-            match.score1 = 5;
-            match.score2 = 0;
-            match.winner = match.player1;
-        }
+        // 0-5 / 5-0 en mode 2 scores, 0-setsToWin en mode sets (voir scoring.iife.js)
+        global.assignResult(match, global.forfeitResult(global.getDayScoring(dayNumber), forfaitPlayer));
+        match.winner = forfaitPlayer === 'player1' ? match.player2 : match.player1;
 
         saveToLocalStorage();
 

@@ -9,7 +9,7 @@
 const { loadModules } = require('../helpers/loadApp');
 
 beforeAll(() => {
-    loadModules(['config', 'utils', 'notifications', 'state', 'export-print']);
+    loadModules(['config', 'utils', 'notifications', 'state', 'scoring', 'export-print']);
 });
 
 const m = (tour, n) => ({ matchId: `T${tour}-M${n}`, tour, player1: 'A', player2: 'B', type: 'Round-Robin' });
@@ -195,5 +195,29 @@ describe('Boccia vierges', () => {
             ['Tour 1 • Match N° 1', 'Tour 3 • Match N° 1', 'Tour 2 • Match N° 1', 'Tour 4 • Match N° 1'],
             ['Tour 1 • Match N° 2', 'Tour 3 • Match N° 2', 'Tour 2 • Match N° 2', 'Tour 4 • Match N° 2'],
         ]);
+    });
+});
+
+describe('format de score de la journée (2 scores / sets)', () => {
+    const recap = () => ({ 'Tour 1': [{ matchId: 'T1-M1', division: 1, player1: 'A', player2: 'B', tour: 1 }] });
+    const headers = html => [...new DOMParser().parseFromString(html, 'text/html').querySelectorAll('.matches-table th')]
+        .map(th => th.textContent.trim());
+
+    test('récapitulatif : colonnes « Score » en 2 scores, « Sets » en mode sets', () => {
+        championship.days = { 1: { matches: { 1: [] } } };
+        expect(headers(generateRecapByTourHTML(1, recap()))).toEqual(['Match', 'Joueur 1', 'Score', 'Score', 'Joueur 2']);
+
+        championship.days[1].scoring = { mode: 'sets', setsToWin: 2, pointsPerSet: 11 };
+        const html = generateRecapByTourHTML(1, recap());
+        expect(headers(html)).toEqual(['Match', 'Joueur 1', 'Sets', 'Sets', 'Joueur 2']);
+        expect(html).toContain('Sets gagnés (BO3 · 11 pts)');
+    });
+
+    test('feuille de match « avec sets » : une colonne par set du format', () => {
+        const match = { matchId: 'M1', division: 1, type: 'Round-Robin', tour: 1, player1: 'A', player2: 'B' };
+        const sets = html => [...new DOMParser().parseFromString(html, 'text/html').querySelectorAll('th')]
+            .map(th => th.textContent.trim()).filter(t => t.startsWith('SET'));
+        expect(sets(generateCompactMatchSheet(match))).toEqual(['SET 1', 'SET 2', 'SET 3']);
+        expect(sets(generateCompactMatchSheet(match, 5))).toEqual(['SET 1', 'SET 2', 'SET 3', 'SET 4', 'SET 5']);
     });
 });

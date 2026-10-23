@@ -13,6 +13,31 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ✨ Scores en sets
+- Nouveau sélecteur **« 🎯 Score »** dans la barre de chaque journée Matchs : 2 scores (comme
+  avant) ou **Sets** en BO3 / BO5 / BO7, avec points par set (11, 15, 21, 25 ou libres). Les
+  nouvelles journées reprennent le format de la précédente.
+- Saisie **set par set** dans les matchs par tours, les poules et la phase finale : Entrée
+  passe au set suivant, le match est validé dès qu'il est gagné, les sets inutiles sont grisés,
+  un set incomplet est signalé (sans blocage). Pas de match nul en sets.
+- BYE et forfaits suivent le format (2-0 en BO3, 3-0 en BO5…). La fenêtre « 🎯 Score du match
+  BYE » propose aussi les points de chaque set : 11-0, 11-5 ou Libre (sets gagnés seulement).
+- Classements (journée, général, poules, qualification, multisport) : après la différence de
+  sets, départage par la **différence de points de jeu** ; colonnes « Sets G/P », « Diff
+  sets », « Pts jeu ± ». Détail des sets dans les résultats (« 2-1 : 11-8 9-11 11-5 »), la
+  fiche joueur et le tableau final.
+- Feuilles de match imprimées « avec sets » : une colonne par set du format. Récapitulatifs
+  (par tour, terrain, poule) : colonnes « Sets » et mention « Sets gagnés (BO3 · 11 pts) ».
+- Import d'un export **tennisdetable** : les sets sont repris (la journée passe en BO3) au lieu
+  d'être réduits au nombre de sets gagnés ; un fichier sans configuration ne fait plus planter
+  l'ajout de journée.
+
+### 🐛 Corrections (scores)
+- BYE de poule en génération « nombre de matchs limité » : en mode sets, victoire 2-0 (BO3)
+  au lieu d'un 0-0 marqué gagné. En mode 2 scores, comportement inchangé.
+- Export HTML du classement général et pré-remplissage des poules depuis le classement :
+  `calculateGeneralRanking` n'était pas accessible depuis ces modules (erreur).
+
 ### 🎨 Apparence
 - « 🎯 Matchs ▾ » ouvre un menu déroulant sous le bouton (Round-Robin, Optimisé 4-10, Par terrain,
   Système suisse) au lieu d'une fenêtre au milieu de l'écran ; utilisable au clavier (flèches, Échap).

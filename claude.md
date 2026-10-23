@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A third, read-only **Multisport tab** appears automatically whenever the championship contains at least one day of each type (or at least one Chrono day) — it shows a combined ranking across both day types. There is no longer a global mode toggle.
 
-Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in 18 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
+Built with vanilla JavaScript, HTML, and CSS. No build system, no external dependencies. Runs entirely client-side with localStorage persistence. Logic lives in 19 IIFE modules under `src/` (see "File Structure" below) — `script.js` at the repo root is legacy and now only handles dark mode (37 lines).
 
 ## Running the Application
 
@@ -45,6 +45,8 @@ Single global `championship` object, keyed by day:
       dayType: 'championship' | 'chrono',   // per-day type, see above
       players: { [division]: [playerNames] },   // Championship-type day
       matches: { [division]: [matchObjects] },  // Championship-type day
+      scoring: { mode: 'simple' } |             // score format of the day (absent = simple),
+               { mode: 'sets', setsToWin: 2|3|4, pointsPerSet: 11|null },  // see "Score format" below
       pools: {                          // Optional, when pool mode enabled
         enabled: boolean,
         divisions: {
@@ -96,6 +98,28 @@ here has been removed — mode is now chosen per day via a type selector
 See issue #65 for the cleanup of the old global Chrono menu.
 - Each mode has its own localStorage key (or its own sub-object per day)
 - Each mode has its own save functions
+
+### 1 bis. Score format per day: 2 scores or sets (CRITICAL)
+
+Each Championship-type day has a score format (`day.scoring`, fallback `config.defaultScoring`,
+fallback `{mode:'simple'}`), chosen with the « 🎯 Score » selector in the day header and copied
+to new days by `addNewDay()`. Logic in `src/scoring.iife.js`.
+- **simple** (historical): `score1`/`score2`, draws allowed.
+- **sets** (best-of `2*setsToWin-1`): per-set detail in `match.setScores = [{s1, s2}, ...]`;
+  `score1`/`score2` hold **sets won** and are recomputed from `setScores`. No draws.
+
+Rules:
+- **Never write a winner/completion rule by hand**: call `applyMatchResult(match, getDayScoring(day))`
+  (the 3 completion functions already do). Never hardcode BYE/forfeit scores: use
+  `byeFieldsForDay()` / `forfeitResult()` (5-0 in simple mode, `setsToWin`-0 in sets mode).
+- `setScores` ≠ the legacy tennisdetable `sets: [{player1Score, player2Score}]`, which
+  `migrateLegacySets()` / `normalizeDayScoring()` convert on import and on localStorage load
+  (the day then becomes BO3 11 pts). The old code used to `delete match.sets` after
+  converting: never do that again, it loses the per-set detail.
+- Rankings: `pointsWon/pointsLost` = sets in sets mode, so goal average = set difference;
+  the next tiebreak is the game-point difference (`gamePointsWon/Lost`, `gamePointsDiff()`),
+  added after the goal-average comparison in every ranking sort (day, general, pools,
+  qualification, multisport day order).
 
 ### 2. Match Collection Pattern (CRITICAL)
 
@@ -392,9 +416,23 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 npm test                    # Jest suite (tests/unit/), jsdom environment
 npm run check:duplicates    # standalone duplicate-function-definition check
 npm run test:e2e            # end-to-end swimming day in a real browser (HEADED=1 to watch)
+npm run browser:start       # persistent browser session (one Chromium kept open, CDP on :9222) — see below
+npm run test:sets           # end-to-end set scores (BO3/BO5: rounds, pools, knockout, forfeit, ranking, print, tennisdetable import)
 ```
 
 `npm run test:e2e` (`tests/e2e/natation.e2e.js`, Playwright) replays a full swimming day through the real UI with the 150 real-format lines of `tests/fixtures/natation test 2.json` (names anonymised): add swimmers, create events, generate series, races (clicks, keyboard, undo, DNS, DISQ after finish, page reload mid-race), per-event ranking, second screens, export → re-import in a fresh browser, print. Not run in CI (needs a browser); run it after any change to the Chrono/swimming/ranking flow — its first run found 4 real bugs that 150+ unit tests had missed. Browser: `CHROME_PATH`, else `/opt/pw-browsers/chromium` (Claude Code sessions), else installed Google Chrome. Screenshots + report in `tests/e2e/output/` (gitignored).
+
+`npm run test:sets` (`tests/e2e/sets.e2e.js`, same harness) covers the set-score format: « 🎯 Score » selector, set-by-set entry with Enter, incomplete-set warning, forfeit, BO5 pool and knockout, ranking columns, printed sheets/recaps, tennisdetable import (no `config`), and a day left in 2-score mode. Run it after any change to `scoring.iife.js` or the score inputs/rankings. Output in `tests/e2e/output-sets/` (gitignored).
+
+**Browser tests: use the persistent session by default** (user's choice, 2026-10). Start it once with
+`npm run browser:start` (`scripts/dev-browser.sh`: one headless Chromium with remote debugging on
+port 9222, profile in `tests/e2e/output-devbrowser/`, idempotent), then run every browser test with
+`CDP_URL=http://127.0.0.1:9222` (e.g. `CDP_URL=http://127.0.0.1:9222 npm run test:sets`). All e2e
+scripts go through `openBrowser()` in `tests/e2e/screens.js`: with `CDP_URL` they connect to the
+session and open their own context (closed at the end; Chromium stays up), without it they launch
+their own browser as before (CI, a fresh machine). Ad-hoc checks (screenshots, manual scenarios)
+also connect with `chromium.connectOverCDP('http://127.0.0.1:9222')` instead of launching a browser.
+`npm run browser:stop` stops it.
 
 CI (`.github/workflows/tests.yml`) runs `npm ci` + `npm test` on every PR and every push to `main` — a red check there is a real regression, not something to merge around. `npm test` already includes the duplicate-function check (`noDuplicateFunctions.test.js`), so running `npm test` alone is enough day to day — `check:duplicates` is only useful for its more readable standalone CLI output when triaging a specific file.
 
@@ -459,6 +497,7 @@ order).
 │   ├── multisport.iife.js   # Per-day type selector, Multisport combined ranking, per-day Chrono UI (the largest, most-load-bearing module — ~3700 lines)
 │   ├── players.iife.js      # Player management (Championship-type days)
 │   ├── ui.iife.js           # Tabs/days, addNewDay/removeDay/clearDayData, Chrono↔raceData bridge (startChronoRaceForDay, saveRaceResultsToDay)
+│   ├── scoring.iife.js      # Score format per day (2 scores / sets best-of N), shared match-result rule, set-by-set input
 │   ├── matches.iife.js      # Match generation & scoring (Championship-type days)
 │   ├── pools.iife.js        # Pool system + knockout phases (largest file, ~7200 lines)
 │   ├── ranking.iife.js      # Championship rankings/statistics

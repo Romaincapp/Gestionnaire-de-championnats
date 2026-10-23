@@ -733,6 +733,72 @@ body   * {
             font-size: 14px;
             margin: 0 2px;
         }
+
+        /* Saisie set par set (journée en mode « Sets », voir scoring.iife.js) :
+           noms sur la 1re ligne, sets en dessous (sinon les noms disparaissent sur mobile) */
+        .set-scores:has(.set-score-grid),
+        .pool-match .score-container:has(.set-score-grid),
+        .manual-match .score-container:has(.set-score-grid) {
+            grid-template-columns: 1fr 1fr;
+            column-gap: 16px;
+        }
+
+        .set-scores .set-score-grid,
+        .pool-match .set-score-grid,
+        .manual-match .set-score-grid {
+            grid-column: 1 / -1;
+            grid-row: 2;
+            justify-self: center;
+        }
+
+        .set-score-grid {
+            flex-wrap: wrap;
+            row-gap: 6px;
+            column-gap: 8px;
+            max-width: 340px;
+        }
+
+        .set-score-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 2px 4px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+        }
+
+        .set-score-cell .set-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            margin-right: 2px;
+        }
+
+        .set-score-cell .score-separator {
+            margin: 0;
+        }
+
+        .set-score-cell.set-unused {
+            opacity: 0.45;
+        }
+
+        .set-score-cell.set-unused .score-input {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
+
+        .set-score-cell.set-warning {
+            border-color: #b9770e;
+            background: #fff6e5;
+        }
+
+        .sets-summary {
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--color-text);
+            min-width: 28px;
+            text-align: center;
+        }
         
         .match-result {
             margin-top: 8px;
@@ -2132,6 +2198,15 @@ body.dark-mode .set-disabled .score-input {
     border-color: #333;
 }
 
+body.dark-mode .set-score-cell.set-unused .score-input {
+    background: #1a1a2e;
+}
+
+body.dark-mode .set-score-cell.set-warning {
+    border-color: #e0a64b;
+    background: #3a2c12;
+}
+
 /* Players list header */
 body.dark-mode .players-list-header:hover {
     background: linear-gradient(135deg, #333350, #2a2a3d) !important;
@@ -2469,6 +2544,11 @@ html.dm-measuring *, html.dm-measuring *::before, html.dm-measuring *::after { t
 /* Barre « Mode » : le libellé ne se coupe pas */
 .day-type-selector > span:first-child {
     white-space: nowrap;
+}
+
+/* Barre « Mode » + « 🎯 Score » : passe à la ligne au lieu de déborder sur téléphone */
+.day-type-selector {
+    flex-wrap: wrap;
 }
 
 @media (max-width: 768px) {
