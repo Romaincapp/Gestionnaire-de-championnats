@@ -503,6 +503,8 @@ qu'une fonction "gagne".
 npm test                    # Suite Jest (tests/unit/), 180+ tests
 npm run check:duplicates    # Détection de doublons en CLI seule (déjà incluse dans npm test)
 npm run test:e2e            # Journée natation complète dans un vrai navigateur (HEADED=1 pour regarder)
+npm run browser:start       # Session navigateur persistante (un Chromium ouvert, port 9222) : à utiliser par défaut
+                            #   pour tous les tests navigateur avec CDP_URL=http://127.0.0.1:9222 (voir claude.md)
 npm run test:sets           # Scores en sets (BO3/BO5) : saisie, poule, phase finale, forfait, classement, impression, import tennisdetable
 npm run test:darkmode       # Audit du mode sombre : contraste de ~50 écrans/fenêtres dans un vrai navigateur
 npm run test:darkmode:mobile # Même audit sur un téléphone (390×844, tactile) + contenu qui déborde de l'écran

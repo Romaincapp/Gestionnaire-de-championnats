@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-23 — Session de navigateur persistante pour les tests
+
+- **Contexte** : demande de l'utilisateur d'utiliser par défaut une session de navigateur unique
+  (façon « dev-browser ») pour tous les tests en vrai navigateur.
+- **Fait** : `scripts/dev-browser.sh` (`npm run browser:start` / `browser:stop`) lance un Chromium
+  persistant (CDP port 9222, PID et profil dans `tests/e2e/output-devbrowser/`). `openBrowser()`
+  dans `tests/e2e/screens.js` : avec `CDP_URL`, les 6 scripts e2e s'y connectent (un contexte par
+  test), sinon lancement classique (CI inchangée). Règle ajoutée dans `claude.md`.
+- **Fichiers/modules touchés** : `scripts/dev-browser.sh`, `tests/e2e/*.e2e.js`, `tests/e2e/screens.js`,
+  `package.json`, `.gitignore`, `claude.md`, `AGENTS.md`
+- **Commit(s)** : branche `claude/intelligent-dijkstra-1e6wb9`
+- **Doc à jour ?** : CHANGELOG — (outillage) · AGENTS.md ✅ · TODO.md — · claude.md ✅
+
 ### 2026-10-20 — Scores en sets (best-of N) par journée
 
 - **Contexte** : préparer la fusion avec tennisdetable (scores en 3 sets) ; le gestionnaire ne

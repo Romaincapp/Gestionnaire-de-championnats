@@ -416,12 +416,23 @@ Multi-day content uses `generateDayContentHTML(dayNumber)` to ensure:
 npm test                    # Jest suite (tests/unit/), jsdom environment
 npm run check:duplicates    # standalone duplicate-function-definition check
 npm run test:e2e            # end-to-end swimming day in a real browser (HEADED=1 to watch)
+npm run browser:start       # persistent browser session (one Chromium kept open, CDP on :9222) — see below
 npm run test:sets           # end-to-end set scores (BO3/BO5: rounds, pools, knockout, forfeit, ranking, print, tennisdetable import)
 ```
 
 `npm run test:e2e` (`tests/e2e/natation.e2e.js`, Playwright) replays a full swimming day through the real UI with the 150 real-format lines of `tests/fixtures/natation test 2.json` (names anonymised): add swimmers, create events, generate series, races (clicks, keyboard, undo, DNS, DISQ after finish, page reload mid-race), per-event ranking, second screens, export → re-import in a fresh browser, print. Not run in CI (needs a browser); run it after any change to the Chrono/swimming/ranking flow — its first run found 4 real bugs that 150+ unit tests had missed. Browser: `CHROME_PATH`, else `/opt/pw-browsers/chromium` (Claude Code sessions), else installed Google Chrome. Screenshots + report in `tests/e2e/output/` (gitignored).
 
 `npm run test:sets` (`tests/e2e/sets.e2e.js`, same harness) covers the set-score format: « 🎯 Score » selector, set-by-set entry with Enter, incomplete-set warning, forfeit, BO5 pool and knockout, ranking columns, printed sheets/recaps, tennisdetable import (no `config`), and a day left in 2-score mode. Run it after any change to `scoring.iife.js` or the score inputs/rankings. Output in `tests/e2e/output-sets/` (gitignored).
+
+**Browser tests: use the persistent session by default** (user's choice, 2026-10). Start it once with
+`npm run browser:start` (`scripts/dev-browser.sh`: one headless Chromium with remote debugging on
+port 9222, profile in `tests/e2e/output-devbrowser/`, idempotent), then run every browser test with
+`CDP_URL=http://127.0.0.1:9222` (e.g. `CDP_URL=http://127.0.0.1:9222 npm run test:sets`). All e2e
+scripts go through `openBrowser()` in `tests/e2e/screens.js`: with `CDP_URL` they connect to the
+session and open their own context (closed at the end; Chromium stays up), without it they launch
+their own browser as before (CI, a fresh machine). Ad-hoc checks (screenshots, manual scenarios)
+also connect with `chromium.connectOverCDP('http://127.0.0.1:9222')` instead of launching a browser.
+`npm run browser:stop` stops it.
 
 CI (`.github/workflows/tests.yml`) runs `npm ci` + `npm test` on every PR and every push to `main` — a red check there is a real regression, not something to merge around. `npm test` already includes the duplicate-function check (`noDuplicateFunctions.test.js`), so running `npm test` alone is enough day to day — `check:duplicates` is only useful for its more readable standalone CLI output when triaging a specific file.
 

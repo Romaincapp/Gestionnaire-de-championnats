@@ -12,7 +12,7 @@
 // Captures d'écran et rapport : tests/e2e/output-sets/ (non versionné).
 // Code de sortie 1 si un contrôle échoue — à lancer avant une compétition en sets.
 // ============================================
-const { chromium } = require('playwright-core');
+const { openBrowser } = require('./screens');
 const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
@@ -70,7 +70,7 @@ const countSetHeaders = html => (html.match(/<th>SET \d<\/th>/g) || []).length;
 (async () => {
     fs.mkdirSync(OUT, { recursive: true });
     fs.readdirSync(OUT).forEach(f => fs.unlinkSync(path.join(OUT, f)));
-    const browser = await chromium.launch(launchOptions());
+    const browser = await openBrowser(launchOptions());
     const context = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
     const page = await context.newPage();
     const jsErrors = [];

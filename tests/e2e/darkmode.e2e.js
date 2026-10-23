@@ -17,10 +17,9 @@
 // Captures et rapport : tests/e2e/output-darkmode/. Code de sortie 1 si un
 // écran présente un défaut.
 // ============================================
-const { chromium } = require('playwright-core');
 const fs = require('fs');
 const path = require('path');
-const { ROOT, APP, launchOptions, prepareApp, readInfo, buildScreens } = require('./screens');
+const { ROOT, APP, openBrowser, prepareApp, readInfo, buildScreens } = require('./screens');
 
 // --mobile : téléphone (390×844, tactile, user-agent mobile) → les règles
 // @media (max-width: 768px) et les mises en page mobiles sont auditées.
@@ -199,7 +198,7 @@ function auditInPage(checkOverflow) {
 async function main() {
     fs.mkdirSync(OUT, { recursive: true });
     fs.readdirSync(OUT).forEach(f => fs.unlinkSync(path.join(OUT, f)));
-    const browser = await chromium.launch(launchOptions());
+    const browser = await openBrowser();
     const context = await browser.newContext(CONTEXT);
     const page = await context.newPage();
     const jsErrors = [];

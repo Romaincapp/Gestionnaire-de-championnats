@@ -12,7 +12,7 @@
 // Code de sortie 1 si un contrôle échoue — à lancer avant chaque compétition.
 // Voir DEVLOG.md (2026-09-24) : ce scénario a révélé 4 bugs réels.
 // ============================================
-const { chromium } = require('playwright-core');
+const { openBrowser } = require('./screens');
 const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
@@ -68,7 +68,7 @@ async function openFresh(browser) {
 (async () => {
     fs.mkdirSync(OUT, { recursive: true });
     fs.readdirSync(OUT).forEach(f => fs.unlinkSync(path.join(OUT, f)));
-    const browser = await chromium.launch(launchOptions());
+    const browser = await openBrowser(launchOptions());
     const { context, page, jsErrors, dialogs } = await openFresh(browser);
 
     const serieOf = (id) => state(page, (sid) => {

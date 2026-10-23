@@ -15,10 +15,9 @@
 // Rapport (défauts regroupés par couple couleur de texte / fond) :
 // tests/e2e/output-contrast/. Code de sortie 1 au moindre défaut.
 // ============================================
-const { chromium } = require('playwright-core');
 const fs = require('fs');
 const path = require('path');
-const { ROOT, APP, launchOptions, prepareApp, readInfo, buildScreens } = require('./screens');
+const { ROOT, APP, openBrowser, prepareApp, readInfo, buildScreens } = require('./screens');
 
 const MOBILE = process.argv.includes('--mobile') || !!process.env.MOBILE;
 const OUT = path.join(__dirname, MOBILE ? 'output-contrast-mobile' : 'output-contrast');
@@ -126,7 +125,7 @@ function auditContrast() {
 async function main() {
     fs.mkdirSync(OUT, { recursive: true });
     fs.readdirSync(OUT).forEach(f => fs.unlinkSync(path.join(OUT, f)));
-    const browser = await chromium.launch(launchOptions());
+    const browser = await openBrowser();
     const context = await browser.newContext(CONTEXT);
     const page = await context.newPage();
     page.on('dialog', d => d.accept(d.type() === 'prompt' ? d.defaultValue() : undefined));
