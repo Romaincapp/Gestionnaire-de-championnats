@@ -1630,6 +1630,8 @@ function exportGeneralRankingToHTML() {
 
     // Ajouter les classements par division
     const numDivisions = championship.config?.numberOfDivisions || 3;
+    const setsMode = window.generalSetsMode();
+    const setsHead = window.generalSetsHeaders(setsMode);
     for (let division = 1; division <= numDivisions; division++) {
         if (generalRanking.divisions[division].length === 0) continue;
 
@@ -1647,8 +1649,9 @@ function exportGeneralRankingToHTML() {
                             <th>Journées</th>
                             <th>V/N/D/F</th>
                             <th>% Vict.</th>
-                            <th>PP/PC</th>
-                            <th>Diff</th>
+                            <th>${setsHead.pp}</th>
+                            <th>${setsHead.diff}</th>
+                            ${setsHead.extra}
                         </tr>
                     </thead>
                     <tbody>
@@ -1666,6 +1669,7 @@ function exportGeneralRankingToHTML() {
                     <td>${player.avgWinRate}%</td>
                     <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
                     <td>${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
+                    ${window.generalSetsCells(player, setsMode)}
                 </tr>
             `;
         });
