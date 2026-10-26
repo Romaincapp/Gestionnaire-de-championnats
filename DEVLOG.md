@@ -33,6 +33,18 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Impression des classements : orientation au choix
+
+- **Quoi** : plus de `@page { size: A4 landscape }` imposé (PDF général, `rankingPrintCSS({landscape})`
+  des documents de `init.iife.js`) : Chrome/Edge ignoraient alors le choix Portrait/Paysage de la
+  fenêtre d'impression. `rankingPrintCSS()` (sans option) ajoute `@media print and (orientation:
+  portrait)` : tableaux resserrés (9 px, marges réduites, noms sur une ligne) pour que 9-10 colonnes
+  tiennent en portrait.
+- **Fichiers** : `src/utils.iife.js`, `src/ranking.iife.js`, `src/init.iife.js`,
+  `tests/unit/rankingPrintDocs.test.js`, `AGENTS.md`
+- **Vérifié** : PDF Chromium en A4 portrait et paysage (40 + 30 joueurs), lisibles.
+- **Tests** : `npm test` vert (517).
+
 ### 2026-10-26 — Impression des classements
 
 - **Quoi** : règles d'impression communes `rankingPrintCSS({landscape})` (`utils.iife.js`)

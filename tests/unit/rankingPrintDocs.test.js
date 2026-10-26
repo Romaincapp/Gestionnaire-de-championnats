@@ -44,8 +44,9 @@ test('règles d\'impression : tableaux sécables, en-tête répété, contrôles
     expect(css).toMatch(/thead \{ display: table-header-group/);
     expect(css).toMatch(/\.division[^{]*\{\s*break-inside: auto !important/);
     expect(css).toMatch(/print-color-adjust: exact/);
-    expect(css).not.toMatch(/@page/);
-    expect(rankingPrintCSS({ landscape: true })).toMatch(/@page \{ size: A4 landscape/);
+    // Pas de format imposé : Portrait / Paysage au choix dans la fenêtre d'impression
+    expect(css).not.toMatch(/[^-]size:/);
+    expect(css).toMatch(/@media print and \(orientation: portrait\)/);
 });
 
 test('export PDF du général : pas de cartes, résumé dans l\'en-tête', () => {
@@ -69,7 +70,7 @@ test('export HTML du général : fonctionne, sans cartes', () => {
     expect(html).not.toMatch(/stat-card|STATISTIQUES DU CHAMPIONNAT/);
     expect(html).toContain('1 journée · 2 matchs dont 1 terminé');
     expect(html).toContain('Alice');
-    expect(html).toContain('size: A4 landscape');
+    expect(html).not.toMatch(/size: A4/);
 });
 
 test('fenêtre de classement : règles d\'impression incluses', () => {

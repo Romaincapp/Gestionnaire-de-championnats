@@ -590,7 +590,7 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
-        ${window.rankingPrintCSS({ landscape: true })}
+        ${window.rankingPrintCSS()}
     </style>
 </head>
 <body>
@@ -1173,7 +1173,7 @@ function openCompleteRankingInNewWindow() {
             color: #2c3e50;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
-        ${window.rankingPrintCSS({ landscape: true })}
+        ${window.rankingPrintCSS()}
     </style>
 </head>
 <body>
@@ -1558,7 +1558,7 @@ function exportGeneralRankingToHTML() {
                     font-size: 14px;
                 }
                 .divisions { padding: 25px; }
-                ${window.rankingPrintCSS({ landscape: true })}
+                ${window.rankingPrintCSS()}
             </style>
         </head>
         <body>

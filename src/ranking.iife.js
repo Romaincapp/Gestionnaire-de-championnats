@@ -1791,11 +1791,6 @@ generalRanking.divisions[division].forEach((player, index) => {
                 }
                 
                 ${rankingPrintCSS()}
-
-                @page {
-                    margin: 1.5cm;
-                    size: A4 landscape;
-                }
             </style>
         </head>
         <body>
