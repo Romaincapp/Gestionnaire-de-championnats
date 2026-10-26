@@ -33,6 +33,23 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-27 — Colonne Épreuve dans le tableau ; fenêtre protégée contre les fermetures involontaires
+
+- **Colonne Épreuve** (tableau « Ajouter des participants ») : épreuve + temps d'engagement
+  (« 50m brasse 45.20 », exemple sur la 1re ligne seulement). Fiche enregistrée « Nom Prénom
+  Épreuve », comme une ligne de la Liste, lue par « 🏁 Séries automatiques ». Liste → Tableau :
+  une ligne de natation est découpée (nom / prénom / club connu / épreuve + temps,
+  `swimEventText`). Astuce ajoutée aussi dans l'onglet Tableau.
+- **Séries automatiques** (`chrono.iife.js`) : le club et la catégorie saisis à part sur la fiche
+  (`getSwimmingSourceInfo`) sont repris quand la ligne n'en donne pas : avant, seul un club
+  « connu » en tête de ligne était lu, et la catégorie était toujours vide.
+- **Fermeture protégée** : plus de fermeture au clic à côté de la fenêtre ; « Annuler » (et Échap,
+  qui clique ce bouton) demande confirmation si une saisie est en cours
+  (`cancelAddParticipantsModal`).
+- **Fichiers** : `src/multisport.iife.js`, `src/chrono.iife.js`, `styles.css`,
+  `tests/unit/bulkParticipantsTable.test.js`
+- **Tests** : `npm test` vert (553).
+
 ### 2026-10-27 — Astuce « Séries automatiques » dans « Ajouter des participants »
 
 - **Quoi** : sous la zone de texte de l'onglet « 📝 Liste », une astuce (`.bulk-tip`) : ajouter

@@ -20,6 +20,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   tableau découpe la liste en colonnes pour la vérifier. L'onglet choisi est gardé.
 - Astuce sous la liste : ajouter l'épreuve (et le temps d'engagement) en fin de ligne pour que
   « 🏁 Séries automatiques » crée les séries en un clic.
+- Colonne « Épreuve » dans le tableau (épreuve + temps d'engagement) : « 🏁 Séries automatiques »
+  s'en sert, et garde le club et la catégorie saisis dans le tableau.
+- La fenêtre ne se ferme plus si on clique à côté ; « Annuler » demande confirmation quand une
+  saisie est en cours.
 
 ### 👥 Liste des joueurs en tableau
 - Les joueurs de chaque division s'affichent dans un tableau (Joueur, Club) au lieu de pastilles.

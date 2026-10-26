@@ -3005,9 +3005,17 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
             return null;
         }
 
+        // Club et catégorie saisis à part (tableau « Ajouter des participants ») : repris
+        // quand la ligne elle-même n'en donne pas
+        var sourceInfo = getSwimmingSourceInfo(sourceDayNumber);
         sourceLines.forEach(function(name) {
             var entry = parseSwimmingEntry(name);
             if (entry) {
+                var info = sourceInfo[name];
+                if (info) {
+                    if (!entry.club && info.club) entry.club = info.club;
+                    if (info.category) entry.category = info.category;
+                }
                 parsed.push(entry);
             } else {
                 errors.push(name);
@@ -3176,7 +3184,7 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
                     name: displayName,
                     bib: bib,
                     club: entry.club,
-                    category: '',
+                    category: entry.category || '',
                     totalTime: null,
                     laps: 0,
                     swimImport: true,
@@ -3190,7 +3198,7 @@ window.generateSwimmingSeries = function(dayNumber, sourceDayNumber, lanesPerSer
                     id: pid,
                     bib: bib,
                     name: displayName,
-                    category: '',
+                    category: entry.category || '',
                     club: entry.club,
                     laps: [],
                     status: 'ready',
@@ -3490,6 +3498,19 @@ function splitSwimmingLine(line, sep) {
 }
 
 // Récupérer les lignes brutes de la journée source
+// Club / catégorie de chaque ligne source d'une journée Courses (champs de la fiche),
+// pour compléter ce que la ligne elle-même ne dit pas
+function getSwimmingSourceInfo(sourceDayNumber) {
+    var info = {};
+    var srcDay = championship.days[sourceDayNumber];
+    if (!srcDay || srcDay.dayType !== 'chrono') return info;
+    ((srcDay.chronoData && srcDay.chronoData.participants) || []).forEach(function(p) {
+        if (!p || p.swimImport || !p.name || info[p.name]) return;
+        if (p.club || p.category) info[p.name] = { club: p.club || '', category: p.category || '' };
+    });
+    return info;
+}
+
 function getSwimmingSourceLines(sourceDayNumber) {
     var lines = [];
     var srcDay = championship.days[sourceDayNumber];

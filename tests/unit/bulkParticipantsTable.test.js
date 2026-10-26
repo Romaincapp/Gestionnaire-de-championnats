@@ -33,10 +33,10 @@ test('par défaut : onglet Liste (zone de texte), tableau masqué', () => {
     expect(document.getElementById('bulk-participants-1')).not.toBeNull();
 });
 
-test('tableau : colonnes Nom, Prénom, Club, Catégorie ; une ligne s\'ajoute en remplissant la dernière', () => {
+test('tableau : colonnes Nom, Prénom, Club, Catégorie, Épreuve ; une ligne s\'ajoute en remplissant la dernière', () => {
     window.setBulkParticipantsMode(1, 'table');
     expect([...document.querySelectorAll('#bulk-grid-1 thead th')].map(th => th.textContent.trim()))
-        .toEqual(['#', 'Nom', 'Prénom', 'Club', 'Catégorie', 'Retirer']);
+        .toEqual(['#', 'Nom', 'Prénom', 'Club', 'Catégorie', 'Épreuve', 'Retirer']);
     expect(rows()).toHaveLength(5);
     for (let i = 0; i < 5; i++) type(cell(i, 'nom'), 'N' + i);
     expect(rows()).toHaveLength(6);
@@ -103,4 +103,57 @@ test('astuce de la Liste : épreuve (et temps) en fin de ligne → « 🏁 Séri
     expect(tip.textContent).toMatch(/Séries automatiques/);
     const example = tip.querySelector('em').textContent;
     expect(window.parseSwimmingEntry(example)).toBeTruthy();
+});
+
+describe('colonne Épreuve et séries automatiques', () => {
+    test('la fiche porte « Nom Prénom Épreuve » ; « 🏁 Séries automatiques » reprend club et catégorie du tableau', () => {
+        cd().events.push({ id: 1, name: '50m brasse', series: [] });
+        cd().nextEventId = 2;
+        window.setBulkParticipantsMode(1, 'table');
+        type(cell(0, 'nom'), 'Dupont'); type(cell(0, 'prenom'), 'Jean'); type(cell(0, 'club'), 'USBW');
+        type(cell(0, 'category'), 'Solo'); type(cell(0, 'event'), '50m brasse 45.20');
+        type(cell(1, 'nom'), 'Martin'); type(cell(1, 'prenom'), 'Pierre'); // sans épreuve
+        window.saveBulkParticipantsForDay(1);
+        expect(cd().participants.map(p => p.name)).toEqual(['Dupont Jean 50m Brasse 45.20', 'Martin Pierre']);
+
+        window.generateSwimmingSeries(1, 1, 5);
+        const fiche = cd().participants.find(p => p.swimImport);
+        expect([fiche.name, fiche.club, fiche.category, fiche.seedTimeMs]).toEqual(['Dupont Jean', 'USBW', 'Solo', 45200]);
+        const inSerie = cd().events[0].series[0].participants[0];
+        expect([inSerie.name, inSerie.club, inSerie.category]).toEqual(['Dupont Jean', 'USBW', 'Solo']);
+    });
+
+    test('Liste → Tableau : une ligne de natation est découpée (nom, prénom, épreuve + temps)', () => {
+        document.getElementById('bulk-participants-1').value = 'Dupont Jean 50m brasse 45.20\nMartin Pierre 100m libre 1:02.50';
+        window.setBulkParticipantsMode(1, 'table');
+        const v = (i) => ['nom', 'prenom', 'event'].map(c => cell(i, c).value);
+        expect(v(0)).toEqual(['Dupont', 'Jean', '50m brasse 45.20']);
+        expect(v(1)).toEqual(['Martin', 'Pierre', '100m libre 1:02.50']);
+    });
+});
+
+describe('fermeture protégée', () => {
+    test('un clic à côté ne ferme plus la fenêtre', () => {
+        const backdrop = document.querySelector('#addParticipantsModal-1 > div');
+        expect(backdrop.hasAttribute('onclick')).toBe(false);
+        backdrop.click();
+        expect(document.getElementById('addParticipantsModal-1')).not.toBeNull();
+    });
+
+    test('« Annuler » avec une saisie en cours : confirmation (refusée → la saisie reste)', () => {
+        document.getElementById('bulk-participants-1').value = 'Dupont Jean';
+        window.confirm = jest.fn(() => false);
+        expect(window.cancelAddParticipantsModal(1)).toBe(false);
+        expect(document.getElementById('addParticipantsModal-1')).not.toBeNull();
+        window.confirm = jest.fn(() => true);
+        expect(window.cancelAddParticipantsModal(1)).toBe(true);
+        expect(document.getElementById('addParticipantsModal-1')).toBeNull();
+    });
+
+    test('« Annuler » sans saisie : ferme sans rien demander', () => {
+        window.confirm = jest.fn(() => true);
+        window.cancelAddParticipantsModal(1);
+        expect(window.confirm).not.toHaveBeenCalled();
+        expect(document.getElementById('addParticipantsModal-1')).toBeNull();
+    });
 });
