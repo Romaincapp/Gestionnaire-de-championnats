@@ -238,23 +238,17 @@
                     </h2>
                     
                     <div id="multisport-hub-content">
-                        <div class="multisport-info" style="background: linear-gradient(135deg, #5267d0 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                            <p style="margin: 0; font-size: 14px;">
+                        <div class="multisport-info">
+                            <p>
                                 🎯 Ce classement combine les journées <strong>Matchs</strong> et <strong>Courses</strong> sur un barème commun.
                                 <br>🏅 Chaque journée : la position au classement rapporte <strong>25 pts au 1er, 19 au 2ème, 17, 15, 12, 10, 8, 6, 4, 2</strong> (0 au-delà). Pour les matchs, le barème s'applique <strong>par division</strong>.
                             </p>
                         </div>
                         
-                        <div class="control-buttons" style="margin-bottom: 30px; flex-wrap: wrap; gap: 8px;">
-                            <button class="btn btn-warning" onclick="updateMultisportRanking()" style="padding: 8px 12px; font-size: 13px;">
-                                🔄 Mettre à jour
-                            </button>
-                            <button class="btn" onclick="openMultisportRankingInNewWindow()" style="background: linear-gradient(135deg, #9654b1, #8e44ad); color: white; padding: 8px 12px; font-size: 13px;">
-                                📺 Afficher
-                            </button>
-                            <button class="btn btn-success" onclick="exportMultisportRanking()" style="padding: 8px 12px; font-size: 13px;">
-                                📊 Exporter JSON
-                            </button>
+                        <div class="ranking-actions">
+                            <button class="ranking-action-btn primary" onclick="updateMultisportRanking()">🔄 Mettre à jour</button>
+                            <button class="ranking-action-btn" onclick="openMultisportRankingInNewWindow()">📺 Afficher</button>
+                            <button class="ranking-action-btn" onclick="exportMultisportRanking()">📊 Exporter JSON</button>
                         </div>
                     </div>
                     

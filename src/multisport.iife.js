@@ -2189,17 +2189,15 @@
 
     // Onglet Multisport d'une compétition 100 % natation
     function renderEventRankingsPanel() {
-        var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
-        html += '<div style="background: #057e68; color: white; padding: 20px;">';
-        html += '<h2 style="margin: 0; text-align: center;">🏊 Classement par épreuve</h2>';
-        html += '<p style="margin: 10px 0 0 0; text-align: center; opacity: 0.9;">Toutes les séries d\'une même épreuve regroupées, classées au temps</p>';
+        var html = '<div class="multisport-ranking">';
+        html += '<h3 style="margin: 0 0 4px 0; color: #2c3e50;">🏊 Classement par épreuve</h3>';
+        html += '<p style="margin: 0 0 15px 0; color: #586566; font-size: 14px;">Toutes les séries d\'une même épreuve regroupées, classées au temps</p>';
+        html += '<div style="padding: 0 0 15px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">';
+        html += '<button class="ranking-action-btn" onclick="showNameHarmonizationModal()">🔤 Harmoniser les noms</button>';
+        html += '<button class="ranking-action-btn" onclick="normalizeAllNamesCase()">Aa Normaliser la casse</button>';
+        html += '<button class="ranking-action-btn" onclick="printGeneralRanking()">🖨️ Imprimer</button>';
         html += '</div>';
-        html += '<div style="padding: 12px 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #ecf0f1; background: #fbfbfd;">';
-        html += '<button onclick="showNameHarmonizationModal()" style="padding: 8px 14px; font-size: 13px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔤 Harmoniser les noms</button>';
-        html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #057e68; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
-        html += '<button onclick="printGeneralRanking()" style="padding: 8px 14px; font-size: 13px; background: #34495e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🖨️ Imprimer</button>';
-        html += '</div>';
-        html += '<div style="padding: 15px;">' + buildEventRankingsHTML() + '</div>';
+        html += '<div>' + buildEventRankingsHTML() + '</div>';
         html += '</div>';
         return html;
     }
@@ -2220,17 +2218,15 @@
             return a.chronoTime - b.chronoTime;
         });
 
-        var html = '<div class="multisport-ranking" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
-        html += '<div style="background: linear-gradient(135deg, #5267d0 0%, #764ba2 100%); color: white; padding: 20px;">';
-        html += '<h2 style="margin: 0; text-align: center; color: white;">🏆 ' + (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses') + '</h2>';
-        html += '<p style="margin: 10px 0 0 0; text-align: center;">' + (mixed ? 'Matchs + Courses (points)' : 'Courses — distance &amp; temps') + '</p>';
-        html += '</div>';
+        var html = '<div class="multisport-ranking">';
+        html += '<h3 style="margin: 0 0 4px 0; color: #2c3e50;">🏆 ' + (mixed ? 'Classement Général Multisport' : 'Classement Général des Courses') + '</h3>';
+        html += '<p style="margin: 0 0 15px 0; color: #586566; font-size: 14px;">' + (mixed ? 'Matchs + Courses (points)' : 'Courses — distance &amp; temps') + '</p>';
 
         // Barre d'outils : harmonisation des noms
-        html += '<div style="padding: 12px 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #ecf0f1; background: #fbfbfd;">';
-        html += '<button onclick="showNameHarmonizationModal()" style="padding: 8px 14px; font-size: 13px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔤 Harmoniser les noms</button>';
-        html += '<button onclick="normalizeAllNamesCase()" style="padding: 8px 14px; font-size: 13px; background: #057e68; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Aa Normaliser la casse</button>';
-        html += '<button onclick="printGeneralRanking()" style="padding: 8px 14px; font-size: 13px; background: #34495e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🖨️ Imprimer</button>';
+        html += '<div style="padding: 0 0 15px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">';
+        html += '<button class="ranking-action-btn" onclick="showNameHarmonizationModal()">🔤 Harmoniser les noms</button>';
+        html += '<button class="ranking-action-btn" onclick="normalizeAllNamesCase()">Aa Normaliser la casse</button>';
+        html += '<button class="ranking-action-btn" onclick="printGeneralRanking()">🖨️ Imprimer</button>';
         html += '<span style="font-size: 12px; color: #586566;">Harmoniser : fusionne les variantes d\'un nom. Normaliser : majuscule à chaque mot.</span>';
         html += '</div>';
 
@@ -2245,22 +2241,22 @@
             if (mixed) {
                 html += '<th style="padding: 15px; text-align: center;">🎾 Matchs</th>';
                 html += '<th style="padding: 15px; text-align: center;">⏱️ Courses</th>';
-                html += '<th style="padding: 15px; text-align: center; background: #e8f4f8; color: #1a2b3c;">Total</th>';
+                html += '<th style="padding: 15px; text-align: center;">Total</th>';
             } else {
                 html += '<th style="padding: 15px; text-align: center;">📏 Distance</th>';
                 html += '<th style="padding: 15px; text-align: center;">⏱️ Temps total</th>';
-                html += '<th style="padding: 15px; text-align: center; background: #e8f4f8;">Séries</th>';
+                html += '<th style="padding: 15px; text-align: center;">Séries</th>';
             }
             html += '</tr></thead><tbody>';
 
             sorted.forEach(function(stat, index) {
                 var rankClass = index < 3 ? 'rank-' + (index + 1) : '';
-                var rowStyle = index % 2 === 0 ? 'background: white;' : 'background: #f8f9fa;';
-                var clubBadge = stat.club ? '<span style="background: linear-gradient(135deg, #5267d0, #764ba2); color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px;">' + stat.club + '</span>' : '-';
+                var rowStyle = '';
+                var clubBadge = stat.club ? stat.club : '-';
 
                 html += '<tr class="' + rankClass + '" style="' + rowStyle + ' border-bottom: 1px solid #ecf0f1;">';
                 html += '<td style="padding: 15px; text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
-                html += '<td style="padding: 15px; font-weight: bold; color: #2c3e50;">' +
+                html += '<td style="padding: 15px; text-align: left; font-weight: bold; color: #2c3e50;">' +
                     '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(stat.player) + '\')" ' +
                     'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
                     'title="Voir le détail des épreuves">' + stat.player + ' 🔍</span></td>';
@@ -2274,13 +2270,13 @@
                     html += '<span style="font-weight: bold; color: #9c5003;">' + stat.chronoPoints + ' pts</span>';
                     html += '<br><small style="color: #586566; font-size: 11px;">' + stat.chronoSeries + ' séries</small>';
                     html += '</td>';
-                    html += '<td style="padding: 15px; text-align: center; background: #e8f4f8; font-size: 1.2em;">';
-                    html += '<strong style="color: #017239;">' + stat.totalPoints + '</strong>';
+                    html += '<td style="padding: 15px; text-align: center; font-size: 1.2em;">';
+                    html += '<strong style="color: #2c3e50;">' + stat.totalPoints + '</strong>';
                     html += '</td>';
                 } else {
                     html += '<td style="padding: 15px; text-align: center; font-weight: bold; color: #08689d;">' + formatDistance(stat.chronoDistance) + '</td>';
                     html += '<td style="padding: 15px; text-align: center; font-family: monospace; color: #9c5003;">' + (stat.chronoTime ? formatDurationHMS(stat.chronoTime) : '-') + '</td>';
-                    html += '<td style="padding: 15px; text-align: center; background: #e8f4f8;"><strong style="color: #017239;">' + stat.chronoSeries + '</strong></td>';
+                    html += '<td style="padding: 15px; text-align: center;"><strong>' + stat.chronoSeries + '</strong></td>';
                 }
                 html += '</tr>';
             });
