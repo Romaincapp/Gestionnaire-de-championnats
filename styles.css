@@ -448,7 +448,7 @@ body   * {
         .player-table .pt-name { font-weight: 600; cursor: pointer; }
         .player-table .pt-name:hover { text-decoration: underline; }
         .player-table .pt-club { color: var(--color-text-muted); }
-        .player-table .pt-muted { color: #9aa5b1; }
+        .player-table .pt-muted { color: var(--color-text-muted); }
         .player-table .pt-actions { width: 40px; text-align: right; }
 
         .pt-menu-btn {
@@ -517,7 +517,7 @@ body   * {
             white-space: nowrap;
         }
         .pt-sort:hover { background: #e9edf1; color: var(--color-text); }
-        .pt-sort-icon { font-size: 11px; color: #9aa5b1; }
+        .pt-sort-icon { font-size: 11px; color: var(--color-text-muted); }
         th[aria-sort="ascending"] .pt-sort-icon,
         th[aria-sort="descending"] .pt-sort-icon { color: var(--color-text); }
 
@@ -525,6 +525,69 @@ body   * {
         .pt-hide-bib [data-col="bib"],
         .pt-hide-club [data-col="club"],
         .pt-hide-info [data-col="info"] { display: none; }
+
+        /* Fenêtre « Ajouter des participants » : onglets Liste / Tableau et grille éditable */
+        .bulk-mode-tabs {
+            display: inline-flex;
+            gap: 2px;
+            padding: 3px;
+            margin: 6px 0 10px;
+            background: #eef1f4;
+            border-radius: 8px;
+        }
+        .bulk-mode-tab {
+            border: none;
+            background: transparent;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .bulk-mode-tab.active {
+            background: white;
+            color: var(--color-text);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+        .bulk-grid-scroll {
+            max-height: 45vh;
+            overflow: auto;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+        }
+        .bulk-grid { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .bulk-grid th {
+            position: sticky; top: 0; z-index: 1;
+            background: #fafbfc;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            padding: 6px 8px;
+            border-bottom: 1px solid #e3e8ee;
+        }
+        .bulk-grid td { padding: 3px 4px; border-bottom: 1px solid #eef1f4; }
+        .bulk-grid input {
+            width: 100%;
+            min-width: 90px;
+            box-sizing: border-box;
+            padding: 6px 8px;
+            font-size: 13px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--color-text);
+        }
+        .bulk-grid input:hover { border-color: #e3e8ee; }
+        .bulk-grid input:focus { border-color: var(--color-primary); background: white; outline: none; }
+        .bulk-grid .bulk-grid-num { width: 28px; text-align: right; color: var(--color-text-muted); font-size: 12px; padding-right: 6px; }
+        .bulk-grid .bulk-grid-del { width: 30px; text-align: center; }
+        .bulk-grid .bulk-grid-del button {
+            border: none; background: transparent; color: var(--color-text-muted);
+            font-size: 16px; width: 26px; height: 26px; border-radius: 4px; cursor: pointer;
+        }
+        .bulk-grid .bulk-grid-del button:hover { background: #fdecea; color: var(--color-danger); }
 
         .pt-sr-only {
             position: absolute;
@@ -1999,6 +2062,16 @@ body.dark-mode .pt-bulk-delete { color: #ff8a80; }
 body.dark-mode .pt-sort:hover { background: #34344a; color: #fff; }
 body.dark-mode th[aria-sort="ascending"] .pt-sort-icon,
 body.dark-mode th[aria-sort="descending"] .pt-sort-icon { color: #e0e0e0; }
+body.dark-mode .bulk-mode-tabs { background: #2a2a3d; }
+body.dark-mode .bulk-mode-tab { color: #b8bec6; }
+body.dark-mode .bulk-mode-tab.active { background: #3a3a50; color: #fff; }
+body.dark-mode .bulk-grid-scroll { border-color: #44445a; }
+body.dark-mode .bulk-grid th { background: #2a2a3d; color: #b8bec6; border-color: #3a3a50; }
+body.dark-mode .bulk-grid td { border-color: #3a3a50; }
+body.dark-mode .bulk-grid input { color: #e0e0e0; }
+body.dark-mode .bulk-grid input:hover { border-color: #44445a; }
+body.dark-mode .bulk-grid input:focus { background: #252538; }
+body.dark-mode .bulk-grid .bulk-grid-del button:hover { background: #4a2a2a; color: #ff8a80; }
 body.dark-mode .pt-club-input { background: #252538; border-color: #44445a; color: #e0e0e0; }
 body.dark-mode .player-table .pt-info { color: #b8bec6; }
 body.dark-mode .player-table .pt-bib { color: #f0c24b; }

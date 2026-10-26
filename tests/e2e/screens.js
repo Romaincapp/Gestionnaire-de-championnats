@@ -131,6 +131,7 @@ function buildScreens(page, info) {
         ['modal-chrono-modifier-epreuve', call(`switchTab(2); editEventForDay(2, ${JSON.stringify(info.event)})`)],
         ['modal-chrono-serie', call(`switchTab(2); showAddSerieModalForDayAndEvent(2, ${JSON.stringify(info.event)})`)],
         ['modal-chrono-participants-manuel', call('switchTab(2); showAddParticipantManualModal(2)')],
+        ['modal-chrono-participants-tableau', call("switchTab(2); showAddParticipantManualModal(2); setBulkParticipantsMode(2, 'table', true)")],
         ['modal-chrono-modifier-participant', call(`switchTab(2); editParticipantInfo(2, ${JSON.stringify(info.participant)})`)],
         ['modal-chrono-gerer-participants', call(`switchTab(2); manageSerieParticipants(2, ${JSON.stringify(info.serie)})`)],
         ['modal-chrono-saisie-resultats', call(`switchTab(2); enterSerieResults(2, ${JSON.stringify(info.serie2)})`)],

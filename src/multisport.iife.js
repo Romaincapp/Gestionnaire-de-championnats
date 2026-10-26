@@ -1079,25 +1079,56 @@
     }
 
     /**
-     * Affiche une modal pour ajouter plusieurs participants (bulk)
+     * Fenêtre « ➕ Ajouter des participants » : deux façons de saisir.
+     * - 📝 Liste : une ligne par participant (Nom · Nom, Club · Dossard + Nom).
+     * - 📊 Tableau : colonnes Nom / Prénom / Club / Catégorie à contrôler une à une ;
+     *   une ligne s'ajoute quand on remplit la dernière, un collage depuis un tableur
+     *   (lignes + tabulations) se répartit dans les cellules. Passer de la liste au
+     *   tableau découpe la liste en colonnes. Dernier mode choisi gardé (navigateur).
      */
+    var BULK_MODE_KEY = 'addParticipantsMode';
+    var BULK_COLUMNS = [
+        { key: 'nom', label: 'Nom' },
+        { key: 'prenom', label: 'Prénom' },
+        { key: 'club', label: 'Club' },
+        { key: 'category', label: 'Catégorie' }
+    ];
+
     function showAddParticipantManualModal(dayNumber) {
         if (document.getElementById('addParticipantsModal-' + dayNumber)) return;
-        
+        var mode = 'list';
+        try { if (localStorage.getItem(BULK_MODE_KEY) === 'table') mode = 'table'; } catch (e) { /* ignore */ }
+
+        var tab = function(key, label) {
+            return '<button type="button" role="tab" id="bulk-tab-' + key + '-' + dayNumber + '" class="bulk-mode-tab" ' +
+                'aria-controls="bulk-panel-' + key + '-' + dayNumber + '" onclick="setBulkParticipantsMode(' + dayNumber + ', \'' + key + '\')">' + label + '</button>';
+        };
+
         var modal = document.createElement('div');
         modal.id = 'addParticipantsModal-' + dayNumber;
-        modal.innerHTML = 
+        modal.innerHTML =
             '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeAddParticipantsModal(' + dayNumber + ')">' +
-            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
+            '<div class="bulk-participants-dialog" style="background: white; padding: 30px; border-radius: 10px; width: 92%; max-height: 85vh; overflow-y: auto;">' +
             '<h3>➕ Ajouter des participants - Journée ' + dayNumber + '</h3>' +
+            '<div class="bulk-mode-tabs" role="tablist" aria-label="Mode de saisie">' + tab('list', '📝 Liste') + tab('table', '📊 Tableau') + '</div>' +
+            // Panneau Liste (saisie historique)
+            '<div id="bulk-panel-list-' + dayNumber + '" role="tabpanel" aria-labelledby="bulk-tab-list-' + dayNumber + '">' +
             '<p style="color: #586566; font-size: 13px;">Entrez les noms (un par ligne). Formats acceptés : Nom · Nom, Club · Dossard + Nom (séparés par tabulation ou virgule, colonnes en trop ignorées)</p>' +
             '<div style="margin: 15px 0;">' +
             '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\n1\tGringos 1\n2\tGringos 2\n..."></textarea>' +
+            '</div></div>' +
+            // Panneau Tableau
+            '<div id="bulk-panel-table-' + dayNumber + '" role="tabpanel" aria-labelledby="bulk-tab-table-' + dayNumber + '" hidden>' +
+            '<p style="color: #586566; font-size: 13px;">Une ligne par participant. Une nouvelle ligne s\'ajoute quand vous remplissez la dernière ; vous pouvez aussi coller un bloc copié depuis un tableur (Nom, Prénom, Club, Catégorie).</p>' +
+            '<div class="bulk-grid-scroll"><table class="bulk-grid" id="bulk-grid-' + dayNumber + '"><thead><tr><th class="bulk-grid-num">#</th>' +
+            BULK_COLUMNS.map(function(c) { return '<th>' + c.label + '</th>'; }).join('') +
+            '<th class="bulk-grid-del"><span class="pt-sr-only">Retirer</span></th></tr></thead><tbody></tbody></table></div>' +
+            '<button type="button" class="ranking-action-btn" style="margin-top: 8px;" onclick="addBulkGridRow(' + dayNumber + ', null, true)">➕ Ligne</button>' +
             '</div>' +
-            '<div style="margin-bottom: 15px;">' +
-            '<label style="font-size: 12px; color: #555; display: block; margin-bottom: 4px;">Catégorie (optionnel — appliquée à tous les participants ci-dessus)</label>' +
+            '<div style="margin: 15px 0;">' +
+            '<label for="bulk-participants-category-' + dayNumber + '" style="font-size: 12px; color: #555; display: block; margin-bottom: 4px;">Catégorie par défaut (optionnel — pour les participants sans catégorie)</label>' +
             '<input type="text" id="bulk-participants-category-' + dayNumber + '" list="categoryList-' + dayNumber + '" placeholder="ex: Solo, Équipe..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">' +
             buildCategoryDatalist(dayNumber) +
             '</div>' +
@@ -1105,14 +1136,138 @@
             '<button onclick="closeAddParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
             '<button onclick="saveBulkParticipantsForDay(' + dayNumber + ')" class="btn btn-primary">💾 Ajouter</button>' +
             '</div></div></div>';
-        
+
         document.body.appendChild(modal);
-        
-        // Focus sur le textarea
-        setTimeout(function() {
-            var textarea = document.getElementById('bulk-participants-' + dayNumber);
-            if (textarea) textarea.focus();
-        }, 100);
+        setBulkParticipantsMode(dayNumber, mode, true);
+    }
+
+    // Change d'onglet. Liste → Tableau : la liste saisie est découpée dans le tableau
+    // (s'il est encore vide) pour pouvoir contrôler chaque colonne.
+    function setBulkParticipantsMode(dayNumber, mode, initial) {
+        ['list', 'table'].forEach(function(key) {
+            var t = document.getElementById('bulk-tab-' + key + '-' + dayNumber);
+            var panel = document.getElementById('bulk-panel-' + key + '-' + dayNumber);
+            if (t) { t.setAttribute('aria-selected', String(key === mode)); t.classList.toggle('active', key === mode); }
+            if (panel) panel.hidden = key !== mode;
+        });
+        var dialog = document.querySelector('#addParticipantsModal-' + dayNumber + ' .bulk-participants-dialog');
+        if (dialog) dialog.style.maxWidth = mode === 'table' ? '760px' : '500px';
+        if (!initial) { try { localStorage.setItem(BULK_MODE_KEY, mode); } catch (e) { /* ignore */ } }
+
+        if (mode === 'table') {
+            var rows = bulkGridRows(dayNumber);
+            if (!rows.some(bulkRowFilled)) {
+                var textarea = document.getElementById('bulk-participants-' + dayNumber);
+                var parsed = textarea ? textarea.value.split('\n').map(parseBulkParticipantLine).filter(Boolean) : [];
+                var tbody = document.querySelector('#bulk-grid-' + dayNumber + ' tbody');
+                if (tbody) tbody.innerHTML = '';
+                parsed.forEach(function(p) {
+                    var split = splitNomPrenom(p.name);
+                    addBulkGridRow(dayNumber, { nom: split.nom, prenom: split.prenom, club: p.club, category: '' });
+                });
+                // Toujours quelques lignes vides prêtes à remplir
+                var empty = Math.max(1, 5 - parsed.length);
+                for (var i = 0; i < empty; i++) addBulkGridRow(dayNumber);
+            }
+            var first = document.querySelector('#bulk-grid-' + dayNumber + ' tbody input');
+            if (first) setTimeout(function() { first.focus(); }, 50);
+        } else {
+            var ta = document.getElementById('bulk-participants-' + dayNumber);
+            if (ta) setTimeout(function() { ta.focus(); }, 50);
+        }
+    }
+
+    // « Dupont Jean » → Nom Dupont, Prénom Jean ; « Van Der Berg Jean » → Nom Van Der Berg ;
+    // un nom d'équipe (« Gringos - Julien ») ou un seul mot reste entier dans Nom.
+    function splitNomPrenom(full) {
+        var name = String(full || '').trim();
+        if (!name || / - /.test(name) || name.indexOf(' ') === -1) return { nom: name, prenom: '' };
+        var i = name.lastIndexOf(' ');
+        return { nom: name.slice(0, i), prenom: name.slice(i + 1) };
+    }
+
+    function bulkGridRows(dayNumber) {
+        return Array.prototype.slice.call(document.querySelectorAll('#bulk-grid-' + dayNumber + ' tbody tr'));
+    }
+
+    function bulkRowValues(tr) {
+        var v = {};
+        BULK_COLUMNS.forEach(function(c) {
+            var input = tr.querySelector('input[data-col="' + c.key + '"]');
+            v[c.key] = input ? input.value.trim() : '';
+        });
+        return v;
+    }
+
+    function bulkRowFilled(tr) {
+        var v = bulkRowValues(tr);
+        return !!(v.nom || v.prenom || v.club || v.category);
+    }
+
+    function renumberBulkGrid(dayNumber) {
+        bulkGridRows(dayNumber).forEach(function(tr, i) {
+            tr.querySelector('.bulk-grid-num').textContent = i + 1;
+            BULK_COLUMNS.forEach(function(c) {
+                var input = tr.querySelector('input[data-col="' + c.key + '"]');
+                if (input) input.setAttribute('aria-label', c.label + ', ligne ' + (i + 1));
+            });
+            var del = tr.querySelector('.bulk-grid-del button');
+            if (del) del.setAttribute('aria-label', 'Retirer la ligne ' + (i + 1));
+        });
+    }
+
+    function addBulkGridRow(dayNumber, values, focus) {
+        var tbody = document.querySelector('#bulk-grid-' + dayNumber + ' tbody');
+        if (!tbody) return null;
+        values = values || {};
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td class="bulk-grid-num"></td>' + BULK_COLUMNS.map(function(c) {
+            return '<td><input type="text" data-col="' + c.key + '" value="' + escapeLaneHtml(values[c.key] || '') + '"' +
+                (c.key === 'category' ? ' list="categoryList-' + dayNumber + '"' : '') +
+                ' oninput="onBulkGridInput(' + dayNumber + ', this)" onpaste="onBulkGridPaste(' + dayNumber + ', event)"></td>';
+        }).join('') +
+            '<td class="bulk-grid-del"><button type="button" title="Retirer la ligne" onclick="removeBulkGridRow(' + dayNumber + ', this)">×</button></td>';
+        tbody.appendChild(tr);
+        renumberBulkGrid(dayNumber);
+        if (focus) tr.querySelector('input').focus();
+        return tr;
+    }
+
+    function removeBulkGridRow(dayNumber, button) {
+        var tr = button.closest('tr');
+        if (tr) tr.remove();
+        if (bulkGridRows(dayNumber).length === 0) addBulkGridRow(dayNumber);
+        renumberBulkGrid(dayNumber);
+    }
+
+    // Remplir la dernière ligne en ajoute une nouvelle, vide
+    function onBulkGridInput(dayNumber, input) {
+        var rows = bulkGridRows(dayNumber);
+        var tr = input.closest('tr');
+        if (tr === rows[rows.length - 1] && bulkRowFilled(tr)) addBulkGridRow(dayNumber);
+    }
+
+    // Collage d'un bloc (lignes / tabulations) : réparti à partir de la cellule visée
+    function onBulkGridPaste(dayNumber, event) {
+        var text = (event.clipboardData || window.clipboardData || { getData: function() { return ''; } }).getData('text') || '';
+        if (text.indexOf('\n') === -1 && text.indexOf('\t') === -1) return; // simple texte : collage normal
+        event.preventDefault();
+        var lines = text.replace(/\r/g, '').split('\n');
+        while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+        var startTr = event.target.closest('tr');
+        var startCol = BULK_COLUMNS.findIndex(function(c) { return c.key === event.target.dataset.col; });
+        var rows = bulkGridRows(dayNumber);
+        var rowIndex = rows.indexOf(startTr);
+        lines.forEach(function(line, i) {
+            var tr = bulkGridRows(dayNumber)[rowIndex + i] || addBulkGridRow(dayNumber);
+            line.split('\t').forEach(function(cell, j) {
+                var col = BULK_COLUMNS[startCol + j];
+                if (!col) return;
+                tr.querySelector('input[data-col="' + col.key + '"]').value = cell.trim();
+            });
+        });
+        var last = bulkGridRows(dayNumber);
+        if (bulkRowFilled(last[last.length - 1])) addBulkGridRow(dayNumber);
     }
 
     function closeAddParticipantsModal(dayNumber) {
@@ -1120,91 +1275,107 @@
         if (modal) modal.remove();
     }
 
-    function saveBulkParticipantsForDay(dayNumber) {
-        var textarea = document.getElementById('bulk-participants-' + dayNumber);
-        if (!textarea || !textarea.value.trim()) {
-            showNotification('Veuillez entrer au moins un nom', 'warning');
-            return;
+    // Une ligne de la saisie « Liste » → { bib, name, club }. Formats : « Nom »,
+    // « Nom, Club », « Dossard, Nom, … » / « Dossard<TAB>Nom<TAB>… » (colonnes en
+    // trop ignorées), ligne natation (nom + distance + temps) gardée entière.
+    function parseBulkParticipantLine(line) {
+        line = String(line || '').trim();
+        if (!line) return null;
+        var parts;
+        if (line.indexOf('\t') !== -1) {
+            parts = line.split('\t').map(function(p) { return p.trim(); });
+        } else {
+            parts = line.split(',').map(function(p) { return p.trim(); });
         }
-        
+        while (parts.length > 1 && !parts[parts.length - 1]) parts.pop();
+
+        var bib = null, name, club = '';
+        if (/\b\d{2,4}\s*(?:m[eè]tres?|m)\b/i.test(line)) {
+            // Ligne de natation (nom + distance + temps) : garder la ligne entière
+            // pour l'import « Séries natation », sans couper « 32,50 » ni les
+            // colonnes d'un collage Excel. Un dossard en tête est mis de côté.
+            name = line.replace(/\t+/g, ' ').replace(/\s+/g, ' ').trim();
+            var lead = name.match(/^(\d+)\s+(?!m\b|m[eè]tres?\b)(?=\D)/i);
+            if (lead) {
+                bib = parseInt(lead[1], 10);
+                name = name.slice(lead[0].length);
+            }
+        } else if (parts.length >= 2 && /^\d+$/.test(parts[0])) {
+            bib = parseInt(parts[0], 10);
+            name = parts[1];
+        } else {
+            name = parts[0];
+            club = parts[1] || '';
+        }
+        name = toTitleCase(name);
+        return name ? { bib: bib, name: name, club: club } : null;
+    }
+
+    function saveBulkParticipantsForDay(dayNumber) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
 
         var categoryInput = document.getElementById('bulk-participants-category-' + dayNumber);
-        var category = categoryInput ? categoryInput.value.trim() : '';
+        var defaultCategory = categoryInput ? categoryInput.value.trim() : '';
+        var tablePanel = document.getElementById('bulk-panel-table-' + dayNumber);
+        var useTable = tablePanel && !tablePanel.hidden;
 
-        var lines = textarea.value.trim().split('\n');
+        var entries;
+        if (useTable) {
+            entries = bulkGridRows(dayNumber).map(bulkRowValues).filter(function(v) { return v.nom || v.prenom; }).map(function(v) {
+                return {
+                    bib: null,
+                    name: toTitleCase((v.nom + ' ' + v.prenom).trim()),
+                    club: v.club,
+                    category: v.category || defaultCategory
+                };
+            });
+        } else {
+            var textarea = document.getElementById('bulk-participants-' + dayNumber);
+            entries = (textarea ? textarea.value.split('\n') : []).map(parseBulkParticipantLine).filter(Boolean)
+                .map(function(e) { e.category = defaultCategory; return e; });
+        }
+        if (entries.length === 0) {
+            showNotification(useTable ? 'Remplissez au moins un nom dans le tableau' : 'Veuillez entrer au moins un nom', 'warning');
+            return;
+        }
+
         var added = 0;
         var skipped = 0;
-        
-        lines.forEach(function(line) {
-            line = line.trim();
-            if (!line) return;
-
-            // Formats acceptés : "Nom", "Nom, Club", ou "Dossard, Nom, ..." /
-            // "Dossard<TAB>Nom<TAB>..." (colonnes en trop, ex: catégorie, ignorées)
-            var parts;
-            if (line.indexOf('\t') !== -1) {
-                parts = line.split('\t').map(function(p) { return p.trim(); });
-            } else {
-                parts = line.split(',').map(function(p) { return p.trim(); });
-            }
-            while (parts.length > 1 && !parts[parts.length - 1]) parts.pop();
-
-            var bib = null, name, club = '';
-            if (/\b\d{2,4}\s*(?:m[eè]tres?|m)\b/i.test(line)) {
-                // Ligne de natation (nom + distance + temps) : garder la ligne entière
-                // pour l'import « Séries natation », sans couper « 32,50 » ni les
-                // colonnes d'un collage Excel. Un dossard en tête est mis de côté.
-                name = line.replace(/\t+/g, ' ').replace(/\s+/g, ' ').trim();
-                var lead = name.match(/^(\d+)\s+(?!m\b|m[eè]tres?\b)(?=\D)/i);
-                if (lead) {
-                    bib = parseInt(lead[1], 10);
-                    name = name.slice(lead[0].length);
-                }
-            } else if (parts.length >= 2 && /^\d+$/.test(parts[0])) {
-                // Dossard, Nom, [Club/Catégorie ignorée]
-                bib = parseInt(parts[0], 10);
-                name = parts[1];
-            } else {
-                // Nom, [Club]
-                name = parts[0];
-                club = parts[1] || '';
-            }
-            name = toTitleCase(name);
-
-            if (!name) return;
-
-            // Vérifier si existe déjà
+        entries.forEach(function(e) {
             var exists = chronoData.participants.some(function(p) {
-                return p.name.toLowerCase() === name.toLowerCase();
+                return p.name.toLowerCase() === e.name.toLowerCase();
             });
-
-            if (!exists) {
-                chronoData.participants.push({
-                    id: chronoData.nextParticipantId++,
-                    name: name,
-                    club: club,
-                    category: category,
-                    bib: bib != null ? bib : chronoData.participants.length + 1,
-                    totalTime: null,
-                    laps: 0
-                });
-                added++;
-            } else {
-                skipped++;
-            }
+            if (exists) { skipped++; return; }
+            chronoData.participants.push({
+                id: chronoData.nextParticipantId++,
+                name: e.name,
+                club: e.club || '',
+                category: e.category || '',
+                bib: e.bib != null ? e.bib : chronoData.participants.length + 1,
+                totalTime: null,
+                laps: 0
+            });
+            added++;
         });
-        
+
         saveToLocalStorage();
         closeAddParticipantsModal(dayNumber);
         refreshChronoDisplay(dayNumber);
-        
+
         var msg = added + ' participant(s) ajouté(s)';
         if (skipped > 0) msg += ' (' + skipped + ' doublon(s) ignoré(s))';
         showNotification(msg, 'success');
     }
-    
+
+    global.setBulkParticipantsMode = setBulkParticipantsMode;
+    global.addBulkGridRow = addBulkGridRow;
+    global.removeBulkGridRow = removeBulkGridRow;
+    global.onBulkGridInput = onBulkGridInput;
+    global.onBulkGridPaste = onBulkGridPaste;
+    global.parseBulkParticipantLine = parseBulkParticipantLine;
+    global.splitNomPrenom = splitNomPrenom;
+
     function showAddToSerieModal(dayNumber, participantId) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;

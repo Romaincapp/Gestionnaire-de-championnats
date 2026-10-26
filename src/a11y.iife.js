@@ -147,10 +147,12 @@
         });
     }
 
-    // Bouton de fermeture de la fenêtre : ×/✕ d'abord, puis Fermer/Annuler.
+    // Bouton de fermeture de la fenêtre : ×/✕ d'abord, puis Fermer/Annuler. Un « × » dans
+    // une cellule de tableau retire une ligne (ex. grille « Ajouter des participants ») :
+    // ce n'est pas la fermeture de la fenêtre, il est ignoré.
     function findCloseControl(dialog) {
         var controls = Array.prototype.filter.call(dialog.querySelectorAll('button, [onclick], [role="button"]'), function(el) {
-            return el !== dialog && isShown(el);
+            return el !== dialog && isShown(el) && !el.closest('td, th');
         });
         var text = function(el) { return el.textContent.replace(/\s+/g, ' ').trim(); };
         return controls.find(function(el) { return CLOSE_SYMBOL.test(text(el)); }) ||
