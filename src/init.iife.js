@@ -1481,7 +1481,7 @@ function exportGeneralRankingToHTML() {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Classement Général du Championnat</title>
+            <title>${window.escapeDocText(window.rankingDocTitle())}</title>
             <style>
                 body {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -1499,16 +1499,7 @@ function exportGeneralRankingToHTML() {
                     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
                     overflow: hidden;
                 }
-                .header {
-                    background: linear-gradient(135deg, #2c3e50, #34495e);
-                    color: white;
-                    padding: 25px;
-                    text-align: center;
-                }
-                .header h1 {
-                    font-size: 2.5rem;
-                    margin-bottom: 10px;
-                }
+                ${window.rankingDocHeaderCSS()}
                 .division {
                     background: white;
                     border-radius: 12px;
@@ -1563,14 +1554,11 @@ function exportGeneralRankingToHTML() {
         </head>
         <body>
             <div class="container">
-                <div class="header">
-                    <h1>🏆 CLASSEMENT GÉNÉRAL DU CHAMPIONNAT</h1>
-                    <p>${window.championshipSummaryText(generalStats)} · Généré le ${new Date().toLocaleDateString('fr-FR', {
-                        year: 'numeric', month: 'long', day: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                    })}</p>
-                </div>
                 <div class="divisions">
+                ${window.rankingDocHeaderHTML(`${window.championshipSummaryText(generalStats)} · Généré le ${new Date().toLocaleDateString('fr-FR', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                })}`)}
     `;
 
     // Ajouter les classements par division
