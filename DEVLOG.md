@@ -33,6 +33,14 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Classement général : « 📤 Exporter ▾ »
+
+- **Quoi** : les boutons « 📊 JSON », « 📄 PDF » et « 📄 HTML » de l'onglet Classement général sont
+  regroupés dans un seul bouton « 📤 Exporter ▾ » (menu `toggleActionMenu` : PDF, HTML, JSON).
+- **Ajout** (`ranking.iife.js`) : `toggleGeneralExportMenu(bouton)`.
+- **Fichiers** : `index.html`, `src/ranking.iife.js`, `tests/unit/rankingPrintDocs.test.js`
+- **Vérifié** : Chromium (menu, « PDF » ouvre la fenêtre d'export). **Tests** : `npm test` vert (539).
+
 ### 2026-10-26 — Impression : chaque division sur une nouvelle page
 
 - **Quoi** : dans les classements imprimés, un titre de division pouvait rester seul en bas de

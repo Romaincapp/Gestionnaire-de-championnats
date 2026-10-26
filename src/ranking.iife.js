@@ -704,6 +704,16 @@ playerStats.forEach((player, index) => {
                 })();
                 <\/script>`;
     }
+    // « 📤 Exporter ▾ » du classement général : PDF, HTML et JSON dans un seul menu
+    function toggleGeneralExportMenu(button) {
+        window.toggleActionMenu('generalExportMenu', button, 'Exporter le classement général', [
+            { icon: '📄', label: 'PDF', hint: 'Aperçu à imprimer ou enregistrer en PDF', onclick: 'exportGeneralRankingToPDF()' },
+            { icon: '🌐', label: 'HTML', hint: 'Page web à partager', onclick: 'exportGeneralRankingToHTML()' },
+            { icon: '📊', label: 'JSON', hint: 'Données du classement', onclick: 'exportGeneralRanking()' }
+        ], 'general');
+    }
+    window.toggleGeneralExportMenu = toggleGeneralExportMenu;
+
     window.rankingDocTitle = rankingDocTitle;
     window.escapeDocText = escapeDocText;
     window.saveRankingTitle = saveRankingTitle;
