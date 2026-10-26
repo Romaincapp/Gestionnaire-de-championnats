@@ -18,6 +18,8 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   à côté de la liste : colonnes Nom, Prénom, Club, Catégorie, une ligne par participant (une
   nouvelle ligne s'ajoute toute seule, collage possible depuis Excel). Passer de la liste au
   tableau découpe la liste en colonnes pour la vérifier. L'onglet choisi est gardé.
+- Astuce sous la liste : ajouter l'épreuve (et le temps d'engagement) en fin de ligne pour que
+  « 🏁 Séries automatiques » crée les séries en un clic.
 
 ### 👥 Liste des joueurs en tableau
 - Les joueurs de chaque division s'affichent dans un tableau (Joueur, Club) au lieu de pastilles.

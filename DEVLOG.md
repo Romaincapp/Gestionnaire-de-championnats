@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-27 — Astuce « Séries automatiques » dans « Ajouter des participants »
+
+- **Quoi** : sous la zone de texte de l'onglet « 📝 Liste », une astuce (`.bulk-tip`) : ajouter
+  l'épreuve en fin de ligne, et même le temps d'engagement (ex. « Dupont Jean 50m brasse 45.20 »),
+  pour que « 🏁 Séries automatiques » crée les séries en un clic. Test : l'exemple est compris par
+  `parseSwimmingEntry`.
+- **Fichiers** : `src/multisport.iife.js`, `styles.css`, `tests/unit/bulkParticipantsTable.test.js`
+- **Tests** : `npm test` vert (548).
+
 ### 2026-10-27 — « ➕ Ajouter des participants » : onglet Tableau
 
 - **Quoi** : la fenêtre (journée Courses) propose deux onglets (`role="tablist"`) : « 📝 Liste »

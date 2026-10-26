@@ -550,6 +550,15 @@ body   * {
             color: var(--color-text);
             box-shadow: 0 1px 3px rgba(0,0,0,0.12);
         }
+        .bulk-tip {
+            margin: -6px 0 0;
+            padding: 8px 10px;
+            font-size: 12px;
+            color: var(--color-text);
+            background: #f0f6fb;
+            border-left: 3px solid var(--color-primary);
+            border-radius: 6px;
+        }
         .bulk-grid-scroll {
             max-height: 45vh;
             overflow: auto;
@@ -2062,6 +2071,7 @@ body.dark-mode .pt-bulk-delete { color: #ff8a80; }
 body.dark-mode .pt-sort:hover { background: #34344a; color: #fff; }
 body.dark-mode th[aria-sort="ascending"] .pt-sort-icon,
 body.dark-mode th[aria-sort="descending"] .pt-sort-icon { color: #e0e0e0; }
+body.dark-mode .bulk-tip { background: #23324a; color: #e0e0e0; }
 body.dark-mode .bulk-mode-tabs { background: #2a2a3d; }
 body.dark-mode .bulk-mode-tab { color: #b8bec6; }
 body.dark-mode .bulk-mode-tab.active { background: #3a3a50; color: #fff; }
