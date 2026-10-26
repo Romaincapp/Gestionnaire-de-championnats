@@ -18,6 +18,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   Un bouton « ⋯ » au bout de chaque ligne ouvre Modifier / Détails / Supprimer.
 - Cases à cocher pour sélectionner plusieurs joueurs (ou tous) et les supprimer en une fois ;
   champ de filtre pour retrouver un joueur.
+- Même tableau pour les « Participants disponibles » des journées Courses (dossard, club,
+  épreuve · série · couloir). « ⋯ » : Modifier, Ajouter à une série, Retirer de la liste. Les
+  actions groupées (club, série, retrait) apparaissent dès qu'une ligne est cochée.
+- Corrigé : la hauteur de la liste des participants agrandie à la souris n'était pas toujours gardée.
 
 ### 🖨️ Impression des classements
 - Onglet Classement général : fond jaune remplacé par la présentation sobre du classement de journée.

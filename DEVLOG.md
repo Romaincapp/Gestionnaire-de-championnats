@@ -33,6 +33,28 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Participants des journées Courses en tableau
+
+- **Quoi** : « 👥 Participants disponibles » passe au même tableau que la liste des joueurs
+  (classes `.player-table*`, sélection / filtre de `players.iife.js`) : colonnes sélection, `#`
+  (dossard), Participant (ligne d'origine en info-bulle, badge « ⚠️ non placée »), Club,
+  « Épreuve · série · couloir » (si au moins une fiche en a), « ⋯ ». Menu « ⋯ »
+  (`openParticipantRowMenu`) : Modifier (édition dans la ligne, une cellule `colspan`),
+  Ajouter à une série (remplace le « + »), Retirer de la liste. Barre d'outils : filtre, puis,
+  dès qu'une ligne est cochée, club à affecter + « 🏷️ Affecter aux cochés », « ➕ Ajouter à une
+  série », « 🗑️ Retirer de la liste (n) » (`.pt-needs-selection`, généralisé dans
+  `refreshPlayerTableSelection`). Ancienne case « Tout » → case de l'en-tête. Liste toujours
+  agrandissable (en-tête collant), pied « n sur N sélectionné ».
+- **Nouveau** : `removeParticipantsFromPool(day, ids)` / `removeSelectedParticipants(day)` — retire
+  des fiches de la liste (une confirmation) ; séries, résultats et classements inchangés.
+- **Bug corrigé** : la hauteur de la liste n'était pas gardée si la souris était relâchée hors de
+  la liste (poignée tirée sous le bas de la fenêtre) → `watchParticipantsListResize` écoute le
+  relâchement sur toute la fenêtre dès l'appui.
+- **Fichiers** : `src/multisport.iife.js`, `src/players.iife.js`, `styles.css`,
+  `tests/unit/participantsListInfo.test.js`, `tests/unit/addToGeneratedSerie.test.js`,
+  `tests/e2e/natation.e2e.js`
+- **Vérifié** : `npm run test:e2e` (natation complète) vert. **Tests** : `npm test` vert (532).
+
 ### 2026-10-26 — Liste des joueurs en tableau (data table)
 
 - **Quoi** : les pastilles bleues des joueurs (`.player-tag`, boutons ✏️ / ×) sont remplacées, par

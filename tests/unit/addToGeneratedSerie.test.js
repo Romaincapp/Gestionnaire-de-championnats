@@ -11,7 +11,7 @@
 const { loadModules, DEFAULT_ORDER } = require('../helpers/loadApp');
 
 beforeAll(() => {
-    loadModules(DEFAULT_ORDER);
+    loadModules([...DEFAULT_ORDER, 'init']);
 });
 
 const NAMES = ['Alice Martin', 'Bruno Petit', 'Chloe Durand', 'David Leroy', 'Emma Roux', 'Farid Nour',
@@ -64,9 +64,14 @@ test('données de départ : Série 2 = dossards 6 à 10, couloirs 1 à 5', () =>
 });
 
 describe('Participants disponibles', () => {
-    test('après une génération natation seule : « + » et « ➕ Ajouter à une série » présents', () => {
+    test('après une génération natation seule : « Ajouter à une série » (menu « ⋯ » et sélection) présent', () => {
         const zoeRow = document.getElementById('participant-row-1-' + pool('Zoe Late').id);
-        expect(zoeRow.querySelector('button[onclick^="showAddToSerieModal"]')).not.toBeNull();
+        zoeRow.querySelector('.pt-menu-btn').click();
+        const item = Array.from(document.querySelectorAll('#participantRowMenu [role="menuitem"]'))
+            .find(b => b.textContent.includes('Ajouter à une série'));
+        expect(item).toBeDefined();
+        expect(item.getAttribute('onclick')).toContain('showAddToSerieModal(1, ' + pool('Zoe Late').id + ')');
+        window.closeActionMenu(false);
         expect(zoeRow.textContent).not.toContain('Créez une série');
         expect(document.querySelector('button[onclick="showBulkAddToSerieModal(1)"]')).not.toBeNull();
     });

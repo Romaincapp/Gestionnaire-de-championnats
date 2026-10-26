@@ -514,25 +514,18 @@
         if (participants.length === 0) {
             html += '<p style="color: #566566; font-size: 12px; text-align: center; margin: 0; padding: 15px;">Aucun participant encore. Ajoutez-en avec le formulaire ci-dessus, ou importez depuis une autre journée avec 📥 Importer.</p>';
         } else {
-            // Barre d'affectation de club aux participants cochés
+            // Tableau façon « data table » (mêmes classes et fonctions de sélection / filtre
+            // que la liste des joueurs, players.iife.js) : sélection, dossard, participant,
+            // club, épreuve·série·couloir et menu « ⋯ » par ligne. Les actions groupées
+            // (club, série, retrait) apparaissent dès qu'une ligne est cochée.
             var clubSet = {};
             if (window.clubsModule && window.clubsModule.getClubsList) {
                 window.clubsModule.getClubsList().forEach(function(c) { clubSet[c] = true; });
             }
             participants.forEach(function(p) { if (p.club) clubSet[p.club] = true; });
             var datalistOptions = Object.keys(clubSet).sort().map(function(c) {
-                return '<option value="' + c + '">';
+                return '<option value="' + escapeLaneHtml(c) + '">';
             }).join('');
-
-            html += '<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; padding: 8px; background: #fef9e7; border-radius: 6px;">';
-            html += '<input list="clubs-datalist-' + dayNumber + '" id="assign-club-input-' + dayNumber + '" placeholder="Club à affecter" style="flex: 1; min-width: 140px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
-            html += '<datalist id="clubs-datalist-' + dayNumber + '">' + datalistOptions + '</datalist>';
-            html += '<button onclick="assignClubToSelected(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #9c5003; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">🏷️ Affecter aux cochés</button>';
-            if (hasSeries) {
-                html += '<button onclick="showBulkAddToSerieModal(' + dayNumber + ')" style="padding: 6px 12px; font-size: 12px; background: #017239; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">➕ Ajouter à une série</button>';
-            }
-            html += '<label style="font-size: 11px; color: #586566; cursor: pointer; white-space: nowrap;"><input type="checkbox" onchange="toggleAllParticipants(' + dayNumber + ', this.checked)" style="vertical-align: middle;"> Tout</label>';
-            html += '</div>';
 
             // Après « 🏁 Séries automatiques » : une fiche par inscription. Infos de chaque
             // fiche (épreuve, engagement, série, couloir) et lignes non placées en tête.
@@ -543,54 +536,65 @@
                 if (typeof global.parseSwimmingEntry === 'function' && !global.parseSwimmingEntry(p.name)) {
                     return 'Non placée : ligne non comprise par « 🏁 Séries automatiques » (distance ou nage manquante ?)';
                 }
-                return 'Non placée : aucune épreuve ne correspond (ou ajouté après la génération) — « + » pour l\'ajouter à une série';
+                return 'Non placée : aucune épreuve ne correspond (ou ajouté après la génération) — « ⋯ » puis « Ajouter à une série »';
             };
             var ordered = participants.map(function(p) { return { p: p, unplaced: unplacedReason(p) }; });
             ordered.sort(function(a, b) { return (b.unplaced ? 1 : 0) - (a.unplaced ? 1 : 0); }); // stable
+            var anyInfo = false;
+            var rowsHtml = ordered.map(function(item) {
+                var p = item.p;
+                var info = participantEntryInfo(p, chronoData, placement);
+                if (info) anyInfo = true;
+                return { item: item, info: info };
+            }).map(function(r) {
+                var p = r.item.p;
+                var name = escapeLaneHtml(p.name || '');
+                var row = '<tr id="participant-row-' + dayNumber + '-' + p.id + '" data-name="' + name + '"' + (r.item.unplaced ? ' class="pt-warning"' : '') + '>';
+                row += '<td class="pt-select"><input type="checkbox" class="participant-check-' + dayNumber + '" value="' + p.id + '" aria-label="Sélectionner ' + name + '" onchange="onPlayerRowSelect(this)"></td>';
+                row += '<td class="pt-bib">' + (p.bib != null ? escapeLaneHtml(p.bib) : '<span class="pt-muted">—</span>') + '</td>';
+                row += '<td class="pt-name pt-plain"><span' + (p.swimRaw ? ' title="' + escapeLaneHtml('Ligne d\'origine : ' + p.swimRaw) + '"' : '') + '>' + name + '</span>';
+                if (r.item.unplaced) {
+                    row += ' <span class="participant-unplaced pt-badge" title="' + escapeLaneHtml(r.item.unplaced) + '">⚠️ non placée</span>';
+                }
+                row += '</td>';
+                row += '<td class="pt-club">' + (p.club ? escapeLaneHtml(p.club) : '<span class="pt-muted">—</span>') + '</td>';
+                if (anyInfo) {
+                    row += '<td class="pt-info">' + (r.info ? '<span class="participant-entry-info">' + escapeLaneHtml(r.info) + '</span>' : '') + '</td>';
+                }
+                row += '<td class="pt-actions"><button type="button" class="pt-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Actions pour ' + name + '" title="Actions" ' +
+                    'onclick="openParticipantRowMenu(this, ' + dayNumber + ', ' + p.id + ')">⋯</button></td>';
+                return row + '</tr>';
+            }).join('');
+
+            html += '<div class="player-table-wrap participant-table-wrap" data-day="' + dayNumber + '">';
+            html += '<div class="pt-toolbar">';
+            html += '<input type="search" class="pt-filter" placeholder="Filtrer les participants…" aria-label="Filtrer les participants" oninput="filterPlayerTable(this)">';
+            html += '<input class="pt-needs-selection pt-club-input" hidden list="clubs-datalist-' + dayNumber + '" id="assign-club-input-' + dayNumber + '" placeholder="Club à affecter" aria-label="Club à affecter aux participants cochés">';
+            html += '<datalist id="clubs-datalist-' + dayNumber + '">' + datalistOptions + '</datalist>';
+            html += '<button type="button" class="ranking-action-btn pt-needs-selection" hidden onclick="assignClubToSelected(' + dayNumber + ')">🏷️ Affecter aux cochés</button>';
+            if (hasSeries) {
+                html += '<button type="button" class="ranking-action-btn pt-needs-selection" hidden onclick="showBulkAddToSerieModal(' + dayNumber + ')">➕ Ajouter à une série</button>';
+            }
+            html += '<button type="button" class="ranking-action-btn pt-bulk-delete" hidden data-label="🗑️ Retirer de la liste" onclick="removeSelectedParticipants(' + dayNumber + ')">🗑️ Retirer de la liste</button>';
+            html += '</div>';
 
             // Hauteur de la liste : agrandissable à la souris (poignée en bas à droite),
             // gardée d'un affichage à l'autre (préférence de ce navigateur)
             var savedHeight = readParticipantsListHeight();
-            var listHeight = savedHeight || (participants.length > 6 ? 200 : 0);
-            html += '<div id="participants-list-' + dayNumber + '" data-initial-height="' + listHeight + '" ' +
-                'onmouseup="saveParticipantsListHeight(' + dayNumber + ', this)" ' +
+            var listHeight = savedHeight || (participants.length > 6 ? 240 : 0);
+            html += '<div id="participants-list-' + dayNumber + '" class="pt-scroll" data-initial-height="' + listHeight + '" ' +
+                'onmousedown="watchParticipantsListResize(' + dayNumber + ', this)" ' +
                 'style="' + (listHeight ? 'height: ' + listHeight + 'px; ' : '') + 'min-height: 60px; overflow-y: auto; resize: vertical;">';
-            ordered.forEach(function(item) {
-                var p = item.p;
-                html += '<div id="participant-row-' + dayNumber + '-' + p.id + '" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; background: ' + (item.unplaced ? '#fff8e6' : '#f8f9fa') + '; border-radius: 6px;">';
-                html += '<label style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; flex: 1; min-width: 0; cursor: pointer; font-size: 12px; color: #2c3e50;">';
-                html += '<input type="checkbox" class="participant-check-' + dayNumber + '" value="' + p.id + '">';
-                html += '<span style="font-weight: bold; color: #9c5003; min-width: 26px;">#' + (p.bib != null ? p.bib : '-') + '</span>';
-                html += '<span' + (p.swimRaw ? ' title="' + escapeLaneHtml('Ligne d\'origine : ' + p.swimRaw) + '"' : '') + '>' + p.name + '</span>';
-                if (p.club) {
-                    html += '<span style="font-size: 11px; background: #057e68; color: white; padding: 2px 6px; border-radius: 3px;">' + p.club + '</span>';
-                }
-                if (item.unplaced) {
-                    html += '<span class="participant-unplaced" title="' + escapeLaneHtml(item.unplaced) + '" style="font-size: 11px; font-weight: 600; color: #9a6700; background: #fdebc8; padding: 2px 6px; border-radius: 3px;">⚠️ non placée</span>';
-                }
-                var info = participantEntryInfo(p, chronoData, placement);
-                if (info) {
-                    html += '<span class="participant-entry-info" style="margin-left: auto; font-size: 11px; color: #54637a; white-space: nowrap;">' + escapeLaneHtml(info) + '</span>';
-                }
-                html += '</label>';
-
-                html += '<div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">';
-                html += '<button onclick="editParticipantInfo(' + dayNumber + ', ' + p.id + ')" style="padding: 3px 7px; font-size: 11px; background: #8b5700; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Éditer nom / dossard">✏️</button>';
-
-                if (hasSeries) {
-                    html += '<button onclick="showAddToSerieModal(' + dayNumber + ', ' + p.id + ')" ' +
-                        'style="padding: 3px 8px; font-size: 11px; background: #017239; color: white; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0;">+</button>';
-                } else {
-                    html += '<span style="font-size: 11px; color: #566566; flex-shrink: 0;">Créez une série</span>';
-                }
-                html += '</div>'; // fin actions
-
-                html += '</div>'; // fin ligne participant
-            });
+            html += '<table class="player-table"><thead><tr>';
+            html += '<th class="pt-select"><input type="checkbox" aria-label="Tout sélectionner" onchange="togglePlayerSelectAll(this)"></th>';
+            html += '<th class="pt-bib">#</th><th>Participant</th><th>Club</th>';
+            if (anyInfo) html += '<th>Épreuve · série · couloir</th>';
+            html += '<th class="pt-actions"><span class="pt-sr-only">Actions</span></th>';
+            html += '</tr></thead><tbody>' + rowsHtml + '</tbody></table>';
             html += '</div>';
-            if (listHeight) {
-                html += '<div style="text-align: right; font-size: 11px; color: #566376; margin-top: 2px;">↘ tirer le coin pour agrandir la liste</div>';
-            }
+            html += '<div class="pt-footer"><span class="pt-count" aria-live="polite">0 sur ' + participants.length + ' sélectionné</span>' +
+                (listHeight ? '<span class="pt-resize-hint">↘ tirer le coin pour agrandir la liste</span>' : '') + '</div>';
+            html += '</div>';
         }
 
         html += '</div>';
@@ -650,6 +654,17 @@
         try { localStorage.setItem('chronoParticipantsListHeight', String(h)); } catch (e) { /* navigation privée */ }
     }
     global.saveParticipantsListHeight = saveParticipantsListHeight;
+
+    // Le relâchement de la poignée peut avoir lieu hors de la liste (souris tirée plus
+    // bas que la fenêtre) : on l'écoute sur toute la fenêtre, une fois, dès l'appui.
+    function watchParticipantsListResize(dayNumber, el) {
+        var done = function() {
+            window.removeEventListener('mouseup', done, true);
+            saveParticipantsListHeight(dayNumber, el);
+        };
+        window.addEventListener('mouseup', done, true);
+    }
+    global.watchParticipantsListResize = watchParticipantsListResize;
 
     /**
      * Ajoute rapidement un participant à la journée
@@ -752,6 +767,52 @@
         checks.forEach(function(ch) { ch.checked = checked; });
     }
     global.toggleAllParticipants = toggleAllParticipants;
+
+    /**
+     * Menu « ⋯ » d'une ligne de « Participants disponibles » (toggleActionMenu, init.iife.js).
+     */
+    function openParticipantRowMenu(button, dayNumber, participantId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        var p = chronoData && chronoData.participants.find(function(x) { return x.id === participantId; });
+        if (!p) return;
+        var items = [
+            { icon: '✏️', label: 'Modifier', hint: 'Nom, dossard, club, catégorie', onclick: 'editParticipantInfo(' + dayNumber + ', ' + participantId + ')' }
+        ];
+        if (getDaySeriesByEvent(chronoData).length > 0) {
+            items.push({ icon: '➕', label: 'Ajouter à une série', hint: 'Choisir la série (et le couloir)', onclick: 'showAddToSerieModal(' + dayNumber + ', ' + participantId + ')' });
+        }
+        items.push({ icon: '🗑️', label: 'Retirer de la liste', hint: 'Les séries ne changent pas', type: 'danger', onclick: 'removeParticipantsFromPool(' + dayNumber + ', [' + participantId + '])' });
+        global.toggleActionMenu('participantRowMenu', button, 'Actions pour ' + p.name, items, dayNumber + '|' + participantId);
+    }
+    global.openParticipantRowMenu = openParticipantRowMenu;
+
+    function removeSelectedParticipants(dayNumber) {
+        var checks = document.querySelectorAll('.participant-check-' + dayNumber + ':checked');
+        removeParticipantsFromPool(dayNumber, Array.prototype.map.call(checks, function(ch) { return parseInt(ch.value, 10); }));
+    }
+    global.removeSelectedParticipants = removeSelectedParticipants;
+
+    /**
+     * Retire des fiches de la liste « Participants disponibles » (une confirmation).
+     * Les séries, résultats et classements ne changent pas : un nageur déjà placé reste
+     * dans sa série.
+     */
+    function removeParticipantsFromPool(dayNumber, ids) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData || !ids || ids.length === 0) return false;
+        var wanted = {};
+        ids.forEach(function(id) { wanted[String(id)] = true; });
+        var targets = chronoData.participants.filter(function(p) { return wanted[String(p.id)]; });
+        if (targets.length === 0) return false;
+        var label = targets.length === 1 ? targets[0].name : 'ces ' + targets.length + ' participants';
+        if (!confirm('Retirer ' + label + ' de la liste des participants disponibles ?\n\nLes séries et les résultats ne changent pas.')) return false;
+        chronoData.participants = chronoData.participants.filter(function(p) { return !wanted[String(p.id)]; });
+        saveToLocalStorage();
+        refreshChronoDisplay(dayNumber);
+        showNotification(targets.length === 1 ? targets[0].name + ' retiré de la liste' : targets.length + ' participants retirés de la liste', 'warning');
+        return true;
+    }
+    global.removeParticipantsFromPool = removeParticipantsFromPool;
 
     /**
      * Affiche une modal pour ajouter en masse les participants cochés à une série.
@@ -887,7 +948,10 @@
         var safeName = (p.name || '').replace(/"/g, '&quot;');
         var safeClub = (p.club || '').replace(/"/g, '&quot;');
         var safeCategory = (p.category || '').replace(/"/g, '&quot;');
-        row.innerHTML =
+        // Ligne du tableau : toute la ligne devient une cellule d'édition
+        var isTableRow = row.tagName === 'TR';
+        var cols = isTableRow ? (row.closest('table').querySelectorAll('thead th').length || 1) : 0;
+        row.innerHTML = (isTableRow ? '<td colspan="' + cols + '"><div style="display: flex; align-items: center; gap: 8px;">' : '') +
             '<div style="display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap;">' +
             '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" aria-label="Dossard" style="width: 55px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px; text-align: center;">' +
             '<input type="text" id="edit-pname-' + dayNumber + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="flex: 1; min-width: 120px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px;">' +
@@ -898,7 +962,7 @@
             '<div style="display: flex; gap: 4px; flex-shrink: 0;">' +
             '<button onclick="saveParticipantInfo(' + dayNumber + ', ' + participantId + ')" style="padding: 4px 8px; font-size: 11px; background: #017239; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Enregistrer">💾</button>' +
             '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="padding: 4px 8px; font-size: 11px; background: #566566; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Annuler">✖️</button>' +
-            '</div>';
+            '</div>' + (isTableRow ? '</div></td>' : '');
 
         var nameInput = document.getElementById('edit-pname-' + dayNumber + '-' + participantId);
         if (nameInput) { nameInput.focus(); nameInput.select(); }
