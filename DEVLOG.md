@@ -33,6 +33,26 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Impression des classements
+
+- **Quoi** : règles d'impression communes `rankingPrintCSS({landscape})` (`utils.iife.js`)
+  ajoutées aux 7 documents de classement (`exportGeneralRankingToPDF`, `exportGeneralRankingToHTML`,
+  `refreshRankingWindow`, `openCompleteRankingInNewWindow`, `openMultisportRankingInNewWindow`,
+  `buildMultisportRankingDoc`, `exportRaceRankingToPDF`) : couleurs gardées, fond blanc, tableaux
+  sécables (`.division { page-break-inside: avoid }` repoussait une division entière → grand blanc),
+  `thead` répété, lignes jamais coupées, contrôles masqués. Cartes de statistiques retirées des
+  exports général PDF/HTML et course : `championshipSummaryText(stats)` dans l'en-tête. Paysage pour
+  les classements à 8+ colonnes ; l'ancien `@media print` du PDF général (en-tête et cartes
+  rétrécis) est supprimé pour que l'aperçu ressemble à l'écran.
+  Onglet Classement général : cartes `.general-stat-card` remplacées par une ligne de texte
+  (`#generalStats`, `<p class="general-stats">`), CSS des cartes retiré de `styles.css`.
+- **Bug corrigé** : `exportGeneralRankingToHTML` (bouton de l'onglet général) appelait
+  `calculateGeneralStats`, non exposée → ReferenceError. Exposée dans `ranking.iife.js`.
+- **Fichiers** : `index.html`, `styles.css`, `src/utils.iife.js`, `src/ranking.iife.js`, `src/init.iife.js`, `src/ui.iife.js`,
+  `src/multisport.iife.js`, `src/chrono.iife.js`, `tests/unit/rankingPrintDocs.test.js`
+- **Vérifié** : PDF générés dans Chromium (40 + 30 joueurs) : plus de blanc, en-tête répété.
+- **Tests** : `npm test` vert (517).
+
 ### 2026-10-26 — Classement général : colonnes de sets
 
 - **Quoi** : le classement général (onglet, export HTML, export depuis `init.iife.js`) reprend les

@@ -611,6 +611,8 @@ playerStats.forEach((player, index) => {
     // Appelé aussi depuis init.iife.js (export HTML du général) et pools.iife.js
     // (pré-remplissage des poules) : sans cette exposition, ReferenceError.
     window.calculateGeneralRanking = function() { return calculateGeneralRanking(); };
+    // Aussi utilisée par exportGeneralRankingToHTML (init.iife.js) : sans cette exposition, ReferenceError.
+    window.calculateGeneralStats = function() { return calculateGeneralStats(); };
 
     /**
      * Colonnes sets du classement général : 'none' (aucune journée en sets),
@@ -650,24 +652,8 @@ playerStats.forEach((player, index) => {
         
         const generalStatsEl = document.getElementById('generalStats');
         if (generalStatsEl) {
-            generalStatsEl.innerHTML = `
-                <div class="general-stat-card">
-                    <div class="general-stat-number">${generalStats.totalDays}</div>
-                    <div class="general-stat-label">Journées</div>
-                </div>
-                <div class="general-stat-card">
-                    <div class="general-stat-number">${generalStats.totalPlayers}</div>
-                    <div class="general-stat-label">Joueurs uniques</div>
-                </div>
-                <div class="general-stat-card">
-                    <div class="general-stat-number">${generalStats.totalMatches}</div>
-                    <div class="general-stat-label">Matchs joués</div>
-                </div>
-                <div class="general-stat-card">
-                    <div class="general-stat-number">${generalStats.completedMatches}</div>
-                    <div class="general-stat-label">Matchs terminés</div>
-                </div>
-            `;
+            // Simple ligne de texte (plus de cartes) : « 1 journée · 151 matchs »
+            generalStatsEl.textContent = championshipSummaryText(generalStats);
         }
         
         const generalRanking = calculateGeneralRanking();
@@ -1615,76 +1601,6 @@ generalRanking.divisions[division].forEach((player, index) => {
                     z-index: 1;
                 }
                 
-                .header-and-stats {
-                    page-break-inside: avoid;
-                    break-inside: avoid;
-                }
-
-                .stats-section {
-                    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
-                    padding: 25px;
-                    margin-bottom: 25px;
-                    border-radius: 16px;
-                    border: 2px solid #fc8181;
-                    position: relative;
-                }
-                
-                .stats-title {
-                    font-size: 16px;
-                    font-weight: 600;
-                    color: #c53030;
-                    margin-bottom: 18px;
-                    text-align: center;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                }
-                
-                .stats-grid {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 15px;
-                }
-                
-                .stat-item {
-                    text-align: center;
-                    padding: 18px 12px;
-                    background: white;
-                    border-radius: 12px;
-                    border: 2px solid #feb2b2;
-                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-                    transition: all 0.3s ease;
-                }
-                
-                .stat-item:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-                }
-                
-                .stat-icon {
-                    font-size: 24px;
-                    margin-bottom: 8px;
-                    display: block;
-                }
-                
-                .stat-number {
-                    font-size: 28px;
-                    font-weight: 700;
-                    color: #c53030;
-                    display: block;
-                    line-height: 1;
-                }
-                
-                .stat-label {
-                    font-size: 10px;
-                    color: #4a5568;
-                    margin-top: 6px;
-                    font-weight: 500;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-                
                 .division {
                     margin-bottom: 25px;
                     page-break-inside: avoid;
@@ -1874,131 +1790,8 @@ generalRanking.divisions[division].forEach((player, index) => {
                     border: 1px solid rgba(255,255,255,0.3);
                 }
                 
-                @media print {
-                    .export-info { display: none !important; }
-                    
-                    body {
-                        background: white !important;
-                        padding: 0;
-                        font-size: 10px;
-                    }
-                    
-                    .container {
-                        box-shadow: none !important;
-                        border-radius: 0;
-                        padding: 15px;
-                        max-width: 100%;
-                    }
-                    
-                    .header-and-stats {
-                        page-break-inside: avoid !important;
-                        break-inside: avoid !important;
-                    }
+                ${rankingPrintCSS()}
 
-                    .header {
-                        background: #1a365d !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        border-radius: 8px;
-                        margin-bottom: 10px !important;
-                        padding: 14px 20px !important;
-                        page-break-after: avoid !important;
-                        break-after: avoid !important;
-                    }
-
-                    .header h1 { font-size: 18px; margin-bottom: 4px; }
-                    .header .trophy-icon { font-size: 24px; margin-bottom: 4px; }
-                    .header .date { font-size: 11px; }
-
-                    .stats-section {
-                        background: #fff5f5 !important;
-                        border: 1px solid #fc8181 !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        border-radius: 8px;
-                        margin-bottom: 15px;
-                        padding: 8px 15px !important;
-                    }
-
-                    .stats-title {
-                        font-size: 10px !important;
-                        margin-bottom: 6px !important;
-                    }
-
-                    .stats-grid {
-                        display: flex !important;
-                        gap: 8px;
-                    }
-
-                    .stat-item {
-                        background: white !important;
-                        border: 1px solid #feb2b2 !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        flex: 1;
-                        display: flex !important;
-                        flex-direction: row !important;
-                        align-items: center !important;
-                        gap: 6px !important;
-                        padding: 5px 8px !important;
-                        text-align: left !important;
-                    }
-
-                    .stat-icon {
-                        font-size: 14px !important;
-                        margin-bottom: 0 !important;
-                        display: inline !important;
-                    }
-
-                    .stat-number {
-                        font-size: 14px !important;
-                        display: inline !important;
-                        line-height: 1 !important;
-                    }
-
-                    .stat-label {
-                        font-size: 9px !important;
-                        margin-top: 0 !important;
-                        line-height: 1.2 !important;
-                    }
-                    
-                    .division {
-                        page-break-inside: avoid;
-                        margin-bottom: 20px;
-                        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
-                        border-radius: 12px;
-                    }
-                    
-                    .division-title {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        border-radius: 12px 12px 0 0;
-                    }
-                    
-                    .ranking-table { font-size: 9px; }
-                    .ranking-table th { font-size: 8px; padding: 8px 4px; }
-                    .ranking-table td { padding: 6px 4px; }
-                    
-                    .rank-gold, .rank-silver, .rank-bronze {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-                    
-                    .stats-grid {
-                        grid-template-columns: repeat(4, 1fr);
-                        gap: 10px;
-                    }
-                    
-                    .stat-number { font-size: 22px; }
-                    
-                    .footer {
-                        background: #2d3748 !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        border-radius: 12px;
-                    }
-                }
-                
                 @page {
                     margin: 1.5cm;
                     size: A4 landscape;
@@ -2013,41 +1806,10 @@ generalRanking.divisions[division].forEach((player, index) => {
             </div>
             
             <div class="container">
-                <div class="header-and-stats">
-                    <div class="header">
-                        <span class="trophy-icon">🏆</span>
-                        <h1>CLASSEMENT GÉNÉRAL DU CHAMPIONNAT</h1>
-                        <div class="date">Généré le ${currentDate}</div>
-                    </div>
-
-                    <div class="stats-section">
-                        <div class="stats-title">
-                            <span>📊</span>
-                            <span>STATISTIQUES DU CHAMPIONNAT</span>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-icon">📅</span>
-                                <span class="stat-number">${generalStats.totalDays}</span>
-                                <div class="stat-label">Journées disputées</div>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-icon">👥</span>
-                                <span class="stat-number">${generalStats.totalPlayers}</span>
-                                <div class="stat-label">Joueurs uniques</div>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-icon">🎯</span>
-                                <span class="stat-number">${generalStats.totalMatches}</span>
-                                <div class="stat-label">Matchs programmés</div>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-icon">✅</span>
-                                <span class="stat-number">${generalStats.completedMatches}</span>
-                                <div class="stat-label">Matchs terminés</div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="header">
+                    <span class="trophy-icon">🏆</span>
+                    <h1>CLASSEMENT GÉNÉRAL DU CHAMPIONNAT</h1>
+                    <div class="date">${championshipSummaryText(generalStats)} · Généré le ${currentDate}</div>
                 </div>
     `;
 

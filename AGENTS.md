@@ -85,6 +85,8 @@ export-print, chrono, search, darkmode, mobile, a11y, init (puis `script.js`). U
 - `calculateWinRate(wins, total)` - Calcule le % de victoires
 - `shuffleArray(array)` - Mélange un tableau
 - `isNewerVersion(newData, currentData)` - Compare les versions
+- `rankingPrintCSS({landscape})` - règles `@media print` communes aux documents de classement (`window.open`) : tableaux sécables, `thead` répété, couleurs gardées, contrôles masqués ; à inclure dans tout nouveau document de classement
+- `championshipSummaryText(stats)` - « 1 journée · 151 matchs » pour l'en-tête des exports (remplace les cartes de statistiques)
 
 ### 3. notifications.iife.js
 **Rôle** : Système de notifications toast
@@ -311,6 +313,7 @@ lors du même nettoyage.
 
 **Fonctions exposées** :
 - `calculatePlayerStats(dayNumber, division, playerName)`, `updateRankings()`, `updateRankingsForDay(dayNumber)`, `showRankings(type)`, `showRankingsForDay(dayNumber)`, `updateGeneralRanking()`, `showGeneralPlayerDetails(playerName)`
+- `calculateGeneralStats()` - journées, joueurs, matchs (exposée pour `exportGeneralRankingToHTML`)
 - `generalSetsMode()`, `generalSetsHeaders(mode)`, `generalSetsCells(player, mode)` - colonnes de sets du classement général (`'none'` / `'all'` : Sets G/P, Diff sets, Pts jeu ± / `'mixed'` : PP/PC + Sets G/P + Pts jeu ±), utilisées par l'onglet et les deux exports HTML
 - `closePlayerModal()` - vit ici, pas dans `players.iife.js` (voir section 7)
 - `showPlayerDetails()`, `exportGeneralRanking()`, `exportGeneralRankingToPDF()`, `showNameCheckModal()`, `applyNameCheckMerge()`, `toggleDayMatches()`, `updateStats()`

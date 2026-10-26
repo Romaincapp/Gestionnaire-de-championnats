@@ -590,6 +590,7 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
+        ${window.rankingPrintCSS({ landscape: true })}
     </style>
 </head>
 <body>
@@ -1172,6 +1173,7 @@ function openCompleteRankingInNewWindow() {
             color: #2c3e50;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
+        ${window.rankingPrintCSS({ landscape: true })}
     </style>
 </head>
 <body>
@@ -1507,45 +1509,6 @@ function exportGeneralRankingToHTML() {
                     font-size: 2.5rem;
                     margin-bottom: 10px;
                 }
-                .section {
-                    margin-bottom: 40px;
-                    background: #f8f9fa;
-                    border-radius: 12px;
-                    padding: 25px;
-                    border-left: 5px solid #09679e;
-                }
-                .section h2 {
-                    color: #2c3e50;
-                    margin-bottom: 20px;
-                    font-size: 1.5rem;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-                .stats {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 30px;
-                }
-                .stat-card {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 12px;
-                    text-align: center;
-                    border-left: 4px solid #8b5700;
-                    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-                }
-                .stat-number {
-                    font-size: 2.5rem;
-                    font-weight: bold;
-                    color: #8b5700;
-                    margin-bottom: 5px;
-                }
-                .stat-label {
-                    color: #586566;
-                    font-weight: 500;
-                }
                 .division {
                     background: white;
                     border-radius: 12px;
@@ -1594,38 +1557,20 @@ function exportGeneralRankingToHTML() {
                     color: #586566;
                     font-size: 14px;
                 }
+                .divisions { padding: 25px; }
+                ${window.rankingPrintCSS({ landscape: true })}
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
                     <h1>🏆 CLASSEMENT GÉNÉRAL DU CHAMPIONNAT</h1>
-                    <p>Généré le ${new Date().toLocaleDateString('fr-FR', {
+                    <p>${window.championshipSummaryText(generalStats)} · Généré le ${new Date().toLocaleDateString('fr-FR', {
                         year: 'numeric', month: 'long', day: 'numeric',
                         hour: '2-digit', minute: '2-digit'
                     })}</p>
                 </div>
-                <div class="section">
-                    <h2>📊 STATISTIQUES DU CHAMPIONNAT</h2>
-                    <div class="stats">
-                        <div class="stat-card">
-                            <div class="stat-number">${generalStats.totalDays}</div>
-                            <div class="stat-label">Journées disputées</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${generalStats.totalPlayers}</div>
-                            <div class="stat-label">Joueurs uniques</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${generalStats.totalMatches}</div>
-                            <div class="stat-label">Matchs programmés</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${generalStats.completedMatches}</div>
-                            <div class="stat-label">Matchs terminés</div>
-                        </div>
-                    </div>
-                </div>
+                <div class="divisions">
     `;
 
     // Ajouter les classements par division
@@ -1683,6 +1628,7 @@ function exportGeneralRankingToHTML() {
 
     // Ajouter le pied de page
     htmlContent += `
+                </div>
                 <div class="footer">
                     <p>Championnat Sportif - Gestion Esenca Sport</p>
                     <p>Système de points: Victoire = 3pts, Nul = 2pts, Défaite = 1pt, Forfait = 0pt</p>

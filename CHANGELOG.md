@@ -13,6 +13,16 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🖨️ Impression des classements
+- Les classements imprimés (général, journée, fenêtres « Afficher », multisport, course) ne
+  laissent plus de grand blanc : un long tableau continue sur la page suivante, avec l'en-tête
+  des colonnes répété et aucune ligne coupée. L'aperçu garde les couleurs de l'écran.
+- Les cartes « Statistiques du championnat » sont retirées des exports : le nombre de journées
+  et de matchs est écrit dans l'en-tête (aussi dans l'onglet Classement général). Classements de
+  8 colonnes et plus imprimés en paysage.
+- Le classement général affiche les colonnes de sets (Sets G/P, Diff sets, Pts jeu ±).
+- Corrigé : le bouton d'export HTML du classement général ne faisait rien (erreur JavaScript).
+
 ### ✨ Scores en sets
 - Nouveau sélecteur **« 🎯 Score »** dans la barre de chaque journée Matchs : 2 scores (comme
   avant) ou **Sets** en BO3 / BO5 / BO7, avec points par set (11, 15, 21, 25 ou libres). Les
