@@ -82,12 +82,19 @@
      * écran (couleurs gardées, fond de page blanc) et un long tableau continue sur
      * la page suivante au lieu d'être repoussé en entier (grand blanc), en-tête de
      * colonnes répété, jamais de ligne coupée, titre gardé avec son tableau.
-     * landscape : A4 paysage (tableaux de 8 colonnes et plus).
+     * Pas de format imposé (@page size) : Portrait/Paysage reste au choix dans la
+     * fenêtre d'impression. En portrait, tableaux resserrés pour que 9-10 colonnes
+     * tiennent (noms sur une ligne).
      */
-    function rankingPrintCSS(options) {
-        const landscape = options && options.landscape;
+    function rankingPrintCSS() {
         return `
-        ${landscape ? '@page { size: A4 landscape; margin: 1cm; }' : ''}
+        @page { margin: 1cm; }
+        @media print and (orientation: portrait) {
+            table { font-size: 9px !important; }
+            th, td { padding: 5px 3px !important; font-size: 9px !important; letter-spacing: 0 !important; }
+            th { font-size: 8px !important; }
+            .ranking-table td:nth-child(2) { white-space: nowrap; }
+        }
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             html, body { background: #fff !important; min-height: 0 !important; }

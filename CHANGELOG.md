@@ -18,8 +18,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   laissent plus de grand blanc : un long tableau continue sur la page suivante, avec l'en-tête
   des colonnes répété et aucune ligne coupée. L'aperçu garde les couleurs de l'écran.
 - Les cartes « Statistiques du championnat » sont retirées des exports : le nombre de journées
-  et de matchs est écrit dans l'en-tête (aussi dans l'onglet Classement général). Classements de
-  8 colonnes et plus imprimés en paysage.
+  et de matchs est écrit dans l'en-tête (aussi dans l'onglet Classement général).
+- Portrait ou paysage au choix dans la fenêtre d'impression ; en portrait, les tableaux sont
+  resserrés pour que toutes les colonnes tiennent.
 - Le classement général affiche les colonnes de sets (Sets G/P, Diff sets, Pts jeu ±).
 - Corrigé : le bouton d'export HTML du classement général ne faisait rien (erreur JavaScript).
 
