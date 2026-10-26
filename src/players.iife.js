@@ -652,13 +652,12 @@
             head.checked = visible.length > 0 && visibleChecked.length === visible.length;
             head.indeterminate = visibleChecked.length > 0 && visibleChecked.length < visible.length;
         }
-        const footer = wrap.querySelector('.pt-footer');
+        const footer = wrap.querySelector('.pt-count') || wrap.querySelector('.pt-footer');
         if (footer) footer.textContent = `${checked.length} sur ${all.length} sélectionné${checked.length > 1 ? 's' : ''}`;
         const bulk = wrap.querySelector('.pt-bulk-delete');
-        if (bulk) {
-            bulk.hidden = checked.length === 0;
-            bulk.textContent = `🗑️ Supprimer la sélection (${checked.length})`;
-        }
+        if (bulk) bulk.textContent = `${bulk.dataset.label || '🗑️ Supprimer la sélection'} (${checked.length})`;
+        // Actions groupées (suppression, et pour les Courses : club, série) : visibles avec une sélection
+        wrap.querySelectorAll('.pt-bulk-delete, .pt-needs-selection').forEach(el => { el.hidden = checked.length === 0; });
     }
 
     function onPlayerRowSelect(checkbox) {

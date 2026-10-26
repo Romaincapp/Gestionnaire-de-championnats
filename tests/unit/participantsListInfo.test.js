@@ -49,8 +49,8 @@ describe('ligne d\'infos d\'une inscription (même ligne)', () => {
         const [libre, dos] = cd().participants.filter(p => p.name === 'Anne Martin');
         expect(infoOf(libre)).toBe('🎯 50m libre · ⏱ 32,50s · Série 1, couloir 4');
         expect(infoOf(dos)).toBe('🎯 50m dos · ⏱ 40,10s · Série 1, couloir 3');
-        // Sur la ligne du participant, pas dans un bloc en dessous
-        expect(rowOf(libre).querySelector('.participant-entry-info').closest('label')).not.toBeNull();
+        // Dans une cellule de la ligne du participant, pas dans un bloc en dessous
+        expect(rowOf(libre).querySelector('.participant-entry-info').closest('td.pt-info')).not.toBeNull();
     });
 
     test('ligne d\'origine en info-bulle sur le nom', () => {
@@ -113,5 +113,66 @@ describe('liste agrandissable à la souris', () => {
     test('un simple clic dans la liste ne change pas la hauteur enregistrée', () => {
         window.saveParticipantsListHeight(1, list());
         expect(localStorage.getItem('chronoParticipantsListHeight')).toBeNull();
+    });
+});
+
+describe('tableau des participants (façon « data table »)', () => {
+    beforeAll(() => { loadModules(['players', 'init']); });
+    const wrap = () => document.querySelector('.participant-table-wrap');
+    const checkRow = (p) => {
+        const cb = rowOf(p).querySelector('.participant-check-1');
+        cb.checked = true;
+        window.onPlayerRowSelect(cb);
+    };
+
+    test('colonnes : sélection, dossard, participant, club, épreuve · série · couloir, actions', () => {
+        expect([...wrap().querySelectorAll('thead th')].map(th => th.textContent.trim()))
+            .toEqual(['', '#', 'Participant', 'Club', 'Épreuve · série · couloir', 'Actions']);
+    });
+
+    test('actions groupées (club, série, retrait) visibles seulement avec une sélection', () => {
+        const groupActions = () => [...wrap().querySelectorAll('.pt-needs-selection, .pt-bulk-delete')];
+        expect(groupActions().length).toBeGreaterThanOrEqual(3);
+        expect(groupActions().every(el => el.hidden)).toBe(true);
+        checkRow(cd().participants[0]);
+        expect(groupActions().every(el => !el.hidden)).toBe(true);
+        expect(wrap().querySelector('.pt-count').textContent).toBe('1 sur 5 sélectionné');
+        expect(wrap().querySelector('.pt-bulk-delete').textContent).toBe('🗑️ Retirer de la liste (1)');
+    });
+
+    test('menu « ⋯ » : Modifier, Ajouter à une série, Retirer de la liste', () => {
+        const p = cd().participants.find(x => x.name === 'Bob Durand');
+        rowOf(p).querySelector('.pt-menu-btn').click();
+        expect([...document.querySelectorAll('#participantRowMenu [role="menuitem"] .am-label')].map(e => e.textContent))
+            .toEqual(['Modifier', 'Ajouter à une série', 'Retirer de la liste']);
+        window.closeActionMenu(false);
+    });
+
+    test('« Modifier » : édition dans la ligne du tableau (une cellule sur toute la largeur)', () => {
+        const p = cd().participants.find(x => x.name === 'Bob Durand');
+        window.editParticipantInfo(1, p.id);
+        const cell = rowOf(p).querySelector('td[colspan]');
+        expect(cell.getAttribute('colspan')).toBe('6');
+        expect(cell.querySelector('#edit-pname-1-' + p.id).value).toBe('Bob Durand');
+    });
+
+    test('retirer de la liste : une confirmation, les séries ne changent pas', () => {
+        window.confirm = jest.fn(() => true);
+        const placed = cd().participants.find(x => x.name === 'Bob Durand');
+        const seriesBefore = JSON.stringify(cd().events.map(e => e.series));
+        checkRow(placed);
+        checkRow(cd().participants.find(x => x.name === 'Ligne sans info'));
+        window.removeSelectedParticipants(1);
+        expect(window.confirm).toHaveBeenCalledTimes(1);
+        expect(window.confirm.mock.calls[0][0]).toMatch(/ces 2 participants/);
+        expect(cd().participants.map(x => x.name)).not.toContain('Bob Durand');
+        expect(cd().participants.map(x => x.name)).not.toContain('Ligne sans info');
+        expect(JSON.stringify(cd().events.map(e => e.series))).toBe(seriesBefore);
+    });
+
+    test('retrait annulé : rien ne change', () => {
+        window.confirm = jest.fn(() => false);
+        expect(window.removeParticipantsFromPool(1, [cd().participants[0].id])).toBe(false);
+        expect(cd().participants).toHaveLength(5);
     });
 });

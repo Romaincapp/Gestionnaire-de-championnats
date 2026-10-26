@@ -143,7 +143,7 @@ async function openFresh(browser) {
     // ---------------------------------------------------------------
     step('4b. 👥 Participants disponibles : infos de chaque inscription sur la ligne, non placées en tête, liste agrandie à la souris');
     const listInfo = await page.locator('#participants-list-1').evaluate(el => {
-        const rows = [...el.children];
+        const rows = [...el.querySelectorAll('tbody tr')];
         const infos = rows.map(r => r.querySelector('.participant-entry-info')).filter(Boolean);
         const sameLine = infos.every(i => Math.abs(i.getBoundingClientRect().top - i.closest('[id^="participant-row-"]').querySelector('input').getBoundingClientRect().top) < 12);
         return {
@@ -399,7 +399,8 @@ async function openFresh(browser) {
         return { name, id: p.id, club: p.club, entries: count(name) };
     }, expected.map(e => e.name));
     const editClub = async (club) => {
-        await page.locator(`#participant-row-1-${clubTarget.id} button[title="Éditer nom / dossard"]`).click();
+        await page.locator(`#participant-row-1-${clubTarget.id} .pt-menu-btn`).click();
+        await page.locator('#participantRowMenu [role="menuitem"]', { hasText: 'Modifier' }).click();
         await page.fill(`#edit-pclub-1-${clubTarget.id}`, club);
         await page.locator(`#participant-row-1-${clubTarget.id} button[title="Enregistrer"]`).click();
         await page.waitForTimeout(300);
@@ -508,7 +509,12 @@ async function openFresh(browser) {
     await page.waitForTimeout(300);
     const poolId = (name) => state(page, (n) => championship.days[1].chronoData.participants.find(p => p.name === n).id, name);
     const lateId = await poolId('Nageur Retardataire');
-    await page.click(`button[onclick="showAddToSerieModal(1, ${lateId})"]`);
+    // « Ajouter à une série » d'une ligne : menu « ⋯ » de la ligne
+    const addToSerieViaMenu = async (id) => {
+        await page.click(`#participant-row-1-${id} .pt-menu-btn`);
+        await page.locator('#participantRowMenu [role="menuitem"]', { hasText: 'Ajouter à une série' }).click();
+    };
+    await addToSerieViaMenu(lateId);
     await page.waitForTimeout(300);
     const pickerText = (await page.locator('#addToSerieModal-1').innerText()).replace(/\s+/g, ' ');
     check(pickerText.includes('🎯 50m brasse') && pickerText.includes(target.name) && /→ couloir \d+/.test(pickerText),
@@ -524,7 +530,7 @@ async function openFresh(browser) {
     const src = notSwum.find(s => s.id !== target.id);
     if (src) {
         const mover = src.participants[0].name;
-        await page.click(`button[onclick="showAddToSerieModal(1, ${await poolId(mover)})"]`);
+        await addToSerieViaMenu(await poolId(mover));
         await page.waitForTimeout(300);
         const hint = await page.locator(`#addToSerieModal-1 [data-serie-id="${target.id}"]`).innerText();
         await page.click(`#addToSerieModal-1 [data-serie-id="${target.id}"]`); // confirmation acceptée

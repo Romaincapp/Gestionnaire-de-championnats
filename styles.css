@@ -484,6 +484,26 @@ body   * {
             border-top: 1px solid #e3e8ee;
         }
 
+        /* Participants des journées Courses (même tableau, colonnes en plus) */
+        .chrono-participants-section .player-table td { padding: 5px 8px; font-size: 13px; }
+        .chrono-participants-section .player-table th { padding: 6px 8px; }
+        .player-table .pt-bib { width: 44px; font-weight: 600; color: var(--color-warning); white-space: nowrap; }
+        .player-table .pt-name.pt-plain { cursor: default; }
+        .player-table .pt-name.pt-plain:hover { text-decoration: none; }
+        .player-table .pt-info { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; }
+        .player-table tbody tr.pt-warning { background: #fff8e6; }
+        .pt-scroll { overflow-y: auto; }
+        .pt-scroll .player-table thead th { position: sticky; top: 0; z-index: 1; }
+        .pt-club-input {
+            flex: 0 1 150px;
+            min-width: 0;
+            padding: 6px 10px;
+            font-size: 13px;
+            border: 1px solid #cfd6dd;
+            border-radius: 6px;
+        }
+        .pt-footer { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+
         .pt-sr-only {
             position: absolute;
             width: 1px; height: 1px;
@@ -1954,6 +1974,10 @@ body.dark-mode .pt-menu-btn:hover,
 body.dark-mode .pt-menu-btn[aria-expanded="true"] { background: #34344a; color: #fff; }
 body.dark-mode .pt-badge { color: #f0c24b; }
 body.dark-mode .pt-bulk-delete { color: #ff8a80; }
+body.dark-mode .pt-club-input { background: #252538; border-color: #44445a; color: #e0e0e0; }
+body.dark-mode .player-table .pt-info { color: #b8bec6; }
+body.dark-mode .player-table .pt-bib { color: #f0c24b; }
+body.dark-mode .player-table tbody tr.pt-warning { background: #3a3220; }
 
 /* Matches */
 body.dark-mode .tour-section {
