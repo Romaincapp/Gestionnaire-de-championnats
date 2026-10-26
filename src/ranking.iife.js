@@ -652,24 +652,8 @@ playerStats.forEach((player, index) => {
         
         const generalStatsEl = document.getElementById('generalStats');
         if (generalStatsEl) {
-            generalStatsEl.innerHTML = `
-                <div class="general-stat-card">
-                    <div class="general-stat-number">${generalStats.totalDays}</div>
-                    <div class="general-stat-label">Journées</div>
-                </div>
-                <div class="general-stat-card">
-                    <div class="general-stat-number">${generalStats.totalPlayers}</div>
-                    <div class="general-stat-label">Joueurs uniques</div>
-                </div>
-                <div class="general-stat-card">
-                    <div class="general-stat-number">${generalStats.totalMatches}</div>
-                    <div class="general-stat-label">Matchs joués</div>
-                </div>
-                <div class="general-stat-card">
-                    <div class="general-stat-number">${generalStats.completedMatches}</div>
-                    <div class="general-stat-label">Matchs terminés</div>
-                </div>
-            `;
+            // Simple ligne de texte (plus de cartes) : « 1 journée · 151 matchs »
+            generalStatsEl.textContent = championshipSummaryText(generalStats);
         }
         
         const generalRanking = calculateGeneralRanking();

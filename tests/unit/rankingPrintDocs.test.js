@@ -77,3 +77,10 @@ test('fenêtre de classement : règles d\'impression incluses', () => {
     const html = captureWindow(() => openRankingInNewWindow('general'));
     expect(html).toContain('table-header-group');
 });
+
+test('onglet Classement général : statistiques en simple texte, sans cartes', () => {
+    updateGeneralRanking();
+    const el = document.getElementById('generalStats');
+    expect(el.textContent).toBe('1 journée · 2 matchs dont 1 terminé');
+    expect(el.querySelector('.general-stat-card')).toBeNull();
+});
