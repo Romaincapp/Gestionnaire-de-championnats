@@ -33,6 +33,21 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — En-tête des classements imprimés : compact et modifiable
+
+- **Quoi** : PDF et export HTML du classement général : grand bandeau (trophée 48 px, titre 32 px,
+  ~250 px de haut) remplacé par une ligne compacte (`.doc-header`, ~60 px). Titre et sous-titre
+  `contenteditable` dans la fenêtre (cadre au survol, écran seulement) ; le titre modifié est
+  renvoyé à l'application par `window.opener.saveRankingTitle` (au blur / Entrée), stocké dans
+  `championship.rankingTitle` (vide = titre par défaut) et repris aux exports suivants (et dans
+  `<title>`, donc le nom proposé du PDF). Encadré « Export PDF » déplacé en bas à droite.
+- **Ajouts** (`ranking.iife.js`) : `rankingDocTitle()`, `saveRankingTitle(text)`, `escapeDocText`,
+  `rankingDocHeaderCSS()`, `rankingDocHeaderHTML(subtitle)`.
+- **Fichiers** : `src/ranking.iife.js`, `src/init.iife.js`, `tests/unit/rankingPrintDocs.test.js`
+- **Vérifié** : Chromium, titre modifié dans la fenêtre PDF → `championship.rankingTitle` et
+  localStorage mis à jour, repris à la réouverture ; aperçu PDF.
+- **Tests** : `npm test` vert (520).
+
 ### 2026-10-26 — Impression des classements : orientation au choix
 
 - **Quoi** : plus de `@page { size: A4 landscape }` imposé (PDF général, `rankingPrintCSS({landscape})`

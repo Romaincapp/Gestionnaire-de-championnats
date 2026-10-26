@@ -85,3 +85,38 @@ test('onglet Classement général : statistiques en simple texte, sans cartes', 
     expect(el.textContent).toBe('1 journée · 2 matchs dont 1 terminé');
     expect(el.querySelector('.general-stat-card')).toBeNull();
 });
+
+describe('en-tête des documents : compact et modifiable', () => {
+    afterEach(() => { championship.rankingTitle = ''; });
+
+    test('PDF : titre et sous-titre modifiables, plus de grand bandeau', () => {
+        jest.useFakeTimers();
+        const html = captureWindow(() => exportGeneralRankingToPDF());
+        jest.runAllTimers();
+        jest.useRealTimers();
+        expect(html).toContain('class="doc-header"');
+        expect(html).not.toContain('trophy-icon');
+        expect(html).toMatch(/<h1 contenteditable="true"[^>]*data-edit="title"[^>]*>Classement général du championnat<\/h1>/);
+        expect(html).toMatch(/class="doc-subtitle" contenteditable="true"[^>]*>1 journée · 2 matchs dont 1 terminé · Généré le/);
+    });
+
+    test('titre modifié dans la fenêtre : mémorisé et réutilisé (échappé)', () => {
+        saveRankingTitle('  Tournoi   <Été> 2026 ');
+        expect(championship.rankingTitle).toBe('Tournoi <Été> 2026');
+        const html = captureWindow(() => exportGeneralRankingToPDF());
+        expect(html).toContain('>Tournoi &lt;Été&gt; 2026</h1>');
+        expect(html).toContain('<title>Tournoi &lt;Été&gt; 2026</title>');
+        // Revenir au titre par défaut ne le stocke pas
+        saveRankingTitle('Classement général du championnat');
+        expect(championship.rankingTitle).toBe('');
+    });
+
+    test('export HTML : même en-tête', () => {
+        let html = '';
+        const OriginalBlob = window.Blob;
+        window.Blob = function(parts) { html = parts.join(''); return new OriginalBlob(parts); };
+        try { exportGeneralRankingToHTML(); } finally { window.Blob = OriginalBlob; }
+        expect(html).toContain('class="doc-header"');
+        expect(html).toContain('data-edit="title"');
+    });
+});

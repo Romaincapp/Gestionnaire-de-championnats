@@ -646,6 +646,70 @@ playerStats.forEach((player, index) => {
     window.generalSetsHeaders = generalSetsHeaders;
     window.generalSetsCells = generalSetsCells;
 
+    // En-tête des documents de classement (PDF, export HTML) : une ligne compacte,
+    // titre et sous-titre modifiables (contenteditable). Le titre modifié dans la
+    // fenêtre PDF est renvoyé à l'application (saveRankingTitle) et réutilisé ensuite.
+    const DEFAULT_RANKING_TITLE = 'Classement général du championnat';
+
+    function rankingDocTitle() {
+        const t = (championship.rankingTitle || '').trim();
+        return t || DEFAULT_RANKING_TITLE;
+    }
+
+    function saveRankingTitle(text) {
+        const t = String(text || '').replace(/\s+/g, ' ').trim();
+        championship.rankingTitle = t === DEFAULT_RANKING_TITLE ? '' : t;
+        if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
+    }
+
+    function escapeDocText(text) {
+        return String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    function rankingDocHeaderCSS() {
+        return `
+                .doc-header {
+                    display: flex; align-items: center; gap: 14px;
+                    padding: 12px 20px; margin-bottom: 16px;
+                    background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
+                    color: #fff; border-radius: 12px;
+                }
+                .doc-header .doc-trophy { font-size: 26px; line-height: 1; }
+                .doc-header .doc-titles { flex: 1; min-width: 0; }
+                .doc-header h1 { font-size: 20px; font-weight: 700; margin: 0; line-height: 1.25; letter-spacing: 0.3px; }
+                .doc-header .doc-subtitle { font-size: 12px; color: #e2ecf7; margin-top: 2px; }
+                .doc-header [contenteditable] { outline: none; border-radius: 4px; cursor: text; }
+                @media screen {
+                    .doc-header [contenteditable]:hover, .doc-header [contenteditable]:focus { box-shadow: 0 0 0 2px rgba(255,255,255,0.6); }
+                }`;
+    }
+
+    function rankingDocHeaderHTML(subtitle) {
+        return `
+                <div class="doc-header">
+                    <span class="doc-trophy" aria-hidden="true">🏆</span>
+                    <div class="doc-titles">
+                        <h1 contenteditable="true" spellcheck="false" data-edit="title" title="Cliquer pour modifier">${escapeDocText(rankingDocTitle())}</h1>
+                        <div class="doc-subtitle" contenteditable="true" spellcheck="false" title="Cliquer pour modifier">${escapeDocText(subtitle)}</div>
+                    </div>
+                </div>
+                <script>
+                (function () {
+                    var t = document.querySelector('[data-edit="title"]');
+                    if (!t) return;
+                    t.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); t.blur(); } });
+                    t.addEventListener('blur', function () {
+                        try { if (window.opener && window.opener.saveRankingTitle) window.opener.saveRankingTitle(t.textContent); } catch (e) {}
+                    });
+                })();
+                <\/script>`;
+    }
+    window.rankingDocTitle = rankingDocTitle;
+    window.escapeDocText = escapeDocText;
+    window.saveRankingTitle = saveRankingTitle;
+    window.rankingDocHeaderCSS = rankingDocHeaderCSS;
+    window.rankingDocHeaderHTML = rankingDocHeaderHTML;
+
     // CLASSEMENT GÉNÉRAL
     function updateGeneralRanking() {
         const generalStats = calculateGeneralStats();
@@ -1526,7 +1590,7 @@ generalRanking.divisions[division].forEach((player, index) => {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Classement Général - Championnat Sportif</title>
+            <title>${escapeDocText(rankingDocTitle())}</title>
             <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
             <style>
                 * {
@@ -1554,53 +1618,8 @@ generalRanking.divisions[division].forEach((player, index) => {
                     margin: 0 auto;
                 }
                 
-                .header {
-                    text-align: center;
-                    margin-bottom: 25px;
-                    padding: 35px 25px;
-                    background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
-                    color: white;
-                    border-radius: 16px;
-                    position: relative;
-                    overflow: hidden;
-                }
-                
-                .header::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-                    opacity: 0.5;
-                }
-                
-                .header h1 {
-                    font-size: 32px;
-                    font-weight: 700;
-                    margin-bottom: 10px;
-                    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-                    position: relative;
-                    z-index: 1;
-                    letter-spacing: 1px;
-                }
-                
-                .header .trophy-icon {
-                    font-size: 48px;
-                    margin-bottom: 10px;
-                    display: block;
-                    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
-                }
-                
-                .header .date {
-                    font-size: 14px;
-                    font-weight: 300;
-                    opacity: 0.9;
-                    position: relative;
-                    z-index: 1;
-                }
-                
+                ${rankingDocHeaderCSS()}
+
                 .division {
                     margin-bottom: 25px;
                     page-break-inside: avoid;
@@ -1757,7 +1776,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                 
                 .export-info {
                     position: fixed;
-                    top: 20px;
+                    bottom: 20px;
                     right: 20px;
                     background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
                     color: white;
@@ -1798,14 +1817,11 @@ generalRanking.divisions[division].forEach((player, index) => {
                 <h3>📄 Export PDF</h3>
                 <p>💡 <strong>Conseil :</strong> Utilisez <span class="shortcut">Ctrl+P</span></p>
                 <p>puis "Enregistrer au format PDF"</p>
+                <p>✏️ Cliquez sur le titre ou la ligne du dessous pour les modifier.</p>
             </div>
             
             <div class="container">
-                <div class="header">
-                    <span class="trophy-icon">🏆</span>
-                    <h1>CLASSEMENT GÉNÉRAL DU CHAMPIONNAT</h1>
-                    <div class="date">${championshipSummaryText(generalStats)} · Généré le ${currentDate}</div>
-                </div>
+                ${rankingDocHeaderHTML(`${championshipSummaryText(generalStats)} · Généré le ${currentDate}`)}
     `;
 
     // Ajouter les classements par division
