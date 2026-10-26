@@ -551,24 +551,25 @@
                 var name = escapeLaneHtml(p.name || '');
                 var row = '<tr id="participant-row-' + dayNumber + '-' + p.id + '" data-name="' + name + '"' + (r.item.unplaced ? ' class="pt-warning"' : '') + '>';
                 row += '<td class="pt-select"><input type="checkbox" class="participant-check-' + dayNumber + '" value="' + p.id + '" aria-label="Sélectionner ' + name + '" onchange="onPlayerRowSelect(this)"></td>';
-                row += '<td class="pt-bib">' + (p.bib != null ? escapeLaneHtml(p.bib) : '<span class="pt-muted">—</span>') + '</td>';
+                row += '<td class="pt-bib" data-col="bib">' + (p.bib != null ? escapeLaneHtml(p.bib) : '<span class="pt-muted">—</span>') + '</td>';
                 row += '<td class="pt-name pt-plain"><span' + (p.swimRaw ? ' title="' + escapeLaneHtml('Ligne d\'origine : ' + p.swimRaw) + '"' : '') + '>' + name + '</span>';
                 if (r.item.unplaced) {
                     row += ' <span class="participant-unplaced pt-badge" title="' + escapeLaneHtml(r.item.unplaced) + '">⚠️ non placée</span>';
                 }
                 row += '</td>';
-                row += '<td class="pt-club">' + (p.club ? escapeLaneHtml(p.club) : '<span class="pt-muted">—</span>') + '</td>';
+                row += '<td class="pt-club" data-col="club">' + (p.club ? escapeLaneHtml(p.club) : '<span class="pt-muted">—</span>') + '</td>';
                 if (anyInfo) {
-                    row += '<td class="pt-info">' + (r.info ? '<span class="participant-entry-info">' + escapeLaneHtml(r.info) + '</span>' : '') + '</td>';
+                    row += '<td class="pt-info" data-col="info">' + (r.info ? '<span class="participant-entry-info">' + escapeLaneHtml(r.info) + '</span>' : '') + '</td>';
                 }
                 row += '<td class="pt-actions"><button type="button" class="pt-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Actions pour ' + name + '" title="Actions" ' +
                     'onclick="openParticipantRowMenu(this, ' + dayNumber + ', ' + p.id + ')">⋯</button></td>';
                 return row + '</tr>';
             }).join('');
 
-            html += '<div class="player-table-wrap participant-table-wrap" data-day="' + dayNumber + '">';
+            html += '<div class="player-table-wrap participant-table-wrap' + global.playerTableHiddenClasses('participants') + '" data-table="participants" data-day="' + dayNumber + '">';
             html += '<div class="pt-toolbar">';
             html += '<input type="search" class="pt-filter" placeholder="Filtrer les participants…" aria-label="Filtrer les participants" oninput="filterPlayerTable(this)">';
+            html += global.playerTableColumnsButtonHTML();
             html += '<input class="pt-needs-selection pt-club-input" hidden list="clubs-datalist-' + dayNumber + '" id="assign-club-input-' + dayNumber + '" placeholder="Club à affecter" aria-label="Club à affecter aux participants cochés">';
             html += '<datalist id="clubs-datalist-' + dayNumber + '">' + datalistOptions + '</datalist>';
             html += '<button type="button" class="ranking-action-btn pt-needs-selection" hidden onclick="assignClubToSelected(' + dayNumber + ')">🏷️ Affecter aux cochés</button>';
@@ -587,8 +588,8 @@
                 'style="' + (listHeight ? 'height: ' + listHeight + 'px; ' : '') + 'min-height: 60px; overflow-y: auto; resize: vertical;">';
             html += '<table class="player-table"><thead><tr>';
             html += '<th class="pt-select"><input type="checkbox" aria-label="Tout sélectionner" onchange="togglePlayerSelectAll(this)"></th>';
-            html += '<th class="pt-bib">#</th><th>Participant</th><th>Club</th>';
-            if (anyInfo) html += '<th>Épreuve · série · couloir</th>';
+            html += '<th class="pt-bib" data-col="bib">#</th><th>Participant</th><th data-col="club">Club</th>';
+            if (anyInfo) html += '<th data-col="info">Épreuve · série · couloir</th>';
             html += '<th class="pt-actions"><span class="pt-sr-only">Actions</span></th>';
             html += '</tr></thead><tbody>' + rowsHtml + '</tbody></table>';
             html += '</div>';

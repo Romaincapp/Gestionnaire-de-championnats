@@ -94,3 +94,28 @@ test('menu « ⋯ » : Modifier, Détails, Supprimer', () => {
     expect(btn.getAttribute('aria-expanded')).toBe('true');
     closeActionMenu(false);
 });
+
+describe('« Colonnes ▾ » : afficher / masquer des colonnes', () => {
+    beforeEach(() => { try { localStorage.clear(); } catch (e) { /* ignore */ } updatePlayersDisplay(1); });
+
+    test('le menu liste les colonnes masquables avec leur état', () => {
+        wrap().querySelector('.pt-columns-btn').click();
+        const items = Array.from(document.querySelectorAll('#playerTableColumnsMenu [role="menuitem"]'));
+        expect(items.map(b => b.querySelector('.am-label').textContent)).toEqual(['Club']);
+        expect(items[0].querySelector('.am-hint').textContent).toBe('Affichée');
+        closeActionMenu(false);
+    });
+
+    test('masquer « Club » : classe sur le tableau, choix gardé après un nouveau rendu, menu resté ouvert', () => {
+        wrap().querySelector('.pt-columns-btn').click();
+        document.querySelector('#playerTableColumnsMenu [role="menuitem"]').click();
+        expect(wrap().classList.contains('pt-hide-club')).toBe(true);
+        expect(document.querySelector('#playerTableColumnsMenu .am-hint').textContent).toBe('Masquée');
+        expect(document.getElementById('playerTableColumnsMenu').hidden).toBe(false);
+        closeActionMenu(false);
+        updatePlayersDisplay(1);
+        expect(wrap().classList.contains('pt-hide-club')).toBe(true);
+        togglePlayerTableColumn('players', 'club');
+        expect(wrap().classList.contains('pt-hide-club')).toBe(false);
+    });
+});

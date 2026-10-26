@@ -176,3 +176,20 @@ describe('tableau des participants (façon « data table »)', () => {
         expect(cd().participants).toHaveLength(5);
     });
 });
+
+describe('« Colonnes ▾ » des participants', () => {
+    beforeAll(() => { loadModules(['players', 'init']); });
+
+    test('dossard, club et épreuve masquables ; choix gardé après un rafraîchissement', () => {
+        const wrap = () => document.querySelector('.participant-table-wrap');
+        wrap().querySelector('.pt-columns-btn').click();
+        expect([...document.querySelectorAll('#playerTableColumnsMenu .am-label')].map(e => e.textContent))
+            .toEqual(['Dossard (#)', 'Club', 'Épreuve · série · couloir']);
+        window.closeActionMenu(false);
+        window.togglePlayerTableColumn('participants', 'info');
+        expect(wrap().classList.contains('pt-hide-info')).toBe(true);
+        window.refreshChronoDisplay(1);
+        expect(wrap().classList.contains('pt-hide-info')).toBe(true);
+        expect(wrap().querySelector('th[data-col="info"]')).not.toBeNull();
+    });
+});

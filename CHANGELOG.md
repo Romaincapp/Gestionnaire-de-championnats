@@ -22,6 +22,7 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   épreuve · série · couloir). « ⋯ » : Modifier, Ajouter à une série, Retirer de la liste. Les
   actions groupées (club, série, retrait) apparaissent dès qu'une ligne est cochée.
 - Corrigé : la hauteur de la liste des participants agrandie à la souris n'était pas toujours gardée.
+- Bouton « Colonnes ▾ » pour masquer / afficher des colonnes (club, dossard, épreuve) ; le choix est gardé.
 
 ### 🖨️ Impression des classements
 - Onglet Classement général : fond jaune remplacé par la présentation sobre du classement de journée.

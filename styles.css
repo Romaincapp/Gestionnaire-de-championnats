@@ -504,6 +504,11 @@ body   * {
         }
         .pt-footer { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 
+        /* Colonnes masquées par « Colonnes ▾ » (togglePlayerTableColumn) */
+        .pt-hide-bib [data-col="bib"],
+        .pt-hide-club [data-col="club"],
+        .pt-hide-info [data-col="info"] { display: none; }
+
         .pt-sr-only {
             position: absolute;
             width: 1px; height: 1px;

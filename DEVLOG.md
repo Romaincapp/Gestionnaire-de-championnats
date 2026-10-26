@@ -33,6 +33,20 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — « Colonnes ▾ » des tableaux joueurs / participants
+
+- **Quoi** : bouton « Colonnes ▾ » (comme le data table shadcn) dans la barre d'outils des deux
+  tableaux : menu des colonnes masquables (joueurs : Club ; participants : Dossard, Club,
+  Épreuve · série · couloir — seulement celles présentes) avec ☑ / ☐ ; le menu reste ouvert
+  pour enchaîner (focus remis sur la colonne cliquée). Choix gardé dans le navigateur
+  (`localStorage` `playerTableHiddenColumns`, par type de tableau) et appliqué à chaque rendu :
+  classe `pt-hide-<colonne>` sur `.player-table-wrap[data-table]`, cellules `data-col`.
+- **Ajouts** (`players.iife.js`) : `playerTableHiddenClasses(kind)`, `playerTableColumnsButtonHTML()`,
+  `openPlayerTableColumnsMenu(bouton)`, `togglePlayerTableColumn(kind, key, reopen)`.
+- **Fichiers** : `src/players.iife.js`, `src/multisport.iife.js`, `styles.css`,
+  `tests/unit/playerTable.test.js`, `tests/unit/participantsListInfo.test.js`
+- **Vérifié** : Chromium (menu, clavier, choix gardé après rechargement). **Tests** : `npm test` vert (535).
+
 ### 2026-10-26 — Participants des journées Courses en tableau
 
 - **Quoi** : « 👥 Participants disponibles » passe au même tableau que la liste des joueurs
