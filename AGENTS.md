@@ -319,6 +319,7 @@ lors du même nettoyage.
 - `generalSetsMode()`, `generalSetsHeaders(mode)`, `generalSetsCells(player, mode)` - colonnes de sets du classement général (`'none'` / `'all'` : Sets G/P, Diff sets, Pts jeu ± / `'mixed'` : PP/PC + Sets G/P + Pts jeu ±), utilisées par l'onglet et les deux exports HTML
 - `rankingDocHeaderHTML(subtitle)`, `rankingDocHeaderCSS()`, `rankingDocTitle()`, `saveRankingTitle(text)`, `escapeDocText(text)` - en-tête compact des documents de classement (PDF, export HTML) : titre et sous-titre modifiables ; le titre modifié revient à l'application (`championship.rankingTitle`) via `window.opener.saveRankingTitle`
 - `closePlayerModal()` - vit ici, pas dans `players.iife.js` (voir section 7)
+- `toggleGeneralExportMenu(bouton)` - « 📤 Exporter ▾ » de l'onglet Classement général (menu PDF / HTML / JSON via `toggleActionMenu`)
 - `showPlayerDetails()`, `exportGeneralRanking()`, `exportGeneralRankingToPDF()`, `showNameCheckModal()`, `applyNameCheckMerge()`, `toggleDayMatches()`, `updateStats()`
 
 ### 13. export-json.iife.js et export-print.iife.js

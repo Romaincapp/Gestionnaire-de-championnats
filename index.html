@@ -214,9 +214,7 @@
                     <div class="ranking-actions">
                         <button class="ranking-action-btn primary" onclick="updateGeneralRanking()">🔄 Mettre à jour</button>
                         <button class="ranking-action-btn" onclick="openRankingInNewWindow('general')">📺 Afficher</button>
-                        <button class="ranking-action-btn" onclick="exportGeneralRanking()">📊 JSON</button>
-                        <button class="ranking-action-btn" onclick="exportGeneralRankingToPDF()">📄 PDF</button>
-                        <button class="ranking-action-btn" onclick="exportGeneralRankingToHTML()">📄 HTML</button>
+                        <button class="ranking-action-btn" aria-haspopup="menu" aria-expanded="false" onclick="toggleGeneralExportMenu(this)">📤 Exporter ▾</button>
                         <button class="ranking-action-btn" onclick="showNameCheckModal()" title="Détecte les fautes de frappe dans les noms des joueurs et propose de les fusionner">🔍 Vérifier les noms</button>
                     </div>
                     </div><!-- Fin general-hub-content -->

@@ -122,3 +122,18 @@ describe('en-tête des documents : compact et modifiable', () => {
         expect(html).toContain('data-edit="title"');
     });
 });
+
+test('« 📤 Exporter ▾ » : PDF, HTML et JSON dans un seul menu', () => {
+    const btn = document.createElement('button');
+    document.body.appendChild(btn);
+    toggleGeneralExportMenu(btn);
+    const items = Array.from(document.querySelectorAll('#generalExportMenu [role="menuitem"]'));
+    expect(items.map(b => b.querySelector('.am-label').textContent)).toEqual(['PDF', 'HTML', 'JSON']);
+    expect(items.map(b => b.getAttribute('onclick'))).toEqual([
+        expect.stringContaining('exportGeneralRankingToPDF()'),
+        expect.stringContaining('exportGeneralRankingToHTML()'),
+        expect.stringContaining('exportGeneralRanking()'),
+    ]);
+    expect(btn.getAttribute('aria-expanded')).toBe('true');
+    closeActionMenu(false);
+});

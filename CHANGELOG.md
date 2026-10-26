@@ -29,6 +29,7 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 - Chaque division commence sur une nouvelle page (plus de titre de division seul en bas de page).
 - Onglet Classement général : fond jaune remplacé par la présentation sobre du classement de journée.
 - Boutons des classements (général et journée) plus sobres : fond blanc, seul « Mettre à jour » en couleur.
+- Classement général : JSON, PDF et HTML regroupés dans un bouton « 📤 Exporter ▾ ».
 - Classement multisport (et natation par épreuve) : même présentation sobre, sans dégradés violets ni lignes dorées.
 - Les classements imprimés (général, journée, fenêtres « Afficher », multisport, course) ne
   laissent plus de grand blanc : un long tableau continue sur la page suivante, avec l'en-tête
