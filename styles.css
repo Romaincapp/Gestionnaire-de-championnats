@@ -380,93 +380,116 @@ body   * {
         }
         
         .players-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
             margin-bottom: 20px;
             min-height: 60px;
-            padding: 15px;
-            background: #f8f9fa;
+        }
+
+        /* Liste des joueurs en tableau (renderPlayerTable, players.iife.js) */
+        .player-table-wrap {
+            border: 1px solid #e3e8ee;
             border-radius: 8px;
+            background: white;
+            overflow: hidden;
         }
-        
-        .player-tag {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
+
+        .pt-toolbar {
             display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .player-tag:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
-        }
-
-        /* Style pour les joueurs ayant au moins un match BYE */
-        .player-tag.player-has-bye {
-            background: linear-gradient(135deg, var(--color-warning), var(--color-orange));
-            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
-        }
-
-        .player-tag.player-has-bye:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(243, 156, 18, 0.5);
-        }
-        
-        .player-actions {
-            display: flex;
-            gap: 4px;
             align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e3e8ee;
         }
 
-        .edit-player {
-            background: rgba(0,0,0,0.25);
-            border: none;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
+        .pt-filter {
+            flex: 1 1 160px;
+            min-width: 0;
+            padding: 6px 10px;
+            font-size: 13px;
+            border: 1px solid #cfd6dd;
+            border-radius: 6px;
+            background: white;
+            color: var(--color-text);
+        }
+
+        .pt-bulk-delete {
+            color: var(--color-danger);
+        }
+
+        .player-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .player-table th {
+            text-align: left;
             font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            transition: all 0.2s ease;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            padding: 8px 10px;
+            border-bottom: 1px solid #e3e8ee;
+            background: #fafbfc;
         }
 
-        .edit-player:hover {
-            background: rgba(0,0,0,0.4);
-            transform: scale(1.1);
+        .player-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid #eef1f4;
+            color: var(--color-text);
+            vertical-align: middle;
         }
 
-        .remove-player {
-            /* foncé plutôt que voile blanc : le × blanc reste lisible (≥ 4,5:1) sur la carte bleue */
-            background: rgba(0,0,0,0.25);
+        .player-table tbody tr:last-child td { border-bottom: none; }
+        .player-table tbody tr:hover { background: #f6f8fa; }
+        .player-table tbody tr.pt-selected { background: #eef5fb; }
+
+        .player-table .pt-select { width: 32px; padding-right: 0; }
+        .player-table .pt-select input { width: 16px; height: 16px; margin: 0; vertical-align: middle; cursor: pointer; }
+        .player-table .pt-name { font-weight: 600; cursor: pointer; }
+        .player-table .pt-name:hover { text-decoration: underline; }
+        .player-table .pt-club { color: var(--color-text-muted); }
+        .player-table .pt-muted { color: #9aa5b1; }
+        .player-table .pt-actions { width: 40px; text-align: right; }
+
+        .pt-menu-btn {
             border: none;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            background: transparent;
+            color: var(--color-text-muted);
+            font-size: 18px;
+            line-height: 1;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            transition: all 0.2s ease;
         }
 
-        .remove-player:hover {
-            background: rgba(0,0,0,0.4);
-            transform: scale(1.1);
+        .pt-menu-btn:hover,
+        .pt-menu-btn[aria-expanded="true"] { background: #e9edf1; color: var(--color-text); }
+
+        .pt-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-warning);
+            border: 1px solid currentColor;
+            border-radius: 4px;
+        }
+
+        .pt-footer {
+            padding: 8px 10px;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            border-top: 1px solid #e3e8ee;
+        }
+
+        .pt-sr-only {
+            position: absolute;
+            width: 1px; height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
         }
 
         .matches-container {
@@ -1881,6 +1904,7 @@ body.dark-mode textarea:focus-visible {
 }
 .action-menu [role="menuitem"]:hover,
 .action-menu [role="menuitem"]:focus { background: #eaf2fb; }
+.action-menu [data-type="danger"] .am-label { color: var(--color-danger); }
 .action-menu .am-icon { font-size: 16px; }
 .action-menu .am-text { display: flex; flex-direction: column; line-height: 1.25; }
 .action-menu .am-label { font-size: 13px; font-weight: 600; }
@@ -1907,9 +1931,29 @@ body.dark-mode .division {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
-body.dark-mode .players-list {
-    background: #2a2a3d;
+body.dark-mode .player-table-wrap,
+body.dark-mode .pt-filter {
+    background: #252538;
+    border-color: #44445a;
+    color: #e0e0e0;
 }
+
+body.dark-mode .pt-toolbar,
+body.dark-mode .pt-footer,
+body.dark-mode .player-table th,
+body.dark-mode .player-table td { border-color: #3a3a50; }
+
+body.dark-mode .player-table th { background: #2a2a3d; color: #b8bec6; }
+body.dark-mode .player-table td { color: #e0e0e0; }
+body.dark-mode .player-table .pt-club,
+body.dark-mode .pt-footer,
+body.dark-mode .pt-menu-btn { color: #b8bec6; }
+body.dark-mode .player-table tbody tr:hover { background: #2a2a3d; }
+body.dark-mode .player-table tbody tr.pt-selected { background: #23324a; }
+body.dark-mode .pt-menu-btn:hover,
+body.dark-mode .pt-menu-btn[aria-expanded="true"] { background: #34344a; color: #fff; }
+body.dark-mode .pt-badge { color: #f0c24b; }
+body.dark-mode .pt-bulk-delete { color: #ff8a80; }
 
 /* Matches */
 body.dark-mode .tour-section {
