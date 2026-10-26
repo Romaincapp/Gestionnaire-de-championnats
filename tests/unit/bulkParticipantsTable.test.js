@@ -96,3 +96,11 @@ test('la saisie Liste fonctionne toujours (catégorie appliquée à tous)', () =
         ['Martin Pierre', '', 'Solo', 3],
     ]);
 });
+
+test('astuce de la Liste : épreuve (et temps) en fin de ligne → « 🏁 Séries automatiques » ; l\'exemple est bien compris', () => {
+    const tip = document.querySelector('#bulk-panel-list-1 .bulk-tip');
+    expect(tip.textContent).toMatch(/épreuve en fin de ligne/);
+    expect(tip.textContent).toMatch(/Séries automatiques/);
+    const example = tip.querySelector('em').textContent;
+    expect(window.parseSwimmingEntry(example)).toBeTruthy();
+});

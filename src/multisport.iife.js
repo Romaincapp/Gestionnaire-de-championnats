@@ -1118,7 +1118,12 @@
             '<p style="color: #586566; font-size: 13px;">Entrez les noms (un par ligne). Formats acceptés : Nom · Nom, Club · Dossard + Nom (séparés par tabulation ou virgule, colonnes en trop ignorées)</p>' +
             '<div style="margin: 15px 0;">' +
             '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\n1\tGringos 1\n2\tGringos 2\n..."></textarea>' +
-            '</div></div>' +
+            '</div>' +
+            // Astuce : avec l'épreuve (et le temps d'engagement) sur la ligne, « 🏁 Séries
+            // automatiques » crée les séries en un clic (generateSwimmingSeries)
+            '<p class="bulk-tip">💡 <strong>Astuce :</strong> ajoutez le nom de l\'épreuve en fin de ligne, et même le temps d\'engagement ' +
+            '(ex. <em>Dupont Jean 50m brasse 45.20</em>)&nbsp;: le bouton «&nbsp;🏁 Séries automatiques&nbsp;» créera alors les séries en un clic.</p>' +
+            '</div>' +
             // Panneau Tableau
             '<div id="bulk-panel-table-' + dayNumber + '" role="tabpanel" aria-labelledby="bulk-tab-table-' + dayNumber + '" hidden>' +
             '<p style="color: #586566; font-size: 13px;">Une ligne par participant. Une nouvelle ligne s\'ajoute quand vous remplissez la dernière ; vous pouvez aussi coller un bloc copié depuis un tableur (Nom, Prénom, Club, Catégorie).</p>' +
