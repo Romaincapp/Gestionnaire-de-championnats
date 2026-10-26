@@ -37,7 +37,7 @@ const check = (i, value = true) => {
 
 test('un tableau : sélection, joueur, club, menu « ⋯ » par ligne', () => {
     expect(document.querySelector('.player-tag')).toBeNull();
-    expect(Array.from(wrap().querySelectorAll('thead th')).map(th => th.textContent.trim())).toEqual(['', 'Joueur', 'Club', 'Actions']);
+    expect(Array.from(wrap().querySelectorAll('thead th')).map(th => th.textContent.replace(/[↕↑↓]/g, '').trim())).toEqual(['', 'Joueur', 'Club', 'Actions']);
     expect(rows().map(tr => tr.dataset.name)).toEqual(['Alice', "O'Neil", 'Élodie']);
     expect(rows()[0].querySelector('.pt-club').textContent).toBe('Boulaie');
     expect(rows()[1].querySelector('.pt-menu-btn').getAttribute('aria-label')).toBe("Actions pour O'Neil");
@@ -93,4 +93,61 @@ test('menu « ⋯ » : Modifier, Détails, Supprimer', () => {
     expect(items).toEqual(['Modifier', 'Détails', 'Supprimer']);
     expect(btn.getAttribute('aria-expanded')).toBe('true');
     closeActionMenu(false);
+});
+
+describe('« Colonnes ▾ » : afficher / masquer des colonnes', () => {
+    beforeEach(() => { try { localStorage.clear(); } catch (e) { /* ignore */ } updatePlayersDisplay(1); });
+
+    test('le menu liste les colonnes masquables avec leur état', () => {
+        wrap().querySelector('.pt-columns-btn').click();
+        const items = Array.from(document.querySelectorAll('#playerTableColumnsMenu [role="menuitem"]'));
+        expect(items.map(b => b.querySelector('.am-label').textContent)).toEqual(['Club']);
+        expect(items[0].querySelector('.am-hint').textContent).toBe('Affichée');
+        closeActionMenu(false);
+    });
+
+    test('masquer « Club » : classe sur le tableau, choix gardé après un nouveau rendu, menu resté ouvert', () => {
+        wrap().querySelector('.pt-columns-btn').click();
+        document.querySelector('#playerTableColumnsMenu [role="menuitem"]').click();
+        expect(wrap().classList.contains('pt-hide-club')).toBe(true);
+        expect(document.querySelector('#playerTableColumnsMenu .am-hint').textContent).toBe('Masquée');
+        expect(document.getElementById('playerTableColumnsMenu').hidden).toBe(false);
+        closeActionMenu(false);
+        updatePlayersDisplay(1);
+        expect(wrap().classList.contains('pt-hide-club')).toBe(true);
+        togglePlayerTableColumn('players', 'club');
+        expect(wrap().classList.contains('pt-hide-club')).toBe(false);
+    });
+});
+
+describe('tri par colonne (clic sur le titre)', () => {
+    beforeEach(() => {
+        championship.days[1].players[1] = [{ name: 'Chloé', club: 'Zèbre' }, { name: 'alice', club: '' }, { name: 'Bob', club: 'Apris' }];
+        updatePlayersDisplay(1);
+    });
+    const names = () => rows().map(tr => tr.dataset.name);
+    const header = (label) => Array.from(wrap().querySelectorAll('thead th')).find(th => th.textContent.includes(label));
+
+    test('A→Z (sans casse ni accents), Z→A, puis ordre d\'origine', () => {
+        const th = header('Joueur');
+        th.querySelector('.pt-sort').click();
+        expect(th.getAttribute('aria-sort')).toBe('ascending');
+        expect(names()).toEqual(['alice', 'Bob', 'Chloé']);
+        th.querySelector('.pt-sort').click();
+        expect(th.getAttribute('aria-sort')).toBe('descending');
+        expect(names()).toEqual(['Chloé', 'Bob', 'alice']);
+        th.querySelector('.pt-sort').click();
+        expect(th.getAttribute('aria-sort')).toBe('none');
+        expect(names()).toEqual(['Chloé', 'alice', 'Bob']);
+    });
+
+    test('club vide toujours en bas ; un seul titre trié à la fois', () => {
+        header('Joueur').querySelector('.pt-sort').click();
+        const club = header('Club');
+        club.querySelector('.pt-sort').click();
+        expect(names()).toEqual(['Bob', 'Chloé', 'alice']);
+        club.querySelector('.pt-sort').click();
+        expect(names()).toEqual(['Chloé', 'Bob', 'alice']);
+        expect(header('Joueur').getAttribute('aria-sort')).toBe('none');
+    });
 });

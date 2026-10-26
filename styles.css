@@ -504,6 +504,28 @@ body   * {
         }
         .pt-footer { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 
+        /* Titres de colonnes triables (sortPlayerTable) */
+        .pt-sort {
+            border: none;
+            background: none;
+            padding: 2px 4px;
+            margin: -2px -4px;
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .pt-sort:hover { background: #e9edf1; color: var(--color-text); }
+        .pt-sort-icon { font-size: 11px; color: #9aa5b1; }
+        th[aria-sort="ascending"] .pt-sort-icon,
+        th[aria-sort="descending"] .pt-sort-icon { color: var(--color-text); }
+
+        /* Colonnes masquées par « Colonnes ▾ » (togglePlayerTableColumn) */
+        .pt-hide-bib [data-col="bib"],
+        .pt-hide-club [data-col="club"],
+        .pt-hide-info [data-col="info"] { display: none; }
+
         .pt-sr-only {
             position: absolute;
             width: 1px; height: 1px;
@@ -1974,6 +1996,9 @@ body.dark-mode .pt-menu-btn:hover,
 body.dark-mode .pt-menu-btn[aria-expanded="true"] { background: #34344a; color: #fff; }
 body.dark-mode .pt-badge { color: #f0c24b; }
 body.dark-mode .pt-bulk-delete { color: #ff8a80; }
+body.dark-mode .pt-sort:hover { background: #34344a; color: #fff; }
+body.dark-mode th[aria-sort="ascending"] .pt-sort-icon,
+body.dark-mode th[aria-sort="descending"] .pt-sort-icon { color: #e0e0e0; }
 body.dark-mode .pt-club-input { background: #252538; border-color: #44445a; color: #e0e0e0; }
 body.dark-mode .player-table .pt-info { color: #b8bec6; }
 body.dark-mode .player-table .pt-bib { color: #f0c24b; }

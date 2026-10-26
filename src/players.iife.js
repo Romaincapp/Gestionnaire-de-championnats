@@ -599,30 +599,31 @@
     }
 
     function renderPlayerTable(dayNumber, division, players) {
-        const rows = players.map(player => {
+        const rows = players.map((player, index) => {
             const { name, club } = playerNameAndClub(player);
             const attrName = escapeHtmlAttr(name);
             const onclickName = escapeHtmlAttr(escapeForOnclick(name));
             const bye = playerHasByeMatch(dayNumber, division, name)
                 ? ' <span class="pt-badge" title="A au moins un match BYE">BYE</span>' : '';
-            return `<tr data-name="${attrName}">
+            return `<tr data-name="${attrName}" data-order="${index}">
                     <td class="pt-select"><input type="checkbox" aria-label="Sélectionner ${attrName}" onchange="onPlayerRowSelect(this)"></td>
                     <td class="pt-name" onclick="showPlayerDetails(${dayNumber}, ${division}, '${onclickName}')">${escapeHtmlAttr(name)}${bye}</td>
-                    <td class="pt-club">${club ? escapeHtmlAttr(club) : '<span class="pt-muted">—</span>'}</td>
+                    <td class="pt-club" data-col="club">${club ? escapeHtmlAttr(club) : '<span class="pt-muted">—</span>'}</td>
                     <td class="pt-actions"><button type="button" class="pt-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Actions pour ${attrName}" title="Actions"
                         onclick="openPlayerRowMenu(this, ${dayNumber}, ${division}, '${onclickName}')">⋯</button></td>
                 </tr>`;
         }).join('');
-        return `<div class="player-table-wrap" data-day="${dayNumber}" data-division="${division}">
+        return `<div class="player-table-wrap${playerTableHiddenClasses('players')}" data-table="players" data-day="${dayNumber}" data-division="${division}">
                 <div class="pt-toolbar">
                     <input type="search" class="pt-filter" placeholder="Filtrer les joueurs…" aria-label="Filtrer les joueurs de la division ${division}" oninput="filterPlayerTable(this)">
+                    ${playerTableColumnsButtonHTML()}
                     <button type="button" class="ranking-action-btn pt-bulk-delete" hidden onclick="removeSelectedPlayers(this)">🗑️ Supprimer la sélection</button>
                 </div>
                 <table class="player-table">
                     <thead><tr>
                         <th class="pt-select"><input type="checkbox" aria-label="Tout sélectionner" onchange="togglePlayerSelectAll(this)"></th>
-                        <th>Joueur</th>
-                        <th>Club</th>
+                        ${playerTableSortHeader('Joueur')}
+                        ${playerTableSortHeader('Club', 'club')}
                         <th class="pt-actions"><span class="pt-sr-only">Actions</span></th>
                     </tr></thead>
                     <tbody>${rows}</tbody>
@@ -630,6 +631,110 @@
                 <div class="pt-footer" aria-live="polite">0 sur ${players.length} sélectionné</div>
             </div>`;
     }
+
+    // ----- Colonnes affichées (bouton « Colonnes ▾ », comme le data table shadcn) -----
+    // Choix gardé dans ce navigateur, par type de tableau ; une colonne masquée porte
+    // data-col="…" et la classe pt-hide-… sur le tableau la cache (styles.css).
+    const PT_COLUMNS = {
+        players: [{ key: 'club', label: 'Club' }],
+        participants: [
+            { key: 'bib', label: 'Dossard (#)' },
+            { key: 'club', label: 'Club' },
+            { key: 'info', label: 'Épreuve · série · couloir' }
+        ]
+    };
+    const PT_HIDDEN_KEY = 'playerTableHiddenColumns';
+    let columnsMenuAnchor = null;
+
+    function readHiddenColumns() {
+        try { return JSON.parse(localStorage.getItem(PT_HIDDEN_KEY)) || {}; } catch (e) { return {}; }
+    }
+
+    function playerTableHiddenClasses(kind) {
+        return (readHiddenColumns()[kind] || []).map(key => ' pt-hide-' + key).join('');
+    }
+
+    function playerTableColumnsButtonHTML() {
+        return '<button type="button" class="ranking-action-btn pt-columns-btn" aria-haspopup="menu" aria-expanded="false" onclick="openPlayerTableColumnsMenu(this)">Colonnes ▾</button>';
+    }
+
+    function openPlayerTableColumnsMenu(button) {
+        const wrap = playerTableOf(button);
+        if (!wrap) return;
+        const kind = wrap.dataset.table;
+        const hidden = readHiddenColumns()[kind] || [];
+        // Seulement les colonnes présentes dans ce tableau (ex. « Épreuve » après les séries automatiques)
+        const cols = (PT_COLUMNS[kind] || []).filter(c => wrap.querySelector(`th[data-col="${c.key}"]`));
+        columnsMenuAnchor = button;
+        toggleActionMenu('playerTableColumnsMenu', button, 'Colonnes affichées', cols.map(c => {
+            const shown = !hidden.includes(c.key);
+            return {
+                icon: shown ? '☑' : '☐', label: c.label, hint: shown ? 'Affichée' : 'Masquée',
+                onclick: `togglePlayerTableColumn('${kind}', '${c.key}', true)`
+            };
+        }), kind);
+    }
+
+    function togglePlayerTableColumn(kind, key, reopenMenu) {
+        const all = readHiddenColumns();
+        const hidden = new Set(all[kind] || []);
+        if (hidden.has(key)) hidden.delete(key); else hidden.add(key);
+        all[kind] = Array.from(hidden);
+        try { localStorage.setItem(PT_HIDDEN_KEY, JSON.stringify(all)); } catch (e) { /* navigation privée */ }
+        document.querySelectorAll(`.player-table-wrap[data-table="${kind}"]`).forEach(w => {
+            w.classList.toggle('pt-hide-' + key, hidden.has(key));
+        });
+        // Le menu reste ouvert pour cocher / décocher plusieurs colonnes de suite
+        if (reopenMenu && columnsMenuAnchor && document.body.contains(columnsMenuAnchor)) {
+            openPlayerTableColumnsMenu(columnsMenuAnchor);
+            const item = Array.from(document.querySelectorAll('#playerTableColumnsMenu [role="menuitem"]'))
+                .find(b => (b.getAttribute('onclick') || '').includes(`'${key}'`));
+            if (item) item.focus();
+        }
+    }
+
+    window.playerTableHiddenClasses = playerTableHiddenClasses;
+    window.playerTableColumnsButtonHTML = playerTableColumnsButtonHTML;
+    window.openPlayerTableColumnsMenu = openPlayerTableColumnsMenu;
+    window.togglePlayerTableColumn = togglePlayerTableColumn;
+
+    // ----- Tri par colonne (clic sur le titre : A→Z, Z→A, puis ordre d'origine) -----
+    function playerTableSortHeader(label, col, extraClass) {
+        return `<th${col ? ` data-col="${col}"` : ''}${extraClass ? ` class="${extraClass}"` : ''} aria-sort="none">` +
+            `<button type="button" class="pt-sort" onclick="sortPlayerTable(this)" title="Trier par ${label}">${label}` +
+            ` <span class="pt-sort-icon" aria-hidden="true">↕</span></button></th>`;
+    }
+
+    function sortPlayerTable(button) {
+        const th = button.closest('th');
+        const table = th && th.closest('table');
+        if (!table) return;
+        const next = { none: 'ascending', ascending: 'descending', descending: 'none' }[th.getAttribute('aria-sort') || 'none'];
+        table.querySelectorAll('thead th[aria-sort]').forEach(h => {
+            h.setAttribute('aria-sort', 'none');
+            const icon = h.querySelector('.pt-sort-icon');
+            if (icon) icon.textContent = '↕';
+        });
+        th.setAttribute('aria-sort', next);
+        th.querySelector('.pt-sort-icon').textContent = { ascending: '↑', descending: '↓', none: '↕' }[next];
+        const col = th.cellIndex;
+        const tbody = table.tBodies[0];
+        const text = tr => (tr.cells[col] ? tr.cells[col].textContent : '').replace(/\s+/g, ' ').trim();
+        const rows = Array.from(tbody.rows);
+        rows.sort((a, b) => {
+            if (next === 'none') return Number(a.dataset.order) - Number(b.dataset.order);
+            const ta = text(a), tb = text(b);
+            // Cellules vides (« — ») toujours en bas
+            const ea = ta === '' || ta === '—', eb = tb === '' || tb === '—';
+            if (ea !== eb) return ea ? 1 : -1;
+            const c = ta.localeCompare(tb, 'fr', { numeric: true, sensitivity: 'base' });
+            return (next === 'ascending' ? c : -c) || Number(a.dataset.order) - Number(b.dataset.order);
+        });
+        rows.forEach(tr => tbody.appendChild(tr));
+    }
+
+    window.playerTableSortHeader = playerTableSortHeader;
+    window.sortPlayerTable = sortPlayerTable;
 
     function playerTableOf(el) {
         return el && el.closest('.player-table-wrap');
