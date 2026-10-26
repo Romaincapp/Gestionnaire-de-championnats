@@ -278,8 +278,8 @@
                     <div class="rankings-toggle" style="flex-wrap: wrap; gap: 5px;">
                         <button class="toggle-btn active" onclick="showRankingsForDay(${dayNumber}, 'points')">Par Points</button>
                         <button class="toggle-btn" onclick="showRankingsForDay(${dayNumber}, 'winrate')">Par % Victoires</button>
-                        <button class="toggle-btn" onclick="openRankingInNewWindow(${dayNumber})" style="background: linear-gradient(135deg, #9654b1, #8e44ad); color: white;">📺 Afficher</button>
-                        <button class="toggle-btn" onclick="showCompleteDayRanking(${dayNumber})" style="background: #017239; color: white;">📊 Complet</button>
+                        <button class="ranking-action-btn" onclick="openRankingInNewWindow(${dayNumber})">📺 Afficher</button>
+                        <button class="ranking-action-btn" onclick="showCompleteDayRanking(${dayNumber})">📊 Complet</button>
                     </div>
                 </div>
                 <div id="rankingsContent-${dayNumber}"></div>

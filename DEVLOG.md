@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Boutons des classements sobres
+
+- **Quoi** : boutons de l'onglet Classement général (6 boutons colorés dans un grand cadre blanc,
+  `.control-buttons`) remplacés par une rangée `.ranking-actions` de boutons `.ranking-action-btn`
+  (fond blanc, bordure grise fine) ; seul « Mettre à jour » est en couleur (`.primary`, bleu).
+  Classement de journée : « 📺 Afficher » et « 📊 Complet » (violet / vert) passent au même style
+  (et ne sont plus des `.toggle-btn`, que `showRankingsForDay` basculait en « actif »). Règles mode
+  sombre ajoutées.
+- **Fichiers** : `index.html`, `styles.css`, `src/ui.iife.js`
+- **Vérifié** : captures clair / sombre. **Tests** : `npm test` vert (520).
+
 ### 2026-10-26 — Onglet Classement général : présentation sobre
 
 - **Quoi** : fond jaune dégradé et bordure ocre de `.general-ranking-section` remplacés par la
