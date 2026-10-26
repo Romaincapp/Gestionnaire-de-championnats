@@ -579,45 +579,154 @@
 
             const players = championship.days[dayNumber].players[division];
 
-            if (players.length === 0) {
-                container.innerHTML = '<div class="empty-state">Aucun joueur</div>';
-            } else {
-                container.innerHTML = players.map(player => {
-                    // Extraire le nom et le club
-                    let playerName, playerClub;
-                    if (typeof player === 'object' && player !== null) {
-                        playerName = player.name || '';
-                        playerClub = player.club || '';
-                    } else {
-                        playerName = String(player);
-                        playerClub = '';
-                    }
-                    
-                    // Échapper les caractères spéciaux pour les attributs onclick
-                    const escapedPlayer = escapeForOnclick(playerName);
-
-                    // Vérifier si le joueur a un match BYE
-                    const hasBye = playerHasByeMatch(dayNumber, division, playerName);
-                    const byeClass = hasBye ? ' player-has-bye' : '';
-                    
-                    // Afficher le club s'il existe
-                    const clubBadge = playerClub ? `<span style="background: linear-gradient(135deg, #5267d0, #764ba2); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 6px;">${playerClub}</span>` : '';
-
-                    return `<div class="player-tag${byeClass}" onclick="showPlayerDetails(${dayNumber}, ${division}, '${escapedPlayer}')">
-                        ${playerName}${clubBadge}
-                        <div class="player-actions">
-                            <button class="edit-player" onclick="event.stopPropagation(); editPlayer(${dayNumber}, ${division}, '${escapedPlayer}')" title="Modifier">✏️</button>
-                            <button class="remove-player" onclick="event.stopPropagation(); removePlayer(${dayNumber}, ${division}, '${escapedPlayer}')" title="Supprimer">×</button>
-                        </div>
-                    </div>`;
-                }).join('');
-            }
+            container.innerHTML = players.length === 0
+                ? '<div class="empty-state">Aucun joueur</div>'
+                : renderPlayerTable(dayNumber, division, players);
 
             // Mettre à jour le compteur de joueurs dynamiquement
             updatePlayerCount(dayNumber, division);
         }
     }
     window.updatePlayersDisplay = updatePlayersDisplay;
+
+    // ----- Liste des joueurs en tableau (façon « data table ») -----
+    // Colonne de sélection (cases à cocher + « tout sélectionner »), Joueur, Club,
+    // et un bouton « ⋯ » par ligne qui ouvre le menu d'actions (toggleActionMenu).
+    // La sélection et le filtre vivent dans le DOM : un re-rendu les remet à zéro.
+    function playerNameAndClub(player) {
+        if (typeof player === 'object' && player !== null) return { name: player.name || '', club: player.club || '' };
+        return { name: String(player), club: '' };
+    }
+
+    function renderPlayerTable(dayNumber, division, players) {
+        const rows = players.map(player => {
+            const { name, club } = playerNameAndClub(player);
+            const attrName = escapeHtmlAttr(name);
+            const onclickName = escapeHtmlAttr(escapeForOnclick(name));
+            const bye = playerHasByeMatch(dayNumber, division, name)
+                ? ' <span class="pt-badge" title="A au moins un match BYE">BYE</span>' : '';
+            return `<tr data-name="${attrName}">
+                    <td class="pt-select"><input type="checkbox" aria-label="Sélectionner ${attrName}" onchange="onPlayerRowSelect(this)"></td>
+                    <td class="pt-name" onclick="showPlayerDetails(${dayNumber}, ${division}, '${onclickName}')">${escapeHtmlAttr(name)}${bye}</td>
+                    <td class="pt-club">${club ? escapeHtmlAttr(club) : '<span class="pt-muted">—</span>'}</td>
+                    <td class="pt-actions"><button type="button" class="pt-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Actions pour ${attrName}" title="Actions"
+                        onclick="openPlayerRowMenu(this, ${dayNumber}, ${division}, '${onclickName}')">⋯</button></td>
+                </tr>`;
+        }).join('');
+        return `<div class="player-table-wrap" data-day="${dayNumber}" data-division="${division}">
+                <div class="pt-toolbar">
+                    <input type="search" class="pt-filter" placeholder="Filtrer les joueurs…" aria-label="Filtrer les joueurs de la division ${division}" oninput="filterPlayerTable(this)">
+                    <button type="button" class="ranking-action-btn pt-bulk-delete" hidden onclick="removeSelectedPlayers(this)">🗑️ Supprimer la sélection</button>
+                </div>
+                <table class="player-table">
+                    <thead><tr>
+                        <th class="pt-select"><input type="checkbox" aria-label="Tout sélectionner" onchange="togglePlayerSelectAll(this)"></th>
+                        <th>Joueur</th>
+                        <th>Club</th>
+                        <th class="pt-actions"><span class="pt-sr-only">Actions</span></th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div class="pt-footer" aria-live="polite">0 sur ${players.length} sélectionné</div>
+            </div>`;
+    }
+
+    function playerTableOf(el) {
+        return el && el.closest('.player-table-wrap');
+    }
+
+    function visiblePlayerRows(wrap) {
+        return Array.from(wrap.querySelectorAll('tbody tr')).filter(tr => !tr.hidden);
+    }
+
+    // Compteur, case « tout sélectionner » (cochée / indéterminée) et bouton de suppression groupée
+    function refreshPlayerTableSelection(wrap) {
+        if (!wrap) return;
+        const all = Array.from(wrap.querySelectorAll('tbody tr'));
+        const checked = all.filter(tr => tr.querySelector('.pt-select input').checked);
+        all.forEach(tr => tr.classList.toggle('pt-selected', tr.querySelector('.pt-select input').checked));
+        const visible = visiblePlayerRows(wrap);
+        const visibleChecked = visible.filter(tr => tr.querySelector('.pt-select input').checked);
+        const head = wrap.querySelector('thead .pt-select input');
+        if (head) {
+            head.checked = visible.length > 0 && visibleChecked.length === visible.length;
+            head.indeterminate = visibleChecked.length > 0 && visibleChecked.length < visible.length;
+        }
+        const footer = wrap.querySelector('.pt-footer');
+        if (footer) footer.textContent = `${checked.length} sur ${all.length} sélectionné${checked.length > 1 ? 's' : ''}`;
+        const bulk = wrap.querySelector('.pt-bulk-delete');
+        if (bulk) {
+            bulk.hidden = checked.length === 0;
+            bulk.textContent = `🗑️ Supprimer la sélection (${checked.length})`;
+        }
+    }
+
+    function onPlayerRowSelect(checkbox) {
+        refreshPlayerTableSelection(playerTableOf(checkbox));
+    }
+
+    // Coche / décoche les lignes visibles (le filtre s'applique, comme sur shadcn)
+    function togglePlayerSelectAll(checkbox) {
+        const wrap = playerTableOf(checkbox);
+        if (!wrap) return;
+        visiblePlayerRows(wrap).forEach(tr => { tr.querySelector('.pt-select input').checked = checkbox.checked; });
+        refreshPlayerTableSelection(wrap);
+    }
+
+    function filterPlayerTable(input) {
+        const wrap = playerTableOf(input);
+        if (!wrap) return;
+        const norm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        const q = norm(input.value.trim());
+        wrap.querySelectorAll('tbody tr').forEach(tr => {
+            tr.hidden = q !== '' && !norm(tr.textContent).includes(q);
+        });
+        refreshPlayerTableSelection(wrap);
+    }
+
+    function openPlayerRowMenu(button, dayNumber, division, playerName) {
+        const n = escapeForOnclick(playerName);
+        toggleActionMenu('playerRowMenu', button, `Actions pour ${playerName}`, [
+            { icon: '✏️', label: 'Modifier', hint: 'Nom et club', onclick: `editPlayer(${dayNumber}, ${division}, '${n}')` },
+            { icon: '📊', label: 'Détails', hint: 'Matchs et statistiques', onclick: `showPlayerDetails(${dayNumber}, ${division}, '${n}')` },
+            { icon: '🗑️', label: 'Supprimer', hint: 'Retire le joueur et ses matchs', type: 'danger', onclick: `removePlayer(${dayNumber}, ${division}, '${n}')` }
+        ], `${dayNumber}|${division}|${playerName}`);
+    }
+
+    function removeSelectedPlayers(button) {
+        const wrap = playerTableOf(button);
+        if (!wrap) return;
+        const names = Array.from(wrap.querySelectorAll('tbody tr'))
+            .filter(tr => tr.querySelector('.pt-select input').checked)
+            .map(tr => tr.dataset.name);
+        removePlayers(parseInt(wrap.dataset.day), parseInt(wrap.dataset.division), names);
+    }
+
+    // Suppression groupée : une seule confirmation, joueurs et leurs matchs retirés
+    function removePlayers(dayNumber, division, names) {
+        if (!names || names.length === 0) return false;
+        const label = names.length === 1 ? names[0] : `ces ${names.length} joueurs`;
+        if (!confirm(`Êtes-vous sûr de vouloir supprimer ${label} ?\n\nLeurs matchs de la journée seront aussi supprimés.`)) return false;
+        const lower = new Set(names.map(n => String(n).toLowerCase()));
+        const day = championship.days[dayNumber];
+        day.players[division] = (day.players[division] || []).filter(p => !lower.has(playerNameAndClub(p).name.toLowerCase()));
+        day.matches[division] = (day.matches[division] || []).filter(m => !names.includes(m.player1) && !names.includes(m.player2));
+        updatePlayersDisplay(dayNumber);
+        updateMatchesDisplay(dayNumber);
+        updateStats(dayNumber);
+        saveToLocalStorage();
+        showNotification(names.length === 1 ? `${names[0]} supprimé` : `${names.length} joueurs supprimés`, 'warning');
+        return true;
+    }
+
+    window.renderPlayerTable = renderPlayerTable;
+    window.refreshPlayerTableSelection = refreshPlayerTableSelection;
+    window.onPlayerRowSelect = onPlayerRowSelect;
+    window.togglePlayerSelectAll = togglePlayerSelectAll;
+    window.filterPlayerTable = filterPlayerTable;
+    window.openPlayerRowMenu = openPlayerRowMenu;
+    window.removeSelectedPlayers = removeSelectedPlayers;
+    window.removePlayers = removePlayers;
 
     function removePlayer(dayNumber, division, playerName) {
         // Trouver le joueur pour obtenir son nom d'affichage

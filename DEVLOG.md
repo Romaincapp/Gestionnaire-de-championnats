@@ -33,6 +33,24 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Liste des joueurs en tableau (data table)
+
+- **Quoi** : les pastilles bleues des joueurs (`.player-tag`, boutons ✏️ / ×) sont remplacées, par
+  division, par un tableau façon shadcn « data table » (`renderPlayerTable`) : colonne de sélection
+  (cases + « tout sélectionner » cochée / indéterminée, appliquée aux lignes visibles), Joueur
+  (clic = détails, badge « BYE »), Club, bouton « ⋯ » par ligne ouvrant un menu Modifier / Détails /
+  Supprimer (`toggleActionMenu`, mêmes clavier et Échap que les menus « ▾ ») ; barre d'outils avec
+  filtre (sans casse ni accents) et « 🗑️ Supprimer la sélection (n) » visible dès qu'une ligne est
+  cochée ; pied « n sur N sélectionné(s) ». Sélection et filtre vivent dans le DOM (remis à zéro à
+  chaque re-rendu). CSS `.player-tag` / `.edit-player` / `.remove-player` supprimé ; règles mode
+  sombre ajoutées ; « Supprimer » en rouge dans les menus (`[data-type="danger"]`).
+- **Ajouts** (`players.iife.js`) : `renderPlayerTable`, `refreshPlayerTableSelection`,
+  `onPlayerRowSelect`, `togglePlayerSelectAll`, `filterPlayerTable`, `openPlayerRowMenu`,
+  `removeSelectedPlayers`, `removePlayers(day, div, names)` (une confirmation, joueurs et matchs).
+- **Fichiers** : `src/players.iife.js`, `styles.css`, `tests/unit/playerTable.test.js`
+- **Vérifié** : Chromium (sélection, menu, filtre, suppression groupée, nom avec apostrophe, clair /
+  sombre / téléphone), `npm run test:a11y` 0 défaut. **Tests** : `npm test` vert (526).
+
 ### 2026-10-26 — Classement multisport sobre
 
 - **Quoi** : même présentation que les classements général et de journée. Section blanche (ombre

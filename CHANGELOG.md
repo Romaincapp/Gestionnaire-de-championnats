@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 👥 Liste des joueurs en tableau
+- Les joueurs de chaque division s'affichent dans un tableau (Joueur, Club) au lieu de pastilles.
+  Un bouton « ⋯ » au bout de chaque ligne ouvre Modifier / Détails / Supprimer.
+- Cases à cocher pour sélectionner plusieurs joueurs (ou tous) et les supprimer en une fois ;
+  champ de filtre pour retrouver un joueur.
+
 ### 🖨️ Impression des classements
 - Onglet Classement général : fond jaune remplacé par la présentation sobre du classement de journée.
 - Boutons des classements (général et journée) plus sobres : fond blanc, seul « Mettre à jour » en couleur.
