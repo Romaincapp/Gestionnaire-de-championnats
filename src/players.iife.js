@@ -599,13 +599,13 @@
     }
 
     function renderPlayerTable(dayNumber, division, players) {
-        const rows = players.map(player => {
+        const rows = players.map((player, index) => {
             const { name, club } = playerNameAndClub(player);
             const attrName = escapeHtmlAttr(name);
             const onclickName = escapeHtmlAttr(escapeForOnclick(name));
             const bye = playerHasByeMatch(dayNumber, division, name)
                 ? ' <span class="pt-badge" title="A au moins un match BYE">BYE</span>' : '';
-            return `<tr data-name="${attrName}">
+            return `<tr data-name="${attrName}" data-order="${index}">
                     <td class="pt-select"><input type="checkbox" aria-label="Sélectionner ${attrName}" onchange="onPlayerRowSelect(this)"></td>
                     <td class="pt-name" onclick="showPlayerDetails(${dayNumber}, ${division}, '${onclickName}')">${escapeHtmlAttr(name)}${bye}</td>
                     <td class="pt-club" data-col="club">${club ? escapeHtmlAttr(club) : '<span class="pt-muted">—</span>'}</td>
@@ -622,8 +622,8 @@
                 <table class="player-table">
                     <thead><tr>
                         <th class="pt-select"><input type="checkbox" aria-label="Tout sélectionner" onchange="togglePlayerSelectAll(this)"></th>
-                        <th>Joueur</th>
-                        <th data-col="club">Club</th>
+                        ${playerTableSortHeader('Joueur')}
+                        ${playerTableSortHeader('Club', 'club')}
                         <th class="pt-actions"><span class="pt-sr-only">Actions</span></th>
                     </tr></thead>
                     <tbody>${rows}</tbody>
@@ -697,6 +697,44 @@
     window.playerTableColumnsButtonHTML = playerTableColumnsButtonHTML;
     window.openPlayerTableColumnsMenu = openPlayerTableColumnsMenu;
     window.togglePlayerTableColumn = togglePlayerTableColumn;
+
+    // ----- Tri par colonne (clic sur le titre : A→Z, Z→A, puis ordre d'origine) -----
+    function playerTableSortHeader(label, col, extraClass) {
+        return `<th${col ? ` data-col="${col}"` : ''}${extraClass ? ` class="${extraClass}"` : ''} aria-sort="none">` +
+            `<button type="button" class="pt-sort" onclick="sortPlayerTable(this)" title="Trier par ${label}">${label}` +
+            ` <span class="pt-sort-icon" aria-hidden="true">↕</span></button></th>`;
+    }
+
+    function sortPlayerTable(button) {
+        const th = button.closest('th');
+        const table = th && th.closest('table');
+        if (!table) return;
+        const next = { none: 'ascending', ascending: 'descending', descending: 'none' }[th.getAttribute('aria-sort') || 'none'];
+        table.querySelectorAll('thead th[aria-sort]').forEach(h => {
+            h.setAttribute('aria-sort', 'none');
+            const icon = h.querySelector('.pt-sort-icon');
+            if (icon) icon.textContent = '↕';
+        });
+        th.setAttribute('aria-sort', next);
+        th.querySelector('.pt-sort-icon').textContent = { ascending: '↑', descending: '↓', none: '↕' }[next];
+        const col = th.cellIndex;
+        const tbody = table.tBodies[0];
+        const text = tr => (tr.cells[col] ? tr.cells[col].textContent : '').replace(/\s+/g, ' ').trim();
+        const rows = Array.from(tbody.rows);
+        rows.sort((a, b) => {
+            if (next === 'none') return Number(a.dataset.order) - Number(b.dataset.order);
+            const ta = text(a), tb = text(b);
+            // Cellules vides (« — ») toujours en bas
+            const ea = ta === '' || ta === '—', eb = tb === '' || tb === '—';
+            if (ea !== eb) return ea ? 1 : -1;
+            const c = ta.localeCompare(tb, 'fr', { numeric: true, sensitivity: 'base' });
+            return (next === 'ascending' ? c : -c) || Number(a.dataset.order) - Number(b.dataset.order);
+        });
+        rows.forEach(tr => tbody.appendChild(tr));
+    }
+
+    window.playerTableSortHeader = playerTableSortHeader;
+    window.sortPlayerTable = sortPlayerTable;
 
     function playerTableOf(el) {
         return el && el.closest('.player-table-wrap');

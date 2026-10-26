@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Tri par colonne des tableaux joueurs / participants
+
+- **Quoi** : clic sur un titre de colonne (Joueur, Club ; #, Participant, Club, Épreuve · série ·
+  couloir) : A→Z, Z→A, puis ordre d'origine (`aria-sort` + icône ↕ / ↑ / ↓, un seul titre trié à la
+  fois). Tri dans le DOM (`sortPlayerTable`), sans casse ni accents, numérique (dossard 2 avant 10),
+  cellules vides en bas ; ordre d'origine via `data-order` ; remis à zéro à chaque rendu.
+- **Ajouts** (`players.iife.js`) : `playerTableSortHeader(label, col, class)`, `sortPlayerTable(bouton)`.
+- **Fichiers** : `src/players.iife.js`, `src/multisport.iife.js`, `styles.css`,
+  `tests/unit/playerTable.test.js`, `tests/unit/participantsListInfo.test.js`
+- **Tests** : `npm test` vert (538).
+
 ### 2026-10-26 — « Colonnes ▾ » des tableaux joueurs / participants
 
 - **Quoi** : bouton « Colonnes ▾ » (comme le data table shadcn) dans la barre d'outils des deux

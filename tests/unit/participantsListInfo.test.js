@@ -126,7 +126,7 @@ describe('tableau des participants (façon « data table »)', () => {
     };
 
     test('colonnes : sélection, dossard, participant, club, épreuve · série · couloir, actions', () => {
-        expect([...wrap().querySelectorAll('thead th')].map(th => th.textContent.trim()))
+        expect([...wrap().querySelectorAll('thead th')].map(th => th.textContent.replace(/[↕↑↓]/g, '').trim()))
             .toEqual(['', '#', 'Participant', 'Club', 'Épreuve · série · couloir', 'Actions']);
     });
 
@@ -138,6 +138,15 @@ describe('tableau des participants (façon « data table »)', () => {
         expect(groupActions().every(el => !el.hidden)).toBe(true);
         expect(wrap().querySelector('.pt-count').textContent).toBe('1 sur 5 sélectionné');
         expect(wrap().querySelector('.pt-bulk-delete').textContent).toBe('🗑️ Retirer de la liste (1)');
+    });
+
+    test('tri par dossard : numérique (2 avant 10)', () => {
+        cd().participants[0].bib = 10;
+        window.refreshChronoDisplay(1);
+        const th = [...wrap().querySelectorAll('thead th')].find(h => h.dataset.col === 'bib');
+        th.querySelector('.pt-sort').click();
+        const bibs = [...wrap().querySelectorAll('tbody td.pt-bib')].map(td => td.textContent.trim());
+        expect(bibs.indexOf('10')).toBeGreaterThan(bibs.indexOf('2'));
     });
 
     test('menu « ⋯ » : Modifier, Ajouter à une série, Retirer de la liste', () => {

@@ -546,10 +546,10 @@
                 var info = participantEntryInfo(p, chronoData, placement);
                 if (info) anyInfo = true;
                 return { item: item, info: info };
-            }).map(function(r) {
+            }).map(function(r, index) {
                 var p = r.item.p;
                 var name = escapeLaneHtml(p.name || '');
-                var row = '<tr id="participant-row-' + dayNumber + '-' + p.id + '" data-name="' + name + '"' + (r.item.unplaced ? ' class="pt-warning"' : '') + '>';
+                var row = '<tr id="participant-row-' + dayNumber + '-' + p.id + '" data-name="' + name + '" data-order="' + index + '"' + (r.item.unplaced ? ' class="pt-warning"' : '') + '>';
                 row += '<td class="pt-select"><input type="checkbox" class="participant-check-' + dayNumber + '" value="' + p.id + '" aria-label="Sélectionner ' + name + '" onchange="onPlayerRowSelect(this)"></td>';
                 row += '<td class="pt-bib" data-col="bib">' + (p.bib != null ? escapeLaneHtml(p.bib) : '<span class="pt-muted">—</span>') + '</td>';
                 row += '<td class="pt-name pt-plain"><span' + (p.swimRaw ? ' title="' + escapeLaneHtml('Ligne d\'origine : ' + p.swimRaw) + '"' : '') + '>' + name + '</span>';
@@ -588,8 +588,8 @@
                 'style="' + (listHeight ? 'height: ' + listHeight + 'px; ' : '') + 'min-height: 60px; overflow-y: auto; resize: vertical;">';
             html += '<table class="player-table"><thead><tr>';
             html += '<th class="pt-select"><input type="checkbox" aria-label="Tout sélectionner" onchange="togglePlayerSelectAll(this)"></th>';
-            html += '<th class="pt-bib" data-col="bib">#</th><th>Participant</th><th data-col="club">Club</th>';
-            if (anyInfo) html += '<th data-col="info">Épreuve · série · couloir</th>';
+            html += global.playerTableSortHeader('#', 'bib', 'pt-bib') + global.playerTableSortHeader('Participant') + global.playerTableSortHeader('Club', 'club');
+            if (anyInfo) html += global.playerTableSortHeader('Épreuve · série · couloir', 'info');
             html += '<th class="pt-actions"><span class="pt-sr-only">Actions</span></th>';
             html += '</tr></thead><tbody>' + rowsHtml + '</tbody></table>';
             html += '</div>';
