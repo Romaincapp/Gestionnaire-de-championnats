@@ -33,6 +33,14 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Cases de score en sets plus compactes
+
+- **Quoi** : en mode sets, cases réduites (30 px, 13 px) et espacements resserrés : un BO3 tient
+  sur une seule ligne dans une carte de terrain (BO5/BO7 passent à la ligne si la place manque).
+  Sur écran tactile, les cases gardent 44 px (section « TACTILE »).
+- **Fichiers** : `styles.css`
+- **Tests** : `npm test` vert (508).
+
 ### 2026-10-23 — Session de navigateur persistante pour les tests
 
 - **Contexte** : demande de l'utilisateur d'utiliser par défaut une session de navigateur unique
