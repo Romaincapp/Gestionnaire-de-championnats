@@ -81,7 +81,8 @@
      * window.open : elles ne chargent pas styles.css). L'aperçu reprend l'affichage
      * écran (couleurs gardées, fond de page blanc) et un long tableau continue sur
      * la page suivante au lieu d'être repoussé en entier (grand blanc), en-tête de
-     * colonnes répété, jamais de ligne coupée, titre gardé avec son tableau.
+     * colonnes répété, jamais de ligne coupée, titre gardé avec son tableau, chaque
+     * division (à partir de la 2e) sur une nouvelle page.
      * Pas de format imposé (@page size) : Portrait/Paysage reste au choix dans la
      * fenêtre d'impression. En portrait, tableaux resserrés pour que 9-10 colonnes
      * tiennent (noms sur une ligne).
@@ -108,6 +109,11 @@
             thead { display: table-header-group; }
             tr, th, td { break-inside: avoid; page-break-inside: avoid; }
             h1, h2, h3, h4, .header, .division-title { break-after: avoid; page-break-after: avoid; }
+            /* Chaque division à partir de la 2e commence sur une nouvelle page : jamais un
+               titre de division seul en bas de page (blanc à la fin de la précédente) */
+            .division ~ .division,
+            .ranking-division ~ .ranking-division,
+            .division-ranking ~ .division-ranking { break-before: page; page-break-before: always; }
         }`;
     }
 

@@ -33,6 +33,19 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Impression : chaque division sur une nouvelle page
+
+- **Quoi** : dans les classements imprimés, un titre de division pouvait rester seul en bas de
+  page. `rankingPrintCSS()` fait maintenant commencer chaque division, à partir de la 2e, sur une
+  nouvelle page (`.division ~ .division`, `.ranking-division ~ .ranking-division`,
+  `.division-ranking ~ .division-ranking` : `break-before: page`). Classe `ranking-division`
+  ajoutée aux blocs de division du classement de journée, du général à l'écran (repris par la
+  fenêtre « Afficher ») et du classement complet.
+- **Fichiers** : `src/utils.iife.js`, `src/ranking.iife.js`, `src/init.iife.js`,
+  `tests/unit/rankingPrintDocs.test.js`
+- **Vérifié** : PDF Chromium (40 + 30 joueurs) : D2 en haut de la page 3, blanc à la fin de la D1.
+  **Tests** : `npm test` vert (538).
+
 ### 2026-10-26 — Tri par colonne des tableaux joueurs / participants
 
 - **Quoi** : clic sur un titre de colonne (Joueur, Club ; #, Participant, Club, Épreuve · série ·

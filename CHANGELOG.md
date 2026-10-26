@@ -26,6 +26,7 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 - Tri en cliquant sur un titre de colonne : A→Z, Z→A, puis ordre d'origine.
 
 ### 🖨️ Impression des classements
+- Chaque division commence sur une nouvelle page (plus de titre de division seul en bas de page).
 - Onglet Classement général : fond jaune remplacé par la présentation sobre du classement de journée.
 - Boutons des classements (général et journée) plus sobres : fond blanc, seul « Mettre à jour » en couleur.
 - Classement multisport (et natation par épreuve) : même présentation sobre, sans dégradés violets ni lignes dorées.

@@ -44,6 +44,8 @@ test('règles d\'impression : tableaux sécables, en-tête répété, contrôles
     expect(css).toMatch(/thead \{ display: table-header-group/);
     expect(css).toMatch(/\.division[^{]*\{\s*break-inside: auto !important/);
     expect(css).toMatch(/print-color-adjust: exact/);
+    // Divisions suivantes sur une nouvelle page (pas de titre de division seul en bas de page)
+    expect(css).toMatch(/\.division ~ \.division,\s*\.ranking-division ~ \.ranking-division,[^{]*\{ break-before: page/);
     // Pas de format imposé : Portrait / Paysage au choix dans la fenêtre d'impression
     expect(css).not.toMatch(/[^-]size:/);
     expect(css).toMatch(/@media print and \(orientation: portrait\)/);
