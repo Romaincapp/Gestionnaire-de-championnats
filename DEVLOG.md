@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Classement général : colonnes de sets
+
+- **Quoi** : le classement général (onglet, export HTML, export depuis `init.iife.js`) reprend les
+  colonnes du classement de journée en mode sets. Toutes les journées Matchs en sets : « Sets G/P »,
+  « Diff sets », « Pts jeu ± ». Journées mélangées (2 scores + sets) : PP/PC et Diff gardés, plus
+  « Sets G/P » (journées en sets seulement, forfaits de journée manquée compris) et « Pts jeu ± ».
+- **Ajouts** : `totalSetsWon`/`totalSetsLost` dans `calculateGeneralRanking` ; `generalSetsMode()`,
+  `generalSetsHeaders(mode)`, `generalSetsCells(player, mode)` exposées (`ranking.iife.js`).
+- **Fichiers** : `src/ranking.iife.js`, `src/init.iife.js`, `tests/unit/generalSetsColumns.test.js`
+- **Tests** : `npm test` vert (511).
+
 ### 2026-10-26 — Cases de score en sets plus compactes
 
 - **Quoi** : en mode sets, cases réduites (30 px, 13 px) et espacements resserrés : un BO3 tient

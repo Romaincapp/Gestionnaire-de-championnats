@@ -311,6 +311,7 @@ lors du même nettoyage.
 
 **Fonctions exposées** :
 - `calculatePlayerStats(dayNumber, division, playerName)`, `updateRankings()`, `updateRankingsForDay(dayNumber)`, `showRankings(type)`, `showRankingsForDay(dayNumber)`, `updateGeneralRanking()`, `showGeneralPlayerDetails(playerName)`
+- `generalSetsMode()`, `generalSetsHeaders(mode)`, `generalSetsCells(player, mode)` - colonnes de sets du classement général (`'none'` / `'all'` : Sets G/P, Diff sets, Pts jeu ± / `'mixed'` : PP/PC + Sets G/P + Pts jeu ±), utilisées par l'onglet et les deux exports HTML
 - `closePlayerModal()` - vit ici, pas dans `players.iife.js` (voir section 7)
 - `showPlayerDetails()`, `exportGeneralRanking()`, `exportGeneralRankingToPDF()`, `showNameCheckModal()`, `applyNameCheckMerge()`, `toggleDayMatches()`, `updateStats()`
 

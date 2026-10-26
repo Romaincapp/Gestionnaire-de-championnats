@@ -612,6 +612,38 @@ playerStats.forEach((player, index) => {
     // (pré-remplissage des poules) : sans cette exposition, ReferenceError.
     window.calculateGeneralRanking = function() { return calculateGeneralRanking(); };
 
+    /**
+     * Colonnes sets du classement général : 'none' (aucune journée en sets),
+     * 'all' (toutes les journées Matchs en sets : PP/PC = sets, comme le classement de journée)
+     * ou 'mixed' (colonne Sets G/P en plus des PP/PC, qui mélangent alors les deux unités).
+     */
+    function generalSetsMode() {
+        const days = Object.keys(championship.days || {}).map(d => parseInt(d))
+            .filter(d => (championship.days[d].dayType || 'championship') !== 'chrono');
+        const sets = days.filter(d => global.isSetsMode(d));
+        if (sets.length === 0) return 'none';
+        return sets.length === days.length ? 'all' : 'mixed';
+    }
+
+    /** En-têtes : {pp, diff, extra} (extra = <th> ajoutés après Diff). */
+    function generalSetsHeaders(mode) {
+        const gp = '<th title="Différence de points de jeu (somme des sets)">Pts jeu ±</th>';
+        if (mode === 'all') return { pp: 'Sets G/P', diff: 'Diff sets', extra: gp };
+        if (mode === 'mixed') return { pp: 'PP/PC', diff: 'Diff', extra: '<th title="Sets gagnés / perdus (journées en sets)">Sets G/P</th>' + gp };
+        return { pp: 'PP/PC', diff: 'Diff', extra: '' };
+    }
+
+    /** Cellules ajoutées après Diff pour un joueur du classement général. */
+    function generalSetsCells(player, mode) {
+        if (mode === 'none') return '';
+        const d = global.gamePointsDiff(player);
+        const gp = `<td title="${player.gamePointsWon}/${player.gamePointsLost}">${d > 0 ? '+' : ''}${d}</td>`;
+        return (mode === 'mixed' ? `<td>${player.totalSetsWon || 0}/${player.totalSetsLost || 0}</td>` : '') + gp;
+    }
+    window.generalSetsMode = generalSetsMode;
+    window.generalSetsHeaders = generalSetsHeaders;
+    window.generalSetsCells = generalSetsCells;
+
     // CLASSEMENT GÉNÉRAL
     function updateGeneralRanking() {
         const generalStats = calculateGeneralStats();
@@ -660,6 +692,8 @@ playerStats.forEach((player, index) => {
 
         // Vérifier si le mode pool est activé pour afficher la colonne Étape
         const isPoolMode = Object.values(championship.days).some(day => day.pools?.enabled);
+        const setsMode = generalSetsMode();
+        const setsHead = generalSetsHeaders(setsMode);
 
         for (let division = 1; division <= numDivisions; division++) {
             if (!generalRanking.divisions[division] || generalRanking.divisions[division].length === 0) continue;
@@ -679,8 +713,9 @@ playerStats.forEach((player, index) => {
                     <th>Journées</th>
                     <th>V/N/D/F</th>
                     <th>% Vict. Moy.</th>
-                    <th>PP/PC</th>
-                    <th>Diff</th>
+                    <th>${setsHead.pp}</th>
+                    <th>${setsHead.diff}</th>
+                    ${setsHead.extra}
                 </tr>
             </thead>
             <tbody>
@@ -727,6 +762,7 @@ generalRanking.divisions[division].forEach((player, index) => {
             <td>${player.avgWinRate}%</td>
             <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
             <td style="${diffStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
+            ${generalSetsCells(player, setsMode)}
         </tr>
     `;
 });
@@ -824,6 +860,8 @@ generalRanking.divisions[division].forEach((player, index) => {
                                 totalPointsLost: 0,
                                 totalGamePointsWon: 0,
                                 totalGamePointsLost: 0,
+                                totalSetsWon: 0,
+                                totalSetsLost: 0,
                                 totalMatchesPlayed: 0,
                                 winRates: [],
                                 firstDay: playerFirstAppearance[playerName]
@@ -838,6 +876,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                                 playersData[playerName].totalForfaits += 4;
                                 playersData[playerName].totalPoints += 0; // 4 forfaits × 0 point
                                 playersData[playerName].totalPointsLost += 4 * global.forfeitPenaltyForDay(missedDay); // 4 forfaits × score d'un forfait (5 buts, ou setsToWin sets)
+                                if (global.isSetsMode(missedDay)) playersData[playerName].totalSetsLost += 4 * global.forfeitPenaltyForDay(missedDay);
                                 playersData[playerName].totalMatchesPlayed += 4;
                                 playersData[playerName].winRates.push(0); // 0% de victoire pour une journée forfait
                             });
@@ -858,6 +897,11 @@ generalRanking.divisions[division].forEach((player, index) => {
                             playersData[playerName].totalPointsLost += dayStats.pointsLost;
                             playersData[playerName].totalGamePointsWon += dayStats.gamePointsWon || 0;
                             playersData[playerName].totalGamePointsLost += dayStats.gamePointsLost || 0;
+                            // Journée en sets : PP/PC de la journée = sets gagnés/perdus
+                            if (global.isSetsMode(dayNum)) {
+                                playersData[playerName].totalSetsWon += dayStats.pointsWon;
+                                playersData[playerName].totalSetsLost += dayStats.pointsLost;
+                            }
                             playersData[playerName].totalMatchesPlayed += dayStats.matchesPlayed;
                             playersData[playerName].winRates.push(dayStats.winRate);
 
@@ -888,6 +932,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                     playersData[playerName].totalForfaits += 4;
                     playersData[playerName].totalPoints += 0;
                     playersData[playerName].totalPointsLost += 4 * global.forfeitPenaltyForDay(missedDay);
+                    if (global.isSetsMode(missedDay)) playersData[playerName].totalSetsLost += 4 * global.forfeitPenaltyForDay(missedDay);
                     playersData[playerName].totalMatchesPlayed += 4;
                     playersData[playerName].winRates.push(0);
                 });
@@ -901,6 +946,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                     playersData[playerName].totalForfaits += 4;
                     playersData[playerName].totalPoints += 0;
                     playersData[playerName].totalPointsLost += 4 * global.forfeitPenaltyForDay(missedDay);
+                    if (global.isSetsMode(missedDay)) playersData[playerName].totalSetsLost += 4 * global.forfeitPenaltyForDay(missedDay);
                     playersData[playerName].totalMatchesPlayed += 4;
                     playersData[playerName].winRates.push(0);
                 });
@@ -2007,6 +2053,8 @@ generalRanking.divisions[division].forEach((player, index) => {
 
     // Ajouter les classements par division
     const numDivisions = championship.config?.numberOfDivisions || 3;
+    const setsMode = generalSetsMode();
+    const setsHead = generalSetsHeaders(setsMode);
     for (let division = 1; division <= numDivisions; division++) {
         if (generalRanking.divisions[division].length === 0) continue;
 
@@ -2026,8 +2074,9 @@ generalRanking.divisions[division].forEach((player, index) => {
                             <th>Journées</th>
                             <th>V/N/D/F</th>
                             <th>% Vict.</th>
-                            <th>PP/PC</th>
-                            <th>Diff</th>
+                            <th>${setsHead.pp}</th>
+                            <th>${setsHead.diff}</th>
+                            ${setsHead.extra}
                         </tr>
                     </thead>
                     <tbody>
@@ -2063,6 +2112,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                     <td class="win-rate">${player.avgWinRate}%</td>
                     <td><span style="color: #38a169;">${player.totalPointsWon}</span> <span style="color: #a0aec0;">/</span> <span style="color: #e53e3e;">${player.totalPointsLost}</span></td>
                     <td class="${diffClass}">${diffSign}${player.goalAveragePoints}</td>
+                    ${generalSetsCells(player, setsMode)}
                 </tr>
             `;
         });
