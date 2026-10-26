@@ -1552,28 +1552,31 @@ body   * {
     color: white;
 }
 
-/* Classement Multisport */
+/* Classement Multisport : même présentation sobre que les classements général et de journée */
 .multisport-ranking-section {
     background: white;
-    border-radius: 10px;
+    border: none;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.multisport-ranking-section h2 {
+    color: var(--color-text);
 }
 
 .multisport-info {
-    position: relative;
-    overflow: hidden;
+    background: #f5f7fa;
+    border-left: 3px solid #cfd6dd;
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    color: var(--color-text);
 }
 
-.multisport-info::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-    opacity: 0.3;
-    pointer-events: none;
+.multisport-info p {
+    margin: 0;
+    font-size: 14px;
 }
 
 /* Table du classement multisport */
@@ -1582,21 +1585,16 @@ body   * {
     border-collapse: collapse;
 }
 
-.multisport-ranking thead tr {
-    /* !important : les gabarits posent un fond gris clair en ligne sur cette rangée */
-    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong)) !important;
-}
-
 .multisport-ranking th {
-    background: transparent;
-    color: white;
-    padding: 15px 10px;
+    background: #f8f9fa;
+    color: var(--color-text);
+    padding: 12px 10px;
     font-weight: 600;
     text-align: center;
 }
 
 .multisport-ranking td {
-    padding: 15px 10px;
+    padding: 12px 10px;
     text-align: center;
     border-bottom: 1px solid #ecf0f1;
 }
@@ -1605,26 +1603,10 @@ body   * {
     background: #f8f9fa;
 }
 
-.multisport-ranking .rank-1 {
-    background: linear-gradient(135deg, #ffd700, #ffed4a) !important;
-}
-
-.multisport-ranking .rank-2 {
-    background: linear-gradient(135deg, #c0c0c0, #e8e8e8) !important;
-}
-
-.multisport-ranking .rank-3 {
-    background: linear-gradient(135deg, #cd7f32, #daa520) !important;
-    color: #1a2b3c;
-}
-
-/* Podium : fond or / argent / bronze → texte de la ligne en encre foncée (les
-   couleurs d'accent des cellules y descendent sous 4,5:1), sauf pastilles à fond propre. */
-body:not(.dark-mode) .multisport-ranking .rank-1 *:not([style*="background"]),
-body:not(.dark-mode) .multisport-ranking .rank-2 *:not([style*="background"]),
-body:not(.dark-mode) .multisport-ranking .rank-3 *:not([style*="background"]) {
-    color: #1a2b3c !important;
-}
+/* Podium : seul le rang est coloré (comme le classement de journée) */
+.multisport-ranking tr.rank-1 td:first-child { color: var(--color-warning); }
+.multisport-ranking tr.rank-2 td:first-child { color: #566566; }
+.multisport-ranking tr.rank-3 td:first-child { color: var(--color-orange); }
 
 /* Interface Chrono par journée */
 .chrono-day-interface {
@@ -2165,19 +2147,29 @@ body.dark-mode .ranking-action-btn.primary {
 }
 
 /* Multisport */
-body.dark-mode .multisport-ranking tr.rank-1 { background: linear-gradient(135deg, #7a6510, #9c8318) !important; }
-body.dark-mode .multisport-ranking tr.rank-2 { background: linear-gradient(135deg, #555a62, #70767e) !important; }
-body.dark-mode .multisport-ranking tr.rank-3 { background: linear-gradient(135deg, #7a4a1e, #8f6420) !important; }
-body.dark-mode .multisport-ranking tr.rank-1 td,
-body.dark-mode .multisport-ranking tr.rank-2 td,
-body.dark-mode .multisport-ranking tr.rank-3 td,
-body.dark-mode .multisport-ranking tr.rank-1 td *:not([style*="background"]),
-body.dark-mode .multisport-ranking tr.rank-2 td *:not([style*="background"]),
-body.dark-mode .multisport-ranking tr.rank-3 td *:not([style*="background"]) { color: #fff !important; }
-
 body.dark-mode .multisport-ranking-section {
     background: #252538;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
+
+body.dark-mode .multisport-ranking-section h2 {
+    color: #e0e0e0;
+}
+
+body.dark-mode .multisport-info {
+    background: #2a2a3d;
+    border-left-color: #44445a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .multisport-ranking th {
+    background: #2a2a3d;
+    color: #e0e0e0;
+}
+
+body.dark-mode .multisport-ranking tr.rank-1 td:first-child { color: #f0c24b; }
+body.dark-mode .multisport-ranking tr.rank-2 td:first-child { color: #c9ced3; }
+body.dark-mode .multisport-ranking tr.rank-3 td:first-child { color: #f0a35e; }
 
 body.dark-mode .multisport-ranking td {
     border-bottom-color: #333;

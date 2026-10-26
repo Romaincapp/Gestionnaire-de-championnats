@@ -33,6 +33,18 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Classement multisport sobre
+
+- **Quoi** : même présentation que les classements général et de journée. Section blanche (ombre
+  légère, titre gris foncé) ; encadré du barème gris clair au lieu du dégradé violet ; boutons
+  `.ranking-action-btn` (seul « Mettre à jour » en couleur), y compris la barre « Harmoniser /
+  Normaliser / Imprimer » ; bandeaux violet (multisport) et vert (natation) remplacés par un titre
+  `h3` gris foncé ; en-tête de tableau gris clair ; podium : plus de lignes or / argent / bronze,
+  seul le rang est coloré ; badge club violet → texte ; colonne Total sans fond bleu. Noms alignés
+  à gauche. Règles mode sombre mises à jour (anciennes règles podium supprimées).
+- **Fichiers** : `index.html`, `styles.css`, `src/multisport.iife.js`
+- **Vérifié** : captures clair / sombre d'un multisport Matchs + Courses. **Tests** : `npm test` vert (520).
+
 ### 2026-10-26 — Boutons des classements sobres
 
 - **Quoi** : boutons de l'onglet Classement général (6 boutons colorés dans un grand cadre blanc,

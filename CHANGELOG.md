@@ -16,6 +16,7 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 ### 🖨️ Impression des classements
 - Onglet Classement général : fond jaune remplacé par la présentation sobre du classement de journée.
 - Boutons des classements (général et journée) plus sobres : fond blanc, seul « Mettre à jour » en couleur.
+- Classement multisport (et natation par épreuve) : même présentation sobre, sans dégradés violets ni lignes dorées.
 - Les classements imprimés (général, journée, fenêtres « Afficher », multisport, course) ne
   laissent plus de grand blanc : un long tableau continue sur la page suivante, avec l'en-tête
   des colonnes répété et aucune ligne coupée. L'aperçu garde les couleurs de l'écran.
