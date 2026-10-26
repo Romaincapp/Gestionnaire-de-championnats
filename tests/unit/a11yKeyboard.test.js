@@ -81,6 +81,16 @@ test('le × est préféré à Annuler ; un fond « event.target === this » sert
     expect(window.closeBackdrop).toHaveBeenCalledTimes(1);
 });
 
+test('un × de ligne de tableau (retirer la ligne) n\'est pas pris pour la fermeture', async () => {
+    window.removeRow = jest.fn();
+    window.closeGrid = jest.fn();
+    overlay('<div><h3>Grille</h3><table><tbody><tr><td><input></td><td><button onclick="removeRow()">×</button></td></tr></tbody></table><button onclick="closeGrid()">Annuler</button></div>');
+    await tick();
+    key(document.body, 'Escape');
+    expect(window.removeRow).not.toHaveBeenCalled();
+    expect(window.closeGrid).toHaveBeenCalledTimes(1);
+});
+
 test('une .modal masquée puis affichée est prise en charge, et le focus revient à la fermeture', async () => {
     document.body.innerHTML += '<div id="m" class="modal" style="display: none; position: fixed"><div class="modal-content"><h3>Import</h3><button onclick="document.getElementById(\'m\').style.display=\'none\'">Annuler</button></div></div>';
     const opener = document.getElementById('opener');

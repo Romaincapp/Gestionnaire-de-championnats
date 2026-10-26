@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ➕ Ajouter des participants : mode Tableau
+- La fenêtre « ➕ Ajouter des participants » des journées Courses propose un onglet « 📊 Tableau »
+  à côté de la liste : colonnes Nom, Prénom, Club, Catégorie, une ligne par participant (une
+  nouvelle ligne s'ajoute toute seule, collage possible depuis Excel). Passer de la liste au
+  tableau découpe la liste en colonnes pour la vérifier. L'onglet choisi est gardé.
+
 ### 👥 Liste des joueurs en tableau
 - Les joueurs de chaque division s'affichent dans un tableau (Joueur, Club) au lieu de pastilles.
   Un bouton « ⋯ » au bout de chaque ligne ouvre Modifier / Détails / Supprimer.

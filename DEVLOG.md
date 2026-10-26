@@ -33,6 +33,30 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-27 — « ➕ Ajouter des participants » : onglet Tableau
+
+- **Quoi** : la fenêtre (journée Courses) propose deux onglets (`role="tablist"`) : « 📝 Liste »
+  (zone de texte, inchangée, par défaut) et « 📊 Tableau » : grille éditable Nom / Prénom / Club /
+  Catégorie, une ligne ajoutée quand on remplit la dernière, « ➕ Ligne », × par ligne, collage
+  depuis un tableur réparti dans les cellules (lignes + tabulations). Passer de Liste à Tableau
+  découpe la liste dans la grille (si elle est vide) : `splitNomPrenom` (dernier mot = prénom ;
+  nom d'équipe « X - Y » ou un seul mot gardé dans Nom). Nom enregistré = « Nom Prénom »
+  (`toTitleCase`), catégorie de la ligne sinon catégorie par défaut. Dernier onglet gardé
+  (`localStorage` `addParticipantsMode`).
+- **Ajouts** (`multisport.iife.js`) : `setBulkParticipantsMode`, `addBulkGridRow`,
+  `removeBulkGridRow`, `onBulkGridInput`, `onBulkGridPaste`, `parseBulkParticipantLine` (analyse
+  d'une ligne de Liste, sortie de `saveBulkParticipantsForDay`), `splitNomPrenom`.
+- **Clavier** (`a11y.iife.js`) : Échap cliquait le « × » d'une ligne de la grille (retrait de la
+  ligne) au lieu de fermer la fenêtre → `findCloseControl` ignore les boutons placés dans une
+  cellule de tableau (`td`, `th`). Test ajouté dans `a11yKeyboard.test.js`.
+- **Contraste** : gris `#9aa5b1` (2,5:1) des numéros de ligne et des × de la grille, du « — » des
+  cases vides et des icônes de tri des tableaux → `var(--color-text-muted)`.
+- **Fichiers** : `src/multisport.iife.js`, `src/a11y.iife.js`, `styles.css`,
+  `tests/unit/bulkParticipantsTable.test.js`, `tests/unit/a11yKeyboard.test.js`,
+  `tests/e2e/screens.js` (écran `modal-chrono-participants-tableau`)
+- **Vérifié** : Chromium (clair / sombre, Tab entre cellules, ajout), `test:a11y`, `test:contrast`,
+  `test:darkmode` : 0 défaut ; `test:e2e` vert. **Tests** : `npm test` vert (547).
+
 ### 2026-10-26 — Classement général : « 📤 Exporter ▾ »
 
 - **Quoi** : les boutons « 📊 JSON », « 📄 PDF » et « 📄 HTML » de l'onglet Classement général sont
