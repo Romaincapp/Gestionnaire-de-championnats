@@ -751,18 +751,26 @@ body   * {
             justify-self: center;
         }
 
+        /* Cases réduites : un BO3 tient sur une seule ligne (BO5/BO7 passent à la ligne si besoin) */
         .set-score-grid {
             flex-wrap: wrap;
-            row-gap: 6px;
-            column-gap: 8px;
-            max-width: 340px;
+            row-gap: 4px;
+            column-gap: 4px;
+            max-width: 100%;
+        }
+
+        .set-score-grid .set-score-input {
+            width: 30px;
+            min-width: 0;
+            padding: 4px 2px;
+            font-size: 13px;
         }
 
         .set-score-cell {
             display: inline-flex;
             align-items: center;
-            gap: 2px;
-            padding: 2px 4px;
+            gap: 1px;
+            padding: 2px 2px;
             border: 1px solid transparent;
             border-radius: 6px;
         }
