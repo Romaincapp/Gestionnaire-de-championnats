@@ -1023,13 +1023,17 @@ body   * {
         }
         
         /* CLASSEMENT GÉNÉRAL */
+        /* Même présentation sobre que le classement de journée (.rankings-section) */
         .general-ranking-section {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            border: 2px solid var(--color-warning);
+            background: white;
+            border: none;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         .general-ranking-section h2 {
-            color: var(--color-orange);
+            color: var(--color-text);
         }
         
         .general-stats {
@@ -1999,8 +2003,12 @@ body.dark-mode .ranking-table tr:hover {
 
 /* General ranking */
 body.dark-mode .general-ranking-section {
-    background: linear-gradient(135deg, #3d3520, #2e2815);
-    border-color: var(--color-warning);
+    background: #252538;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .general-ranking-section h2 {
+    color: #e0e0e0;
 }
 
 /* Import section */

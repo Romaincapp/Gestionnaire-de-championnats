@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-26 — Onglet Classement général : présentation sobre
+
+- **Quoi** : fond jaune dégradé et bordure ocre de `.general-ranking-section` remplacés par la
+  présentation du classement de journée (`.rankings-section` : fond blanc, coins arrondis, ombre
+  légère) ; titre de section et titres de division en gris foncé (`#2c3e50`) au lieu d'orange.
+  Mode sombre : surface `#252538` comme le classement de journée.
+- **Fichiers** : `styles.css`, `src/ranking.iife.js`
+- **Tests** : `npm test` vert (520).
+
 ### 2026-10-26 — En-tête des classements imprimés : compact et modifiable
 
 - **Quoi** : PDF et export HTML du classement général : grand bandeau (trophée 48 px, titre 32 px,
