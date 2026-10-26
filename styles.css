@@ -588,6 +588,7 @@ body   * {
             background: transparent;
             color: var(--color-text);
         }
+        .bulk-grid input[data-col="event"] { min-width: 160px; }
         .bulk-grid input:hover { border-color: #e3e8ee; }
         .bulk-grid input:focus { border-color: var(--color-primary); background: white; outline: none; }
         .bulk-grid .bulk-grid-num { width: 28px; text-align: right; color: var(--color-text-muted); font-size: 12px; padding-right: 6px; }

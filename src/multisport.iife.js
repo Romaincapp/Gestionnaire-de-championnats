@@ -1091,7 +1091,10 @@
         { key: 'nom', label: 'Nom' },
         { key: 'prenom', label: 'Prénom' },
         { key: 'club', label: 'Club' },
-        { key: 'category', label: 'Catégorie' }
+        { key: 'category', label: 'Catégorie' },
+        // Épreuve (et temps d'engagement) : la fiche devient « Nom Prénom 50m brasse 45.20 »,
+        // la ligne que lit « 🏁 Séries automatiques »
+        { key: 'event', label: 'Épreuve', placeholder: 'ex. 50m brasse 45.20' }
     ];
 
     function showAddParticipantManualModal(dayNumber) {
@@ -1109,7 +1112,7 @@
         modal.innerHTML =
             '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
-            'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeAddParticipantsModal(' + dayNumber + ')">' +
+            'align-items: center; z-index: 10000;">' + // pas de fermeture au clic à côté : la saisie serait perdue
             '<div class="bulk-participants-dialog" style="background: white; padding: 30px; border-radius: 10px; width: 92%; max-height: 85vh; overflow-y: auto;">' +
             '<h3>➕ Ajouter des participants - Journée ' + dayNumber + '</h3>' +
             '<div class="bulk-mode-tabs" role="tablist" aria-label="Mode de saisie">' + tab('list', '📝 Liste') + tab('table', '📊 Tableau') + '</div>' +
@@ -1126,7 +1129,8 @@
             '</div>' +
             // Panneau Tableau
             '<div id="bulk-panel-table-' + dayNumber + '" role="tabpanel" aria-labelledby="bulk-tab-table-' + dayNumber + '" hidden>' +
-            '<p style="color: #586566; font-size: 13px;">Une ligne par participant. Une nouvelle ligne s\'ajoute quand vous remplissez la dernière ; vous pouvez aussi coller un bloc copié depuis un tableur (Nom, Prénom, Club, Catégorie).</p>' +
+            '<p style="color: #586566; font-size: 13px;">Une ligne par participant. Une nouvelle ligne s\'ajoute quand vous remplissez la dernière ; vous pouvez aussi coller un bloc copié depuis un tableur (Nom, Prénom, Club, Catégorie, Épreuve).</p>' +
+            '<p class="bulk-tip" style="margin: 0 0 10px;">💡 <strong>Astuce :</strong> avec l\'épreuve, et même le temps d\'engagement (ex. <em>50m brasse 45.20</em>), le bouton «&nbsp;🏁 Séries automatiques&nbsp;» créera les séries en un clic.</p>' +
             '<div class="bulk-grid-scroll"><table class="bulk-grid" id="bulk-grid-' + dayNumber + '"><thead><tr><th class="bulk-grid-num">#</th>' +
             BULK_COLUMNS.map(function(c) { return '<th>' + c.label + '</th>'; }).join('') +
             '<th class="bulk-grid-del"><span class="pt-sr-only">Retirer</span></th></tr></thead><tbody></tbody></table></div>' +
@@ -1138,7 +1142,7 @@
             buildCategoryDatalist(dayNumber) +
             '</div>' +
             '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
-            '<button onclick="closeAddParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
+            '<button onclick="cancelAddParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Annuler</button>' +
             '<button onclick="saveBulkParticipantsForDay(' + dayNumber + ')" class="btn btn-primary">💾 Ajouter</button>' +
             '</div></div></div>';
 
@@ -1167,6 +1171,14 @@
                 var tbody = document.querySelector('#bulk-grid-' + dayNumber + ' tbody');
                 if (tbody) tbody.innerHTML = '';
                 parsed.forEach(function(p) {
+                    // Ligne de natation (« Dupont Jean 50m brasse 45.20 ») : épreuve et temps
+                    // dans leur colonne, club connu (en tête de ligne) dans la sienne
+                    var swim = typeof global.parseSwimmingEntry === 'function' && !p.club ? global.parseSwimmingEntry(p.name) : null;
+                    if (swim && swim.swimmerName && !swim.relay) {
+                        var s2 = splitNomPrenom(swim.swimmerName);
+                        addBulkGridRow(dayNumber, { nom: s2.nom, prenom: s2.prenom, club: swim.club, category: '', event: swimEventText(swim) });
+                        return;
+                    }
                     var split = splitNomPrenom(p.name);
                     addBulkGridRow(dayNumber, { nom: split.nom, prenom: split.prenom, club: p.club, category: '' });
                 });
@@ -1180,6 +1192,18 @@
             var ta = document.getElementById('bulk-participants-' + dayNumber);
             if (ta) setTimeout(function() { ta.focus(); }, 50);
         }
+    }
+
+    // Épreuve + temps d'une ligne de natation analysée : « 50m Brasse 45.20 », « 100m Libre 1:02.50 »
+    function swimEventText(entry) {
+        var text = entry.distance + 'm' + (entry.stroke ? ' ' + entry.stroke : '');
+        if (entry.timeMs > 0) {
+            var cs = Math.round(entry.timeMs / 10);
+            var min = Math.floor(cs / 6000), sec = Math.floor((cs % 6000) / 100), cent = cs % 100;
+            var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+            text += ' ' + (min > 0 ? min + ':' + pad(sec) : String(sec)) + '.' + pad(cent);
+        }
+        return text;
     }
 
     // « Dupont Jean » → Nom Dupont, Prénom Jean ; « Van Der Berg Jean » → Nom Van Der Berg ;
@@ -1206,7 +1230,7 @@
 
     function bulkRowFilled(tr) {
         var v = bulkRowValues(tr);
-        return !!(v.nom || v.prenom || v.club || v.category);
+        return !!(v.nom || v.prenom || v.club || v.category || v.event);
     }
 
     function renumberBulkGrid(dayNumber) {
@@ -1228,6 +1252,8 @@
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="bulk-grid-num"></td>' + BULK_COLUMNS.map(function(c) {
             return '<td><input type="text" data-col="' + c.key + '" value="' + escapeLaneHtml(values[c.key] || '') + '"' +
+                // Exemple seulement sur la 1re ligne (répété partout, il charge la grille)
+                (c.placeholder && tbody.rows.length === 0 ? ' placeholder="' + escapeLaneHtml(c.placeholder) + '"' : '') +
                 (c.key === 'category' ? ' list="categoryList-' + dayNumber + '"' : '') +
                 ' oninput="onBulkGridInput(' + dayNumber + ', this)" onpaste="onBulkGridPaste(' + dayNumber + ', event)"></td>';
         }).join('') +
@@ -1280,6 +1306,15 @@
         if (modal) modal.remove();
     }
 
+    // « Annuler » (et Échap, qui clique ce bouton) : confirmation si une saisie est en cours
+    function cancelAddParticipantsModal(dayNumber) {
+        var textarea = document.getElementById('bulk-participants-' + dayNumber);
+        var typed = (textarea && textarea.value.trim()) || bulkGridRows(dayNumber).some(bulkRowFilled);
+        if (typed && !confirm('Abandonner la saisie ? Les participants tapés seront perdus.')) return false;
+        closeAddParticipantsModal(dayNumber);
+        return true;
+    }
+
     // Une ligne de la saisie « Liste » → { bib, name, club }. Formats : « Nom »,
     // « Nom, Club », « Dossard, Nom, … » / « Dossard<TAB>Nom<TAB>… » (colonnes en
     // trop ignorées), ligne natation (nom + distance + temps) gardée entière.
@@ -1330,7 +1365,8 @@
             entries = bulkGridRows(dayNumber).map(bulkRowValues).filter(function(v) { return v.nom || v.prenom; }).map(function(v) {
                 return {
                     bib: null,
-                    name: toTitleCase((v.nom + ' ' + v.prenom).trim()),
+                    // Avec une épreuve : « Nom Prénom 50m brasse 45.20 », comme une ligne de la Liste
+                    name: toTitleCase((v.nom + ' ' + v.prenom + ' ' + v.event).replace(/\s+/g, ' ').trim()),
                     club: v.club,
                     category: v.category || defaultCategory
                 };
@@ -1373,6 +1409,7 @@
         showNotification(msg, 'success');
     }
 
+    global.cancelAddParticipantsModal = cancelAddParticipantsModal;
     global.setBulkParticipantsMode = setBulkParticipantsMode;
     global.addBulkGridRow = addBulkGridRow;
     global.removeBulkGridRow = removeBulkGridRow;
