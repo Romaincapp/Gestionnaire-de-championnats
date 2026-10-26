@@ -14,6 +14,7 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 ## [Unreleased]
 
 ### 🖨️ Impression des classements
+- Onglet Classement général : fond jaune remplacé par la présentation sobre du classement de journée.
 - Les classements imprimés (général, journée, fenêtres « Afficher », multisport, course) ne
   laissent plus de grand blanc : un long tableau continue sur la page suivante, avec l'en-tête
   des colonnes répété et aucune ligne coupée. L'aperçu garde les couleurs de l'écran.
