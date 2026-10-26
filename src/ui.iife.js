@@ -702,6 +702,7 @@
             }
             .refreshing { animation: pulse 1s ease-in-out; }
             @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+            ${window.rankingPrintCSS()}
         </style></head><body>
         <div class="container">
             <h1>${windowTitle}</h1>

@@ -2339,7 +2339,7 @@
             'th,td{border:1px solid #ccc;padding:7px 9px;text-align:center;}' +
             'thead th{background:#34495e;color:#fff;}' +
             'tbody tr:nth-child(even){background:#f4f6fb;}' +
-            '@media print{body{margin:0;} button{display:none;}}' +
+            global.rankingPrintCSS() +
             '</style></head><body>' +
             '<h1>🏆 ' + title + '</h1>' +
             '<div class="sub">' + (champName ? champName + ' — ' : '') + 'Édité le ' + dateStr + '</div>' +

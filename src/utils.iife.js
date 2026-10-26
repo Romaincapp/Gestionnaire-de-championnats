@@ -76,7 +76,45 @@
         return new Date(newData.lastModified) > new Date(currentData.lastModified);
     }
 
+    /**
+     * Règles d'impression communes à tous les documents de classement (fenêtres
+     * window.open : elles ne chargent pas styles.css). L'aperçu reprend l'affichage
+     * écran (couleurs gardées, fond de page blanc) et un long tableau continue sur
+     * la page suivante au lieu d'être repoussé en entier (grand blanc), en-tête de
+     * colonnes répété, jamais de ligne coupée, titre gardé avec son tableau.
+     * landscape : A4 paysage (tableaux de 8 colonnes et plus).
+     */
+    function rankingPrintCSS(options) {
+        const landscape = options && options.landscape;
+        return `
+        ${landscape ? '@page { size: A4 landscape; margin: 1cm; }' : ''}
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            html, body { background: #fff !important; min-height: 0 !important; }
+            body { padding: 0 !important; margin: 0 !important; }
+            .export-info, .refresh-btn, .auto-refresh, button { display: none !important; }
+            .container, .content, .section, .division, .division-ranking, .ranking-division {
+                break-inside: auto !important; page-break-inside: auto !important;
+                box-shadow: none !important; max-width: none !important;
+            }
+            table { break-inside: auto !important; page-break-inside: auto !important; }
+            thead { display: table-header-group; }
+            tr, th, td { break-inside: avoid; page-break-inside: avoid; }
+            h1, h2, h3, h4, .header, .division-title { break-after: avoid; page-break-after: avoid; }
+        }`;
+    }
+
+    /** « 1 journée · 151 matchs » (+ « dont N terminés » s'il en reste à jouer). */
+    function championshipSummaryText(stats) {
+        const plural = (n, word) => `${n} ${word}${n > 1 ? 's' : ''}`;
+        const parts = [plural(stats.totalDays, 'journée'), plural(stats.totalMatches, 'match')];
+        if (stats.completedMatches < stats.totalMatches) parts[1] += ` dont ${stats.completedMatches} terminé${stats.completedMatches > 1 ? 's' : ''}`;
+        return parts.join(' · ');
+    }
+
     // Exposer sur window
+    global.rankingPrintCSS = rankingPrintCSS;
+    global.championshipSummaryText = championshipSummaryText;
     global.formatProperName = formatProperName;
     global.escapeForOnclick = escapeForOnclick;
     global.hasReverseMatchInDay = hasReverseMatchInDay;

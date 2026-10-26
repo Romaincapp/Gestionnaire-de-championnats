@@ -1928,17 +1928,13 @@ window.exportRaceRankingToPDF = function() {
         th:nth-child(3) { text-align: left; }
         th:nth-child(4) { text-align: left; }
         td { border-bottom: 1px solid #dee2e6; }
-        .stats { display: flex; gap: 15px; margin-top: 20px; justify-content: center; }
-        .stat-card { background: #f0faf8; border: 2px solid #057e68; border-radius: 8px; padding: 12px 20px; text-align: center; }
-        .stat-label { font-size: 11px; color: #586566; }
-        .stat-value { font-size: 22px; font-weight: bold; color: #057e68; }
         .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #566566; }
-        @media print { button { display: none; } }
+        ${window.rankingPrintCSS()}
     </style>
 </head>
 <body>
     <h1>🏆 Classement Général</h1>
-    <p class="subtitle">${serieName} &nbsp;|&nbsp; Généré le ${currentDate}</p>
+    <p class="subtitle">${serieName} &nbsp;|&nbsp; ${serie.participants.length} participants · ${finishedCount} terminés · ${totalDistance} km · ${totalLaps} tours &nbsp;|&nbsp; Généré le ${currentDate}</p>
     <table>
         <thead>
             <tr>
@@ -1955,12 +1951,6 @@ window.exportRaceRankingToPDF = function() {
         </thead>
         <tbody>${rows}</tbody>
     </table>
-    <div class="stats">
-        <div class="stat-card"><div class="stat-label">Participants</div><div class="stat-value">${serie.participants.length}</div></div>
-        <div class="stat-card"><div class="stat-label">Terminés</div><div class="stat-value">${finishedCount}</div></div>
-        <div class="stat-card"><div class="stat-label">Distance totale</div><div class="stat-value">${totalDistance} km</div></div>
-        <div class="stat-card"><div class="stat-label">Tours totaux</div><div class="stat-value">${totalLaps}</div></div>
-    </div>
     <p class="footer">Gestionnaire de Championnats</p>
     <script>window.onload = function() { window.print(); }<\/script>
 </body>
