@@ -913,7 +913,7 @@ function generateCompleteDivisionHTML(dayNumber, division, pools, poolRankings, 
     const bestRunnerUps = config?.bestRunnerUps || 0;
 
     let html = `
-        <div style="background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+        <div class="ranking-division" style="background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
             <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 12px 15px;">
                 <h3 style="margin: 0; font-size: 16px;">${divIcon} Division ${division}</h3>
             </div>

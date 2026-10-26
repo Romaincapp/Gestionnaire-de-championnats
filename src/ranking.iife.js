@@ -519,7 +519,7 @@ if (sortBy === 'points') {
             }
 
            rankingsHtml += `
-    <div style="margin-bottom: 30px;">
+    <div class="ranking-division" style="margin-bottom: 30px;">
         <h3 style="color: #2c3e50; margin-bottom: 15px;">
             ${division === 1 ? '🥇' : division === 2 ? '🥈' : '🥉'} Division ${division}
         </h3>
@@ -749,7 +749,7 @@ playerStats.forEach((player, index) => {
             if (!generalRanking.divisions[division] || generalRanking.divisions[division].length === 0) continue;
 
             rankingHtml += `
-    <div style="margin-bottom: 30px;">
+    <div class="ranking-division" style="margin-bottom: 30px;">
         <h3 style="color: #2c3e50; margin-bottom: 15px;">
             ${division === 1 ? '🥇' : division === 2 ? '🥈' : '🥉'} Division ${division} - Classement Général
         </h3>

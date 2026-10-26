@@ -85,7 +85,7 @@ export-print, chrono, search, darkmode, mobile, a11y, init (puis `script.js`). U
 - `calculateWinRate(wins, total)` - Calcule le % de victoires
 - `shuffleArray(array)` - Mélange un tableau
 - `isNewerVersion(newData, currentData)` - Compare les versions
-- `rankingPrintCSS()` - règles `@media print` communes aux documents de classement (`window.open`) : tableaux sécables, `thead` répété, couleurs gardées, contrôles masqués, tableaux resserrés en portrait ; aucun `@page size` (orientation au choix de l'utilisateur) ; à inclure dans tout nouveau document de classement
+- `rankingPrintCSS()` - règles `@media print` communes aux documents de classement (`window.open`) : tableaux sécables, `thead` répété, couleurs gardées, contrôles masqués, tableaux resserrés en portrait, chaque division à partir de la 2e sur une nouvelle page (`.division`, `.ranking-division`, `.division-ranking` : classe à poser sur tout nouveau bloc de division) ; aucun `@page size` (orientation au choix de l'utilisateur) ; à inclure dans tout nouveau document de classement
 - `championshipSummaryText(stats)` - « 1 journée · 151 matchs » pour l'en-tête des exports (remplace les cartes de statistiques)
 
 ### 3. notifications.iife.js
