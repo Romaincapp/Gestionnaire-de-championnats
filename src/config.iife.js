@@ -185,6 +185,10 @@
             if (typeof global.updatePlayersDisplay === 'function') global.updatePlayersDisplay(dayNumber);
             if (typeof global.updateMatchesDisplay === 'function') global.updateMatchesDisplay(dayNumber);
             if (day.pools && day.pools.enabled && typeof global.updatePoolsDisplay === 'function') global.updatePoolsDisplay(dayNumber);
+            // La phase finale vit dans le bloc de sa division, reconstruit ci-dessus :
+            // sans ce réaffichage elle disparaissait jusqu'au rechargement de la page
+            if (day.pools && day.pools.manualFinalPhase && day.pools.manualFinalPhase.enabled &&
+                typeof global.updateManualFinalPhaseDisplay === 'function') global.updateManualFinalPhaseDisplay(dayNumber);
             if (typeof global.updateStats === 'function') global.updateStats(dayNumber);
         });
         if (typeof global.updateGeneralRanking === 'function') global.updateGeneralRanking();

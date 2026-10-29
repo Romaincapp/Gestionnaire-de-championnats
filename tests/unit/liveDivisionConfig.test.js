@@ -120,3 +120,31 @@ describe('protection d\'une journée en cours (matchs déjà générés)', () =>
         expect(championship.config.numberOfCourts).toBe(2);
     });
 });
+
+// Retirer une division (ex. D2 oubliée) pendant la phase finale de D1 : le bloc de
+// chaque division est reconstruit, et la phase finale qui s'y trouve disparaissait
+// de l'écran jusqu'au rechargement de la page.
+test('changer le nombre de divisions garde la phase finale affichée', () => {
+    setup(2, { 1: [{ name: 'A' }, { name: 'B' }], 2: [] });
+    const finale = { id: 'Finale-1-1', player1: 'A', player2: 'B', score1: '', score2: '', completed: false, winner: null, roundName: 'Finale', position: 1 };
+    championship.days[1].pools = {
+        enabled: true, config: { mode: 'direct' },
+        divisions: { 1: { pools: [], matches: [] }, 2: { pools: [], matches: [] } },
+        manualFinalPhase: {
+            enabled: true, currentRound: 'Finale',
+            divisions: {
+                1: { qualified: [{ name: 'A', seed: 1 }, { name: 'B', seed: 2 }], rounds: { Finale: { name: 'Finale', matches: [finale], completed: false } } },
+                2: { qualified: [], rounds: {} },
+            },
+        },
+    };
+    window.applyConfiguration();
+    expect(document.querySelectorAll('#division1-1-matches .manual-final-phase-container')).toHaveLength(1);
+
+    window.confirm = jest.fn(() => true);
+    document.getElementById('divisionConfig').value = '1';
+    window.updateDivisionConfig();
+    expect(championship.config.numberOfDivisions).toBe(1);
+    expect(document.querySelectorAll('#division1-1-matches .manual-final-phase-container')).toHaveLength(1);
+    expect(document.getElementById('division1-1-matches').textContent).toContain('Finale');
+});

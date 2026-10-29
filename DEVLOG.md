@@ -33,6 +33,14 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Changer le nombre de divisions ne cache plus la phase finale
+
+- Retirer une division (ex. D2 oubliée) pendant la phase finale de D1 la faisait disparaître de
+  l'écran jusqu'au rechargement : `applyConfiguration` reconstruit le bloc de chaque division
+  (`initializeDivisionsDisplay`) mais ne redessinait pas la phase finale qui s'y trouve. Appel
+  d'`updateManualFinalPhaseDisplay` ajouté (`config.iife.js`), comme le fait déjà le bouton
+  « Modifier les matchs ». Données jamais perdues. Test : `tests/unit/liveDivisionConfig.test.js`.
+
 ### 2026-10-29 — Phase finale relancée : plus de podium hérité de la précédente
 
 - Relancer la phase finale affichait un podium dès le départ (0 match joué) : `initializeManualFinalPhase`

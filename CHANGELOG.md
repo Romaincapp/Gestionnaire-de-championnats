@@ -13,6 +13,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🐛 Phase finale et nombre de divisions
+- Changer le nombre de divisions pendant une phase finale ne la cache plus (elle n'était visible
+  qu'après rechargement de la page).
+
 ### 🐛 Phase finale relancée
 - Plus de podium affiché dès le lancement : relancer la phase finale repart de zéro (avec
   confirmation si l'ancienne avait déjà des matchs joués).
