@@ -256,6 +256,7 @@ Un sous-ensemble représentatif :
 - « 📋 Depuis les classements » (`showImportPoolRankingsModal`) : menu « ↺ Reprendre… » par zone, `getImportRankingSources(jour)` (autres journées Matchs par division via `getDayDivisionRanking` de `ranking.iife.js`, + classement général), `fillPoolInputFromSource(jour, i, clé)`
 - `toggleDayHub(dayNumber)`, `toggleGeneralHub()` - ces deux fonctions vivent ici, pas dans `ui.iife.js`
 - Phase finale manuelle : `initializeManualFinalPhase`, `generateManualFinalPhase`, `generateNextManualRound`, `resetManualFinalPhase`, `exportManualFinalResults`
+- Lancer une phase finale (`generateManualFinalPhase`, `generateDirectFinalPhase`, `generateDirectFromImportedRankings`, finale de saison) part d'une structure vide via `freshManualFinalPhase(day)` — `initializeManualFinalPhase` ne crée la structure que si elle manque (gardée pour le rechargement). Si l'ancienne phase finale a des matchs joués (`countPlayedFinalPhaseMatches(day)`), `confirmDiscardFinalPhase(day)` demande confirmation ; refus = rien ne change. Le podium (`generatePodiumHTML`, `getChampionFromFinalPhase`) n'apparaît qu'une fois la Finale jouée
 - Répartition/pré-remplissage : `preFillFromGeneralRanking`, `applyPreFillStrategy`, `applyPoolRedistribution`, `previewPoolRedistribution`
 - Pour la liste complète, `grep "^\s*(global|window)\.[a-zA-Z_]* =" src/pools.iife.js`
 

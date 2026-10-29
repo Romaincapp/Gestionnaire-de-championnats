@@ -13,6 +13,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🐛 Phase finale relancée
+- Plus de podium affiché dès le lancement : relancer la phase finale repart de zéro (avec
+  confirmation si l'ancienne avait déjà des matchs joués).
+
 ### 📋 Phase finale depuis les classements : reprise des autres journées
 - Dans « Depuis les classements », chaque classement peut être rempli d'un clic avec le classement d'une autre journée (par division) ou le classement général.
 

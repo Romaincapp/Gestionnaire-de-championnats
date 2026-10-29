@@ -33,6 +33,14 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Phase finale relancée : plus de podium hérité de la précédente
+
+- Relancer la phase finale affichait un podium dès le départ (0 match joué) : `initializeManualFinalPhase`
+  ne crée la structure que si elle manque, donc les tours de la phase finale précédente (Finale
+  jouée comprise) restaient. Les 4 lancements passent par `freshManualFinalPhase` (structure vide),
+  avec confirmation `confirmDiscardFinalPhase` si l'ancienne a des matchs joués (`pools.iife.js`).
+- Test : `tests/unit/poolFinalPhase.test.js` (relancer la phase finale).
+
 ### 2026-10-29 — « Depuis les classements » : reprendre les classements des autres journées
 
 - Fenêtre « 🏆 Phase finale depuis vos classements » (`showImportPoolRankingsModal`,
