@@ -10,6 +10,7 @@
     "browser:stop": "sh scripts/dev-browser.sh stop",
     "test:e2e": "node tests/e2e/natation.e2e.js",
     "test:sets": "node tests/e2e/sets.e2e.js",
+    "test:pools": "node tests/e2e/pools.e2e.js",
     "test:darkmode": "node tests/e2e/darkmode.e2e.js",
     "test:darkmode:mobile": "node tests/e2e/darkmode.e2e.js --mobile",
     "test:a11y": "node tests/e2e/a11y.e2e.js",

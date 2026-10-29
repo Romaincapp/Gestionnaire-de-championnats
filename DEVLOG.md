@@ -33,6 +33,24 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Mode Poules : panneau redessiné + 2 bugs de phase finale
+
+- Panneau « 🏊 Poules » (`addPoolToggleToInterface`) réécrit avec des classes `.pool-panel*`
+  / `.pool-btn` (`styles.css`, mode sombre compris) : carte blanche à liseré, Simple / Avancé
+  en sélecteur segmenté, boutons en 2 groupes (Poules / Phase finale), aide en `<details>`.
+  Ids et `onclick` inchangés. Cartes de poule (`.pool-card`, état par le liseré) et bandeau de
+  qualification (`.pool-qualif-banner`) allégés.
+- Bug : `generateManualFinalPhase` appelait `generateFinalPhase` sans barrage → 6 qualifiés
+  = 3 quarts → 3 vainqueurs → un joueur perdu en demi. Passe maintenant par
+  `startEliminationBracket` (comme les autres chemins).
+- Bug : « 🚀 Passer aux … » restait sous un tour terminé ; recliqué, il régénérait le tour
+  suivant et effaçait ses scores. Bouton remplacé par « ✅ Tour terminé » si le tour suivant
+  existe (`generateRoundControlsHTML`, exposée) + confirmation dans `generateNextManualRound`.
+- Nouveau test navigateur `npm run test:pools` (`tests/e2e/pools.e2e.js`) : 12 joueurs,
+  poules, scores, barrage, demies, finale, champion, rechargement. Test unitaire
+  `tests/unit/poolFinalPhase.test.js`.
+- Fichiers : `src/pools.iife.js`, `styles.css`, `package.json`, `.gitignore`, tests, docs.
+
 ### 2026-10-29 — Courses : la ligne en modification ne grossit plus au survol
 
 - « ⋯ » → ✏️ Modifier d'un participant : au survol, la ligne entière grossissait de 20 % et

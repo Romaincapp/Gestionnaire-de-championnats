@@ -2887,3 +2887,115 @@ body.dark-mode #championshipConfigBar select,
 body.dark-mode .court-chip { background: #1f1f2e; color: #e6e6f0; border-color: #44445a; }
 body.dark-mode #courtAssignmentInfo { color: #b8c2cc; }
 body.dark-mode .content:has(> #championshipConfigBar:not([style*="none"])) > .day-content.active > .day-type-selector { border-top-color: #44445a !important; }
+
+/* ============================================
+   PANNEAU POULES (pools.iife.js, addPoolToggleToInterface)
+   Carte sobre alignée sur le reste de l'app : fond blanc, bordure grise,
+   liseré gauche de la couleur « Poules », boutons secondaires en contour.
+   ============================================ */
+.pool-panel {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-left: 4px solid var(--color-orange);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 15px 0;
+    color: var(--color-text);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.pool-panel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.pool-panel-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--color-text); }
+.pool-panel-subtitle { margin: 2px 0 0; font-size: 12px; color: var(--color-text-muted); }
+.pool-panel-close {
+    background: none; border: 1px solid transparent; border-radius: 6px;
+    font-size: 20px; line-height: 1; width: 30px; height: 30px; cursor: pointer; color: var(--color-text-muted);
+}
+.pool-panel-close:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.pool-panel-switch {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600; padding: 8px 12px;
+    background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+}
+.pool-panel-switch input { width: 16px; height: 16px; accent-color: var(--color-orange); cursor: pointer; }
+.pool-config { margin-top: 14px; }
+.pool-panel-prefill {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 10px 12px; margin-bottom: 12px;
+    background: #f5f9fc; border: 1px solid #c9dceb; border-radius: 6px; font-size: 12px;
+}
+.pool-panel-prefill strong { display: block; font-size: 13px; }
+.pool-panel-prefill span { color: var(--color-text-muted); }
+.pool-panel-group { padding: 12px 0; border-top: 1px solid #edf0f2; }
+.pool-panel-group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pool-panel-label {
+    display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--color-text-muted); margin-bottom: 8px;
+}
+.pool-panel-group-head .pool-panel-label { margin-bottom: 0; }
+.pool-segmented { display: inline-flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; }
+.pool-segmented label { cursor: pointer; }
+.pool-segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pool-segmented span { display: block; padding: 5px 14px; font-size: 12px; font-weight: 500; color: #475569; background: #fff; }
+.pool-segmented label + label span { border-left: 1px solid #cbd5e1; }
+.pool-segmented input:checked + span { background: var(--color-primary); color: #fff; }
+.pool-segmented input:focus-visible + span { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+.pool-panel-fields { gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.pool-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 500; color: var(--color-text); min-width: 140px; flex: 0 1 220px; }
+.pool-field select, .pool-field input {
+    padding: 6px 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; background: #fff; color: #333;
+}
+.pool-panel-info {
+    margin-top: 10px; padding: 8px 10px; font-size: 12px;
+    background: #f5f9fc; border-left: 3px solid var(--color-primary); border-radius: 4px; color: var(--color-text);
+}
+.pool-panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pool-btn {
+    display: inline-flex; align-items: center; gap: 4px; padding: 7px 12px; font-size: 12px; font-weight: 500;
+    background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer;
+}
+.pool-btn:hover:not(:disabled) { background: #e2e8f0; }
+.pool-btn-primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.pool-btn-primary:hover:not(:disabled) { background: #075683; }
+.pool-btn:disabled { opacity: 1; cursor: not-allowed; background: #f1f5f9; color: #6b7785; border-color: #dee2e6; }
+.pool-panel-help { margin-top: 4px; padding-top: 10px; border-top: 1px solid #edf0f2; font-size: 12px; color: var(--color-text-muted); }
+.pool-panel-help summary { cursor: pointer; font-weight: 500; }
+.pool-panel-help ol { margin: 6px 0 0 20px; }
+
+body.dark-mode .pool-panel { background: #22222f; border-color: #44445a; border-left-color: #e0a050; color: #e4e4ee; }
+body.dark-mode .pool-panel-title, body.dark-mode .pool-field { color: #e4e4ee; }
+body.dark-mode .pool-panel-subtitle, body.dark-mode .pool-panel-label, body.dark-mode .pool-panel-help,
+body.dark-mode .pool-panel-prefill span, body.dark-mode .pool-panel-close { color: #a9a9bd; }
+body.dark-mode .pool-panel-switch, body.dark-mode .pool-panel-prefill, body.dark-mode .pool-panel-info { background: #2a2a3d; border-color: #44445a; color: #e4e4ee; }
+body.dark-mode .pool-panel-group, body.dark-mode .pool-panel-help { border-top-color: #33334a; }
+body.dark-mode .pool-field select, body.dark-mode .pool-field input { background: #2a2a3d; color: #e4e4ee; border-color: #44445a; }
+body.dark-mode .pool-segmented, body.dark-mode .pool-segmented label + label span { border-color: #44445a; }
+body.dark-mode .pool-segmented span { background: #2a2a3d; color: #d0d0dc; }
+body.dark-mode .pool-segmented input:checked + span { background: #1d6fb8; color: #fff; }
+body.dark-mode .pool-btn { background: #2a2a3d; color: #d0d0dc; border-color: #44445a; }
+body.dark-mode .pool-btn:hover:not(:disabled), body.dark-mode .pool-panel-close:hover { background: #33334a; }
+body.dark-mode .pool-btn-primary { background: #1d6fb8; color: #fff; border-color: #1d6fb8; }
+body.dark-mode .pool-btn:disabled { background: #26263a; color: #8a8aa0; }
+
+/* Cartes de poule (updatePoolsDisplay) : état porté par le liseré gauche */
+.pool-qualif-banner {
+    padding: 8px 12px; margin-bottom: 12px; font-size: 13px; font-weight: 500;
+    background: #fbf6ee; border: 1px solid #ecdcc2; border-left: 4px solid var(--color-orange); border-radius: 6px; color: var(--color-text);
+}
+.pool-card {
+    background: #fff; border: 1px solid #dee2e6; border-left: 4px solid var(--color-primary);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.pool-card-done { border-left-color: var(--color-success); }
+.pool-card-warn { border-left-color: var(--color-danger); }
+.pool-card-header {
+    position: relative; text-align: center; cursor: pointer; color: var(--color-text);
+    padding: 8px 44px; margin-bottom: 10px; border-bottom: 1px solid #edf0f2;
+}
+.pool-card-header:hover { background: #f8f9fa; }
+body.dark-mode .pool-card, body.dark-mode .pool-qualif-banner { background: #22222f; border-color: #44445a; color: #e4e4ee; }
+body.dark-mode .pool-card { border-left-color: #5aa9e6; }
+body.dark-mode .pool-card-done { border-left-color: #3fbf7f; }
+body.dark-mode .pool-card-warn { border-left-color: #ef6b5f; }
+body.dark-mode .pool-qualif-banner { border-left-color: #e0a050; }
+body.dark-mode .pool-card-header { color: #e4e4ee; border-bottom-color: #33334a; }
+body.dark-mode .pool-card-header:hover { background: #2a2a3d; }

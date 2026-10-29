@@ -13,6 +13,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏊 Mode Poules : nouveau look et deux corrections de phase finale
+- Panneau « Poules » redessiné, sobre : carte blanche, réglages Simple / Avancé en sélecteur, boutons rangés en deux groupes (Poules / Phase finale), aide repliable ; cartes de poule et bandeau de qualification allégés.
+- Corrigé : avec un nombre de qualifiés qui n'est pas une puissance de 2 (ex. 6), « Phase finale » faisait disparaître un joueur au tour suivant ; un tour de barrage est désormais créé.
+- Corrigé : le bouton « Passer aux … » restait sous un tour terminé et un second clic effaçait les résultats du tour suivant.
+
 ### 🐛 Courses : modifier un participant
 - La ligne en cours de modification ne grossit plus au survol : 💾 et ✖️ restent visibles.
 

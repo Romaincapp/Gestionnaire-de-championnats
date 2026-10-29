@@ -252,6 +252,7 @@ src/pools.iife.js` laquelle des deux définitions est réellement active
 
 Un sous-ensemble représentatif :
 - `updatePoolsDisplay(dayNumber)`, `togglePoolSection(dayNumber)`, `togglePoolMode(dayNumber)`, `generatePools(dayNumber)`, `updatePoolMatchScore(dayNumber, matchId, scoreField, value)`, `handlePoolMatchEnter(event, dayNumber, matchId)`, `generateFinalPhase(dayNumber)`
+- Panneau « 🏊 Poules » : classes `.pool-panel*` / `.pool-btn` / `.pool-card` dans `styles.css` (plus de couleurs inline). `generateRoundControlsHTML(day, div, round, name, faits, total)` (exposée) n'affiche plus « Passer aux … » quand le tour suivant existe
 - `toggleDayHub(dayNumber)`, `toggleGeneralHub()` - ces deux fonctions vivent ici, pas dans `ui.iife.js`
 - Phase finale manuelle : `initializeManualFinalPhase`, `generateManualFinalPhase`, `generateNextManualRound`, `resetManualFinalPhase`, `exportManualFinalResults`
 - Répartition/pré-remplissage : `preFillFromGeneralRanking`, `applyPreFillStrategy`, `applyPoolRedistribution`, `previewPoolRedistribution`
@@ -513,6 +514,7 @@ npm run check:duplicates    # Détection de doublons en CLI seule (déjà inclus
 npm run test:e2e            # Journée natation complète dans un vrai navigateur (HEADED=1 pour regarder)
 npm run browser:start       # Session navigateur persistante (un Chromium ouvert, port 9222) : à utiliser par défaut
                             #   pour tous les tests navigateur avec CDP_URL=http://127.0.0.1:9222 (voir claude.md)
+npm run test:pools          # Mode Poules complet par clics : panneau, poules, scores, barrage, finale, rechargement
 npm run test:sets           # Scores en sets (BO3/BO5) : saisie, poule, phase finale, forfait, classement, impression, import tennisdetable
 npm run test:darkmode       # Audit du mode sombre : contraste de ~50 écrans/fenêtres dans un vrai navigateur
 npm run test:darkmode:mobile # Même audit sur un téléphone (390×844, tactile) + contenu qui déborde de l'écran
