@@ -13,6 +13,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🐛 Courses : modifier un participant
+- La ligne en cours de modification ne grossit plus au survol : 💾 et ✖️ restent visibles.
+
 ### 🧹 Courses : un seul endroit pour ajouter des participants
 - La ligne d'ajout rapide au-dessus de la liste est retirée : « ➕ Participants » fait un ou plusieurs.
 

@@ -899,7 +899,7 @@
         // Ligne du tableau : toute la ligne devient une cellule d'édition
         var isTableRow = row.tagName === 'TR';
         var cols = isTableRow ? (row.closest('table').querySelectorAll('thead th').length || 1) : 0;
-        row.innerHTML = (isTableRow ? '<td colspan="' + cols + '"><div style="display: flex; align-items: center; gap: 8px;">' : '') +
+        row.innerHTML = (isTableRow ? '<td colspan="' + cols + '"><div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">' : '') +
             '<div style="display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap;">' +
             '<input type="number" id="edit-pbib-' + dayNumber + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" aria-label="Dossard" style="width: 55px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px; text-align: center;">' +
             '<input type="text" id="edit-pname-' + dayNumber + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="flex: 1; min-width: 120px; padding: 5px; border: 1px solid #8b5700; border-radius: 4px; font-size: 12px;">' +
