@@ -33,6 +33,16 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — En-tête de journée plus sobre : Divisions/Terrains fusionné avec « Mode »
+
+- La barre verte « Divisions / Terrains » (`#championshipConfigBar`) prend le style neutre du
+  bandeau « Mode / Score » et s'y colle (une seule carte, séparation pointillée) ; l'attribution
+  des terrains devient de petites pastilles « 🥇 D1 : Terrains 1-2 » sur la même ligne.
+- Journée Courses : barre toujours masquée (`updateDayTypeUI`), le bandeau garde ses coins.
+  Onglets Classement / Multisport : barre masquée (CSS `:has`), elle s'y affichait avant.
+- Aucun déplacement DOM (la barre reste globale) : fusion purement CSS, ids inchangés.
+- Fichiers : `index.html`, `styles.css`, `src/init.iife.js` (`updateCourtAssignmentInfo`).
+
 ### 2026-10-27 — Colonne Épreuve dans le tableau ; fenêtre protégée contre les fermetures involontaires
 
 - **Colonne Épreuve** (tableau « Ajouter des participants ») : épreuve + temps d'engagement

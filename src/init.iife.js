@@ -1656,7 +1656,7 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
         const numDivisions = getNumberOfDivisions();
         const medals = ['🥇', '🥈', '🥉', '🏅', '🎖️', '⭐'];
 
-        let html = '<div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">';
+        let html = '';
 
         for (let div = 1; div <= numDivisions; div++) {
             const courts = getCourtsForDivision(div);
@@ -1669,14 +1669,9 @@ window.exportGeneralRankingToHTML = exportGeneralRankingToHTML;
                 courtText = `Terrains ${courts.first}-${courts.last}`;
             }
 
-            html += `
-                <div style="padding: 5px 15px; background: white; border-radius: 5px; color: #057e68; font-weight: bold;">
-                    ${medal} Division ${div}: ${courtText}
-                </div>
-            `;
+            html += `<span class="court-chip">${medal} D${div} : ${courtText}</span>`;
         }
 
-        html += '</div>';
         infoDiv.innerHTML = html;
     }
     window.updateCourtAssignmentInfo = updateCourtAssignmentInfo;
