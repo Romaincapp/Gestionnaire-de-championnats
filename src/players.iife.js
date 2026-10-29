@@ -277,6 +277,7 @@
             const textarea = document.getElementById('addPlayerNames');
             if (textarea) textarea.focus();
         }
+        refreshPlayerGridSummary();
     }
     window.setAddPlayerMode = setAddPlayerMode;
 
@@ -345,6 +346,7 @@
         (rows || []).forEach(row => addPlayerGridRow(row));
         const empty = Math.max(1, 5 - (rows || []).length);
         for (let i = 0; i < empty; i++) addPlayerGridRow();
+        refreshPlayerGridSummary();
     }
 
     function removePlayerGridRow(button) {
@@ -352,6 +354,7 @@
         if (tr) tr.remove();
         if (playerGridRows().length === 0) addPlayerGridRow();
         renumberPlayerGrid();
+        refreshPlayerGridSummary();
     }
     window.removePlayerGridRow = removePlayerGridRow;
 
@@ -360,6 +363,7 @@
         const rows = playerGridRows();
         const tr = input.closest('tr');
         if (tr === rows[rows.length - 1] && playerRowFilled(tr)) addPlayerGridRow();
+        refreshPlayerGridSummary();
     }
     window.onPlayerGridInput = onPlayerGridInput;
 
@@ -381,17 +385,84 @@
         });
         const rows = playerGridRows();
         if (playerRowFilled(rows[rows.length - 1])) addPlayerGridRow();
+        refreshPlayerGridSummary();
     }
     window.onPlayerGridPaste = onPlayerGridPaste;
 
-    // Lignes du tableau → [{ name, club, division }] (division : nombre, « D2 », sinon vide)
+    // Case Division : vide → null (division du menu), « 2 » / « D2 » / « Div 2 » → 2,
+    // autre chose (« abc », « 0 ») → NaN, refusé
+    function parseGridDivision(text) {
+        const t = String(text || '').trim();
+        if (!t) return null;
+        const m = t.match(/^(?:d|div\.?|division)?\s*(\d+)$/i);
+        const n = m ? parseInt(m[1], 10) : NaN;
+        return n > 0 ? n : NaN;
+    }
+
+    // Lignes du tableau → [{ name, club, division, line }] ; division null = menu,
+    // NaN = illisible. Les lignes sans nom sont écartées (signalées par le résumé).
     function playerGridEntries() {
-        return playerGridRows().map(playerRowValues).map(v => {
+        return playerGridRows().map((tr, i) => {
+            const v = playerRowValues(tr);
             const name = formatProperName([v.nom, v.prenom].filter(Boolean).join(' '));
-            const div = parseInt(String(v.division).replace(/^\D+/, ''), 10);
-            return name ? { name, club: v.club, division: div > 0 ? div : null } : null;
+            return name ? { name, club: v.club, division: parseGridDivision(v.division), divisionText: v.division, line: i + 1 } : null;
         }).filter(Boolean);
     }
+
+    const isBadDivision = (division, numDivisions) => division != null && !(division >= 1 && division <= numDivisions);
+
+    // Résumé en direct sous le tableau (« 3 joueurs seront ajoutés : D1 × 1 · D2 × 2 »),
+    // case Division vide qui montre en gris la division du menu, case invalide en rouge,
+    // et le bouton qui annonce le nombre de joueurs : on voit où ira chacun avant d'ajouter.
+    function refreshPlayerGridSummary() {
+        const summary = document.getElementById('apm-grid-summary');
+        const button = document.getElementById('apm-add-btn');
+        const tableMode = currentAddPlayerMode() === 'table';
+        if (button) button.textContent = '➕ Ajouter';
+        if (!summary) return;
+        const numDivisions = getNumberOfDivisions();
+        const defaultDivision = parseInt((document.getElementById('addPlayerDivision') || {}).value) || 1;
+
+        const nameless = [];
+        playerGridRows().forEach((tr, i) => {
+            const input = tr.querySelector('input[data-col="division"]');
+            if (input) {
+                input.placeholder = 'D' + defaultDivision;
+                input.setAttribute('aria-invalid', String(isBadDivision(parseGridDivision(input.value), numDivisions)));
+            }
+            const v = playerRowValues(tr);
+            if (!v.nom && !v.prenom && (v.club || v.division)) nameless.push(i + 1);
+        });
+        if (!tableMode) return;
+
+        const entries = playerGridEntries();
+        const bad = entries.filter(e => isBadDivision(e.division, numDivisions));
+        let text;
+        let state = '';
+        if (bad.length) {
+            state = 'warn';
+            text = '⚠️ ' + bad.map(e => `Ligne ${e.line} (${e.name}) : division « ${e.divisionText} » inexistante`).join(' ; ') +
+                ` — il y a ${numDivisions} division${numDivisions > 1 ? 's' : ''}. Corrigez avant d'ajouter.`;
+        } else if (entries.length) {
+            state = 'ok';
+            const perDivision = {};
+            entries.forEach(e => {
+                const d = e.division || defaultDivision;
+                perDivision[d] = (perDivision[d] || 0) + 1;
+            });
+            const byMenu = entries.filter(e => e.division == null).length;
+            text = `✅ ${entries.length} joueur${entries.length > 1 ? 's' : ''} ser${entries.length > 1 ? 'ont' : 'a'} ajouté${entries.length > 1 ? 's' : ''} : ` +
+                Object.keys(perDivision).sort((a, b) => a - b).map(d => `D${d} × ${perDivision[d]}`).join(' · ') +
+                (byMenu ? ` (dont ${byMenu} sans division → D${defaultDivision}, le menu)` : '') + '.';
+            if (button) button.textContent = `➕ Ajouter ${entries.length} joueur${entries.length > 1 ? 's' : ''}`;
+        } else {
+            text = `Division vide = D${defaultDivision} (menu ci-dessous) ; une division écrite dans la ligne l'emporte.`;
+        }
+        if (nameless.length) text += ` Ligne${nameless.length > 1 ? 's' : ''} ${nameless.join(', ')} sans nom : ignorée${nameless.length > 1 ? 's' : ''}.`;
+        summary.textContent = text;
+        summary.className = 'apm-grid-summary' + (state ? ' ' + state : '');
+    }
+    window.refreshPlayerGridSummary = refreshPlayerGridSummary;
 
     // Accordéon de la fenêtre : une seule section ouverte à la fois. Un clic sur la
     // section ouverte la referme ; forceOpen l'ouvre toujours.
@@ -467,9 +538,10 @@
         }
 
         const numDivisions = getNumberOfDivisions();
-        const badDivisions = entries.filter(e => e.division && e.division > numDivisions).map(e => e.name);
+        const badDivisions = entries.filter(e => isBadDivision(e.division, numDivisions)).map(e => e.name);
         if (badDivisions.length) {
             showNotification(`Division inexistante (${numDivisions} division${numDivisions > 1 ? 's' : ''}) pour : ${badDivisions.join(', ')}`, 'warning');
+            refreshPlayerGridSummary();
             return;
         }
 

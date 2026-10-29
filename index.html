@@ -281,11 +281,12 @@
                     <p class="apm-hint" style="margin: 0 0 8px;">Une ligne par joueur ; une nouvelle ligne s'ajoute quand vous remplissez la dernière. Vous pouvez coller un bloc copié d'un tableur (Nom, Prénom, Club, Division). Division vide = celle choisie ci-dessous.</p>
                     <div class="bulk-grid-scroll"><table class="bulk-grid" id="apm-grid"><thead><tr><th class="bulk-grid-num">#</th><th>Nom</th><th>Prénom</th><th>Club</th><th>Division</th><th class="bulk-grid-del"><span class="pt-sr-only">Retirer</span></th></tr></thead><tbody></tbody></table></div>
                     <button type="button" class="ranking-action-btn" style="margin: 8px 0 10px;" onclick="addPlayerGridRow(null, true)">➕ Ligne</button>
+                    <p id="apm-grid-summary" class="apm-grid-summary" aria-live="polite"></p>
                 </div>
                 <div class="apm-row">
                     <div>
                         <label class="apm-label" for="addPlayerDivision">Division <span id="addPlayerDivisionHint" style="font-weight: 400;"></span></label>
-                        <select id="addPlayerDivision" class="apm-field"></select>
+                        <select id="addPlayerDivision" class="apm-field" onchange="refreshPlayerGridSummary()"></select>
                     </div>
                     <div style="flex: 1; min-width: 140px;">
                         <label class="apm-label" for="addPlayerClub">Club <span style="font-weight: 400;">(facultatif, si la ligne n'en a pas)</span></label>
@@ -295,7 +296,7 @@
                     </div>
                 </div>
                 <input type="text" id="addPlayerClubCustom" class="apm-field" placeholder="Nom du nouveau club" aria-label="Nom du nouveau club" style="display: none;">
-                <button onclick="addPlayerFromModal()" class="apm-primary" style="background: #087f58;">➕ Ajouter</button>
+                <button id="apm-add-btn" onclick="addPlayerFromModal()" class="apm-primary" style="background: #087f58;">➕ Ajouter</button>
                 <div class="file-input-wrapper apm-file">
                     <input type="file" id="modalFileInput" accept=".xlsx,.xls,.csv" onchange="handleModalFileInput(event)">
                     <label for="modalFileInput" class="apm-link" title="Colonne A = nom, colonne B = division">📁 ou importer un fichier CSV / Excel</label>

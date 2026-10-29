@@ -2615,6 +2615,14 @@ body.dark-mode .app-search-bar button {
 .apm-main { margin-bottom: 14px; }
 .apm-main .bulk-mode-tabs { margin-top: 0; }
 .bulk-grid input[data-col="division"] { min-width: 56px; width: 64px; }
+.bulk-grid input[aria-invalid="true"] { border-color: var(--color-danger); background: #fdecea; }
+.apm-grid-summary { margin: 0 0 10px; padding: 8px 10px; font-size: 13px; border-radius: 6px; background: #f0f6fb; border-left: 3px solid var(--color-primary); color: var(--color-text); }
+.apm-grid-summary.ok { background: #eaf6ef; border-left-color: var(--color-success); }
+.apm-grid-summary.warn { background: #fdecea; border-left-color: var(--color-danger); }
+body.dark-mode .apm-grid-summary { background: #23324a; color: #e0e0e0; }
+body.dark-mode .apm-grid-summary.ok { background: #1f3a2c; }
+body.dark-mode .apm-grid-summary.warn { background: #4a2a2a; }
+body.dark-mode .bulk-grid input[aria-invalid="true"] { background: #4a2a2a; }
 .apm-names { min-height: 150px; resize: vertical; font-family: inherit; line-height: 1.4; }
 .apm-file { display: block; margin-top: 8px; text-align: center; }
 .apm-link { cursor: pointer; color: #09679e; font-size: 13px; font-weight: 600; text-decoration: underline; }

@@ -169,6 +169,45 @@ describe('onglet 📊 Tableau', () => {
         expect(document.getElementById('addPlayerModal').style.display).toBe('block');
     });
 
+    test('résumé en direct : où ira chaque joueur, case vide = division du menu, bouton qui compte', () => {
+        championship.config.numberOfDivisions = 3;
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        const summary = () => document.getElementById('apm-grid-summary');
+        expect(summary().textContent).toContain('Division vide = D1');
+        fill(0, { nom: 'Dupont', prenom: 'Jean' });
+        fill(1, { nom: 'Martin', prenom: 'Paul', division: '2' });
+        fill(2, { nom: 'Durand', prenom: 'Léa', division: 'D3' });
+        refreshPlayerGridSummary();
+        expect(summary().textContent).toBe('✅ 3 joueurs seront ajoutés : D1 × 1 · D2 × 1 · D3 × 1 (dont 1 sans division → D1, le menu).');
+        expect(summary().className).toContain('ok');
+        expect(document.getElementById('apm-add-btn').textContent).toBe('➕ Ajouter 3 joueurs');
+        expect(cell(0, 'division').placeholder).toBe('D1');
+        // le menu change : la case vide suit
+        document.getElementById('addPlayerDivision').value = '2';
+        refreshPlayerGridSummary();
+        expect(cell(0, 'division').placeholder).toBe('D2');
+        expect(summary().textContent).toContain('D2 × 2');
+    });
+
+    test('résumé : division inexistante ou illisible en rouge, ligne sans nom signalée', () => {
+        showAddPlayerModal(1); // 2 divisions
+        setAddPlayerMode('table');
+        fill(0, { nom: 'Martin', prenom: 'Paul', division: '5' });
+        fill(1, { nom: 'Durand', division: 'abc' });
+        fill(2, { club: 'CTT Ciney', division: '1' });
+        refreshPlayerGridSummary();
+        const summary = document.getElementById('apm-grid-summary');
+        expect(summary.className).toContain('warn');
+        expect(summary.textContent).toContain('Ligne 1 (Martin Paul) : division « 5 » inexistante');
+        expect(summary.textContent).toContain('Ligne 2 (Durand) : division « abc » inexistante');
+        expect(summary.textContent).toContain('Ligne 3 sans nom : ignorée');
+        expect(cell(0, 'division').getAttribute('aria-invalid')).toBe('true');
+        expect(cell(2, 'division').getAttribute('aria-invalid')).toBe('false');
+        addPlayerFromModal();
+        expect(championship.days[1].players[1]).toEqual([]);
+    });
+
     test('dernier onglet choisi rouvert à l\'ouverture suivante', () => {
         showAddPlayerModal(1);
         setAddPlayerMode('table');
