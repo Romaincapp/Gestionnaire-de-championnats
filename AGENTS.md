@@ -7,7 +7,7 @@ choisit indépendamment un type (`championship` ou `chrono`, voir `claude.md`
 pour le détail de cette architecture par-journée) :
 - 🎾 **Championship** : Matchs par tours (round-robin, suisse) + 🏆 **POOL** : Poules + phase finale
 - ⏱️ **CHRONO** : Courses avec chronométrage
-- 🏅 **Multisport** : onglet combiné qui apparaît automatiquement dès qu'il y a au moins une journée Chrono — classement combiné entre journées Matchs et Courses
+- 🏅 **Multisport** : onglet combiné qui apparaît automatiquement dès qu'il y a au moins une journée Matchs ET une journée Chrono — classement combiné entre les deux. Courses seules : pas d'onglet Multisport, « 🏆 Classement » ouvre le classement des courses
 
 Ce fichier documente les modules `src/` un par un. **Attention** : les listes
 de fonctions ci-dessous sont indicatives, pas exhaustives — certains modules

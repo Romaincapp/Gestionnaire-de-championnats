@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Onglet « 🏅 Multisport » seulement pour un mélange Matchs + Courses
+
+- `updateMultisportTabVisibility` : onglet visible seulement avec des journées Matchs ET Courses.
+  Courses seules : « 🏆 Classement » (`switchToGeneralRanking`) ouvre le classement des courses,
+  marqué actif (`switchToMultisportRanking`) ; titre « 🏆 Classement des Courses », barème
+  combiné masqué (`updateMultisportRanking`).
+- Test : `tests/unit/multisportTabChronoOnly.test.js` ; `eventRanking.test.js` adapté.
+- Fichiers : `src/multisport.iife.js`, `src/ui.iife.js`, `AGENTS.md`.
+
 ### 2026-10-29 — En-tête de journée plus sobre : Divisions/Terrains fusionné avec « Mode »
 
 - La barre verte « Divisions / Terrains » (`#championshipConfigBar`) prend le style neutre du

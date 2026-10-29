@@ -13,6 +13,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏅 Onglet Multisport seulement s'il y a à combiner
+- Avec des journées Courses seulement, plus d'onglet « Multisport » en doublon : « 🏆 Classement »
+  ouvre directement le classement des courses (sans barème Matchs + Courses).
+
 ### 🎨 En-tête de journée plus sobre
 - Divisions / Terrains et Mode / Score réunis dans un seul bandeau neutre (plus de barre verte),
   attribution des terrains en petites pastilles ; masqué sur les journées Courses et les classements.

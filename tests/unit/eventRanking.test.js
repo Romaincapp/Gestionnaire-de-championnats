@@ -131,11 +131,18 @@ describe('affichage', () => {
         expect(document.querySelector('#multisport-ranking .multisport-info').style.display).toBe('none');
         expect(document.getElementById('multisportRankingContent').innerHTML).toContain('Classement par épreuve');
 
-        // Retour à une compétition de course à pied : en-tête d'origine
+        // Course à pied seule : classement des courses, sans barème combiné
         championship.days[1].chronoData.events.forEach(e => e.series.forEach(s => { s.sportType = 'running'; s.laneMode = false; }));
+        window.updateMultisportRanking();
+        expect(document.getElementById('multisport-hub-title').textContent).toBe('🏆 Classement des Courses');
+        expect(document.querySelector('#multisport-ranking .multisport-info').style.display).toBe('none');
+
+        // Avec une journée Matchs en plus : en-tête et barème multisport
+        championship.days[99] = { dayType: 'championship', players: {}, matches: {} };
         window.updateMultisportRanking();
         expect(document.getElementById('multisport-hub-title').textContent).toContain('Matchs + Courses');
         expect(document.querySelector('#multisport-ranking .multisport-info').style.display).toBe('');
+        delete championship.days[99];
     });
 
     test('course à pied : classement général inchangé', () => {

@@ -590,7 +590,10 @@
         const multisportTab = document.querySelector('[data-tab="multisport"]');
         const multisportContent = document.getElementById('multisport-ranking');
 
-        if (multisportTab) multisportTab.classList.add('active');
+        // Courses seules : onglet Multisport masqué, c'est « 🏆 Classement » qui l'ouvre
+        const tabHidden = !multisportTab || multisportTab.style.display === 'none';
+        const activeTab = tabHidden ? document.getElementById('generalRankingTab') : multisportTab;
+        if (activeTab) activeTab.classList.add('active');
         if (multisportContent) {
             multisportContent.classList.add('active');
             multisportContent.style.display = 'block';
@@ -607,10 +610,13 @@
         // Natation : l'en-tête statique (« Matchs + Courses », barème de points)
         // ne s'applique pas — classement par épreuve, au temps.
         const swimmingOnly = typeof isSwimmingOnlyCompetition === 'function' && isSwimmingOnlyCompetition();
+        // Courses seules (sans journée Matchs) : rien à combiner, pas de barème.
+        const mixed = typeof hasChampionshipDays === 'function' && hasChampionshipDays();
         const title = document.getElementById('multisport-hub-title');
-        if (title) title.textContent = swimmingOnly ? eventRankingTitle() : '🏅 Classement Multisport (Matchs + Courses)';
+        if (title) title.textContent = swimmingOnly ? eventRankingTitle()
+            : (mixed ? '🏅 Classement Multisport (Matchs + Courses)' : '🏆 Classement des Courses');
         const info = document.querySelector('#multisport-ranking .multisport-info');
-        if (info) info.style.display = swimmingOnly ? 'none' : '';
+        if (info) info.style.display = swimmingOnly || !mixed ? 'none' : '';
 
         if (typeof renderMultisportRanking === 'function') {
             container.innerHTML = renderMultisportRanking();
