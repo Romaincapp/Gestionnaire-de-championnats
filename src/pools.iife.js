@@ -3166,6 +3166,35 @@ function initializeManualFinalPhase(dayNumber) {
     }
 }
 
+// Matchs déjà joués dans la phase finale existante de la journée (toutes divisions)
+function countPlayedFinalPhaseMatches(dayNumber) {
+    const fp = championship.days[dayNumber]?.pools?.manualFinalPhase;
+    if (!fp || !fp.divisions) return 0;
+    let played = 0;
+    Object.values(fp.divisions).forEach(div => {
+        Object.values((div && div.rounds) || {}).forEach(round => {
+            (round.matches || []).forEach(m => { if (m && m.completed && !m.isBye) played++; });
+        });
+    });
+    return played;
+}
+
+// Relancer une phase finale efface la précédente : confirmation si elle a des résultats
+function confirmDiscardFinalPhase(dayNumber) {
+    const played = countPlayedFinalPhaseMatches(dayNumber);
+    if (!played) return true;
+    return confirm(`⚠️ La phase finale actuelle a ${played} match${played > 1 ? 's' : ''} joué${played > 1 ? 's' : ''}.\n\n` +
+        'La relancer efface ses tours, ses résultats et son podium. Continuer ?');
+}
+
+// Nouvelle phase finale : structure vide. initializeManualFinalPhase seule gardait
+// les tours de la précédente (dont une Finale jouée → podium affiché dès le départ)
+function freshManualFinalPhase(dayNumber) {
+    const dayData = championship.days[dayNumber];
+    if (dayData.pools) delete dayData.pools.manualFinalPhase;
+    initializeManualFinalPhase(dayNumber);
+}
+
 // ======================================
 // FONCTION MANQUANTE - getQualifiedPlayersFromPools
 // ======================================
@@ -3319,8 +3348,9 @@ function generateManualFinalPhase(dayNumber) {
         alert('⚠️ Terminez d\'abord toutes les poules avant de générer la phase finale !');
         return;
     }
-    
-    initializeManualFinalPhase(dayNumber);
+    if (!confirmDiscardFinalPhase(dayNumber)) return;
+
+    freshManualFinalPhase(dayNumber);
 
     // Détecter le mode de configuration
     const configMode = dayData.pools.config?.mode || 'simple';
@@ -3412,6 +3442,7 @@ function generateDirectFinalPhase(dayNumber) {
     if (!confirm(`⚡ ÉLIMINATION DIRECTE\n\nCette option crée une phase finale directe sans poules.\n\n${totalPlayers} joueur(s) inscrit(s) au total.\n\nContinuer ?`)) {
         return;
     }
+    if (!confirmDiscardFinalPhase(dayNumber)) return;
 
     // Initialiser la structure pools si nécessaire
     if (!dayData.pools) {
@@ -3437,7 +3468,7 @@ function generateDirectFinalPhase(dayNumber) {
     }
 
     // Initialiser la phase finale manuelle
-    initializeManualFinalPhase(dayNumber);
+    freshManualFinalPhase(dayNumber);
 
     let totalQualified = 0;
 
@@ -3883,6 +3914,7 @@ function startEliminationBracket(dayNumber, division, qualifiedPlayers) {
 function generateDirectFromImportedRankings(dayNumber, rankings) {
     const dayData = championship.days[dayNumber];
     if (!dayData) { alert('Journée non trouvée !'); return; }
+    if (!confirmDiscardFinalPhase(dayNumber)) return;
 
     // Construire les listes de joueurs avec leurs infos de classement
     const rankingLists = rankings.map((ranking, listIndex) =>
@@ -3925,7 +3957,7 @@ function generateDirectFromImportedRankings(dayNumber, rankings) {
         }
     }
 
-    initializeManualFinalPhase(dayNumber);
+    freshManualFinalPhase(dayNumber);
 
     // Tous les joueurs importés vont en division 1
     const division = 1;
@@ -4026,6 +4058,7 @@ function generateSeasonFinalPhase(dayNumber) {
         `Continuer ?`;
 
     if (!confirm(confirmMsg)) return;
+    if (!confirmDiscardFinalPhase(dayNumber)) return;
 
     // Initialiser la structure pools si nécessaire
     if (!dayData.pools) {
@@ -4051,7 +4084,7 @@ function generateSeasonFinalPhase(dayNumber) {
     }
 
     // Initialiser la phase finale manuelle
-    initializeManualFinalPhase(dayNumber);
+    freshManualFinalPhase(dayNumber);
 
     let totalQualified = 0;
     let qualificationSummary = [];
@@ -6060,6 +6093,10 @@ global.handlePoolMatchEnter = handlePoolMatchEnter;
 // Exposer les fonctions de phase finale manuelle
 global.initializePoolsForDay = initializePoolsForDay;
 global.initializeManualFinalPhase = initializeManualFinalPhase;
+global.freshManualFinalPhase = freshManualFinalPhase;
+global.countPlayedFinalPhaseMatches = countPlayedFinalPhaseMatches;
+global.getChampionFromFinalPhase = getChampionFromFinalPhase;
+global.generatePodiumHTML = generatePodiumHTML;
 global.updateManualFinalPhaseDisplay = updateManualFinalPhaseDisplay;
 global.updateManualMatchScore = updateManualMatchScore;
 global.handleManualMatchEnter = handleManualMatchEnter;

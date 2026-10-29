@@ -99,3 +99,48 @@ test('« Regénérer la finale / petite finale » demande confirmation et garde 
     window.generateFinale(1, 1);
     expect(div.rounds.Finale.matches[0].completed).toBe(false);
 });
+
+// Relancer la phase finale gardait les tours de la précédente (structure créée
+// seulement si absente) : sa Finale jouée affichait un podium dès le départ.
+describe('relancer la phase finale', () => {
+    function playToPodium() {
+        window.confirm = jest.fn(() => true);
+        window.generateManualFinalPhase(1);
+        const div = championship.days[1].pools.manualFinalPhase.divisions[1];
+        const win = r => { r.matches.forEach(m => Object.assign(m, { score1: 11, score2: 2, completed: true, winner: m.player1 })); r.completed = true; };
+        win(div.rounds.Barrage);
+        window.generateNextManualRound(1, 1, 'Barrage');
+        win(div.rounds['Demi-finales']);
+        window.generateFinale(1, 1);
+        win(div.rounds.Finale);
+        expect(window.getChampionFromFinalPhase(div)).toBeTruthy();
+    }
+
+    test('nouvelle phase finale : seulement le 1er tour, aucun podium', () => {
+        playToPodium();
+        window.confirm = jest.fn(() => true);
+        window.generateManualFinalPhase(1);
+        const div = championship.days[1].pools.manualFinalPhase.divisions[1];
+        expect(Object.keys(div.rounds)).toEqual(['Barrage']);
+        expect(div.rounds.Barrage.matches.every(m => !m.completed)).toBe(true);
+        expect(window.getChampionFromFinalPhase(div)).toBeNull();
+        expect(window.generatePodiumHTML(div)).toBe('');
+    });
+
+    test('des matchs déjà joués : confirmation ; refus = rien ne change', () => {
+        playToPodium();
+        const before = JSON.stringify(championship.days[1].pools.manualFinalPhase);
+        expect(window.countPlayedFinalPhaseMatches(1)).toBe(5); // 2 barrages, 2 demis, 1 finale
+        window.confirm = jest.fn(() => false);
+        window.generateManualFinalPhase(1);
+        expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('5 matchs joués'));
+        expect(JSON.stringify(championship.days[1].pools.manualFinalPhase)).toBe(before);
+    });
+
+    test('phase finale encore vide : relancée sans question', () => {
+        window.generateManualFinalPhase(1);
+        window.confirm = jest.fn(() => true);
+        window.generateManualFinalPhase(1);
+        expect(window.confirm).not.toHaveBeenCalled();
+    });
+});
