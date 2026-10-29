@@ -1,9 +1,10 @@
 /**
  * @jest-environment jsdom
  *
- * Fenêtre « ➕ Ajouter des joueurs » épurée en accordéon (demande utilisateur) :
- * 👤 Ajouter un joueur / 📋 Ajouter plusieurs joueurs / 🏢 Gérer les clubs, une seule
- * section ouverte à la fois, la gestion des clubs intégrée (plus de seconde fenêtre).
+ * Fenêtre « ➕ Ajouter des joueurs » (demande utilisateur) : une seule zone de saisie,
+ * toujours visible, pour un nom ou une liste (un par ligne, « Nom, Club » accepté) —
+ * plus de sections « un joueur » / « plusieurs joueurs » séparées. Restent en accordéon
+ * 📥 Reprendre d'une autre journée et 🏢 Gérer les clubs (une seule ouverte à la fois).
  */
 const fs = require('fs');
 const path = require('path');
@@ -24,28 +25,81 @@ beforeEach(() => {
 
 const openSections = () => [...document.querySelectorAll('#addPlayerModal .apm-section.open')].map((s) => s.id);
 
-test('toutes les sections fermées à l\'ouverture, une seule ouverte à la fois', () => {
+const typeNames = (text) => { document.getElementById('addPlayerNames').value = text; };
+const names = (div) => championship.days[1].players[div].map((p) => p.name);
+
+test('saisie toujours visible, plus de sections « un » / « plusieurs » ; 📥 et 🏢 en accordéon', () => {
     showAddPlayerModal(1);
+    expect(document.getElementById('apm-section-single')).toBeNull();
+    expect(document.getElementById('apm-section-bulk')).toBeNull();
+    expect(document.getElementById('bulkModal')).toBeNull();
+    expect(document.activeElement.id).toBe('addPlayerNames');
     expect(openSections()).toEqual([]);
-    toggleAddPlayerSection('single');
-    expect(openSections()).toEqual(['apm-section-single']);
-    toggleAddPlayerSection('bulk');
-    expect(openSections()).toEqual(['apm-section-bulk']);
+    toggleAddPlayerSection('import');
+    expect(openSections()).toEqual(['apm-section-import']);
+    toggleAddPlayerSection('clubs');
+    expect(openSections()).toEqual(['apm-section-clubs']);
+    toggleAddPlayerSection('clubs');
+    expect(openSections()).toEqual([]);
+    // 'add' (et les anciens 'single' / 'bulk') : retour à la saisie
+    toggleAddPlayerSection('import');
     toggleAddPlayerSection('bulk');
     expect(openSections()).toEqual([]);
-    // rouvrir la fenêtre referme tout, même si une section était restée ouverte
+    expect(document.activeElement.id).toBe('addPlayerNames');
+    // rouvrir la fenêtre referme tout
     toggleAddPlayerSection('clubs');
     closeAddPlayerModal();
     showAddPlayerModal(1);
     expect(openSections()).toEqual([]);
 });
 
-test('ajout individuel toujours fonctionnel (mêmes champs)', () => {
+test('un seul nom : ajouté, fenêtre ouverte et saisie vidée pour le suivant', () => {
     showAddPlayerModal(1);
-    document.getElementById('addPlayerName').value = 'Dupont Jean';
+    typeNames('dupont jean');
     document.getElementById('addPlayerDivision').value = '2';
     addPlayerFromModal();
-    expect(championship.days[1].players[2].map((p) => p.name)).toEqual(['Dupont Jean']);
+    expect(names(2)).toEqual(['Dupont Jean']);
+    expect(document.getElementById('addPlayerModal').style.display).toBe('block');
+    expect(document.getElementById('addPlayerNames').value).toBe('');
+});
+
+test('une liste : un joueur par ligne, lignes vides ignorées, doublons signalés', () => {
+    championship.days[1].players[1] = [{ name: 'Déjà Là', club: '' }];
+    showAddPlayerModal(1);
+    typeNames('Martin Paul\n\n  Durand Léa  \nDéjà Là\nmartin paul');
+    addPlayerFromModal();
+    expect(names(1)).toEqual(['Déjà Là', 'Martin Paul', 'Durand Léa']);
+    const shown = document.body.textContent;
+    expect(shown).toContain('2 joueurs ajoutés à D1');
+    expect(shown).toContain('Déjà inscrits en D1 (ignorés) : Déjà Là, Martin Paul');
+});
+
+test('« Nom, Club » et colonnes collées : club de la ligne, sinon club choisi ; clubs ajoutés à la liste', () => {
+    showAddPlayerModal(1);
+    const select = document.getElementById('addPlayerClub');
+    select.value = '__custom__';
+    handleClubSelectChange(select, 'addPlayerClubCustom');
+    document.getElementById('addPlayerClubCustom').value = 'CTT Ciney';
+    typeNames('Martin Paul, TT Namur\nDurand Léa\tCTT Andenne\tcolonne en trop\nSans Virgule');
+    addPlayerFromModal();
+    expect(championship.days[1].players[1]).toEqual([
+        { name: 'Martin Paul', club: 'TT Namur' },
+        { name: 'Durand Léa', club: 'CTT Andenne' },
+        { name: 'Sans Virgule', club: 'CTT Ciney' },
+    ]);
+    expect(clubsModule.getClubsList()).toEqual(expect.arrayContaining(['CTT Ciney', 'TT Namur', 'CTT Andenne']));
+    expect(select.value).toBe('CTT Ciney'); // reste choisi pour la suite
+});
+
+test('fermer avec des noms tapés non ajoutés : confirmation', () => {
+    showAddPlayerModal(1);
+    typeNames('Oublié');
+    window.confirm = jest.fn(() => false);
+    closeAddPlayerModal();
+    expect(document.getElementById('addPlayerModal').style.display).toBe('block');
+    window.confirm = jest.fn(() => true);
+    closeAddPlayerModal();
+    expect(document.getElementById('addPlayerModal').style.display).toBe('none');
 });
 
 test('clubs gérés dans la fenêtre : ajout et suppression mettent à jour la liste et le sélecteur', () => {
@@ -70,7 +124,7 @@ test('aucun club prédéfini : le menu « Club » ne propose que « + Ajouter un
     expect(values).toEqual(['', '__custom__']);
     expect(document.getElementById('addPlayerClubsPanel').textContent).toContain('Aucun club');
     // un joueur sans club s'ajoute normalement
-    document.getElementById('addPlayerName').value = 'Sans Club';
+    typeNames('Sans Club');
     addPlayerFromModal();
     expect(championship.days[1].players[1].map((p) => [p.name, p.club])).toEqual([['Sans Club', '']]);
 });
@@ -82,7 +136,7 @@ test('nouveau club saisi en ajoutant un joueur : visible tout de suite dans le m
     select.value = '__custom__';
     handleClubSelectChange(select, 'addPlayerClubCustom');
     custom.value = 'CTT Ciney';
-    document.getElementById('addPlayerName').value = 'Martin Paul';
+    typeNames('Martin Paul');
     addPlayerFromModal();
 
     expect(championship.days[1].players[1]).toEqual([{ name: 'Martin Paul', club: 'CTT Ciney' }]);
@@ -97,7 +151,7 @@ test('joueur refusé (nom vide) : le nouveau club n\'est pas créé', () => {
     const select = document.getElementById('addPlayerClub');
     select.value = '__custom__';
     document.getElementById('addPlayerClubCustom').value = 'Club Fantôme';
-    document.getElementById('addPlayerName').value = '';
+    typeNames('');
     addPlayerFromModal();
     expect(clubsModule.getClubsList()).not.toContain('Club Fantôme');
 });

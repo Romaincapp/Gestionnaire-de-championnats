@@ -90,18 +90,6 @@
     }
     window.addPlayerToDay = addPlayerToDay;
 
-    // Fonction pour ouvrir le modal bulk depuis une journée spécifique
-    function showBulkInputForDay(dayNumber) {
-        const division = document.getElementById(`bulkDivision-${dayNumber}`).value;
-        document.getElementById('selectedDivision').textContent = `Division ${division} - Journée ${dayNumber}`;
-        document.getElementById('bulkModal').style.display = 'block';
-        document.getElementById('bulkText').focus();
-
-        document.getElementById('bulkModal').dataset.dayNumber = dayNumber;
-        document.getElementById('bulkModal').dataset.division = division;
-    }
-    window.showBulkInputForDay = showBulkInputForDay;
-
     // Fonction pour gérer l'import de fichier depuis une journée spécifique
     function handleFileInputForDay(dayNumber, event) {
         const file = event.target.files[0];
@@ -209,7 +197,7 @@
 
         // Initialiser les sélecteurs de division
         const numDivisions = championship.config?.numberOfDivisions || 3;
-        ['addPlayerDivision', 'modalBulkDivision'].forEach(selectId => {
+        ['addPlayerDivision'].forEach(selectId => {
             const select = document.getElementById(selectId);
             if (select) {
                 select.innerHTML = '';
@@ -237,21 +225,31 @@
 
         if (typeof renderAddPlayerClubsPanel === 'function') renderAddPlayerClubsPanel();
         modal.style.display = 'block';
-        // Toutes les sections fermées à l'ouverture : l'utilisateur choisit ce qu'il veut faire
+        // Sections secondaires (📥, 🏢) fermées ; la saisie des noms est toujours visible
         document.querySelectorAll('#addPlayerModal .apm-section').forEach(section => section.classList.remove('open'));
+        const names = document.getElementById('addPlayerNames');
+        if (names) names.focus();
     }
     window.showAddPlayerModal = showAddPlayerModal;
 
     // Accordéon de la fenêtre : une seule section ouverte à la fois. Un clic sur la
     // section ouverte la referme ; forceOpen l'ouvre toujours.
+    // 'add' (et les anciens 'single' / 'bulk') : la saisie des noms, toujours
+    // visible — referme les sections et place le curseur dans la liste.
     function toggleAddPlayerSection(name, forceOpen) {
+        if (name === 'add' || name === 'single' || name === 'bulk') {
+            document.querySelectorAll('#addPlayerModal .apm-section').forEach(section => section.classList.remove('open'));
+            const names = document.getElementById('addPlayerNames');
+            if (names) names.focus();
+            return;
+        }
         const target = document.getElementById('apm-section-' + name);
         if (!target) return;
         const open = forceOpen || !target.classList.contains('open');
         document.querySelectorAll('#addPlayerModal .apm-section').forEach(section => section.classList.remove('open'));
         if (!open) return;
         target.classList.add('open');
-        const focusId = { single: 'addPlayerName', clubs: 'apmNewClubName' }[name];
+        const focusId = { clubs: 'apmNewClubName' }[name];
         const field = focusId && document.getElementById(focusId);
         if (field) field.focus();
     }
@@ -266,37 +264,54 @@
     }
     window.importPlayersFromAddPlayerModal = importPlayersFromAddPlayerModal;
 
-    // Fermer le modal
+    // Fermer le modal (« Fermer », Échap) : confirmation si des noms tapés n'ont pas été ajoutés
     function closeAddPlayerModal() {
+        const names = document.getElementById('addPlayerNames');
+        if (names && names.value.trim() && !confirm('Fermer sans ajouter les joueurs tapés ?')) return false;
         document.getElementById('addPlayerModal').style.display = 'none';
-        document.getElementById('addPlayerName').value = '';
+        if (names) names.value = '';
+        return true;
     }
     window.closeAddPlayerModal = closeAddPlayerModal;
 
-    // Ajouter un joueur depuis le modal
+    // Une ligne de la saisie → { name, club }. « Nom », « Nom, Club » ou colonnes
+    // collées depuis un tableur (Nom<TAB>Club, colonnes en trop ignorées).
+    function parseAddPlayerLine(line) {
+        line = String(line || '').trim();
+        if (!line) return null;
+        const parts = line.split(line.indexOf('\t') !== -1 ? '\t' : ',').map(p => p.trim());
+        const name = formatProperName(parts[0] || '');
+        return name ? { name, club: parts[1] || '' } : null;
+    }
+    window.parseAddPlayerLine = parseAddPlayerLine;
+
+    // « ➕ Ajouter » : un nom ou une liste (un par ligne) dans la division choisie.
+    // Le club choisi s'applique aux lignes sans club. La fenêtre reste ouverte
+    // (curseur dans la liste vidée) pour enchaîner les ajouts un par un.
     function addPlayerFromModal() {
-        const name = formatProperName(document.getElementById('addPlayerName').value);
-        const division = parseInt(document.getElementById('addPlayerDivision').value);
+        const textarea = document.getElementById('addPlayerNames');
+        const division = parseInt(document.getElementById('addPlayerDivision').value) || 1;
         const dayNumber = addPlayerModalDayNumber;
-        
-        // Récupérer le club
-        let club = '';
-        const clubSelect = document.getElementById('addPlayerClub');
-        const clubCustom = document.getElementById('addPlayerClubCustom');
-        
-        let isNewClub = false;
-        if (clubSelect) {
-            if (clubSelect.value === '__custom__' && clubCustom && clubCustom.value.trim()) {
-                club = clubCustom.value.trim();
-                isNewClub = true; // ajouté à la liste seulement si le joueur est accepté
-            } else if (clubSelect.value && clubSelect.value !== '__custom__') {
-                club = clubSelect.value;
-            }
+        const entries = (textarea ? textarea.value : '').split('\n').map(parseAddPlayerLine).filter(Boolean);
+
+        if (entries.length === 0) {
+            showNotification('Veuillez entrer au moins un nom de joueur', 'warning');
+            if (textarea) textarea.focus();
+            return;
         }
 
-        if (!name || name === '') {
-            showNotification('Veuillez entrer un nom de joueur', 'warning');
-            return;
+        // Club par défaut
+        let defaultClub = '';
+        let newDefaultClub = false;
+        const clubSelect = document.getElementById('addPlayerClub');
+        const clubCustom = document.getElementById('addPlayerClubCustom');
+        if (clubSelect) {
+            if (clubSelect.value === '__custom__' && clubCustom && clubCustom.value.trim()) {
+                defaultClub = clubCustom.value.trim();
+                newDefaultClub = true; // ajouté à la liste seulement si un joueur est accepté
+            } else if (clubSelect.value && clubSelect.value !== '__custom__') {
+                defaultClub = clubSelect.value;
+            }
         }
 
         if (!championship.days[dayNumber]) {
@@ -309,222 +324,64 @@
             }
             championship.days[dayNumber] = { players, matches };
         }
+        const dayPlayers = championship.days[dayNumber].players;
+        if (!dayPlayers[division]) dayPlayers[division] = [];
 
-        // Vérifier si le joueur existe déjà (en utilisant la fonction du module clubs si disponible)
-        let playerExists = false;
-        if (typeof clubsModule !== 'undefined' && clubsModule.playerExists) {
-            playerExists = clubsModule.playerExists(dayNumber, division, name);
-        } else {
-            playerExists = championship.days[dayNumber].players[division].some(p => {
-                const pName = typeof p === 'object' ? p.name : p;
-                return pName.toLowerCase() === name.toLowerCase();
-            });
+        const exists = (name) => (typeof clubsModule !== 'undefined' && clubsModule.playerExists)
+            ? clubsModule.playerExists(dayNumber, division, name)
+            : dayPlayers[division].some(p => (typeof p === 'object' ? p.name : p).toLowerCase() === name.toLowerCase());
+
+        const added = [];
+        const duplicates = [];
+        const lineClubs = [];
+        entries.forEach(entry => {
+            if (exists(entry.name)) {
+                duplicates.push(entry.name);
+                return;
+            }
+            const club = entry.club || defaultClub;
+            dayPlayers[division].push({ name: entry.name, club });
+            added.push(entry.name + (club ? ' (' + club + ')' : ''));
+            if (entry.club) lineClubs.push(entry.club);
+        });
+
+        if (added.length) {
+            saveToLocalStorage();
+            updatePlayersDisplay(dayNumber);
+            if (typeof updateDaySelectors === 'function') updateDaySelectors();
         }
-        
-        if (playerExists) {
-            showNotification(`${name} est déjà inscrit en D${division}`, 'warning');
-            return;
+
+        if (added.length === 1) {
+            showNotification(`${added[0]} ajouté à D${division}`, 'success');
+        } else if (added.length > 1) {
+            showNotification(`${added.length} joueurs ajoutés à D${division}`, 'success');
         }
+        if (duplicates.length) {
+            showNotification(`Déjà inscrit${duplicates.length > 1 ? 's' : ''} en D${division} (ignoré${duplicates.length > 1 ? 's' : ''}) : ${duplicates.join(', ')}`, 'warning');
+        }
+        if (!added.length) return;
 
-        // Créer l'objet joueur avec club
-        const playerObj = { name, club };
-        championship.days[dayNumber].players[division].push(playerObj);
-        
-        saveToLocalStorage();
-        showNotification(`${name}${club ? ' (' + club + ')' : ''} ajouté à D${division}`, 'success');
-        updatePlayersDisplay(dayNumber);
-
-        // Nouveau club saisi : l'ajouter à la liste et le montrer tout de suite dans la
-        // fenêtre (menu « Club », où il reste sélectionné pour le joueur suivant, et
-        // section 🏢). Avant, il n'apparaissait qu'en rouvrant la fenêtre.
-        if (isNewClub) {
-            if (typeof clubsModule !== 'undefined' && clubsModule.addClub) clubsModule.addClub(club);
-            if (typeof refreshAddPlayerClubSelect === 'function') refreshAddPlayerClubSelect(club);
+        // Nouveaux clubs (club par défaut saisi, ou « Nom, Club » des lignes) : ajoutés à
+        // la liste et visibles tout de suite dans la fenêtre (menu « Club » et section 🏢)
+        const known = (typeof clubsModule !== 'undefined' && clubsModule.getClubsList) ? clubsModule.getClubsList() : [];
+        const newClubs = (newDefaultClub ? [defaultClub] : []).concat(lineClubs)
+            .filter((club, i, all) => all.indexOf(club) === i && known.indexOf(club) === -1);
+        if (newClubs.length) {
+            if (typeof clubsModule !== 'undefined' && clubsModule.addClub) newClubs.forEach(club => clubsModule.addClub(club));
+            if (typeof refreshAddPlayerClubSelect === 'function') refreshAddPlayerClubSelect(newDefaultClub ? defaultClub : (clubSelect ? clubSelect.value : ''));
             if (typeof renderAddPlayerClubsPanel === 'function') renderAddPlayerClubsPanel();
         }
 
-        document.getElementById('addPlayerName').value = '';
-        document.getElementById('addPlayerName').focus();
+        textarea.value = '';
+        textarea.focus();
     }
     window.addPlayerFromModal = addPlayerFromModal;
-
-    // Ouvrir le bulk modal depuis le modal d'ajout
-    function showBulkFromModal() {
-        const division = document.getElementById('modalBulkDivision').value;
-        document.getElementById('selectedDivision').textContent = `Division ${division} - Journée ${addPlayerModalDayNumber}`;
-        document.getElementById('bulkModal').style.display = 'block';
-        document.getElementById('bulkText').focus();
-
-        document.getElementById('bulkModal').dataset.dayNumber = addPlayerModalDayNumber;
-        document.getElementById('bulkModal').dataset.division = division;
-        
-        // Initialiser le sélecteur de clubs
-        const clubSelect = document.getElementById('bulkClubSelect');
-        if (clubSelect && typeof clubsModule !== 'undefined' && clubsModule.generateClubOptions) {
-            clubSelect.innerHTML = '<option value="">-- Aucun --</option>' + 
-                clubsModule.generateClubOptions().replace('<option value="">-- Sélectionner un club --</option>', '');
-        }
-        
-        // Cacher le champ personnalisé
-        const clubCustom = document.getElementById('bulkClubCustom');
-        if (clubCustom) {
-            clubCustom.style.display = 'none';
-            clubCustom.value = '';
-        }
-        
-        // Configurer le changement de sélection
-        if (clubSelect) {
-            clubSelect.onchange = function() {
-                if (this.value === '__custom__' && clubCustom) {
-                    clubCustom.style.display = 'block';
-                    clubCustom.focus();
-                } else if (clubCustom) {
-                    clubCustom.style.display = 'none';
-                    clubCustom.value = '';
-                }
-            };
-        }
-    }
-    window.showBulkFromModal = showBulkFromModal;
 
     // Import fichier depuis le modal
     function handleModalFileInput(event) {
         handleFileInputForDay(addPlayerModalDayNumber, event);
     }
     window.handleModalFileInput = handleModalFileInput;
-
-    function showBulkInput() {
-        const division = document.getElementById('bulkDivision').value;
-        const targetDay = 1; // Toujours ajouter à la journée 1 depuis le formulaire de J1
-        document.getElementById('selectedDivision').textContent = `Division ${division}`;
-        document.getElementById('bulkModal').style.display = 'block';
-        document.getElementById('bulkText').focus();
-
-        document.getElementById('bulkModal').dataset.dayNumber = targetDay;
-        document.getElementById('bulkModal').dataset.division = division;
-        
-        // Initialiser le sélecteur de clubs
-        const clubSelect = document.getElementById('bulkClubSelect');
-        if (clubSelect && typeof clubsModule !== 'undefined' && clubsModule.generateClubOptions) {
-            clubSelect.innerHTML = '<option value="">-- Aucun --</option>' + 
-                clubsModule.generateClubOptions().replace('<option value="">-- Sélectionner un club --</option>', '');
-        }
-        
-        // Cacher le champ personnalisé
-        const clubCustom = document.getElementById('bulkClubCustom');
-        if (clubCustom) {
-            clubCustom.style.display = 'none';
-            clubCustom.value = '';
-        }
-        
-        // Configurer le changement de sélection
-        if (clubSelect) {
-            clubSelect.onchange = function() {
-                if (this.value === '__custom__' && clubCustom) {
-                    clubCustom.style.display = 'block';
-                    clubCustom.focus();
-                } else if (clubCustom) {
-                    clubCustom.style.display = 'none';
-                    clubCustom.value = '';
-                }
-            };
-        }
-    }
-    window.showBulkInput = showBulkInput;
-
-    function closeBulkModal() {
-        document.getElementById('bulkModal').style.display = 'none';
-        document.getElementById('bulkText').value = '';
-        
-        // Réinitialiser le sélecteur de clubs
-        const clubSelect = document.getElementById('bulkClubSelect');
-        const clubCustom = document.getElementById('bulkClubCustom');
-        if (clubSelect) clubSelect.value = '';
-        if (clubCustom) {
-            clubCustom.style.display = 'none';
-            clubCustom.value = '';
-        }
-    }
-    window.closeBulkModal = closeBulkModal;
-
-    function addBulkPlayers() {
-        const text = document.getElementById('bulkText').value.trim();
-        const modal = document.getElementById('bulkModal');
-        const dayNumber = parseInt(modal.dataset.dayNumber) || parseInt(document.getElementById('bulkTargetDay')?.value || 1);
-        const division = parseInt(modal.dataset.division) || parseInt(document.getElementById('bulkDivision')?.value || 1);
-        
-        // Récupérer le club sélectionné
-        let club = '';
-        const clubSelect = document.getElementById('bulkClubSelect');
-        const clubCustom = document.getElementById('bulkClubCustom');
-        
-        if (clubSelect) {
-            if (clubSelect.value === '__custom__' && clubCustom && clubCustom.value.trim()) {
-                club = clubCustom.value.trim();
-                if (typeof clubsModule !== 'undefined' && clubsModule.addClub) {
-                    clubsModule.addClub(club);
-                }
-            } else if (clubSelect.value && clubSelect.value !== '__custom__') {
-                club = clubSelect.value;
-            }
-        }
-        
-        if (!text) {
-            alert('Veuillez entrer au moins un nom de joueur');
-            return;
-        }
-
-        const names = text.split('\n')
-                         .map(name => formatProperName(name))
-                         .filter(name => name.length > 0);
-        
-        let added = 0;
-        let duplicates = [];
-        
-        if (!championship.days[dayNumber]) {
-            const numDivisions = championship.config?.numberOfDivisions || 3;
-            const players = {};
-            const matches = {};
-            for (let div = 1; div <= numDivisions; div++) {
-                players[div] = [];
-                matches[div] = [];
-            }
-            championship.days[dayNumber] = {
-                players: players,
-                matches: matches
-            };
-        }
-        
-        names.forEach(name => {
-            // Vérifier si le joueur existe déjà (en comparant les noms)
-            const exists = championship.days[dayNumber].players[division].some(p => {
-                const pName = typeof p === 'object' ? p.name : p;
-                return pName.toLowerCase() === name.toLowerCase();
-            });
-            
-            if (!exists) {
-                // Créer l'objet joueur avec club
-                const playerObj = club ? { name, club } : { name, club: '' };
-                championship.days[dayNumber].players[division].push(playerObj);
-                added++;
-            } else {
-                duplicates.push(name);
-            }
-        });
-        
-        updatePlayersDisplay(dayNumber);
-        updateDaySelectors();
-        saveToLocalStorage();
-        
-        let message = `✅ ${added} joueurs${club ? ' (' + club + ')' : ''} ajoutés à la Division ${division} - Journée ${dayNumber} !`;
-        if (duplicates.length > 0) {
-            message += `\n\n⚠️ Joueurs déjà présents (ignorés): ${duplicates.join(', ')}`;
-        }
-        
-        alert(message);
-        closeBulkModal();
-    }
-    window.addBulkPlayers = addBulkPlayers;
 
     // Fonction pour vérifier si un joueur a au moins un match BYE
     function playerHasByeMatch(dayNumber, division, playerName) {
