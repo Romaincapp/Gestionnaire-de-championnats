@@ -263,21 +263,32 @@
 
     <!-- Modal Ajout Joueurs -->
     <div id="addPlayerModal" class="modal">
-        <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-content apm-dialog" style="max-width: 480px;">
             <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">➕ Ajouter des joueurs <span id="addPlayerDayLabel" style="font-size: 14px; color: #54637a;"></span></h3>
 
             <!-- Saisie unique : un nom ou une liste (addPlayerFromModal) -->
             <div class="apm-main" id="apm-main">
-                <label class="apm-label" for="addPlayerNames">Joueurs <span style="font-weight: 400;">(un par ligne)</span></label>
-                <textarea id="addPlayerNames" class="apm-field apm-names" rows="7" placeholder="Dupont Jean&#10;Martin Paul, CTT Ciney&#10;…" onkeydown="if (event.key === 'Enter' &amp;&amp; (event.ctrlKey || event.metaKey)) { event.preventDefault(); addPlayerFromModal(); }"></textarea>
-                <p class="apm-hint" style="margin: 0 0 10px;">Un seul nom ou une liste collée (Excel compris). « Nom, Club » donne son club au joueur.</p>
+                <div class="bulk-mode-tabs" role="tablist" aria-label="Mode de saisie">
+                    <button type="button" role="tab" id="apm-tab-list" class="bulk-mode-tab active" aria-selected="true" aria-controls="apm-panel-list" onclick="setAddPlayerMode('list')">📝 Liste</button>
+                    <button type="button" role="tab" id="apm-tab-table" class="bulk-mode-tab" aria-selected="false" aria-controls="apm-panel-table" onclick="setAddPlayerMode('table')">📊 Tableau</button>
+                </div>
+                <div id="apm-panel-list" role="tabpanel" aria-labelledby="apm-tab-list">
+                    <label class="apm-label" for="addPlayerNames">Joueurs <span style="font-weight: 400;">(un par ligne)</span></label>
+                    <textarea id="addPlayerNames" class="apm-field apm-names" rows="7" placeholder="Dupont Jean&#10;Martin Paul, CTT Ciney&#10;…" onkeydown="if (event.key === 'Enter' &amp;&amp; (event.ctrlKey || event.metaKey)) { event.preventDefault(); addPlayerFromModal(); }"></textarea>
+                    <p class="apm-hint" style="margin: 0 0 10px;">Un seul nom ou une liste collée (Excel compris). « Nom, Club » donne son club au joueur.</p>
+                </div>
+                <div id="apm-panel-table" role="tabpanel" aria-labelledby="apm-tab-table" hidden>
+                    <p class="apm-hint" style="margin: 0 0 8px;">Une ligne par joueur ; une nouvelle ligne s'ajoute quand vous remplissez la dernière. Vous pouvez coller un bloc copié d'un tableur (Nom, Prénom, Club, Division). Division vide = celle choisie ci-dessous.</p>
+                    <div class="bulk-grid-scroll"><table class="bulk-grid" id="apm-grid"><thead><tr><th class="bulk-grid-num">#</th><th>Nom</th><th>Prénom</th><th>Club</th><th>Division</th><th class="bulk-grid-del"><span class="pt-sr-only">Retirer</span></th></tr></thead><tbody></tbody></table></div>
+                    <button type="button" class="ranking-action-btn" style="margin: 8px 0 10px;" onclick="addPlayerGridRow(null, true)">➕ Ligne</button>
+                </div>
                 <div class="apm-row">
                     <div>
-                        <label class="apm-label" for="addPlayerDivision">Division</label>
+                        <label class="apm-label" for="addPlayerDivision">Division <span id="addPlayerDivisionHint" style="font-weight: 400;"></span></label>
                         <select id="addPlayerDivision" class="apm-field"></select>
                     </div>
                     <div style="flex: 1; min-width: 140px;">
-                        <label class="apm-label" for="addPlayerClub">Club <span style="font-weight: 400;">(facultatif, pour tous)</span></label>
+                        <label class="apm-label" for="addPlayerClub">Club <span style="font-weight: 400;">(facultatif, si la ligne n'en a pas)</span></label>
                         <select id="addPlayerClub" class="apm-field" onchange="handleClubSelectChange(this, 'addPlayerClubCustom')">
                             <option value="">-- Club --</option>
                         </select>

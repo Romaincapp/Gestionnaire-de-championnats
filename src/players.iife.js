@@ -227,10 +227,171 @@
         modal.style.display = 'block';
         // Sections secondaires (📥, 🏢) fermées ; la saisie des noms est toujours visible
         document.querySelectorAll('#addPlayerModal .apm-section').forEach(section => section.classList.remove('open'));
-        const names = document.getElementById('addPlayerNames');
-        if (names) names.focus();
+        let mode = 'list';
+        try { if (localStorage.getItem(ADD_PLAYER_MODE_KEY) === 'table') mode = 'table'; } catch (e) { /* ignore */ }
+        resetPlayerGrid();
+        setAddPlayerMode(mode, true);
     }
     window.showAddPlayerModal = showAddPlayerModal;
+
+    // ----- Onglets « 📝 Liste » / « 📊 Tableau » (même principe que « ➕ Participants »
+    // des journées Courses). Dernier onglet choisi gardé dans le navigateur. -----
+    const ADD_PLAYER_MODE_KEY = 'addPlayersMode';
+    const PLAYER_GRID_COLUMNS = [
+        { key: 'nom', label: 'Nom' },
+        { key: 'prenom', label: 'Prénom' },
+        { key: 'club', label: 'Club' },
+        { key: 'division', label: 'Division' }
+    ];
+
+    function currentAddPlayerMode() {
+        const panel = document.getElementById('apm-panel-table');
+        return panel && !panel.hidden ? 'table' : 'list';
+    }
+
+    // Liste → Tableau : la liste tapée est découpée dans le tableau s'il est encore vide
+    function setAddPlayerMode(mode, initial) {
+        ['list', 'table'].forEach(key => {
+            const tab = document.getElementById('apm-tab-' + key);
+            const panel = document.getElementById('apm-panel-' + key);
+            if (tab) { tab.setAttribute('aria-selected', String(key === mode)); tab.classList.toggle('active', key === mode); }
+            if (panel) panel.hidden = key !== mode;
+        });
+        // En Tableau, la division de la ligne l'emporte : le menu ne vaut que pour les cases vides
+        const divisionHint = document.getElementById('addPlayerDivisionHint');
+        if (divisionHint) divisionHint.textContent = mode === 'table' ? '(si la ligne n\'en a pas)' : '';
+        const dialog = document.querySelector('#addPlayerModal .apm-dialog');
+        if (dialog) dialog.style.maxWidth = mode === 'table' ? '680px' : '480px';
+        if (!initial) { try { localStorage.setItem(ADD_PLAYER_MODE_KEY, mode); } catch (e) { /* ignore */ } }
+
+        if (mode === 'table') {
+            const textarea = document.getElementById('addPlayerNames');
+            if (!playerGridRows().some(playerRowFilled) && textarea && textarea.value.trim()) {
+                const parsed = textarea.value.split('\n').map(parseAddPlayerLine).filter(Boolean);
+                resetPlayerGrid(parsed.map(p => Object.assign(splitPlayerNomPrenom(p.name), { club: p.club })));
+                textarea.value = '';
+            }
+            const first = document.querySelector('#apm-grid tbody input');
+            if (first) first.focus();
+        } else {
+            const textarea = document.getElementById('addPlayerNames');
+            if (textarea) textarea.focus();
+        }
+    }
+    window.setAddPlayerMode = setAddPlayerMode;
+
+    // « Dupont Jean » → Nom Dupont, Prénom Jean ; un seul mot reste dans Nom
+    function splitPlayerNomPrenom(full) {
+        const name = String(full || '').trim();
+        if (!name || name.indexOf(' ') === -1) return { nom: name, prenom: '' };
+        const i = name.lastIndexOf(' ');
+        return { nom: name.slice(0, i), prenom: name.slice(i + 1) };
+    }
+
+    function playerGridRows() {
+        return Array.from(document.querySelectorAll('#apm-grid tbody tr'));
+    }
+
+    function playerRowValues(tr) {
+        const v = {};
+        PLAYER_GRID_COLUMNS.forEach(c => {
+            const input = tr.querySelector(`input[data-col="${c.key}"]`);
+            v[c.key] = input ? input.value.trim() : '';
+        });
+        return v;
+    }
+
+    function playerRowFilled(tr) {
+        const v = playerRowValues(tr);
+        return !!(v.nom || v.prenom || v.club || v.division);
+    }
+
+    function renumberPlayerGrid() {
+        playerGridRows().forEach((tr, i) => {
+            tr.querySelector('.bulk-grid-num').textContent = i + 1;
+            PLAYER_GRID_COLUMNS.forEach(c => {
+                const input = tr.querySelector(`input[data-col="${c.key}"]`);
+                if (input) input.setAttribute('aria-label', `${c.label}, ligne ${i + 1}`);
+            });
+            const del = tr.querySelector('.bulk-grid-del button');
+            if (del) del.setAttribute('aria-label', `Retirer la ligne ${i + 1}`);
+        });
+    }
+
+    const escapeAttr = (text) => String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+    function addPlayerGridRow(values, focus) {
+        const tbody = document.querySelector('#apm-grid tbody');
+        if (!tbody) return null;
+        values = values || {};
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td class="bulk-grid-num"></td>' + PLAYER_GRID_COLUMNS.map(c =>
+            `<td><input type="text" data-col="${c.key}" value="${escapeAttr(values[c.key] || '')}"` +
+            (c.key === 'division' ? ' inputmode="numeric"' : '') +
+            ' oninput="onPlayerGridInput(this)" onpaste="onPlayerGridPaste(event)"></td>').join('') +
+            '<td class="bulk-grid-del"><button type="button" title="Retirer la ligne" onclick="removePlayerGridRow(this)">×</button></td>';
+        tbody.appendChild(tr);
+        renumberPlayerGrid();
+        if (focus) tr.querySelector('input').focus();
+        return tr;
+    }
+    window.addPlayerGridRow = addPlayerGridRow;
+
+    // Vide le tableau, le remplit avec `rows`, puis ajoute des lignes vides (5 lignes au moins)
+    function resetPlayerGrid(rows) {
+        const tbody = document.querySelector('#apm-grid tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        (rows || []).forEach(row => addPlayerGridRow(row));
+        const empty = Math.max(1, 5 - (rows || []).length);
+        for (let i = 0; i < empty; i++) addPlayerGridRow();
+    }
+
+    function removePlayerGridRow(button) {
+        const tr = button.closest('tr');
+        if (tr) tr.remove();
+        if (playerGridRows().length === 0) addPlayerGridRow();
+        renumberPlayerGrid();
+    }
+    window.removePlayerGridRow = removePlayerGridRow;
+
+    // Remplir la dernière ligne en ajoute une nouvelle, vide
+    function onPlayerGridInput(input) {
+        const rows = playerGridRows();
+        const tr = input.closest('tr');
+        if (tr === rows[rows.length - 1] && playerRowFilled(tr)) addPlayerGridRow();
+    }
+    window.onPlayerGridInput = onPlayerGridInput;
+
+    // Collage d'un bloc (lignes / tabulations) : réparti à partir de la cellule visée
+    function onPlayerGridPaste(event) {
+        const text = (event.clipboardData || window.clipboardData || { getData: () => '' }).getData('text') || '';
+        if (text.indexOf('\n') === -1 && text.indexOf('\t') === -1) return; // simple texte : collage normal
+        event.preventDefault();
+        const lines = text.replace(/\r/g, '').split('\n');
+        while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+        const rowIndex = playerGridRows().indexOf(event.target.closest('tr'));
+        const startCol = PLAYER_GRID_COLUMNS.findIndex(c => c.key === event.target.dataset.col);
+        lines.forEach((line, i) => {
+            const tr = playerGridRows()[rowIndex + i] || addPlayerGridRow();
+            line.split('\t').forEach((cell, j) => {
+                const col = PLAYER_GRID_COLUMNS[startCol + j];
+                if (col) tr.querySelector(`input[data-col="${col.key}"]`).value = cell.trim();
+            });
+        });
+        const rows = playerGridRows();
+        if (playerRowFilled(rows[rows.length - 1])) addPlayerGridRow();
+    }
+    window.onPlayerGridPaste = onPlayerGridPaste;
+
+    // Lignes du tableau → [{ name, club, division }] (division : nombre, « D2 », sinon vide)
+    function playerGridEntries() {
+        return playerGridRows().map(playerRowValues).map(v => {
+            const name = formatProperName([v.nom, v.prenom].filter(Boolean).join(' '));
+            const div = parseInt(String(v.division).replace(/^\D+/, ''), 10);
+            return name ? { name, club: v.club, division: div > 0 ? div : null } : null;
+        }).filter(Boolean);
+    }
 
     // Accordéon de la fenêtre : une seule section ouverte à la fois. Un clic sur la
     // section ouverte la referme ; forceOpen l'ouvre toujours.
@@ -239,8 +400,7 @@
     function toggleAddPlayerSection(name, forceOpen) {
         if (name === 'add' || name === 'single' || name === 'bulk') {
             document.querySelectorAll('#addPlayerModal .apm-section').forEach(section => section.classList.remove('open'));
-            const names = document.getElementById('addPlayerNames');
-            if (names) names.focus();
+            setAddPlayerMode(currentAddPlayerMode(), true);
             return;
         }
         const target = document.getElementById('apm-section-' + name);
@@ -267,9 +427,11 @@
     // Fermer le modal (« Fermer », Échap) : confirmation si des noms tapés n'ont pas été ajoutés
     function closeAddPlayerModal() {
         const names = document.getElementById('addPlayerNames');
-        if (names && names.value.trim() && !confirm('Fermer sans ajouter les joueurs tapés ?')) return false;
+        const typed = (names && names.value.trim()) || playerGridRows().some(playerRowFilled);
+        if (typed && !confirm('Fermer sans ajouter les joueurs tapés ?')) return false;
         document.getElementById('addPlayerModal').style.display = 'none';
         if (names) names.value = '';
+        resetPlayerGrid();
         return true;
     }
     window.closeAddPlayerModal = closeAddPlayerModal;
@@ -285,18 +447,29 @@
     }
     window.parseAddPlayerLine = parseAddPlayerLine;
 
-    // « ➕ Ajouter » : un nom ou une liste (un par ligne) dans la division choisie.
-    // Le club choisi s'applique aux lignes sans club. La fenêtre reste ouverte
-    // (curseur dans la liste vidée) pour enchaîner les ajouts un par un.
+    // « ➕ Ajouter » : les joueurs de l'onglet affiché — Liste (un par ligne) ou
+    // Tableau (Nom, Prénom, Club, Division) — dans la division choisie, sauf division
+    // donnée par la ligne. Le club choisi s'applique aux lignes sans club. La fenêtre
+    // reste ouverte (saisie vidée) pour enchaîner les ajouts.
     function addPlayerFromModal() {
         const textarea = document.getElementById('addPlayerNames');
-        const division = parseInt(document.getElementById('addPlayerDivision').value) || 1;
+        const defaultDivision = parseInt(document.getElementById('addPlayerDivision').value) || 1;
         const dayNumber = addPlayerModalDayNumber;
-        const entries = (textarea ? textarea.value : '').split('\n').map(parseAddPlayerLine).filter(Boolean);
+        const tableMode = currentAddPlayerMode() === 'table';
+        const entries = tableMode
+            ? playerGridEntries()
+            : (textarea ? textarea.value : '').split('\n').map(parseAddPlayerLine).filter(Boolean);
 
         if (entries.length === 0) {
             showNotification('Veuillez entrer au moins un nom de joueur', 'warning');
-            if (textarea) textarea.focus();
+            setAddPlayerMode(tableMode ? 'table' : 'list', true);
+            return;
+        }
+
+        const numDivisions = getNumberOfDivisions();
+        const badDivisions = entries.filter(e => e.division && e.division > numDivisions).map(e => e.name);
+        if (badDivisions.length) {
+            showNotification(`Division inexistante (${numDivisions} division${numDivisions > 1 ? 's' : ''}) pour : ${badDivisions.join(', ')}`, 'warning');
             return;
         }
 
@@ -325,25 +498,29 @@
             championship.days[dayNumber] = { players, matches };
         }
         const dayPlayers = championship.days[dayNumber].players;
-        if (!dayPlayers[division]) dayPlayers[division] = [];
 
-        const exists = (name) => (typeof clubsModule !== 'undefined' && clubsModule.playerExists)
+        const exists = (division, name) => (typeof clubsModule !== 'undefined' && clubsModule.playerExists)
             ? clubsModule.playerExists(dayNumber, division, name)
             : dayPlayers[division].some(p => (typeof p === 'object' ? p.name : p).toLowerCase() === name.toLowerCase());
 
         const added = [];
         const duplicates = [];
         const lineClubs = [];
+        const divisionsUsed = new Set();
         entries.forEach(entry => {
-            if (exists(entry.name)) {
-                duplicates.push(entry.name);
+            const division = entry.division || defaultDivision;
+            if (!dayPlayers[division]) dayPlayers[division] = [];
+            if (exists(division, entry.name)) {
+                duplicates.push(`${entry.name} (D${division})`);
                 return;
             }
             const club = entry.club || defaultClub;
             dayPlayers[division].push({ name: entry.name, club });
             added.push(entry.name + (club ? ' (' + club + ')' : ''));
+            divisionsUsed.add(division);
             if (entry.club) lineClubs.push(entry.club);
         });
+        const where = divisionsUsed.size === 1 ? ` à D${[...divisionsUsed][0]}` : '';
 
         if (added.length) {
             saveToLocalStorage();
@@ -352,12 +529,12 @@
         }
 
         if (added.length === 1) {
-            showNotification(`${added[0]} ajouté à D${division}`, 'success');
+            showNotification(`${added[0]} ajouté${where}`, 'success');
         } else if (added.length > 1) {
-            showNotification(`${added.length} joueurs ajoutés à D${division}`, 'success');
+            showNotification(`${added.length} joueurs ajoutés${where}`, 'success');
         }
         if (duplicates.length) {
-            showNotification(`Déjà inscrit${duplicates.length > 1 ? 's' : ''} en D${division} (ignoré${duplicates.length > 1 ? 's' : ''}) : ${duplicates.join(', ')}`, 'warning');
+            showNotification(`Déjà inscrit${duplicates.length > 1 ? 's' : ''} (ignoré${duplicates.length > 1 ? 's' : ''}) : ${duplicates.join(', ')}`, 'warning');
         }
         if (!added.length) return;
 
@@ -372,8 +549,9 @@
             if (typeof renderAddPlayerClubsPanel === 'function') renderAddPlayerClubsPanel();
         }
 
-        textarea.value = '';
-        textarea.focus();
+        if (tableMode) resetPlayerGrid();
+        else if (textarea) textarea.value = '';
+        setAddPlayerMode(tableMode ? 'table' : 'list', true);
     }
     window.addPlayerFromModal = addPlayerFromModal;
 

@@ -2613,6 +2613,8 @@ body.dark-mode .app-search-bar button {
     font-weight: 600;
 }
 .apm-main { margin-bottom: 14px; }
+.apm-main .bulk-mode-tabs { margin-top: 0; }
+.bulk-grid input[data-col="division"] { min-width: 56px; width: 64px; }
 .apm-names { min-height: 150px; resize: vertical; font-family: inherit; line-height: 1.4; }
 .apm-file { display: block; margin-top: 8px; text-align: center; }
 .apm-link { cursor: pointer; color: #09679e; font-size: 13px; font-weight: 600; text-decoration: underline; }

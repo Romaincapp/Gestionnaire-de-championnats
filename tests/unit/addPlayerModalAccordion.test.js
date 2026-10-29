@@ -17,7 +17,7 @@ beforeAll(() => loadModules());
 
 beforeEach(() => {
     document.body.innerHTML = BODY;
-    localStorage.clear();
+    localStorage.clear(); // onglet « Liste » par défaut
     window.confirm = jest.fn(() => true);
     championship.config = { numberOfDivisions: 2, numberOfCourts: 4 };
     championship.days = { 1: { dayType: 'championship', players: { 1: [], 2: [] }, matches: { 1: [], 2: [] } } };
@@ -71,7 +71,7 @@ test('une liste : un joueur par ligne, lignes vides ignorées, doublons signalé
     expect(names(1)).toEqual(['Déjà Là', 'Martin Paul', 'Durand Léa']);
     const shown = document.body.textContent;
     expect(shown).toContain('2 joueurs ajoutés à D1');
-    expect(shown).toContain('Déjà inscrits en D1 (ignorés) : Déjà Là, Martin Paul');
+    expect(shown).toContain('Déjà inscrits (ignorés) : Déjà Là (D1), Martin Paul (D1)');
 });
 
 test('« Nom, Club » et colonnes collées : club de la ligne, sinon club choisi ; clubs ajoutés à la liste', () => {
@@ -100,6 +100,86 @@ test('fermer avec des noms tapés non ajoutés : confirmation', () => {
     window.confirm = jest.fn(() => true);
     closeAddPlayerModal();
     expect(document.getElementById('addPlayerModal').style.display).toBe('none');
+});
+
+describe('onglet 📊 Tableau', () => {
+    const cell = (row, col) => document.querySelectorAll('#apm-grid tbody tr')[row].querySelector(`input[data-col="${col}"]`);
+    const fill = (row, values) => Object.entries(values).forEach(([col, v]) => { cell(row, col).value = v; });
+
+    test('Liste → Tableau : la liste tapée est découpée en Nom / Prénom / Club', () => {
+        showAddPlayerModal(1);
+        typeNames('Dupont Jean\nVan Der Berg Anne, TT Namur');
+        setAddPlayerMode('table');
+        expect(document.getElementById('apm-panel-table').hidden).toBe(false);
+        expect(document.getElementById('apm-panel-list').hidden).toBe(true);
+        expect([cell(0, 'nom').value, cell(0, 'prenom').value]).toEqual(['Dupont', 'Jean']);
+        expect([cell(1, 'nom').value, cell(1, 'prenom').value, cell(1, 'club').value]).toEqual(['Van Der Berg', 'Anne', 'TT Namur']);
+        expect(document.querySelectorAll('#apm-grid tbody tr').length).toBe(5);
+        expect(localStorage.getItem('addPlayersMode')).toBe('table');
+    });
+
+    test('ajout depuis le tableau : Nom + Prénom, club, division de la ligne ou choisie', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        fill(0, { nom: 'dupont', prenom: 'jean', club: 'CTT Ciney', division: '2' });
+        fill(1, { nom: 'Martin', prenom: 'Paul' });
+        fill(2, { nom: 'Durand', prenom: 'Léa', division: 'd2' });
+        // « Division 1 » choisie dans le menu : seule la ligne sans division y va
+        expect(document.getElementById('addPlayerDivision').value).toBe('1');
+        expect(document.getElementById('addPlayerDivisionHint').textContent).toBe("(si la ligne n'en a pas)");
+        addPlayerFromModal();
+        expect(championship.days[1].players[1]).toEqual([{ name: 'Martin Paul', club: '' }]);
+        expect(championship.days[1].players[2]).toEqual([{ name: 'Dupont Jean', club: 'CTT Ciney' }, { name: 'Durand Léa', club: '' }]);
+        // tableau remis à vide, fenêtre ouverte, onglet gardé
+        expect(Array.from(document.querySelectorAll('#apm-grid tbody input')).every((i) => i.value === '')).toBe(true);
+        expect(document.getElementById('apm-panel-table').hidden).toBe(false);
+    });
+
+    test('division inexistante : rien n\'est ajouté', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        fill(0, { nom: 'Martin', prenom: 'Paul', division: '5' });
+        addPlayerFromModal();
+        expect(championship.days[1].players[1]).toEqual([]);
+        expect(document.body.textContent).toContain('Division inexistante');
+    });
+
+    test('collage d\'un bloc de tableur : réparti dans les cellules, lignes ajoutées', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        const event = new Event('paste', { bubbles: true, cancelable: true });
+        event.clipboardData = { getData: () => 'A\tB\tC1\t1\nD\tE\tC2\t2\nF\tG\t\t\nH\tI\t\t\nJ\tK\t\t\n' };
+        cell(0, 'nom').dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(true);
+        expect([cell(1, 'nom').value, cell(1, 'club').value, cell(1, 'division').value]).toEqual(['D', 'C2', '2']);
+        expect(cell(4, 'prenom').value).toBe('K');
+        expect(document.querySelectorAll('#apm-grid tbody tr').length).toBe(6); // une ligne vide prête
+    });
+
+    test('remplir la dernière ligne en ajoute une ; fermer avec une ligne remplie demande confirmation', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        const rows = () => document.querySelectorAll('#apm-grid tbody tr').length;
+        fill(4, { nom: 'Dernier' });
+        onPlayerGridInput(cell(4, 'nom'));
+        expect(rows()).toBe(6);
+        window.confirm = jest.fn(() => false);
+        closeAddPlayerModal();
+        expect(window.confirm).toHaveBeenCalled();
+        expect(document.getElementById('addPlayerModal').style.display).toBe('block');
+    });
+
+    test('dernier onglet choisi rouvert à l\'ouverture suivante', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        closeAddPlayerModal();
+        showAddPlayerModal(1);
+        expect(document.getElementById('apm-panel-table').hidden).toBe(false);
+        setAddPlayerMode('list');
+        closeAddPlayerModal();
+        showAddPlayerModal(1);
+        expect(document.getElementById('apm-panel-list').hidden).toBe(false);
+    });
 });
 
 test('clubs gérés dans la fenêtre : ajout et suppression mettent à jour la liste et le sélecteur', () => {

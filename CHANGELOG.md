@@ -16,7 +16,8 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 ### 👤 Ajouter des joueurs : une seule saisie
 - En journée Matchs, « ➕ Joueurs » ouvre une grande zone de saisie : un nom ou une liste
   (un par ligne, « Nom, Club » accepté), puis « ➕ Ajouter ». Plus de choix entre
-  « un joueur » et « plusieurs joueurs ».
+  « un joueur » et « plusieurs joueurs ». Onglet « 📊 Tableau » (Nom, Prénom, Club, Division)
+  pour coller une feuille Excel, chaque ligne pouvant donner sa division.
 
 ### ➕ Courses : bouton « Participants » à côté d'« Importer »
 - Ajouter des participants se fait depuis la barre d'actions, comme « ➕ Joueurs » en journée Matchs.

@@ -41,6 +41,9 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
   Division + Club par défaut, bouton « ➕ Ajouter » (Ctrl+Entrée). La fenêtre reste ouverte
   pour enchaîner ; doublons signalés ; nouveaux clubs ajoutés à la liste ; fermer avec une
   saisie en cours demande confirmation. Restent en accordéon : 📥 Reprendre, 🏢 Clubs.
+- Onglet « 📊 Tableau » (comme en Courses) : grille Nom / Prénom / Club / Division, collage
+  depuis un tableur ; la division de la ligne l'emporte sur le menu Division (libellé « si la
+  ligne n'en a pas » en mode Tableau) ; division inexistante refusée. Dernier onglet mémorisé.
 - Menu « ➕ Joueurs ▾ » : 3 choix (👤 Ajouter des joueurs, 📥 D'une autre journée, 🏢 Clubs).
 - Supprimés (plus atteignables) : `#bulkModal`, `showBulkInput`, `showBulkInputForDay`,
   `showBulkFromModal`, `closeBulkModal`, `addBulkPlayers`.
