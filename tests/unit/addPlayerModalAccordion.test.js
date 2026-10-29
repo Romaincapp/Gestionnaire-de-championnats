@@ -131,7 +131,7 @@ describe('onglet 📊 Tableau', () => {
         expect(championship.days[1].players[1]).toEqual([{ name: 'Martin Paul', club: '' }]);
         expect(championship.days[1].players[2]).toEqual([{ name: 'Dupont Jean', club: 'CTT Ciney' }, { name: 'Durand Léa', club: '' }]);
         // tableau remis à vide, fenêtre ouverte, onglet gardé
-        expect(Array.from(document.querySelectorAll('#apm-grid tbody input')).every((i) => i.value === '')).toBe(true);
+        expect(Array.from(document.querySelectorAll('#apm-grid tbody input[data-col]')).every((i) => i.value === '')).toBe(true);
         expect(document.getElementById('apm-panel-table').hidden).toBe(false);
     });
 
@@ -206,6 +206,121 @@ describe('onglet 📊 Tableau', () => {
         expect(cell(2, 'division').getAttribute('aria-invalid')).toBe('false');
         addPlayerFromModal();
         expect(championship.days[1].players[1]).toEqual([]);
+    });
+
+    const rowCount = () => document.querySelectorAll('#apm-grid tbody tr').length;
+    const heads = () => Array.from(document.querySelectorAll('#apm-grid thead select')).map((sel) => sel.value);
+    const check = (row) => {
+        const box = document.querySelectorAll('#apm-grid tbody tr')[row].querySelector('.bulk-grid-check input');
+        box.checked = true;
+        onPlayerGridRowCheck(box);
+    };
+    const typeIn = (row, col, value) => {
+        const input = cell(row, col);
+        notePlayerGridFocus();
+        input.value = value;
+        onPlayerGridInput(input);
+    };
+
+    test('↶ Annuler : frappe, suppression de ligne et « Tout vider » reviennent en arrière', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        expect(document.getElementById('apm-undo-btn').disabled).toBe(true);
+        typeIn(0, 'nom', 'Dupont');
+        typeIn(1, 'nom', 'Martin');
+        expect(document.getElementById('apm-undo-btn').disabled).toBe(false);
+        removePlayerGridRow(document.querySelectorAll('#apm-grid tbody tr')[0].querySelector('.bulk-grid-del button'));
+        expect(cell(0, 'nom').value).toBe('Martin');
+        clearPlayerGrid();
+        expect(cell(0, 'nom').value).toBe('');
+        undoPlayerGrid(); // annule « Tout vider »
+        expect(cell(0, 'nom').value).toBe('Martin');
+        undoPlayerGrid(); // annule la suppression
+        expect([cell(0, 'nom').value, cell(1, 'nom').value]).toEqual(['Dupont', 'Martin']);
+        undoPlayerGrid(); // annule « Martin »
+        expect(cell(1, 'nom').value).toBe('');
+        undoPlayerGrid();
+        expect(cell(0, 'nom').value).toBe('');
+        expect(document.getElementById('apm-undo-btn').disabled).toBe(true);
+    });
+
+    test('Ctrl+Z dans le tableau annule la frappe en cours', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        typeIn(0, 'nom', 'Dupont');
+        const event = new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true, cancelable: true });
+        cell(0, 'nom').dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(true);
+        expect(cell(0, 'nom').value).toBe('');
+    });
+
+    test('cases à cocher : division et club en groupe, suppression des lignes cochées', () => {
+        championship.config.numberOfDivisions = 3;
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        ['A', 'B', 'C'].forEach((n, i) => fill(i, { nom: n }));
+        typeIn(3, 'nom', 'D'); // modification annulable faite avant toute sélection
+        expect(document.getElementById('apm-grid-selection').hidden).toBe(true);
+        check(0);
+        check(2);
+        expect(document.getElementById('apm-grid-selection').hidden).toBe(false);
+        expect(document.getElementById('apm-grid-selection-count').textContent).toBe('2 lignes sélectionnées :');
+        applyPlayerGridBulk('division', '3');
+        applyPlayerGridBulk('club', 'CTT Ciney');
+        expect([cell(0, 'division').value, cell(1, 'division').value, cell(2, 'division').value]).toEqual(['3', '', '3']);
+        expect([cell(0, 'club').value, cell(2, 'club').value]).toEqual(['CTT Ciney', 'CTT Ciney']);
+        removeSelectedPlayerGridRows();
+        expect(cell(0, 'nom').value).toBe('B');
+        expect(document.getElementById('apm-grid-selection').hidden).toBe(true);
+        undoPlayerGrid();
+        expect(cell(2, 'nom').value).toBe('C');
+        // annuler rétablit aussi les cases cochées et la barre
+        expect(document.getElementById('apm-grid-selection').hidden).toBe(false);
+        undoPlayerGrid(); undoPlayerGrid(); undoPlayerGrid(); // club, division, « D »
+        expect(cell(3, 'nom').value).toBe('');
+        expect(document.getElementById('apm-grid-selection').hidden).toBe(true);
+        // tout sélectionner
+        togglePlayerGridSelectAll(true);
+        expect(document.getElementById('apm-grid-selection-count').textContent).toBe(`${rowCount()} lignes sélectionnées :`);
+    });
+
+    test('colonnes : ajouter, changer le sens, déplacer, supprimer — et l\'ajout suit les colonnes', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        expect(heads()).toEqual(['nom', 'prenom', 'club', 'division']);
+        fill(0, { nom: 'Jean', prenom: 'Dupont' });
+        // le fichier a le prénom d'abord : on inverse les deux colonnes, valeurs comprises
+        movePlayerGridColumn(0, 1);
+        expect(heads()).toEqual(['prenom', 'nom', 'club', 'division']);
+        expect(cell(0, 'nom').value).toBe('Jean');
+        setPlayerGridColumnType(0, 'nom');
+        setPlayerGridColumnType(1, 'prenom');
+        expect(heads()).toEqual(['nom', 'prenom', 'club', 'division']);
+        expect([cell(0, 'nom').value, cell(0, 'prenom').value]).toEqual(['Dupont', 'Jean']);
+        addPlayerGridColumn();
+        expect(heads()).toEqual(['nom', 'prenom', 'club', 'division', 'ignore']);
+        document.querySelectorAll('#apm-grid tbody tr')[0].querySelectorAll('input[data-col]')[4].value = 'note perso';
+        removePlayerGridColumn(2); // plus de colonne Club
+        expect(heads()).toEqual(['nom', 'prenom', 'division', 'ignore']);
+        undoPlayerGrid();
+        expect(heads()).toEqual(['nom', 'prenom', 'club', 'division', 'ignore']);
+        addPlayerFromModal();
+        expect(championship.days[1].players[1]).toEqual([{ name: 'Dupont Jean', club: '' }]);
+        // les colonnes choisies restent pour le collage suivant
+        expect(heads()).toEqual(['nom', 'prenom', 'club', 'division', 'ignore']);
+    });
+
+    test('collage plus large que le tableau : colonnes « Ignorer » ajoutées, rien de perdu', () => {
+        showAddPlayerModal(1);
+        setAddPlayerMode('table');
+        const event = new Event('paste', { bubbles: true, cancelable: true });
+        event.clipboardData = { getData: () => 'Dupont\tJean\tCTT\t1\tlicence 123\n' };
+        cell(0, 'nom').dispatchEvent(event);
+        expect(heads()).toEqual(['nom', 'prenom', 'club', 'division', 'ignore']);
+        expect(document.querySelectorAll('#apm-grid tbody tr')[0].querySelectorAll('input[data-col]')[4].value).toBe('licence 123');
+        undoPlayerGrid();
+        expect(heads()).toEqual(['nom', 'prenom', 'club', 'division']);
+        expect(cell(0, 'nom').value).toBe('');
     });
 
     test('dernier onglet choisi rouvert à l\'ouverture suivante', () => {

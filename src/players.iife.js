@@ -237,12 +237,22 @@
     // ----- Onglets « 📝 Liste » / « 📊 Tableau » (même principe que « ➕ Participants »
     // des journées Courses). Dernier onglet choisi gardé dans le navigateur. -----
     const ADD_PLAYER_MODE_KEY = 'addPlayersMode';
-    const PLAYER_GRID_COLUMNS = [
-        { key: 'nom', label: 'Nom' },
-        { key: 'prenom', label: 'Prénom' },
-        { key: 'club', label: 'Club' },
-        { key: 'division', label: 'Division' }
+    // Colonnes du tableau : chacune a un sens (type) choisi dans son titre ; on peut les
+    // ajouter, supprimer, déplacer (◀ ▶) pour suivre l'ordre d'un fichier collé.
+    // Plusieurs colonnes Nom / Prénom se mettent bout à bout ; Club / Division : la
+    // première non vide. « Ignorer » : colonne gardée à l'écran mais pas enregistrée.
+    const PLAYER_COLUMN_TYPES = [
+        { type: 'nom', label: 'Nom' },
+        { type: 'prenom', label: 'Prénom' },
+        { type: 'club', label: 'Club' },
+        { type: 'division', label: 'Division' },
+        { type: 'ignore', label: 'Ignorer' }
     ];
+    const DEFAULT_GRID_COLUMNS = ['nom', 'prenom', 'club', 'division'];
+    let playerGridColumns = DEFAULT_GRID_COLUMNS.slice();
+    let playerGridUndo = [];
+    let playerGridPendingSnapshot = null;
+    const PLAYER_GRID_UNDO_MAX = 50;
 
     function currentAddPlayerMode() {
         const panel = document.getElementById('apm-panel-table');
@@ -293,27 +303,32 @@
         return Array.from(document.querySelectorAll('#apm-grid tbody tr'));
     }
 
+    const columnLabel = (type) => (PLAYER_COLUMN_TYPES.find(t => t.type === type) || {}).label || type;
+
+    // Valeurs d'une ligne par sens : { nom, prenom, club, division }
     function playerRowValues(tr) {
-        const v = {};
-        PLAYER_GRID_COLUMNS.forEach(c => {
-            const input = tr.querySelector(`input[data-col="${c.key}"]`);
-            v[c.key] = input ? input.value.trim() : '';
+        const v = { nom: '', prenom: '', club: '', division: '' };
+        Array.from(tr.querySelectorAll('input[data-col]')).forEach(input => {
+            const type = input.dataset.col;
+            const val = input.value.trim();
+            if (!val || !(type in v)) return;
+            if (type === 'nom' || type === 'prenom') v[type] = v[type] ? v[type] + ' ' + val : val;
+            else if (!v[type]) v[type] = val;
         });
         return v;
     }
 
     function playerRowFilled(tr) {
-        const v = playerRowValues(tr);
-        return !!(v.nom || v.prenom || v.club || v.division);
+        return Array.from(tr.querySelectorAll('input[data-col]')).some(input => input.value.trim());
     }
 
     function renumberPlayerGrid() {
         playerGridRows().forEach((tr, i) => {
             tr.querySelector('.bulk-grid-num').textContent = i + 1;
-            PLAYER_GRID_COLUMNS.forEach(c => {
-                const input = tr.querySelector(`input[data-col="${c.key}"]`);
-                if (input) input.setAttribute('aria-label', `${c.label}, ligne ${i + 1}`);
-            });
+            tr.querySelectorAll('input[data-col]').forEach((input, j) =>
+                input.setAttribute('aria-label', `${columnLabel(playerGridColumns[j])}, ligne ${i + 1}`));
+            const check = tr.querySelector('.bulk-grid-check input');
+            if (check) check.setAttribute('aria-label', `Sélectionner la ligne ${i + 1}`);
             const del = tr.querySelector('.bulk-grid-del button');
             if (del) del.setAttribute('aria-label', `Retirer la ligne ${i + 1}`);
         });
@@ -321,45 +336,287 @@
 
     const escapeAttr = (text) => String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
+    function renderPlayerGridHead() {
+        const thead = document.querySelector('#apm-grid thead');
+        if (!thead) return;
+        const last = playerGridColumns.length - 1;
+        thead.innerHTML = '<tr><th class="bulk-grid-check"><input type="checkbox" id="apm-grid-all" aria-label="Tout sélectionner" onchange="togglePlayerGridSelectAll(this.checked)"></th>' +
+            '<th class="bulk-grid-num">#</th>' +
+            playerGridColumns.map((type, j) => '<th><div class="apm-col-head">' +
+                `<button type="button" onclick="movePlayerGridColumn(${j}, -1)" title="Déplacer à gauche" aria-label="Déplacer la colonne ${j + 1} à gauche"${j === 0 ? ' disabled' : ''}>◀</button>` +
+                `<select aria-label="Contenu de la colonne ${j + 1}" onchange="setPlayerGridColumnType(${j}, this.value)">` +
+                PLAYER_COLUMN_TYPES.map(t => `<option value="${t.type}"${t.type === type ? ' selected' : ''}>${t.label}</option>`).join('') +
+                '</select>' +
+                `<button type="button" onclick="movePlayerGridColumn(${j}, 1)" title="Déplacer à droite" aria-label="Déplacer la colonne ${j + 1} à droite"${j === last ? ' disabled' : ''}>▶</button>` +
+                `<button type="button" onclick="removePlayerGridColumn(${j})" title="Supprimer la colonne" aria-label="Supprimer la colonne ${j + 1}"${playerGridColumns.length === 1 ? ' disabled' : ''}>×</button>` +
+                '</div></th>').join('') +
+            '<th class="bulk-grid-del"><span class="pt-sr-only">Retirer</span></th></tr>';
+    }
+
+    // `values` : objet par sens ({ nom, prenom, club, division }) ou tableau par colonne
+    function buildPlayerGridRow(values, selected) {
+        values = values || {};
+        const tr = document.createElement('tr');
+        if (selected) tr.classList.add('apm-row-selected');
+        tr.innerHTML = `<td class="bulk-grid-check"><input type="checkbox"${selected ? ' checked' : ''} onchange="onPlayerGridRowCheck(this)"></td>` +
+            '<td class="bulk-grid-num"></td>' + playerGridColumns.map((type, j) => {
+                const value = Array.isArray(values) ? values[j] : values[type];
+                return `<td><input type="text" data-col="${type}" value="${escapeAttr(value || '')}"` +
+                    (type === 'division' ? ' inputmode="numeric"' : '') +
+                    ' onfocus="notePlayerGridFocus()" oninput="onPlayerGridInput(this)" onpaste="onPlayerGridPaste(event)"></td>';
+            }).join('') +
+            '<td class="bulk-grid-del"><button type="button" title="Retirer la ligne" onclick="removePlayerGridRow(this)">×</button></td>';
+        return tr;
+    }
+
     function addPlayerGridRow(values, focus) {
         const tbody = document.querySelector('#apm-grid tbody');
         if (!tbody) return null;
-        values = values || {};
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td class="bulk-grid-num"></td>' + PLAYER_GRID_COLUMNS.map(c =>
-            `<td><input type="text" data-col="${c.key}" value="${escapeAttr(values[c.key] || '')}"` +
-            (c.key === 'division' ? ' inputmode="numeric"' : '') +
-            ' oninput="onPlayerGridInput(this)" onpaste="onPlayerGridPaste(event)"></td>').join('') +
-            '<td class="bulk-grid-del"><button type="button" title="Retirer la ligne" onclick="removePlayerGridRow(this)">×</button></td>';
+        if (focus) pushPlayerGridUndo();
+        const tr = buildPlayerGridRow(values);
         tbody.appendChild(tr);
         renumberPlayerGrid();
-        if (focus) tr.querySelector('input').focus();
+        if (focus) tr.querySelector('input[data-col]').focus();
         return tr;
     }
     window.addPlayerGridRow = addPlayerGridRow;
 
-    // Vide le tableau, le remplit avec `rows`, puis ajoute des lignes vides (5 lignes au moins)
-    function resetPlayerGrid(rows) {
+    // ----- Annuler : instantané (colonnes + lignes) avant chaque modification -----
+    function capturePlayerGrid() {
+        return {
+            columns: playerGridColumns.slice(),
+            rows: playerGridRows().map(tr => ({
+                selected: tr.querySelector('.bulk-grid-check input').checked,
+                values: Array.from(tr.querySelectorAll('input[data-col]')).map(i => i.value)
+            }))
+        };
+    }
+
+    function renderPlayerGrid(snapshot) {
         const tbody = document.querySelector('#apm-grid tbody');
         if (!tbody) return;
+        playerGridColumns = snapshot.columns.slice();
+        renderPlayerGridHead();
         tbody.innerHTML = '';
-        (rows || []).forEach(row => addPlayerGridRow(row));
-        const empty = Math.max(1, 5 - (rows || []).length);
-        for (let i = 0; i < empty; i++) addPlayerGridRow();
+        snapshot.rows.forEach(row => tbody.appendChild(buildPlayerGridRow(row.values, row.selected)));
+        if (!snapshot.rows.length) tbody.appendChild(buildPlayerGridRow());
+        renumberPlayerGrid();
+        refreshPlayerGridSelection();
         refreshPlayerGridSummary();
     }
 
+    function pushPlayerGridUndo(snapshot) {
+        playerGridUndo.push(snapshot || capturePlayerGrid());
+        if (playerGridUndo.length > PLAYER_GRID_UNDO_MAX) playerGridUndo.shift();
+        playerGridPendingSnapshot = null;
+        refreshPlayerGridUndoButton();
+    }
+
+    function refreshPlayerGridUndoButton() {
+        const button = document.getElementById('apm-undo-btn');
+        if (button) button.disabled = playerGridUndo.length === 0;
+    }
+
+    // Saisie dans une case : l'état d'avant est retenu au focus, empilé à la 1re frappe
+    function notePlayerGridFocus() {
+        playerGridPendingSnapshot = capturePlayerGrid();
+    }
+    window.notePlayerGridFocus = notePlayerGridFocus;
+
+    function undoPlayerGrid() {
+        if (!playerGridUndo.length) return false;
+        renderPlayerGrid(playerGridUndo.pop());
+        playerGridPendingSnapshot = null;
+        refreshPlayerGridUndoButton();
+        return true;
+    }
+    window.undoPlayerGrid = undoPlayerGrid;
+
+    // Ctrl+Z dans le tableau : annule la dernière modification du tableau
+    function onPlayerGridKeydown(event) {
+        if ((event.ctrlKey || event.metaKey) && !event.shiftKey && (event.key === 'z' || event.key === 'Z')) {
+            event.preventDefault();
+            // une frappe pas encore empilée : on revient à l'état du focus
+            if (playerGridPendingSnapshot && JSON.stringify(playerGridPendingSnapshot) !== JSON.stringify(capturePlayerGrid())) {
+                pushPlayerGridUndo(playerGridPendingSnapshot);
+            }
+            undoPlayerGrid();
+        }
+    }
+    window.onPlayerGridKeydown = onPlayerGridKeydown;
+
+    // Vide le tableau, le remplit avec `rows`, puis ajoute des lignes vides (5 lignes au
+    // moins). Remet l'historique à zéro. Colonnes par défaut, sauf `keepColumns` (après
+    // un ajout : l'ordre choisi sert au collage suivant).
+    function resetPlayerGrid(rows, keepColumns) {
+        const tbody = document.querySelector('#apm-grid tbody');
+        if (!tbody) return;
+        if (!keepColumns) playerGridColumns = DEFAULT_GRID_COLUMNS.slice();
+        playerGridUndo = [];
+        playerGridPendingSnapshot = null;
+        renderPlayerGridHead();
+        tbody.innerHTML = '';
+        (rows || []).forEach(row => tbody.appendChild(buildPlayerGridRow(row)));
+        const empty = Math.max(1, 5 - (rows || []).length);
+        for (let i = 0; i < empty; i++) tbody.appendChild(buildPlayerGridRow());
+        renumberPlayerGrid();
+        refreshPlayerGridUndoButton();
+        refreshPlayerGridSelection();
+        refreshPlayerGridSummary();
+    }
+
+    // « 🗑️ Tout vider » : lignes vidées, colonnes gardées (annulable)
+    function clearPlayerGrid() {
+        if (!playerGridRows().some(playerRowFilled)) return;
+        const snapshot = capturePlayerGrid();
+        pushPlayerGridUndo(snapshot);
+        renderPlayerGrid({ columns: snapshot.columns, rows: Array.from({ length: 5 }, () => ({ selected: false, values: [] })) });
+        refreshPlayerGridSelection();
+    }
+    window.clearPlayerGrid = clearPlayerGrid;
+
     function removePlayerGridRow(button) {
+        pushPlayerGridUndo();
         const tr = button.closest('tr');
         if (tr) tr.remove();
         if (playerGridRows().length === 0) addPlayerGridRow();
         renumberPlayerGrid();
+        refreshPlayerGridSelection();
         refreshPlayerGridSummary();
     }
     window.removePlayerGridRow = removePlayerGridRow;
 
+    // ----- Sélection de lignes et actions groupées -----
+    function selectedPlayerGridRows() {
+        return playerGridRows().filter(tr => tr.querySelector('.bulk-grid-check input').checked);
+    }
+
+    function onPlayerGridRowCheck(checkbox) {
+        checkbox.closest('tr').classList.toggle('apm-row-selected', checkbox.checked);
+        refreshPlayerGridSelection();
+    }
+    window.onPlayerGridRowCheck = onPlayerGridRowCheck;
+
+    function togglePlayerGridSelectAll(checked) {
+        playerGridRows().forEach(tr => {
+            tr.querySelector('.bulk-grid-check input').checked = checked;
+            tr.classList.toggle('apm-row-selected', checked);
+        });
+        refreshPlayerGridSelection();
+    }
+    window.togglePlayerGridSelectAll = togglePlayerGridSelectAll;
+
+    // Barre d'actions visible avec une sélection ; case « tout » cochée / indéterminée
+    function refreshPlayerGridSelection() {
+        const rows = playerGridRows();
+        const count = selectedPlayerGridRows().length;
+        const all = document.getElementById('apm-grid-all');
+        if (all) {
+            all.checked = count > 0 && count === rows.length;
+            all.indeterminate = count > 0 && count < rows.length;
+        }
+        const bar = document.getElementById('apm-grid-selection');
+        if (!bar) return;
+        bar.hidden = count === 0;
+        const label = document.getElementById('apm-grid-selection-count');
+        if (label) label.textContent = `${count} ligne${count > 1 ? 's' : ''} sélectionnée${count > 1 ? 's' : ''} :`;
+        const divSelect = document.getElementById('apm-bulk-division');
+        if (divSelect && divSelect.options.length !== getNumberOfDivisions()) {
+            divSelect.innerHTML = Array.from({ length: getNumberOfDivisions() }, (_, i) => `<option value="${i + 1}">D${i + 1}</option>`).join('');
+        }
+        const datalist = document.getElementById('apm-club-datalist');
+        if (datalist && typeof clubsModule !== 'undefined' && clubsModule.getClubsList) {
+            datalist.innerHTML = clubsModule.getClubsList().map(c => `<option value="${escapeAttr(c)}"></option>`).join('');
+        }
+    }
+
+    // Donne la même division / le même club aux lignes cochées (colonne créée si absente)
+    function applyPlayerGridBulk(type, value) {
+        const rows = selectedPlayerGridRows();
+        if (!rows.length) return false;
+        if (value === undefined) {
+            const field = document.getElementById(type === 'division' ? 'apm-bulk-division' : 'apm-bulk-club');
+            value = field ? field.value.trim() : '';
+        }
+        if (type === 'division' && value && /^\d+$/.test(value)) value = String(parseInt(value, 10));
+        pushPlayerGridUndo();
+        let col = playerGridColumns.indexOf(type);
+        if (col === -1) {
+            const snapshot = capturePlayerGrid();
+            snapshot.columns.push(type);
+            renderPlayerGrid(snapshot);
+            col = playerGridColumns.length - 1;
+        }
+        const selectedIndexes = new Set(selectedPlayerGridRows().map(tr => playerGridRows().indexOf(tr)));
+        playerGridRows().forEach((tr, i) => {
+            if (selectedIndexes.has(i)) tr.querySelectorAll('input[data-col]')[col].value = value;
+        });
+        refreshPlayerGridSummary();
+        return true;
+    }
+    window.applyPlayerGridBulk = applyPlayerGridBulk;
+
+    function removeSelectedPlayerGridRows() {
+        const rows = selectedPlayerGridRows();
+        if (!rows.length) return;
+        pushPlayerGridUndo();
+        rows.forEach(tr => tr.remove());
+        if (playerGridRows().length === 0) addPlayerGridRow();
+        renumberPlayerGrid();
+        refreshPlayerGridSelection();
+        refreshPlayerGridSummary();
+    }
+    window.removeSelectedPlayerGridRows = removeSelectedPlayerGridRows;
+
+    // ----- Colonnes : ajouter, supprimer, changer le sens, déplacer -----
+    function addPlayerGridColumn(type) {
+        const snapshot = capturePlayerGrid();
+        pushPlayerGridUndo(snapshot);
+        const used = new Set(snapshot.columns);
+        const next = type || (DEFAULT_GRID_COLUMNS.find(t => !used.has(t)) || 'ignore');
+        renderPlayerGrid({ columns: snapshot.columns.concat(next), rows: snapshot.rows });
+        refreshPlayerGridSelection();
+    }
+    window.addPlayerGridColumn = addPlayerGridColumn;
+
+    function removePlayerGridColumn(index) {
+        const snapshot = capturePlayerGrid();
+        if (snapshot.columns.length <= 1) return;
+        pushPlayerGridUndo(snapshot);
+        renderPlayerGrid({
+            columns: snapshot.columns.filter((_, j) => j !== index),
+            rows: snapshot.rows.map(r => ({ selected: r.selected, values: r.values.filter((_, j) => j !== index) }))
+        });
+        refreshPlayerGridSelection();
+    }
+    window.removePlayerGridColumn = removePlayerGridColumn;
+
+    function movePlayerGridColumn(index, delta) {
+        const to = index + delta;
+        const snapshot = capturePlayerGrid();
+        if (to < 0 || to >= snapshot.columns.length) return;
+        pushPlayerGridUndo(snapshot);
+        const swap = (arr) => { const a = arr.slice(); [a[index], a[to]] = [a[to], a[index]]; return a; };
+        renderPlayerGrid({ columns: swap(snapshot.columns), rows: snapshot.rows.map(r => ({ selected: r.selected, values: swap(r.values) })) });
+        refreshPlayerGridSelection();
+        const head = document.querySelectorAll('#apm-grid thead select')[to];
+        if (head) head.focus();
+    }
+    window.movePlayerGridColumn = movePlayerGridColumn;
+
+    function setPlayerGridColumnType(index, type) {
+        const snapshot = capturePlayerGrid();
+        pushPlayerGridUndo(snapshot);
+        const columns = snapshot.columns.slice();
+        columns[index] = type;
+        renderPlayerGrid({ columns, rows: snapshot.rows });
+        refreshPlayerGridSelection();
+    }
+    window.setPlayerGridColumnType = setPlayerGridColumnType;
+
     // Remplir la dernière ligne en ajoute une nouvelle, vide
     function onPlayerGridInput(input) {
+        if (playerGridPendingSnapshot) pushPlayerGridUndo(playerGridPendingSnapshot);
         const rows = playerGridRows();
         const tr = input.closest('tr');
         if (tr === rows[rows.length - 1] && playerRowFilled(tr)) addPlayerGridRow();
@@ -367,25 +624,32 @@
     }
     window.onPlayerGridInput = onPlayerGridInput;
 
-    // Collage d'un bloc (lignes / tabulations) : réparti à partir de la cellule visée
+    // Collage d'un bloc (lignes / tabulations) : réparti à partir de la cellule visée ;
+    // des colonnes « Ignorer » s'ajoutent si le bloc est plus large que le tableau
     function onPlayerGridPaste(event) {
         const text = (event.clipboardData || window.clipboardData || { getData: () => '' }).getData('text') || '';
         if (text.indexOf('\n') === -1 && text.indexOf('\t') === -1) return; // simple texte : collage normal
         event.preventDefault();
         const lines = text.replace(/\r/g, '').split('\n');
         while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
-        const rowIndex = playerGridRows().indexOf(event.target.closest('tr'));
-        const startCol = PLAYER_GRID_COLUMNS.findIndex(c => c.key === event.target.dataset.col);
+        const target = event.target;
+        const rowIndex = playerGridRows().indexOf(target.closest('tr'));
+        const startCol = Array.from(target.closest('tr').querySelectorAll('input[data-col]')).indexOf(target);
+
+        const snapshot = capturePlayerGrid();
+        pushPlayerGridUndo(snapshot);
+        const widest = Math.max(...lines.map(l => l.split('\t').length));
+        const columns = snapshot.columns.slice();
+        while (startCol + widest > columns.length) columns.push('ignore');
+        const rows = snapshot.rows.map(r => ({ selected: r.selected, values: columns.map((_, j) => r.values[j] || '') }));
         lines.forEach((line, i) => {
-            const tr = playerGridRows()[rowIndex + i] || addPlayerGridRow();
-            line.split('\t').forEach((cell, j) => {
-                const col = PLAYER_GRID_COLUMNS[startCol + j];
-                if (col) tr.querySelector(`input[data-col="${col.key}"]`).value = cell.trim();
-            });
+            const r = rowIndex + i;
+            if (!rows[r]) rows[r] = { selected: false, values: columns.map(() => '') };
+            line.split('\t').forEach((cell, j) => { rows[r].values[startCol + j] = cell.trim(); });
         });
-        const rows = playerGridRows();
-        if (playerRowFilled(rows[rows.length - 1])) addPlayerGridRow();
-        refreshPlayerGridSummary();
+        if (rows[rows.length - 1].values.some(v => v)) rows.push({ selected: false, values: [] });
+        renderPlayerGrid({ columns, rows });
+        refreshPlayerGridSelection();
     }
     window.onPlayerGridPaste = onPlayerGridPaste;
 
@@ -431,7 +695,7 @@
                 input.setAttribute('aria-invalid', String(isBadDivision(parseGridDivision(input.value), numDivisions)));
             }
             const v = playerRowValues(tr);
-            if (!v.nom && !v.prenom && (v.club || v.division)) nameless.push(i + 1);
+            if (!v.nom && !v.prenom && playerRowFilled(tr)) nameless.push(i + 1);
         });
         if (!tableMode) return;
 
@@ -621,7 +885,7 @@
             if (typeof renderAddPlayerClubsPanel === 'function') renderAddPlayerClubsPanel();
         }
 
-        if (tableMode) resetPlayerGrid();
+        if (tableMode) resetPlayerGrid(null, true);
         else if (textarea) textarea.value = '';
         setAddPlayerMode(tableMode ? 'table' : 'list', true);
     }

@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 📊 Tableau des joueurs : plus de contrôle
+- Résumé en direct de la division de chaque joueur avant d'ajouter, erreurs en rouge.
+- ↶ Annuler (Ctrl+Z), 🗑️ Tout vider, cases à cocher pour changer la division ou le club de
+  plusieurs lignes, ou les supprimer.
+- Colonnes à la carte : choisir ce que contient chaque colonne, la déplacer, en ajouter ou en
+  supprimer, pour coller un fichier dans n'importe quel ordre.
+
 ### 👤 Ajouter des joueurs : une seule saisie
 - En journée Matchs, « ➕ Joueurs » ouvre une grande zone de saisie : un nom ou une liste
   (un par ligne, « Nom, Club » accepté), puis « ➕ Ajouter ». Plus de choix entre
