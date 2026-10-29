@@ -33,6 +33,13 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Icône ⏱️ du libellé « Mode: » en journée Courses
+
+- Le libellé `#day-type-icon-N` (« 🎾 Mode: ») restait 🎾 après avoir choisi « ⏱️ Courses » :
+  mis à jour par `handleDayTypeChange` et `initializeDayTypeSelectorForDay1` (`ui.iife.js`),
+  id ajouté dans `index.html` (J1) et `generateDayContentHTML`.
+- Test : `tests/unit/dayTypeIcon.test.js`.
+
 ### 2026-10-29 — Divisions / Terrains appliqués dès le changement, bouton « Appliquer » retiré
 
 - `updateDivisionConfig` / `updateCourtConfig` (`config.iife.js`) appellent directement
