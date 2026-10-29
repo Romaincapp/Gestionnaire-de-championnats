@@ -13,6 +13,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎨 En-tête de journée plus sobre
+- Divisions / Terrains et Mode / Score réunis dans un seul bandeau neutre (plus de barre verte),
+  attribution des terrains en petites pastilles ; masqué sur les journées Courses et les classements.
+
 ### ➕ Ajouter des participants : mode Tableau
 - La fenêtre « ➕ Ajouter des participants » des journées Courses propose un onglet « 📊 Tableau »
   à côté de la liste : colonnes Nom, Prénom, Club, Catégorie, une ligne par participant (une

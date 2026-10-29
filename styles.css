@@ -2783,3 +2783,77 @@ html.dm-measuring *, html.dm-measuring *::before, html.dm-measuring *::after { t
         display: none;
     }
 }
+
+/* ===== Barre Divisions / Terrains fusionnée avec le bandeau « Mode » =====
+   #championshipConfigBar (global, en tête de .content) et le bandeau
+   .day-type-selector de la journée active forment une seule carte sobre :
+   la barre en haut, le bandeau collé dessous. Journée Courses : la barre est
+   masquée (updateDayTypeUI), le bandeau reprend ses coins arrondis. */
+#championshipConfigBar {
+    background: #f8f9fa;
+    color: #2c3e50;
+    border: 1px solid #dee2e6;
+    border-left: 4px solid #09679e;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 12px 4px;
+}
+#championshipConfigBar .config-bar-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+#championshipConfigBar select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    font-size: 13px;
+    background: white;
+    color: #333;
+}
+#applyConfigBtn {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    background: white;
+    color: #017239;
+    font-weight: 600;
+}
+#courtAssignmentInfo {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-left: auto;
+    font-size: 12px;
+    color: #586566;
+}
+#courtAssignmentInfo:empty { display: none; }
+#championshipConfigBar .config-bar-row #courtAssignmentInfo { margin-left: auto; }
+.court-chip {
+    padding: 2px 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: white;
+    white-space: nowrap;
+}
+/* Collage avec le bandeau de la journée active (barre visible seulement) */
+.content:has(> #championshipConfigBar:not([style*="none"])) > .day-content.active > .day-type-selector {
+    border-top: 1px dashed #dee2e6 !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+/* Onglets Classement : la barre ne concerne pas ces écrans */
+.content:has(> #general-ranking.active) > #championshipConfigBar,
+.content:has(> #multisport-ranking.active) > #championshipConfigBar {
+    display: none !important;
+}
+body.dark-mode #championshipConfigBar { background: #2a2a3a; color: #e6e6f0; border-color: #44445a; border-left-color: #7cc4ff; }
+body.dark-mode #championshipConfigBar select,
+body.dark-mode #applyConfigBtn,
+body.dark-mode .court-chip { background: #1f1f2e; color: #e6e6f0; border-color: #44445a; }
+body.dark-mode #courtAssignmentInfo { color: #b8c2cc; }
+body.dark-mode .content:has(> #championshipConfigBar:not([style*="none"])) > .day-content.active > .day-type-selector { border-top-color: #44445a !important; }

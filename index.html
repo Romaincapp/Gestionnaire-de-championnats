@@ -54,11 +54,11 @@
 
         <div class="content">
             <!-- CONFIGURATION (Championship uniquement — masquée sur une journée Chrono, voir updateDayTypeUI) -->
-            <div id="championshipConfigBar" style="background: #057e68; padding: 12px; border-radius: 8px; margin-bottom: 15px; color: white;">
-                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: center;">
+            <div id="championshipConfigBar">
+                <div class="config-bar-row">
                     <div id="divisionConfigContainer" style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-weight: bold; font-size: 14px;">⚙️ Divisions:</span>
-                        <select id="divisionConfig" onchange="updateDivisionConfig()" style="padding: 6px 10px; border-radius: 5px; border: none; font-size: 13px;">
+                        <label for="divisionConfig" style="font-size: 13px; font-weight: 500;">⚙️ Divisions:</label>
+                        <select id="divisionConfig" onchange="updateDivisionConfig()">
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3" selected>3</option>
@@ -68,8 +68,8 @@
                         </select>
                     </div>
                     <div id="courtConfigContainer" style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-weight: bold; font-size: 14px;">🎾 Terrains:</span>
-                        <select id="courtConfig" onchange="updateCourtConfig()" style="padding: 6px 10px; border-radius: 5px; border: none; font-size: 13px;">
+                        <label for="courtConfig" style="font-size: 13px; font-weight: 500;">🎾 Terrains:</label>
+                        <select id="courtConfig" onchange="updateCourtConfig()">
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
@@ -80,12 +80,10 @@
                             <option value="10">10</option>
                         </select>
                     </div>
-                    <button id="applyConfigBtn" class="btn" onclick="applyConfiguration()" style="background: white; color: #057e68; font-weight: bold; padding: 6px 15px; font-size: 13px;">
+                    <button id="applyConfigBtn" class="btn" onclick="applyConfiguration()">
                         ✅ Appliquer
                     </button>
-                </div>
-                <div id="courtAssignmentInfo" style="margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.2); border-radius: 5px; font-size: 12px; text-align: center;">
-                    <!-- Information sur l'attribution des terrains sera ajoutée ici -->
+                    <div id="courtAssignmentInfo"></div>
                 </div>
             </div>
 
