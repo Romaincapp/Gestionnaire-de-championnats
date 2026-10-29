@@ -4471,78 +4471,39 @@ function generateManualFinalPhaseHTML(dayNumber, division, finalPhase) {
     const rounds = finalPhase.rounds;
     const isDirectMode = championship.days[dayNumber].pools.config?.mode === 'direct';
 
-    // Adapter les textes selon le mode
-    const headerTitle = isDirectMode ? '⚡ ÉLIMINATION DIRECTE' : '🏆 PHASE FINALE';
-    const headerBg = isDirectMode ? 'linear-gradient(135deg, #9654b1, #8e44ad)' : '#057e68';
-    const playersTitle = isDirectMode ? '👥 Participants au Tournoi' : '✨ Joueurs Qualifiés des Poules';
+    // Adapter les textes selon le mode (styles : .fp-* dans styles.css)
+    const headerTitle = isDirectMode ? '⚡ Élimination directe' : '🏆 Phase finale';
+    const playersTitle = isDirectMode ? 'Participants' : 'Qualifiés des poules';
 
     let html = `
-        <div class="manual-final-phase-container" style="margin-top: 30px;">
-            <div class="final-phase-header" style="
-                background: ${headerBg};
-                color: white;
-                padding: 25px;
-                border-radius: 15px;
-                text-align: center;
-                margin-bottom: 25px;
-                box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
-            ">
-                <h3 style="margin: 0 0 10px 0; font-size: 1.5rem;">
-                    ${headerTitle} - Division ${division}
-                </h3>
-                <div style="font-size: 16px;">
-                    ${finalPhase.qualified.length} joueurs en compétition
+        <div class="manual-final-phase-container fp-container">
+            <div class="final-phase-header fp-header">
+                <div>
+                    <h3 class="fp-title">${headerTitle} — Division ${division}</h3>
+                    <div class="fp-subtitle">${finalPhase.qualified.length} joueurs en compétition</div>
                 </div>
-                ${currentRound ? `
-                    <div style="
-                        background: rgba(0,0,0,0.18);
-                        padding: 10px 20px;
-                        border-radius: 20px;
-                        margin-top: 15px;
-                        display: inline-block;
-                    ">
-                        <strong>🎯 Tour actuel : ${currentRound}</strong>
-                    </div>
-                ` : ''}
+                ${currentRound ? `<span class="fp-chip fp-chip-current">Tour actuel : ${currentRound}</span>` : ''}
             </div>
 
-            <div class="qualified-players" style="
-                background: linear-gradient(135deg, #e8f5e8, #d4edda);
-                border: 2px solid #087227;
-                border-radius: 12px;
-                padding: 20px;
-                margin-bottom: 25px;
-            ">
-                <h4 style="color: #155724; margin-bottom: 15px; text-align: center;">
-                    ${playersTitle}
-                </h4>
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+            <details class="qualified-players fp-qualified">
+                <summary>${playersTitle} (${finalPhase.qualified.length})</summary>
+                <div class="fp-qualified-list">
                     ${finalPhase.qualified.map(player => `
-                        <span style="
-                            background: linear-gradient(135deg, #087227, #017f5d);
-                            color: white;
-                            padding: 8px 15px;
-                            border-radius: 20px;
-                            font-size: 14px;
-                            font-weight: 600;
-                            box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
-                        ">
-                            #${player.seed} ${player.name}${player.poolName && player.poolName !== '-' ? ` (${player.poolName})` : ''}
-                        </span>
+                        <span class="fp-seed"><b>#${player.seed}</b> ${player.name}${player.poolName && player.poolName !== '-' ? ` <small>${player.poolName}</small>` : ''}</span>
                     `).join('')}
                 </div>
-            </div>
+            </details>
     `;
     
-    // Afficher les tours
-    if (Object.keys(rounds).length > 0) {
-        html += generateRoundsHTML(dayNumber, division, rounds, currentRound);
-    }
-    
-    // Afficher le podium si terminé
+    // Afficher le podium en tête si terminé
     const champion = getChampionFromFinalPhase(finalPhase);
     if (champion) {
         html += generatePodiumHTML(finalPhase);
+    }
+
+    // Afficher les tours
+    if (Object.keys(rounds).length > 0) {
+        html += generateRoundsHTML(dayNumber, division, rounds, currentRound);
     }
     
     html += '</div>';
@@ -4563,48 +4524,18 @@ function generateRoundsHTML(dayNumber, division, rounds, currentRound) {
         const isCompleted = round.completed;
         const completedMatches = round.matches.filter(m => m.completed).length;
         const totalMatches = round.matches.length;
+        const state = isCompleted || (completedMatches === totalMatches && totalMatches > 0) ? 'done' : isCurrentRound ? 'current' : 'pending';
         
         html += `
-            <div class="manual-round" style="
-                background: ${isCurrentRound ? 'linear-gradient(135deg, #fff3cd, #ffeaa7)' : 'white'};
-                border: 3px solid ${isCurrentRound ? '#ffc107' : isCompleted ? '#087227' : '#5b636b'};
-                border-radius: 15px;
-                padding: 25px;
-                margin-bottom: 25px;
-                ${isCurrentRound ? 'box-shadow: 0 5px 20px rgba(255, 193, 7, 0.3);' : ''}
-            ">
-                <div class="round-header" style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 20px;
-                ">
-                    <h4 style="
-                        margin: 0;
-                        color: ${isCurrentRound ? '#6c5103' : isCompleted ? '#155724' : '#495057'};
-                        font-size: 1.3rem;
-                    ">
-                        ${getRoundIcon(roundName)} ${roundName}
-                    </h4>
-                    <div style="
-                        background: ${isCompleted ? '#d4edda' : isCurrentRound ? '#fff3cd' : '#f8f9fa'};
-                        color: ${isCompleted ? '#155724' : isCurrentRound ? '#6c5103' : '#5b636b'};
-                        padding: 8px 15px;
-                        border-radius: 20px;
-                        font-weight: bold;
-                        font-size: 14px;
-                    ">
-                        ${completedMatches}/${totalMatches} terminés
-                        ${isCompleted ? ' ✅' : isCurrentRound ? ' ⚡' : ' ⏳'}
-                    </div>
+            <div class="manual-round fp-round fp-round-${state}">
+                <div class="round-header fp-round-header">
+                    <h4 class="fp-round-title">${getRoundIcon(roundName)} ${roundName}</h4>
+                    <span class="fp-chip fp-chip-${state}">
+                        ${completedMatches}/${totalMatches} terminés${state === 'done' ? ' ✓' : ''}
+                    </span>
                 </div>
                 
-                <div class="round-matches" style="
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-                    gap: 15px;
-                    margin-bottom: 20px;
-                ">
+                <div class="round-matches fp-round-matches">
                     ${round.matches.map(match => generateManualMatchHTML(dayNumber, division, match, roundName)).join('')}
                 </div>
                 
@@ -4632,83 +4563,32 @@ function getRoundIcon(roundName) {
 
 function generateManualMatchHTML(dayNumber, division, match, roundName) {
     const isCompleted = match.completed;
-    const isActive = !match.isBye;
     const score1 = match.score1 || 0;
     const score2 = match.score2 || 0;
     const scoreDisplay = isCompleted && !match.isBye ? `<span class="collapse-score" title="${global.setDetailSuffix(match, true, 'Sets : ')}">${score1}-${score2}</span>` : '';
+    const stateClass = match.isBye ? 'fp-match-bye' : isCompleted ? 'fp-match-done' : '';
     return `
-        <div class="manual-match ${match.isCollapsed ? 'collapsed' : ''}" style="
-            background: ${isCompleted ? '#d5f4e6' : isActive ? 'white' : '#f8f9fa'};
-            border: 2px solid ${isCompleted ? '#087227' : isActive ? '#096cde' : '#5b636b'};
-            border-radius: 10px;
-            padding: 10px;
-            position: relative;
-            ${match.isBye ? 'border-style: dashed;' : ''}
-        ">
+        <div class="manual-match fp-match ${stateClass} ${match.isCollapsed ? 'collapsed' : ''}">
             ${!match.isBye && window.showForfaitButtons ? `<button onclick="event.stopPropagation(); deleteManualMatch(${dayNumber}, ${division}, '${roundName}', ${match.position})"
-                    title="Supprimer ce match"
-                    style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
-                           width: 18px; height: 18px; z-index: 10;
-                           background: #d03427; color: white; border: none; border-radius: 50%;
-                           font-size: 11px; cursor: pointer; line-height: 1; padding: 0;
-                           opacity: 0.9; transition: opacity 0.2s;"
-                    onmouseover="this.style.opacity='1'"
-                    onmouseout="this.style.opacity='0.9'">×</button>` : ''}
-            <div class="match-header" ${isCompleted && !match.isBye ? `onclick="toggleMatchCollapse(this.parentElement)"` : ''} style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 8px;
-                ${isCompleted && !match.isBye ? 'cursor: pointer;' : ''}
-            ">
-                <div class="match-title" style="
-                    font-size: 13px;
-                    color: #5b636b;
-                    font-weight: bold;
-                ">
+                    title="Supprimer ce match" class="fp-match-delete">×</button>` : ''}
+            <div class="match-header fp-match-header" ${isCompleted && !match.isBye ? `onclick="toggleMatchCollapse(this.parentElement)"` : ''} style="${isCompleted && !match.isBye ? 'cursor: pointer;' : ''}">
+                <div class="match-title fp-match-title">
                     Match ${match.position}${scoreDisplay}
                 </div>
-                ${isCompleted || match.isBye ? `<div class="match-status" style="
-                    font-size: 12px;
-                    padding: 4px 10px;
-                    border-radius: 15px;
-                    font-weight: bold;
-                    background: ${isCompleted ? '#d4edda' : '#e2e3e5'};
-                    color: ${isCompleted ? '#155724' : '#5b636b'};
-                ">
-                    ${isCompleted ? 'Terminé ✅' : 'Qualifié ⚡'}
-                </div>` : ''}
+                ${isCompleted || match.isBye ? `<span class="match-status fp-chip ${isCompleted ? 'fp-chip-done' : ''}">
+                    ${isCompleted ? 'Terminé' : 'Qualifié'}
+                </span>` : ''}
             </div>
             
-            <div class="players" style="
-                font-weight: bold;
-                color: #2c3e50;
-                margin-bottom: ${match.isBye ? '0' : '15px'};
-                font-size: 15px;
-                text-align: center;
-                ${!match.isBye ? 'display: none;' : ''}
-            ">
+            <div class="players fp-match-players" style="${!match.isBye ? 'display: none;' : ''}">
                 ${match.player1Seed ? `#${match.player1Seed}` : ''} ${match.player1}
                 ${!match.isBye ? ` VS ${match.player2Seed ? `#${match.player2Seed}` : ''} ${match.player2}` : ''}
             </div>
             
             ${match.isBye ? `
-                <div style="
-                    text-align: center;
-                    color: #087227;
-                    font-style: italic;
-                    padding: 10px;
-                ">
-                    Qualifié automatiquement
-                </div>
+                <div class="fp-bye-note">Qualifié automatiquement</div>
             ` : `
-                <div class="score-container" style="
-                    margin-bottom: 12px;
-                    padding: 12px;
-                    background: #f8f9fa;
-                    border: 1px solid #dee2e6;
-                    border-radius: 6px;
-                ">
+                <div class="score-container">
                     ${window.showForfaitButtons ? 
                         `<input type="text" value="${match.player1}" 
                                 onchange="editFinalMatchPlayerName(${dayNumber}, ${division}, '${match.id}', 'player1', this.value)"
@@ -4716,19 +4596,17 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                         : `<span class="player-name-left">${match.player1}</span>`}
                     ${global.renderSetScoreInputs('final', dayNumber, division, String(match.id), match,
                         { onkeydown: `handleManualMatchEnter(event, '${match.id}', ${dayNumber})` }) || `<div class="score-center">
-                        <input type="number"
+                        <input type="number" class="fp-score-input"
                                value="${match.score1 === null || match.score1 === undefined ? '' : match.score1}"
                                placeholder="0"
                                onchange="updateManualMatchScore('${match.id}', 'score1', this.value, ${dayNumber})"
-                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #096cde; border-radius: 4px; font-size: 16px; font-weight: bold;">
-                        <span style="color: #5b636b; font-weight: bold; font-size: 14px;">-</span>
-                        <input type="number"
+                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})">
+                        <span class="fp-score-sep">-</span>
+                        <input type="number" class="fp-score-input"
                                value="${match.score2 === null || match.score2 === undefined ? '' : match.score2}"
                                placeholder="0"
                                onchange="updateManualMatchScore('${match.id}', 'score2', this.value, ${dayNumber})"
-                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})"
-                               style="width: 45px; height: 40px; text-align: center; border: 2px solid #096cde; border-radius: 4px; font-size: 16px; font-weight: bold;">
+                               onkeydown="handleManualMatchEnter(event, '${match.id}', ${dayNumber})">
                     </div>`}
                     ${window.showForfaitButtons ? 
                         `<input type="text" value="${match.player2}" 
@@ -4750,15 +4628,7 @@ function generateManualMatchHTML(dayNumber, division, match, roundName) {
                 </div>
                 ` : ''}
 
-                <div class="match-result" style="
-                    text-align: center;
-                    padding: 6px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    background: ${isCompleted ? (match.forfaitBy ? '#fff3cd' : (match.winner === null ? '#e3f2fd' : '#d4edda')) : '#fff3cd'};
-                    color: ${isCompleted ? (match.forfaitBy ? '#6c5103' : (match.winner === null ? '#1565c0' : '#155724')) : '#6c5103'};
-                    font-size: 13px;
-                ">
+                <div class="match-result fp-match-result ${isCompleted ? (match.forfaitBy ? 'fp-result-forfait' : match.winner === null ? 'fp-result-draw' : 'fp-result-win') : ''}">
                     ${isCompleted && match.winner ? `${match.forfaitBy ? '⚠️' : '🏆'} ${match.winner} gagne${match.forfaitBy ? ' (forfait)' : ''} (${score1}-${score2}${global.setDetailSuffix(match)})` :
                       isCompleted && match.winner === null ? `🤝 Match nul (${score1}-${score2})` : 'En attente des scores'}
                 </div>
@@ -4771,72 +4641,23 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
     const allCompleted = completedMatches === totalMatches && totalMatches > 0;
     
     if (!allCompleted && roundName !== "Finale" && roundName !== "Petite finale") {
-        return `
-            <div style="
-                text-align: center;
-                padding: 15px;
-                background: #f8f9fa;
-                border-radius: 8px;
-                color: #5b636b;
-                font-style: italic;
-            ">
-                Terminez tous les matchs pour passer au tour suivant
-            </div>
-        `;
+        return `<div class="fp-controls fp-controls-muted">Terminez tous les matchs pour passer au tour suivant</div>`;
     }
     
     if (allCompleted && (roundName === "Finale" || roundName === "Petite finale")) {
-        return `
-            <div style="
-                text-align: center;
-                padding: 20px;
-                background: linear-gradient(135deg, #087227, #017f5d);
-                color: white;
-                border-radius: 10px;
-                font-weight: bold;
-            ">
-                🎉 ${roundName} terminée ! Consultez le podium ci-dessous.
-            </div>
-        `;
+        return `<div class="fp-controls fp-controls-done">✅ ${roundName} terminée — résultat dans le podium</div>`;
     }
     
+    const existingRounds = championship.days[dayNumber]?.pools?.manualFinalPhase?.divisions?.[division]?.rounds || {};
+
     // Cas spécial pour les demi-finales
     if (allCompleted && roundName === "Demi-finales") {
         return `
-            <div style="
-                text-align: center;
-                padding: 20px;
-                background: linear-gradient(135deg, #ffc107, #ffca2c);
-                border-radius: 10px;
-            ">
-                <div style="color: #6c5103; font-weight: bold; margin-bottom: 15px; font-size: 16px;">
-                    ✅ Demi-finales terminées !
-                </div>
-                <div style="display: flex; gap: 15px; justify-content: center; margin-top: 15px;">
-                    <button class="btn" onclick="generatePetiteFinale(${dayNumber}, ${division})" 
-                            style="
-                        background: linear-gradient(135deg, #fd7e14, #e55a00);
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 8px;
-                        font-weight: bold;
-                        cursor: pointer;
-                    ">
-                        🥉 Petite Finale
-                    </button>
-                    <button class="btn" onclick="generateFinale(${dayNumber}, ${division})" 
-                            style="
-                        background: linear-gradient(135deg, #dc3545, #c82333);
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 8px;
-                        font-weight: bold;
-                        cursor: pointer;
-                    ">
-                        🏆 Grande Finale
-                    </button>
+            <div class="fp-controls fp-controls-action">
+                <span>✅ Demi-finales terminées</span>
+                <div class="pool-panel-actions">
+                    <button class="pool-btn" onclick="generatePetiteFinale(${dayNumber}, ${division})">🥉 ${existingRounds['Petite finale'] ? 'Regénérer la petite finale' : 'Petite finale'}</button>
+                    <button class="pool-btn pool-btn-primary" onclick="generateFinale(${dayNumber}, ${division})">🏆 ${existingRounds['Finale'] ? 'Regénérer la finale' : 'Finale'}</button>
                 </div>
             </div>
         `;
@@ -4846,42 +4667,16 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
     if (allCompleted) {
         // Fallback: calculer nextRound si non défini (pour données créées avant correction)
         const nextRound = round.nextRound || getNextRoundName(roundName);
-        const existingRounds = championship.days[dayNumber]?.pools?.manualFinalPhase?.divisions?.[division]?.rounds || {};
         // Tour suivant déjà généré : plus de bouton (un second clic le régénérait et effaçait ses scores)
         if (nextRound && existingRounds[nextRound]) {
-            return `
-                <div style="text-align: center; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; color: #586566; font-size: 13px;">
-                    ✅ Tour terminé — ${nextRound} générés
-                </div>
-            `;
+            return `<div class="fp-controls fp-controls-muted">✅ Tour terminé — ${nextRound} générés</div>`;
         }
         if (nextRound) {
             return `
-                <div style="
-                    text-align: center;
-                    padding: 20px;
-                    background: linear-gradient(135deg, #ffc107, #ffca2c);
-                    border-radius: 10px;
-                ">
-                    <div style="color: #6c5103; font-weight: bold; margin-bottom: 15px; font-size: 16px;">
-                        ✅ Tous les matchs sont terminés !
-                    </div>
-                    <div style="margin-bottom: 15px; color: #6c5f00;">
-                        Qualifiés : ${getQualifiedFromRound(round).join(', ')}
-                    </div>
-                    <button class="btn" onclick="generateNextManualRound(${dayNumber}, ${division}, '${roundName}')" 
-                            style="
-                        background: linear-gradient(135deg, #087227, #017f5d);
-                        color: white;
-                        border: none;
-                        padding: 12px 25px;
-                        border-radius: 8px;
-                        font-size: 16px;
-                        font-weight: bold;
-                        cursor: pointer;
-                        box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
-                    ">
-                        🚀 Passer aux ${nextRound}
+                <div class="fp-controls fp-controls-action">
+                    <span>✅ Qualifiés : ${getQualifiedFromRound(round).join(', ')}</span>
+                    <button class="pool-btn pool-btn-primary" onclick="generateNextManualRound(${dayNumber}, ${division}, '${roundName}')">
+                        Passer aux ${nextRound} →
                     </button>
                 </div>
             `;
@@ -5302,108 +5097,14 @@ function generatePodiumHTML(finalPhase) {
     }
     
     return `
-        <div class="podium-container" style="
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            border: 3px solid #8b5700;
-            border-radius: 20px;
-            padding: 30px;
-            margin-top: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(243, 156, 18, 0.3);
-        ">
-            <h3 style="
-                color: #b8860b;
-                margin: 0 0 25px 0;
-                font-size: 1.8rem;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            ">
-                🏆 PODIUM FINAL
-            </h3>
-            
-            <div class="podium" style="
-                display: flex;
-                justify-content: center;
-                align-items: end;
-                gap: 20px;
-                margin: 25px 0;
-            ">
-                ${troisieme ? `
-                    <div class="podium-place" style="
-                        background: linear-gradient(135deg, #cd7f32, #b8722c);
-                        color: white;
-                        padding: 20px 15px;
-                        border-radius: 15px;
-                        min-width: 120px;
-                        height: 100px;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        box-shadow: 0 5px 15px rgba(205, 127, 50, 0.4);
-                    ">
-                        <div style="font-size: 2rem; margin-bottom: 5px;">🥉</div>
-                        <div style="font-weight: bold; font-size: 16px;">${troisieme}</div>
-                        <div style="font-size: 12px; opacity: 0.9;">3ème place</div>
-                    </div>
-                ` : ''}
-                
-                <div class="podium-place" style="
-                    background: linear-gradient(135deg, #ffd700, #ffed4e);
-                    color: #b8860b;
-                    padding: 25px 20px;
-                    border-radius: 15px;
-                    min-width: 140px;
-                    height: 140px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
-                    transform: scale(1.1);
-                ">
-                    <div style="font-size: 3rem; margin-bottom: 8px;">🏆</div>
-                    <div style="font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
-                        ${champion}
-                    </div>
-                    <div style="font-size: 14px; font-weight: bold;">CHAMPION</div>
-                </div>
-                
-                <div class="podium-place" style="
-                    background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
-                    color: white;
-                    padding: 20px 15px;
-                    border-radius: 15px;
-                    min-width: 120px;
-                    height: 120px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    box-shadow: 0 5px 15px rgba(192, 192, 192, 0.4);
-                ">
-                    <div style="font-size: 2.5rem; margin-bottom: 5px;">🥈</div>
-                    <div style="font-weight: bold; font-size: 16px;">${finaliste}</div>
-                    <div style="font-size: 12px; opacity: 0.9;">Finaliste</div>
-                </div>
-            </div>
-            
-            ${quatrieme ? `
-                <div style="
-                    background: rgba(255, 255, 255, 0.8);
-                    padding: 10px 20px;
-                    border-radius: 10px;
-                    margin-top: 15px;
-                    color: #5b636b;
-                ">
-                    <strong>4ème place :</strong> ${quatrieme}
-                </div>
-            ` : ''}
-            
-            <div style="
-                margin-top: 20px;
-                font-size: 14px;
-                color: #6c5103;
-                font-style: italic;
-            ">
-                🎉 Félicitations à tous les participants ! 🎉
-            </div>
+        <div class="podium-container fp-podium">
+            <h3 class="fp-podium-title">🏆 Podium</h3>
+            <ol class="podium fp-podium-list">
+                <li class="podium-place fp-place fp-place-1"><span class="fp-medal">🥇</span><b>${champion}</b><small>Champion</small></li>
+                <li class="podium-place fp-place fp-place-2"><span class="fp-medal">🥈</span><b>${finaliste}</b><small>Finaliste</small></li>
+                ${troisieme ? `<li class="podium-place fp-place fp-place-3"><span class="fp-medal">🥉</span><b>${troisieme}</b><small>3e place</small></li>` : ''}
+                ${quatrieme ? `<li class="podium-place fp-place fp-place-4"><span class="fp-medal">4</span><b>${quatrieme}</b><small>4e place</small></li>` : ''}
+            </ol>
         </div>
     `;
 }

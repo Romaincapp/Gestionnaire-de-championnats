@@ -33,6 +33,16 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Phase finale : même design sobre que le panneau Poules
+
+- `generateManualFinalPhaseHTML`, `generateRoundsHTML`, `generateManualMatchHTML`,
+  `generateRoundControlsHTML`, `generatePodiumHTML` (`src/pools.iife.js`) : couleurs inline
+  remplacées par des classes `.fp-*` (`styles.css`, mode sombre compris). En-tête en carte à
+  liseré, qualifiés repliables, tours à liseré d'état (en cours / terminé), matchs en cartes
+  neutres, boutons `.pool-btn`, podium compact affiché en tête une fois la finale jouée.
+  Logique, ids, `onclick` et classes existantes (`.manual-match`, `.match-result`…) inchangés.
+- Vérifié : `npm test` (584), `npm run test:pools`, `test:contrast`, `test:darkmode` : 0 défaut.
+
 ### 2026-10-29 — Mode Poules : panneau redessiné + 2 bugs de phase finale
 
 - Panneau « 🏊 Poules » (`addPoolToggleToInterface`) réécrit avec des classes `.pool-panel*`
