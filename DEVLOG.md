@@ -33,6 +33,12 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Courses : formulaire « un participant à la fois » retiré
+
+- La ligne « Nom du participant / Club / Ajouter » au-dessus de « Participants disponibles »
+  doublait « ➕ Participants » (qui accepte un nom ou une liste) : retirée avec
+  `quickAddParticipantToDay` (`multisport.iife.js`). `tests/e2e/natation.e2e.js` passe par la fenêtre.
+
 ### 2026-10-29 — Tableau « Ajouter des joueurs » : résumé, annuler, sélection, colonnes modifiables
 
 - Résumé en direct sous le tableau (« ✅ 3 joueurs seront ajoutés : D1 × 1 · D2 × 1 · D3 × 1 »),

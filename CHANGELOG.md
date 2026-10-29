@@ -13,6 +13,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🧹 Courses : un seul endroit pour ajouter des participants
+- La ligne d'ajout rapide au-dessus de la liste est retirée : « ➕ Participants » fait un ou plusieurs.
+
 ### 📊 Tableau des joueurs : plus de contrôle
 - Résumé en direct de la division de chaque joueur avant d'ajouter, erreurs en rouge.
 - ↶ Annuler (Ctrl+Z), 🗑️ Tout vider, cases à cocher pour changer la division ou le club de

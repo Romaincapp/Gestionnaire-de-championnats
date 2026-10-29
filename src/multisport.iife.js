@@ -507,15 +507,8 @@
         html += '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">👥 Participants disponibles (' + participants.length + ')</h4>';
         html += '</div>';
         
-        // Formulaire rapide d'ajout (toujours visible)
-        html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 10px; background: #f0f9ff; border-radius: 6px;">';
-        html += '<input type="text" id="quick-participant-name-' + dayNumber + '" placeholder="Nom du participant" style="flex: 1; min-width: 150px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
-        html += '<input type="text" id="quick-participant-club-' + dayNumber + '" placeholder="Club (optionnel)" style="width: 120px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px;">';
-        html += '<button onclick="quickAddParticipantToDay(' + dayNumber + ')" style="padding: 8px 15px; background: #087f58; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">Ajouter</button>';
-        html += '</div>';
-        
         if (participants.length === 0) {
-            html += '<p style="color: #566566; font-size: 12px; text-align: center; margin: 0; padding: 15px;">Aucun participant encore. Ajoutez-en avec le formulaire ci-dessus, ou importez depuis une autre journée avec 📥 Importer.</p>';
+            html += '<p style="color: #566566; font-size: 12px; text-align: center; margin: 0; padding: 15px;">Aucun participant encore. Ajoutez-en avec ➕ Participants, ou importez depuis une autre journée avec 📥 Importer.</p>';
         } else {
             // Tableau façon « data table » (mêmes classes et fonctions de sélection / filtre
             // que la liste des joueurs, players.iife.js) : sélection, dossard, participant,
@@ -669,55 +662,6 @@
         window.addEventListener('mouseup', done, true);
     }
     global.watchParticipantsListResize = watchParticipantsListResize;
-
-    /**
-     * Ajoute rapidement un participant à la journée
-     */
-    function quickAddParticipantToDay(dayNumber) {
-        var nameInput = document.getElementById('quick-participant-name-' + dayNumber);
-        var clubInput = document.getElementById('quick-participant-club-' + dayNumber);
-        
-        if (!nameInput || !nameInput.value.trim()) {
-            showNotification('Veuillez entrer un nom', 'warning');
-            return;
-        }
-        
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        
-        var name = nameInput.value.trim();
-        var club = clubInput ? clubInput.value.trim() : '';
-        
-        // Vérifier si déjà existe
-        var exists = chronoData.participants.some(function(p) {
-            return p.name.toLowerCase() === name.toLowerCase();
-        });
-        
-        if (exists) {
-            showNotification('Ce participant existe déjà', 'warning');
-            return;
-        }
-        
-        var participant = {
-            id: chronoData.nextParticipantId++,
-            name: name,
-            club: club,
-            bib: chronoData.participants.length + 1,
-            totalTime: null,
-            laps: 0
-        };
-        
-        chronoData.participants.push(participant);
-        saveToLocalStorage();
-        
-        // Vider les champs
-        nameInput.value = '';
-        if (clubInput) clubInput.value = '';
-        nameInput.focus();
-        
-        refreshChronoDisplay(dayNumber);
-        showNotification('Participant ajouté : ' + name, 'success');
-    }
 
     /**
      * Affecte un club à tous les participants cochés (et propage dans les séries).
@@ -5086,7 +5030,6 @@
     global.closeParticipantsModal = closeParticipantsModal;
     global.removeParticipantFromSerie = removeParticipantFromSerie;
     global.renderParticipantsSection = renderParticipantsSection;
-    global.quickAddParticipantToDay = quickAddParticipantToDay;
     global.showAddParticipantManualModal = showAddParticipantManualModal;
     global.closeAddParticipantsModal = closeAddParticipantsModal;
     global.saveBulkParticipantsForDay = saveBulkParticipantsForDay;

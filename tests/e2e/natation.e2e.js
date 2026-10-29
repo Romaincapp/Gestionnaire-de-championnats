@@ -505,8 +505,10 @@ async function openFresh(browser) {
     step('12. « + » des Participants disponibles vers une série générée (retardataire, puis déplacement)');
     const notSwum = (await brasseSeries(brasseId)).filter(s => s.id !== added.id && s.status !== 'completed' && !(s.results || []).length);
     const target = notSwum[notSwum.length - 1];
-    await page.fill('#quick-participant-name-1', 'Nageur Retardataire');
-    await page.click('button[onclick="quickAddParticipantToDay(1)"]');
+    await btn(page, '➕ Participants');
+    await page.click('#bulk-tab-list-1');
+    await page.fill('#bulk-participants-1', 'Nageur Retardataire');
+    await btn(page, '💾 Ajouter');
     await page.waitForTimeout(300);
     const poolId = (name) => state(page, (n) => championship.days[1].chronoData.participants.find(p => p.name === n).id, name);
     const lateId = await poolId('Nageur Retardataire');
