@@ -33,6 +33,30 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Divisions / Terrains appliqués dès le changement, bouton « Appliquer » retiré
+
+- `updateDivisionConfig` / `updateCourtConfig` (`config.iife.js`) appellent directement
+  `applyConfiguration`, qui ne recharge plus la page : sauvegarde puis réaffichage des journées
+  Matchs (`initializeDivisionsDisplay`, joueurs, matchs, poules, stats, `initializeDivisionSelects`).
+  Les deux valeurs sont resynchronisées depuis `championship.config` (le `config` du module
+  pouvait être en retard). Réduction des divisions : confirmation seulement si une division
+  retirée a du contenu, données conservées.
+- `#applyConfigBtn` supprimé (`index.html`, `styles.css`).
+- Protection journée en cours : `configChangeWarning` demande confirmation si des matchs déjà
+  générés changeraient de terrain (`countMatchesChangingCourt`, plages calculées par
+  `getCourtsForDivision(div, nbDiv, nbTerrains)`) ou si une division retirée a du contenu ;
+  annuler remet le menu. Sans matchs : immédiat, sans question.
+- Test : `tests/unit/liveDivisionConfig.test.js`.
+
+### 2026-10-29 — Onglet « 🏅 Multisport » seulement pour un mélange Matchs + Courses
+
+- `updateMultisportTabVisibility` : onglet visible seulement avec des journées Matchs ET Courses.
+  Courses seules : « 🏆 Classement » (`switchToGeneralRanking`) ouvre le classement des courses,
+  marqué actif (`switchToMultisportRanking`) ; titre « 🏆 Classement des Courses », barème
+  combiné masqué (`updateMultisportRanking`).
+- Test : `tests/unit/multisportTabChronoOnly.test.js` ; `eventRanking.test.js` adapté.
+- Fichiers : `src/multisport.iife.js`, `src/ui.iife.js`, `AGENTS.md`.
+
 ### 2026-10-29 — En-tête de journée plus sobre : Divisions/Terrains fusionné avec « Mode »
 
 - La barre verte « Divisions / Terrains » (`#championshipConfigBar`) prend le style neutre du

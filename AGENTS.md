@@ -7,7 +7,7 @@ choisit indépendamment un type (`championship` ou `chrono`, voir `claude.md`
 pour le détail de cette architecture par-journée) :
 - 🎾 **Championship** : Matchs par tours (round-robin, suisse) + 🏆 **POOL** : Poules + phase finale
 - ⏱️ **CHRONO** : Courses avec chronométrage
-- 🏅 **Multisport** : onglet combiné qui apparaît automatiquement dès qu'il y a au moins une journée Chrono — classement combiné entre journées Matchs et Courses
+- 🏅 **Multisport** : onglet combiné qui apparaît automatiquement dès qu'il y a au moins une journée Matchs ET une journée Chrono — classement combiné entre les deux. Courses seules : pas d'onglet Multisport, « 🏆 Classement » ouvre le classement des courses
 
 Ce fichier documente les modules `src/` un par un. **Attention** : les listes
 de fonctions ci-dessous sont indicatives, pas exhaustives — certains modules
@@ -67,12 +67,11 @@ export-print, chrono, search, darkmode, mobile, a11y, init (puis `script.js`). U
 - `config` (objet global) - Configuration active
 - `DEFAULT_CONFIG` - Configuration par défaut
 - `initializeDivisions(n)` - Initialise les divisions
-- `updateDivisionConfig()` - Met à jour le nombre de divisions
-- `updateCourtConfig()` - Met à jour le nombre de terrains
+- `updateDivisionConfig()` / `updateCourtConfig()` - `onchange` des menus Divisions / Terrains : appliqués aussitôt (plus de bouton « Appliquer » depuis 2026-10-29), via `changeConfiguration`. Confirmation seulement si le changement touche l'existant (`configChangeWarning(div, terrains)` → texte ou null) : division retirée qui a des joueurs/matchs (masqués, jamais supprimés) ou matchs déjà générés qui changeraient de terrain (`countMatchesChangingCourt(div, terrains)`). Annuler remet le menu
+- `getCourtsForDivision(div, nbDiv?, nbTerrains?)` - plage de terrains d'une division (configuration actuelle, ou hypothétique avec les 2 derniers arguments)
 - `getNumberOfDivisions()` - Retourne le nombre de divisions
 - `getNumberOfCourts()` - Retourne le nombre de terrains
-- `getCourtsForDivision(div)` - Retourne les terrains d'une division
-- `applyConfiguration()` - Applique la configuration
+- `applyConfiguration()` - Enregistre `config` dans `championship.config` et réaffiche sur place les journées Matchs (divisions, joueurs, matchs, poules, stats, pastilles de terrains) — plus de `location.reload()` ; les journées Courses ne sont pas redessinées
 
 ### 2. utils.iife.js
 **Rôle** : Fonctions utilitaires pures

@@ -113,9 +113,10 @@
         var multisportTab = document.getElementById('multisportTab');
         if (!multisportTab) return;
 
-        // Afficher l'onglet dès qu'il y a des journées chrono (mix OU chrono seul),
-        // car c'est lui qui porte le classement combiné / des courses.
-        if (isMultisportMode() || hasChronoDays()) {
+        // Onglet « 🏅 Multisport » seulement s'il y a à combiner (journées Matchs
+        // ET Courses). Courses seules : leur classement s'ouvre par
+        // « 🏆 Classement » (switchToGeneralRanking), un second onglet ferait doublon.
+        if (hasChampionshipDays() && hasChronoDays()) {
             multisportTab.style.display = 'inline-block';
             // Petite animation pour attirer l'attention
             multisportTab.style.animation = 'pulse 1s ease-in-out';
