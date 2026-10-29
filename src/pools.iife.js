@@ -5003,6 +5003,14 @@ function createManualRound(dayNumber, division, roundName, players) {
 // GESTION FINALE ET PETITE FINALE
 // ======================================
 
+// Un tour déjà créé ne se recrée qu'après confirmation (ses scores seraient effacés)
+function confirmRegenerateRound(dayNumber, division, roundName) {
+    const existing = championship.days[dayNumber].pools.manualFinalPhase.divisions[division].rounds[roundName];
+    if (!existing) return true;
+    const played = existing.matches.some(m => m.completed && !m.isBye);
+    return confirm(`⚠️ La ${roundName.toLowerCase()} existe déjà${played ? ' et a un résultat' : ''}.\n\nLa regénérer ${played ? 'effacera ce résultat' : 'la recréera'}. Continuer ?`);
+}
+
 function generateFinale(dayNumber, division) {
     const dayData = championship.days[dayNumber];
     const demiFinales = dayData.pools.manualFinalPhase.divisions[division].rounds["Demi-finales"];
@@ -5025,6 +5033,8 @@ function generateFinale(dayNumber, division) {
         return;
     }
     
+    if (!confirmRegenerateRound(dayNumber, division, "Finale")) return;
+
     createManualRound(dayNumber, division, "Finale", finalistes);
     
     // Marquer la finale comme tour actuel
@@ -5058,6 +5068,8 @@ function generatePetiteFinale(dayNumber, division) {
         return;
     }
     
+    if (!confirmRegenerateRound(dayNumber, division, "Petite finale")) return;
+
     createManualRound(dayNumber, division, "Petite finale", perdants);
     
     updateManualFinalPhaseDisplay(dayNumber);

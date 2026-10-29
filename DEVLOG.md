@@ -33,6 +33,13 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Phase finale : confirmation avant de regénérer la finale / petite finale
+
+- `generateFinale` / `generatePetiteFinale` (`src/pools.iife.js`) recréaient le match sans
+  prévenir (boutons « Regénérer … » restés sous les demi-finales) : nouvelle
+  `confirmRegenerateRound(day, div, tour)` appelée avant `createManualRound` ; refus → rien
+  ne change. Test ajouté dans `tests/unit/poolFinalPhase.test.js`.
+
 ### 2026-10-29 — Phase finale : même design sobre que le panneau Poules
 
 - `generateManualFinalPhaseHTML`, `generateRoundsHTML`, `generateManualMatchHTML`,
