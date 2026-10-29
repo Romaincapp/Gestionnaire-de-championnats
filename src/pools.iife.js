@@ -3519,7 +3519,8 @@ function showImportPoolRankingsModal(dayNumber) {
         <div style="background:white;padding:25px;border-radius:12px;max-width:720px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4);margin:auto;">
             <h3 style="margin:0 0 6px 0;color:#2c3e50;font-size:18px;">🏆 Phase finale depuis vos classements</h3>
             <p style="margin:0 0 20px 0;color:#586566;font-size:13px;">
-                Collez les classements finaux de vos groupes joués pendant l'année.
+                Collez les classements finaux de vos groupes joués pendant l'année, ou reprenez
+                ceux des autres journées avec « ↺ Reprendre un classement existant… ».
                 Aucun match de poule ne sera créé : le tableau à élimination directe est généré
                 immédiatement, en croisant les classements (le 1er du classement 1 et le 1er du
                 classement 2 ne peuvent se rencontrer qu'en finale).
@@ -3571,19 +3572,79 @@ function renderPoolInputs(dayNumber) {
 
     container.style.gridTemplateColumns = numLists === 1 ? '1fr' : '1fr 1fr';
 
+    // Garder ce qui est déjà saisi quand on change le nombre de classements
+    const previous = Array.from(container.querySelectorAll('textarea')).map(t => t.value);
+    const sources = getImportRankingSources(dayNumber);
+    const sourceSelect = i => sources.length ? `
+                <select aria-label="Reprendre un classement existant pour le classement ${i + 1}"
+                    onchange="fillPoolInputFromSource(${dayNumber}, ${i}, this.value); this.value = ''"
+                    style="width:100%;margin-bottom:6px;padding:6px 8px;border:1px solid #ced4da;border-radius:6px;font-size:12px;background:white;color:#333;cursor:pointer;">
+                    <option value="">↺ Reprendre un classement existant…</option>
+                    ${sources.map(src => `<option value="${src.key}">${src.label}</option>`).join('')}
+                </select>` : '';
+
     container.innerHTML = Array.from({ length: numLists }, (_, i) => {
         const label = numLists === 1 ? 'Classement' : `Classement ${i + 1}`;
         return `
             <div>
-                <label style="display:block;margin-bottom:5px;font-size:13px;font-weight:600;color:#555;">📋 ${label}</label>
+                <label for="poolInput_${i}" style="display:block;margin-bottom:5px;font-size:13px;font-weight:600;color:#555;">📋 ${label}</label>
+                ${sourceSelect(i)}
                 <textarea id="poolInput_${i}"
                     placeholder="1er du classement&#10;2ème&#10;3ème&#10;..."
                     style="width:100%;height:150px;padding:8px;border:2px solid #ddd;border-radius:6px;font-size:12px;resize:vertical;font-family:monospace;box-sizing:border-box;"></textarea>
             </div>
         `;
     }).join('');
+    previous.forEach((value, i) => {
+        const t = document.getElementById(`poolInput_${i}`);
+        if (t) t.value = value;
+    });
 }
 window.renderPoolInputs = renderPoolInputs;
+
+/**
+ * Classements déjà disponibles dans le championnat, proposés par « ↺ Reprendre… » de la
+ * fenêtre « Phase finale depuis vos classements » : classement de chaque autre journée
+ * Matchs, division par division (même ordre que 🏆 Classements), et classement général.
+ * Clé : `day:J:D` ou `general:D`. Seules les sources avec au moins 2 joueurs classés.
+ */
+function getImportRankingSources(dayNumber) {
+    const sources = [];
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
+    const dayNumbers = Object.keys(championship.days || {}).map(Number).filter(d => d !== dayNumber).sort((a, b) => a - b);
+    const divLabel = d => numDivisions > 1 ? ` — Division ${d}` : '';
+
+    if (typeof global.getDayDivisionRanking === 'function') {
+        dayNumbers.forEach(d => {
+            const day = championship.days[d];
+            if (!day || day.dayType === 'chrono') return;
+            for (let div = 1; div <= numDivisions; div++) {
+                const names = global.getDayDivisionRanking(d, div).map(p => p.name);
+                if (names.length >= 2) sources.push({ key: `day:${d}:${div}`, label: `Journée ${d}${divLabel(div)} (${names.length} joueurs)`, names });
+            }
+        });
+    }
+
+    if (typeof global.calculateGeneralRanking === 'function') {
+        const general = global.calculateGeneralRanking();
+        for (let div = 1; div <= numDivisions; div++) {
+            const names = ((general && general.divisions && general.divisions[div]) || []).map(p => p.name).filter(Boolean);
+            if (names.length >= 2) sources.push({ key: `general:${div}`, label: `Classement général${divLabel(div)} (${names.length} joueurs)`, names });
+        }
+    }
+    return sources;
+}
+global.getImportRankingSources = getImportRankingSources;
+
+function fillPoolInputFromSource(dayNumber, index, key) {
+    if (!key) return;
+    const source = getImportRankingSources(dayNumber).find(src => src.key === key);
+    const textarea = document.getElementById(`poolInput_${index}`);
+    if (!source || !textarea) return;
+    if (textarea.value.trim() && !confirm(`Remplacer le contenu du classement ${index + 1} par « ${source.label} » ?`)) return;
+    textarea.value = source.names.join('\n');
+}
+global.fillPoolInputFromSource = fillPoolInputFromSource;
 
 function applyImportPoolRankings(dayNumber) {
     const numLists = parseInt(document.getElementById('numPoolsInput').value) || 2;

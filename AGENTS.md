@@ -253,6 +253,7 @@ src/pools.iife.js` laquelle des deux définitions est réellement active
 Un sous-ensemble représentatif :
 - `updatePoolsDisplay(dayNumber)`, `togglePoolSection(dayNumber)`, `togglePoolMode(dayNumber)`, `generatePools(dayNumber)`, `updatePoolMatchScore(dayNumber, matchId, scoreField, value)`, `handlePoolMatchEnter(event, dayNumber, matchId)`, `generateFinalPhase(dayNumber)`
 - Panneau « 🏊 Poules » : classes `.pool-panel*` / `.pool-btn` / `.pool-card` dans `styles.css` (plus de couleurs inline). `generateRoundControlsHTML(day, div, round, name, faits, total)` (exposée) n'affiche plus « Passer aux … » quand le tour suivant existe
+- « 📋 Depuis les classements » (`showImportPoolRankingsModal`) : menu « ↺ Reprendre… » par zone, `getImportRankingSources(jour)` (autres journées Matchs par division via `getDayDivisionRanking` de `ranking.iife.js`, + classement général), `fillPoolInputFromSource(jour, i, clé)`
 - `toggleDayHub(dayNumber)`, `toggleGeneralHub()` - ces deux fonctions vivent ici, pas dans `ui.iife.js`
 - Phase finale manuelle : `initializeManualFinalPhase`, `generateManualFinalPhase`, `generateNextManualRound`, `resetManualFinalPhase`, `exportManualFinalResults`
 - Répartition/pré-remplissage : `preFillFromGeneralRanking`, `applyPreFillStrategy`, `applyPoolRedistribution`, `previewPoolRedistribution`

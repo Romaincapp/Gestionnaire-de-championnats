@@ -367,6 +367,60 @@
     }
     window.showRankingsForDay = showRankingsForDay;
 
+    // Statistiques des joueurs d'une division pour une journée (avec étape finale en mode pool)
+    function dayDivisionPlayerStats(dayNumber, division) {
+        const dayData = championship.days[dayNumber];
+        return ((dayData && dayData.players && dayData.players[division]) || [])
+            .map(p => getPlayerName(p))
+            .filter(player => player && player.toUpperCase() !== 'BYE')
+            .map(player => {
+                const stats = calculatePlayerStats(dayNumber, division, player);
+                // Récupérer l'étape finale du joueur pour cette journée
+                const stage = getPlayerFinalStageForDay(player, dayNumber, division);
+                return {
+                    name: player,
+                    ...stats,
+                    goalAveragePoints: stats.pointsWon - stats.pointsLost,
+                    // Ajouter les informations d'étape finale
+                    stageWeight: stage ? stage.stageWeight : 0,
+                    stageLabel: stage ? stage.stageLabel : '-',
+                    stagePosition: stage ? stage.position : 999
+                };
+            });
+    }
+
+    // Ordre du classement de journée « par points » (étape finale d'abord en mode pool)
+    function dayPointsComparator(isPoolMode) {
+        return (a, b) => {
+            // EN MODE POOL: Prioriser l'étape finale
+            if (isPoolMode) {
+                if (b.stageWeight !== a.stageWeight) return b.stageWeight - a.stageWeight;
+            }
+            // 1. Points totaux
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            // 2. Nombre de victoires
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            // 3. Différence de points (PP - PC)
+            if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
+            // 3b. Mode sets : différence de points de jeu (somme des sets)
+            if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
+            // 4. Points Pour
+            if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
+            // 5. Ordre alphabétique
+            return a.name.localeCompare(b.name);
+        };
+    }
+
+    // Classement d'une division pour une journée, comme l'onglet 🏆 Classements (tri par points),
+    // limité aux joueurs qui ont joué au moins un match
+    function getDayDivisionRanking(dayNumber, division) {
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return [];
+        return dayDivisionPlayerStats(dayNumber, division)
+            .filter(p => p.matchesPlayed > 0)
+            .sort(dayPointsComparator(!!(dayData.pools && dayData.pools.enabled)));
+    }
+
     function updateRankingsForDay(dayNumber, sortBy = 'points') {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
@@ -431,50 +485,11 @@
         for (let division = 1; division <= numDivisions; division++) {
             if (!dayData.players[division] || dayData.players[division].length === 0) continue;
 
-           const playerStats = dayData.players[division]
-    .map(p => getPlayerName(p))
-    .filter(player => player && player.toUpperCase() !== 'BYE')
-    .map(player => {
-    const stats = calculatePlayerStats(dayNumber, division, player);
-    // Récupérer l'étape finale du joueur pour cette journée
-    const stage = getPlayerFinalStageForDay(player, dayNumber, division);
-    return {
-        name: player,
-        ...stats,
-        goalAveragePoints: stats.pointsWon - stats.pointsLost,
-        // Ajouter les informations d'étape finale
-        stageWeight: stage ? stage.stageWeight : 0,
-        stageLabel: stage ? stage.stageLabel : '-',
-        stagePosition: stage ? stage.position : 999
-    };
-});
+           const playerStats = dayDivisionPlayerStats(dayNumber, division);
 
 if (sortBy === 'points') {
     // Tri standard par points (avec étape finale en priorité en mode pool)
-    playerStats.sort((a, b) => {
-        // EN MODE POOL: Prioriser l'étape finale
-        if (isPoolMode) {
-            if (b.stageWeight !== a.stageWeight) return b.stageWeight - a.stageWeight;
-        }
-
-        // 1. Points totaux
-        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-
-        // 2. Nombre de victoires
-        if (b.wins !== a.wins) return b.wins - a.wins;
-
-        // 3. Différence de points (PP - PC)
-        if (b.goalAveragePoints !== a.goalAveragePoints) return b.goalAveragePoints - a.goalAveragePoints;
-
-        // 3b. Mode sets : différence de points de jeu (somme des sets)
-        if (global.gamePointsDiff(b) !== global.gamePointsDiff(a)) return global.gamePointsDiff(b) - global.gamePointsDiff(a);
-
-        // 4. Points Pour
-        if (b.pointsWon !== a.pointsWon) return b.pointsWon - a.pointsWon;
-
-        // 5. Ordre alphabétique
-        return a.name.localeCompare(b.name);
-    });
+    playerStats.sort(dayPointsComparator(isPoolMode));
 } else {
     // Tri par % victoires (avec étape finale en priorité en mode pool)
     playerStats.sort((a, b) => {
@@ -606,6 +621,7 @@ playerStats.forEach((player, index) => {
         }
     }
     window.updateRankingsForDay = updateRankingsForDay;
+    window.getDayDivisionRanking = getDayDivisionRanking;
     // Exposé pour le module multisport (calcul des points de journée par barème).
     window.calculatePlayerStats = calculatePlayerStats;
     // Appelé aussi depuis init.iife.js (export HTML du général) et pools.iife.js
