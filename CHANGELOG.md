@@ -13,6 +13,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🛡️ Phase finale : confirmation avant de regénérer
+- « Regénérer la finale » / « Regénérer la petite finale » demandent confirmation : un clic par erreur n'efface plus le résultat.
+
 ### 🏆 Phase finale : nouveau look
 - Tours, matchs, boutons et podium de la phase finale reprennent le style sobre du panneau Poules ; le podium s'affiche en tête dès la finale jouée, la liste des qualifiés est repliable.
 

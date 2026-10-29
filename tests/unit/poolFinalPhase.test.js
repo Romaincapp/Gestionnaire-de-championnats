@@ -73,3 +73,29 @@ test('« Passer aux … » disparaît une fois le tour suivant généré, et la 
     expect(window.confirm).toHaveBeenCalled();
     expect(div.rounds['Demi-finales'].matches[0].completed).toBe(true);
 });
+
+test('« Regénérer la finale / petite finale » demande confirmation et garde le résultat si refusé', () => {
+    window.generateManualFinalPhase(1);
+    const div = championship.days[1].pools.manualFinalPhase.divisions[1];
+    const win = r => { r.matches.forEach(m => Object.assign(m, { score1: 11, score2: 2, completed: true, winner: m.player1 })); r.completed = true; };
+    win(div.rounds.Barrage);
+    window.generateNextManualRound(1, 1, 'Barrage');
+    win(div.rounds['Demi-finales']);
+    window.confirm = jest.fn(() => true);
+    window.generateFinale(1, 1);
+    window.generatePetiteFinale(1, 1);
+    expect(window.confirm).not.toHaveBeenCalled();
+    win(div.rounds.Finale);
+    win(div.rounds['Petite finale']);
+
+    window.confirm = jest.fn(() => false);
+    window.generateFinale(1, 1);
+    window.generatePetiteFinale(1, 1);
+    expect(window.confirm).toHaveBeenCalledTimes(2);
+    expect(div.rounds.Finale.matches[0].completed).toBe(true);
+    expect(div.rounds['Petite finale'].matches[0].completed).toBe(true);
+
+    window.confirm = jest.fn(() => true);
+    window.generateFinale(1, 1);
+    expect(div.rounds.Finale.matches[0].completed).toBe(false);
+});
