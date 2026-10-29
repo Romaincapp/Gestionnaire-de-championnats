@@ -19,20 +19,50 @@
         return divisions;
     }
 
+    // Les menus Divisions / Terrains s'appliquent dès qu'on les change (plus
+    // de bouton « Appliquer » ni de rechargement de page).
     function updateDivisionConfig() {
         var select = document.getElementById('divisionConfig');
-        if (select) {
-            config.numberOfDivisions = parseInt(select.value);
+        if (!select) return;
+        var newDivisions = parseInt(select.value);
+        var oldDivisions = getNumberOfDivisions();
+        if (newDivisions < oldDivisions) {
+            var hidden = divisionsWithContentAbove(newDivisions);
+            if (hidden.length && !confirm('⚙️ Passer à ' + newDivisions + ' division' + (newDivisions > 1 ? 's' : '') + ' ?\n\n' +
+                'Des joueurs ou matchs existent en division ' + hidden.join(', ') + ' : ils seront masqués, pas supprimés ' +
+                '(remettre ' + oldDivisions + ' divisions les fait réapparaître).')) {
+                select.value = oldDivisions;
+                return;
+            }
         }
-        if (typeof global.updateCourtAssignmentInfo === 'function') global.updateCourtAssignmentInfo();
+        config.numberOfDivisions = newDivisions;
+        config.numberOfCourts = getNumberOfCourts();
+        applyConfiguration();
     }
 
     function updateCourtConfig() {
         var select = document.getElementById('courtConfig');
-        if (select) {
-            config.numberOfCourts = parseInt(select.value);
+        if (!select) return;
+        config.numberOfCourts = parseInt(select.value);
+        config.numberOfDivisions = getNumberOfDivisions();
+        applyConfiguration();
+    }
+
+    // Divisions au-delà de `max` qui ont des joueurs ou des matchs (toutes journées)
+    function divisionsWithContentAbove(max) {
+        var championship = global.championship;
+        var found = {};
+        if (championship && championship.days) {
+            Object.keys(championship.days).forEach(function(dayKey) {
+                var day = championship.days[dayKey] || {};
+                [day.players || {}, day.matches || {}].forEach(function(byDiv) {
+                    Object.keys(byDiv).forEach(function(div) {
+                        if (parseInt(div) > max && byDiv[div] && byDiv[div].length) found[div] = true;
+                    });
+                });
+            });
         }
-        if (typeof global.updateCourtAssignmentInfo === 'function') global.updateCourtAssignmentInfo();
+        return Object.keys(found).map(Number).sort(function(x, y) { return x - y; });
     }
 
     function getNumberOfDivisions() {
@@ -68,41 +98,47 @@
         };
     }
 
+    // Enregistre la configuration (config.numberOfDivisions / numberOfCourts)
+    // dans le championnat et réaffiche les journées Matchs sur place.
     function applyConfiguration() {
         var newDivisions = config.numberOfDivisions;
         var newCourts = config.numberOfCourts;
-
-        if (!confirm('⚙️ Appliquer la nouvelle configuration ?\n\n' +
-            '📊 Divisions: ' + newDivisions + '\n' +
-            '🎾 Terrains: ' + newCourts + '\n\n' +
-            '⚠️ Attention: Cela peut affecter l\'affichage des joueurs et matchs existants.')) {
-            return;
-        }
-
         var championship = global.championship;
-        if (championship && championship.days) {
-            // Mettre à jour toutes les journées existantes
-            Object.keys(championship.days).forEach(function(dayKey) {
-                var day = championship.days[dayKey];
-                for (var i = 1; i <= newDivisions; i++) {
-                    if (!day.players[i]) {
-                        day.players[i] = [];
-                        day.matches[i] = [];
-                    }
-                }
-            });
+        if (!championship) return;
+        if (!championship.days) championship.days = {};
 
-            // Sauvegarder la config dans le championnat
-            championship.config = {
-                numberOfDivisions: newDivisions,
-                numberOfCourts: newCourts
-            };
-        }
+        Object.keys(championship.days).forEach(function(dayKey) {
+            var day = championship.days[dayKey];
+            if (!day.players) day.players = {};
+            if (!day.matches) day.matches = {};
+            for (var i = 1; i <= newDivisions; i++) {
+                if (!day.players[i]) day.players[i] = [];
+                if (!day.matches[i]) day.matches[i] = [];
+            }
+        });
+        championship.config = Object.assign({}, championship.config, {
+            numberOfDivisions: newDivisions,
+            numberOfCourts: newCourts
+        });
 
         if (typeof global.saveToLocalStorage === 'function') global.saveToLocalStorage();
 
-        // Recharger l'interface
-        location.reload();
+        // Menus de division des fenêtres + pastilles « D1 : Terrains 1-2 »
+        if (typeof global.initializeDivisionSelects === 'function') global.initializeDivisionSelects();
+        else if (typeof global.updateCourtAssignmentInfo === 'function') global.updateCourtAssignmentInfo();
+
+        // Journées Matchs seulement : une course en cours n'est pas redessinée
+        Object.keys(championship.days).forEach(function(dayKey) {
+            var dayNumber = Number(dayKey);
+            var day = championship.days[dayKey];
+            if (day.dayType === 'chrono') return;
+            if (typeof global.initializeDivisionsDisplay === 'function') global.initializeDivisionsDisplay(dayNumber);
+            if (typeof global.updatePlayersDisplay === 'function') global.updatePlayersDisplay(dayNumber);
+            if (typeof global.updateMatchesDisplay === 'function') global.updateMatchesDisplay(dayNumber);
+            if (day.pools && day.pools.enabled && typeof global.updatePoolsDisplay === 'function') global.updatePoolsDisplay(dayNumber);
+            if (typeof global.updateStats === 'function') global.updateStats(dayNumber);
+        });
+        if (typeof global.updateGeneralRanking === 'function') global.updateGeneralRanking();
     }
 
     // Exposer sur window

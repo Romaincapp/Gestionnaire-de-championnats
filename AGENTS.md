@@ -67,12 +67,11 @@ export-print, chrono, search, darkmode, mobile, a11y, init (puis `script.js`). U
 - `config` (objet global) - Configuration active
 - `DEFAULT_CONFIG` - Configuration par défaut
 - `initializeDivisions(n)` - Initialise les divisions
-- `updateDivisionConfig()` - Met à jour le nombre de divisions
-- `updateCourtConfig()` - Met à jour le nombre de terrains
+- `updateDivisionConfig()` / `updateCourtConfig()` - `onchange` des menus Divisions / Terrains : appliqués aussitôt (plus de bouton « Appliquer » depuis 2026-10-29). Réduire les divisions demande confirmation si une division retirée a des joueurs/matchs (masqués, jamais supprimés ; annuler remet le menu)
 - `getNumberOfDivisions()` - Retourne le nombre de divisions
 - `getNumberOfCourts()` - Retourne le nombre de terrains
 - `getCourtsForDivision(div)` - Retourne les terrains d'une division
-- `applyConfiguration()` - Applique la configuration
+- `applyConfiguration()` - Enregistre `config` dans `championship.config` et réaffiche sur place les journées Matchs (divisions, joueurs, matchs, poules, stats, pastilles de terrains) — plus de `location.reload()` ; les journées Courses ne sont pas redessinées
 
 ### 2. utils.iife.js
 **Rôle** : Fonctions utilitaires pures

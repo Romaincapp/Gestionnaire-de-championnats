@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Divisions / Terrains appliqués dès le changement, bouton « Appliquer » retiré
+
+- `updateDivisionConfig` / `updateCourtConfig` (`config.iife.js`) appellent directement
+  `applyConfiguration`, qui ne recharge plus la page : sauvegarde puis réaffichage des journées
+  Matchs (`initializeDivisionsDisplay`, joueurs, matchs, poules, stats, `initializeDivisionSelects`).
+  Les deux valeurs sont resynchronisées depuis `championship.config` (le `config` du module
+  pouvait être en retard). Réduction des divisions : confirmation seulement si une division
+  retirée a du contenu, données conservées.
+- `#applyConfigBtn` supprimé (`index.html`, `styles.css`).
+- Test : `tests/unit/liveDivisionConfig.test.js`.
+
 ### 2026-10-29 — Onglet « 🏅 Multisport » seulement pour un mélange Matchs + Courses
 
 - `updateMultisportTabVisibility` : onglet visible seulement avec des journées Matchs ET Courses.
