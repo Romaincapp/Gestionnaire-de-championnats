@@ -66,229 +66,133 @@ function addPoolToggleToInterface(dayNumber) {
     }
 
     const poolToggleHTML = `
-        <!-- Section Mode Poules (bouton déplacé dans la barre d'action) -->
-        <div class="pool-toggle-section" id="pool-toggle-${dayNumber}" style="
-            background: linear-gradient(135deg, #fff8e1, #ffe082);
-            border: 2px solid #8b5700;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px auto;
-            max-width: 800px;
-            display: none;
-        ">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="color: #9c5003; margin: 0; font-size: 16px;">
-                    🏊 Mode Poules de Qualification
-                </h3>
-                <button onclick="togglePoolSection(${dayNumber})" style="
-                    background: none;
-                    border: none;
-                    font-size: 24px;
-                    cursor: pointer;
-                    color: #9c5003;
-                    padding: 0;
-                    line-height: 1;
-                ">×</button>
+        <!-- Section Mode Poules (ouverte par « 🏊 Poules » de la barre d'actions) — styles : .pool-panel* dans styles.css -->
+        <div class="pool-toggle-section pool-panel" id="pool-toggle-${dayNumber}" style="display: none;">
+            <div class="pool-panel-header">
+                <div>
+                    <h3 class="pool-panel-title">🏊 Poules de qualification</h3>
+                    <p class="pool-panel-subtitle">Répartissez les joueurs en poules, puis qualifiez les meilleurs pour une phase finale.</p>
+                </div>
+                <button class="pool-panel-close" onclick="togglePoolSection(${dayNumber})" title="Fermer" aria-label="Fermer le panneau Poules">×</button>
             </div>
 
-            <p style="color: #6c5103; margin-bottom: 12px; font-size: 12px;">
-                Créez des groupes, puis organisez des phases finales avec les meilleurs
-            </p>
-
-            <div class="toggle-container" style="margin-bottom: 12px; text-align: center;">
-                <label class="toggle-switch" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="pool-enabled-${dayNumber}" onchange="togglePoolMode(${dayNumber})" style="
-                        width: 18px; height: 18px; cursor: pointer; accent-color: #8b5700;
-                    ">
-                    <span style="font-weight: bold; color: #9c5003; font-size: 13px;">✓ Activer le mode Poules</span>
-                </label>
-            </div>
+            <label class="pool-panel-switch">
+                <input type="checkbox" id="pool-enabled-${dayNumber}" onchange="togglePoolMode(${dayNumber})">
+                <span>Activer le mode Poules pour cette journée</span>
+            </label>
 
             <div id="pool-config-${dayNumber}" class="pool-config" style="display: none;">
                 ${dayNumber > 1 ? `
-                    <div style="background: rgba(52, 152, 219, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 12px; border: 2px solid #09679e;">
-                        <button class="btn" onclick="preFillFromGeneralRanking(${dayNumber})" style="
-                            background: linear-gradient(135deg, #09679e, #08689d);
-                            color: white;
-                            padding: 8px 12px;
-                            font-size: 12px;
-                            width: 100%;
-                        ">
-                            ⭐ Pré-remplir depuis le Classement Général
-                        </button>
-                        <p style="margin: 8px 0 0 0; font-size: 11px; color: #2c3e50; text-align: center;">
-                            Les meilleurs joueurs du classement général seront répartis équitablement
-                        </p>
+                    <div class="pool-panel-prefill">
+                        <div>
+                            <strong>Pré-remplir depuis le classement général</strong>
+                            <span>Les meilleurs joueurs du classement général sont répartis équitablement.</span>
+                        </div>
+                        <button class="pool-btn" onclick="preFillFromGeneralRanking(${dayNumber})">⭐ Pré-remplir</button>
                     </div>
                 ` : ''}
 
-                <!-- Toggle Mode Simple/Avancé -->
-                <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap;">
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px;">
-                        <input type="radio" name="pool-config-mode-${dayNumber}" value="simple" checked
-                               onchange="togglePoolConfigMode(${dayNumber}, 'simple')"
-                               style="width: 16px; height: 16px; cursor: pointer; accent-color: #09679e;">
-                        <span style="font-weight: 600; color: #2c3e50;">📊 Mode Simple</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px;">
-                        <input type="radio" name="pool-config-mode-${dayNumber}" value="advanced"
-                               onchange="togglePoolConfigMode(${dayNumber}, 'advanced')"
-                               style="width: 16px; height: 16px; cursor: pointer; accent-color: #9c5003;">
-                        <span style="font-weight: 600; color: #2c3e50;">🎯 Mode Avancé</span>
-                    </label>
+                <div class="pool-panel-group">
+                    <div class="pool-panel-group-head">
+                        <span class="pool-panel-label">Configuration</span>
+                        <div class="pool-segmented" role="radiogroup" aria-label="Mode de configuration">
+                            <label>
+                                <input type="radio" name="pool-config-mode-${dayNumber}" value="simple" checked
+                                       onchange="togglePoolConfigMode(${dayNumber}, 'simple')">
+                                <span>Simple</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="pool-config-mode-${dayNumber}" value="advanced"
+                                       onchange="togglePoolConfigMode(${dayNumber}, 'advanced')">
+                                <span>Avancé</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Mode Simple -->
+                    <div id="simple-config-${dayNumber}" class="pool-panel-fields" style="display: flex;">
+                        <label class="pool-field">
+                            <span>Taille des poules</span>
+                            <select id="pool-size-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})">
+                                <option value="4">4 joueurs</option>
+                                <option value="5">5 joueurs</option>
+                                <option value="6">6 joueurs</option>
+                            </select>
+                        </label>
+                        <label class="pool-field">
+                            <span>Qualifiés par poule</span>
+                            <select id="qualified-per-pool-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})">
+                                <option value="2">2 premiers</option>
+                                <option value="3">3 premiers</option>
+                            </select>
+                        </label>
+                        <label class="pool-field">
+                            <span>Matchs par joueur</span>
+                            <select id="matches-per-player-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})">
+                                <option value="">Tous contre tous</option>
+                                <option value="3" selected>3 matchs</option>
+                                <option value="4">4 matchs</option>
+                                <option value="5">5 matchs</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <!-- Mode Avancé -->
+                    <div id="advanced-config-${dayNumber}" class="pool-panel-fields" style="display: none;">
+                        <label class="pool-field">
+                            <span>Nombre de poules</span>
+                            <input type="number" id="num-pools-${dayNumber}" min="2" max="10" value="4"
+                                   onchange="updateAdvancedConfigInfo(${dayNumber})">
+                        </label>
+                        <label class="pool-field">
+                            <span>Total qualifiés</span>
+                            <input type="number" id="total-qualified-${dayNumber}" min="4" max="32" value="8"
+                                   onchange="updateAdvancedConfigInfo(${dayNumber})">
+                        </label>
+                        <label class="pool-field">
+                            <span>Matchs par joueur</span>
+                            <select id="matches-per-player-adv-${dayNumber}" onchange="updateAdvancedConfigInfo(${dayNumber})">
+                                <option value="">Tous contre tous</option>
+                                <option value="3" selected>3 matchs</option>
+                                <option value="4">4 matchs</option>
+                                <option value="5">5 matchs</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <!-- Message informatif dynamique -->
+                    <div id="config-info-${dayNumber}" class="pool-panel-info" style="display: none;"></div>
                 </div>
 
-                <!-- Mode Simple -->
-                <div id="simple-config-${dayNumber}" style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-                        <span style="font-weight: 600; color: #2c3e50;">Taille:</span>
-                        <select id="pool-size-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #09679e; border-radius: 5px; font-size: 12px;">
-                            <option value="4">4 joueurs/poule</option>
-                            <option value="5">5 joueurs/poule</option>
-                            <option value="6">6 joueurs/poule</option>
-                        </select>
-                    </label>
-
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-                        <span style="font-weight: 600; color: #2c3e50;">Qualifiés:</span>
-                        <select id="qualified-per-pool-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #09679e; border-radius: 5px; font-size: 12px;">
-                            <option value="2">2 premiers</option>
-                            <option value="3">3 premiers</option>
-                        </select>
-                    </label>
-
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-                        <span style="font-weight: 600; color: #2c3e50;">⚡ Matchs/joueur:</span>
-                        <select id="matches-per-player-${dayNumber}" onchange="updateSimpleConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #057e68; border-radius: 5px; font-size: 12px;">
-                            <option value="">Tous contre tous</option>
-                            <option value="3" selected>3 matchs</option>
-                            <option value="4">4 matchs</option>
-                            <option value="5">5 matchs</option>
-                        </select>
-                    </label>
+                <div class="pool-panel-group">
+                    <span class="pool-panel-label">Poules</span>
+                    <div class="pool-panel-actions">
+                        <button class="pool-btn pool-btn-primary" onclick="generatePools(${dayNumber})">🎯 Générer les poules</button>
+                        <button class="pool-btn" onclick="showModulatePoolsModal(${dayNumber})" id="modulate-pools-btn-${dayNumber}">⚖️ Moduler</button>
+                        <button class="pool-btn" onclick="verifyPoolMatchesCount(${dayNumber})" id="verify-matches-btn-${dayNumber}">🔍 Vérifier les matchs</button>
+                    </div>
                 </div>
 
-                <!-- Mode Avancé -->
-                <div id="advanced-config-${dayNumber}" style="display: none; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-                        <span style="font-weight: 600; color: #2c3e50;">Nombre de poules:</span>
-                        <input type="number" id="num-pools-${dayNumber}" min="2" max="10" value="4"
-                               onchange="updateAdvancedConfigInfo(${dayNumber})"
-                               style="width: 60px; padding: 6px 8px; border: 2px solid #9c5003; border-radius: 5px; font-size: 12px;">
-                    </label>
-
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-                        <span style="font-weight: 600; color: #2c3e50;">Total qualifiés:</span>
-                        <input type="number" id="total-qualified-${dayNumber}" min="4" max="32" value="8"
-                               onchange="updateAdvancedConfigInfo(${dayNumber})"
-                               style="width: 60px; padding: 6px 8px; border: 2px solid #9c5003; border-radius: 5px; font-size: 12px;">
-                    </label>
-
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-                        <span style="font-weight: 600; color: #2c3e50;">⚡ Matchs/joueur:</span>
-                        <select id="matches-per-player-adv-${dayNumber}" onchange="updateAdvancedConfigInfo(${dayNumber})" style="padding: 6px 8px; border: 2px solid #057e68; border-radius: 5px; font-size: 12px;">
-                            <option value="">Tous contre tous</option>
-                            <option value="3" selected>3 matchs</option>
-                            <option value="4">4 matchs</option>
-                            <option value="5">5 matchs</option>
-                        </select>
-                    </label>
-                </div>
-
-                <!-- Message informatif dynamique -->
-                <div id="config-info-${dayNumber}" style="
-                    background: rgba(52, 152, 219, 0.1);
-                    padding: 8px 10px;
-                    border-radius: 5px;
-                    margin-bottom: 12px;
-                    font-size: 11px;
-                    color: #2c3e50;
-                    text-align: center;
-                    border-left: 3px solid #09679e;
-                    display: none;
-                "></div>
-
-                <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                    <button class="btn" onclick="generatePools(${dayNumber})" style="
-                        background: #017239;
-                        color: white;
-                        padding: 8px 15px;
-                        font-size: 12px;
-                    ">
-                        🎯 Générer Poules
-                    </button>
-
-                    <button class="btn" onclick="showModulatePoolsModal(${dayNumber})" style="
-                        background: linear-gradient(135deg, #9654b1, #8e44ad);
-                        color: white;
-                        padding: 8px 15px;
-                        font-size: 12px;
-                    " id="modulate-pools-btn-${dayNumber}">
-                        ⚖️ Moduler Pools
-                    </button>
-
-                    <button class="btn" onclick="verifyPoolMatchesCount(${dayNumber})" style="
-                        background: linear-gradient(135deg, #067b8c, #077b8c);
-                        color: white;
-                        padding: 8px 15px;
-                        font-size: 12px;
-                    " id="verify-matches-btn-${dayNumber}">
-                        🔍 Vérifier Matchs
-                    </button>
-
-                    <button class="btn" onclick="generateFinalPhase(${dayNumber})" style="
-                        background: linear-gradient(135deg, #8b5700, #9c5003);
-                        color: white;
-                        padding: 8px 15px;
-                        font-size: 12px;
-                    " disabled id="final-phase-btn-${dayNumber}">
-                        🏆 Phase Finale
-                    </button>
-
-                    <button class="btn" onclick="generateDirectFinalPhase(${dayNumber})" style="
-                        background: linear-gradient(135deg, #9654b1, #8e44ad);
-                        color: white;
-                        padding: 8px 15px;
-                        font-size: 12px;
-                    " id="direct-final-btn-${dayNumber}">
-                        ⚡ Élimination Directe
-                    </button>
-
-                    <button class="btn" onclick="showImportPoolRankingsModal(${dayNumber})" style="
-                        background: #057e68;
-                        color: white;
-                        padding: 8px 15px;
-                        font-size: 12px;
-                    " id="import-pool-rankings-btn-${dayNumber}">
-                        📋 Finale depuis classements
-                    </button>
-
-                    <button class="btn" onclick="generateSeasonFinalPhase(${dayNumber})" style="
-                        background: linear-gradient(135deg, #8b5700, #9c5003);
-                        color: white;
-                        padding: 8px 15px;
-                        font-size: 12px;
-                    " id="season-final-btn-${dayNumber}">
-                        🏆 Finale Saison
-                    </button>
+                <div class="pool-panel-group">
+                    <span class="pool-panel-label">Phase finale</span>
+                    <div class="pool-panel-actions">
+                        <button class="pool-btn pool-btn-primary" onclick="generateFinalPhase(${dayNumber})" disabled id="final-phase-btn-${dayNumber}" title="Disponible une fois les poules générées">🏆 Phase finale</button>
+                        <button class="pool-btn" onclick="generateDirectFinalPhase(${dayNumber})" id="direct-final-btn-${dayNumber}">⚡ Élimination directe</button>
+                        <button class="pool-btn" onclick="showImportPoolRankingsModal(${dayNumber})" id="import-pool-rankings-btn-${dayNumber}">📋 Depuis les classements</button>
+                        <button class="pool-btn" onclick="generateSeasonFinalPhase(${dayNumber})" id="season-final-btn-${dayNumber}">🏆 Finale de saison</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="pool-info" style="
-                background: rgba(255, 255, 255, 0.8);
-                padding: 10px;
-                border-radius: 6px;
-                margin-top: 10px;
-                font-size: 11px;
-                color: #2c3e50;
-                display: none;
-            " id="pool-info-${dayNumber}">
-                <strong>ℹ️ Comment ça marche :</strong><br>
-                1. Les joueurs sont répartis en poules équilibrées<br>
-                2. Chaque poule joue en round-robin<br>
-                3. Les meilleurs se qualifient pour les phases finales<br>
-                4. Tableaux à élimination directe pour désigner les champions
-            </div>
+            <details class="pool-info pool-panel-help" style="display: none;" id="pool-info-${dayNumber}">
+                <summary>ℹ️ Comment ça marche</summary>
+                <ol>
+                    <li>Les joueurs sont répartis en poules équilibrées.</li>
+                    <li>Chaque poule joue en round-robin.</li>
+                    <li>Les meilleurs se qualifient pour la phase finale.</li>
+                    <li>Un tableau à élimination directe désigne les champions.</li>
+                </ol>
+            </details>
         </div>
     `;
 
@@ -588,7 +492,7 @@ function togglePoolSection(dayNumber) {
             poolSection.style.display = 'block';
             if (toggleBtn) {
                 toggleBtn.textContent = '🏊 Masquer';
-                toggleBtn.style.background = '#d92223';
+                toggleBtn.style.background = '#54637a';
             }
         } else {
             poolSection.style.display = 'none';
@@ -1919,17 +1823,7 @@ function updatePoolsDisplay(dayNumber) {
         // Afficher l'info de qualification si disponible
         if (qualificationInfo) {
             html += `
-                <div style="
-                    background: linear-gradient(135deg, #8b5700, #9c5003);
-                    color: white;
-                    padding: 12px 15px;
-                    border-radius: 8px;
-                    margin-bottom: 15px;
-                    text-align: center;
-                    font-size: 13px;
-                    font-weight: 600;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                ">
+                <div class="pool-qualif-banner">
                     🏆 Qualification: ${qualificationInfo.text}
                 </div>
             `;
@@ -1966,46 +1860,30 @@ function updatePoolsDisplay(dayNumber) {
             }
 
             html += `
-                <div class="pool-section" style="
-                    background: white;
-                    border: 2px solid ${isCompleted && matchDistributionOk ? '#017239' : !matchDistributionOk ? '#d03427' : '#09679e'};
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                ">
-                    <div class="pool-header" onclick="togglePoolCollapse('${poolContentId}', '${poolArrowId}')" style="
-                        background: linear-gradient(135deg, ${isCompleted && matchDistributionOk ? '#017239, #017239' : !matchDistributionOk ? '#d03427, #c0392b' : '#09679e, #08689d'});
-                        color: white;
-                        padding: 15px;
-                        border-radius: 8px;
-                        margin-bottom: 15px;
-                        text-align: center;
-                        cursor: pointer;
-                        position: relative;
-                        transition: all 0.3s;
-                    " onmouseover="this.style.opacity='0.9'"
-                       onmouseout="this.style.opacity='1'">
+                <div class="pool-section pool-card ${isCompleted && matchDistributionOk ? 'pool-card-done' : !matchDistributionOk ? 'pool-card-warn' : ''}">
+                    <div class="pool-header pool-card-header" onclick="togglePoolCollapse('${poolContentId}', '${poolArrowId}')">
                         <span id="${poolArrowId}" style="
                             position: absolute;
                             left: 15px;
                             top: 50%;
                             transform: translateY(-50%) rotate(0deg);
-                            font-size: 20px;
+                            font-size: 12px;
+                            color: #586566;
                             transition: transform 0.3s;
                         ">▼</span>
                         <button onclick="event.stopPropagation(); showAddPoolMatchModal(${dayNumber}, ${division}, ${poolIndex})"
                                 title="Ajouter un match"
                                 style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
-                                       width: 28px; height: 28px; background: rgba(255,255,255,0.9);
-                                       color: #09679e; border: none; border-radius: 50%;
+                                       width: 28px; height: 28px; background: #f1f5f9;
+                                       color: #09679e; border: 1px solid #cbd5e1; border-radius: 6px;
                                        font-size: 20px; font-weight: bold; cursor: pointer;
                                        display: flex; align-items: center; justify-content: center;"
-                                onmouseover="this.style.background='white'; this.style.transform='translateY(-50%) scale(1.1)'"
-                                onmouseout="this.style.background='rgba(255,255,255,0.9)'; this.style.transform='translateY(-50%)'">+</button>
-                        <h4 style="margin: 0; font-size: 1.2rem;">${poolName}${isCompleted && matchDistributionOk ? ' ✓' : ''}</h4>
-                        <div style="font-size: 14px; margin-top: 5px;">
+                                onmouseover="this.style.background='#e2e8f0'"
+                                onmouseout="this.style.background='#f1f5f9'">+</button>
+                        <h4 style="margin: 0; font-size: 15px; font-weight: 600;">${poolName}${isCompleted && matchDistributionOk ? ' ✓' : ''}</h4>
+                        <div style="font-size: 12px; margin-top: 2px; color: #586566;">
                             ${completedMatches}/${poolMatches.length} matchs terminés
-                            ${!matchDistributionOk && targetMatches ? `<span style="background: rgba(0,0,0,0.18); padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-weight: bold;">⚠️ ${playersWithMissingMatches} joueur${playersWithMissingMatches > 1 ? 's' : ''} à compléter</span>` : ''}
+                            ${!matchDistributionOk && targetMatches ? `<span style="background: #fdecea; color: #b42318; padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-weight: 600;">⚠️ ${playersWithMissingMatches} joueur${playersWithMissingMatches > 1 ? 's' : ''} à compléter</span>` : ''}
                         </div>
                     </div>
 
@@ -2470,7 +2348,6 @@ function checkPoolsCompletion(dayNumber) {
 
     if (finalButton) {
         finalButton.disabled = !allPoolsCompleted;
-        finalButton.style.opacity = allPoolsCompleted ? '1' : '0.5';
     }
 
     return allPoolsCompleted;
@@ -3472,10 +3349,11 @@ function generateManualFinalPhase(dayNumber) {
         dayData.pools.manualFinalPhase.divisions[division].qualified = qualified;
         totalQualified += qualified.length;
         
-        // Déterminer le premier tour selon le nombre de qualifiés
-        const firstRoundName = determineFirstRound(qualified.length);
-        if (firstRoundName && qualified.length >= 4) {
-            generateFirstRound(dayNumber, division, qualified, firstRoundName);
+        // Premier tour : startEliminationBracket ajoute un barrage quand le nombre de
+        // qualifiés n'est pas une puissance de 2 (6 qualifiés en quarts donnaient
+        // 3 vainqueurs, et le 3e disparaissait aux demi-finales)
+        if (qualified.length >= 4) {
+            startEliminationBracket(dayNumber, division, qualified);
         }
     }
     
@@ -4968,6 +4846,15 @@ function generateRoundControlsHTML(dayNumber, division, round, roundName, comple
     if (allCompleted) {
         // Fallback: calculer nextRound si non défini (pour données créées avant correction)
         const nextRound = round.nextRound || getNextRoundName(roundName);
+        const existingRounds = championship.days[dayNumber]?.pools?.manualFinalPhase?.divisions?.[division]?.rounds || {};
+        // Tour suivant déjà généré : plus de bouton (un second clic le régénérait et effaçait ses scores)
+        if (nextRound && existingRounds[nextRound]) {
+            return `
+                <div style="text-align: center; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; color: #586566; font-size: 13px;">
+                    ✅ Tour terminé — ${nextRound} générés
+                </div>
+            `;
+        }
         if (nextRound) {
             return `
                 <div style="
@@ -5229,6 +5116,14 @@ function generateNextManualRound(dayNumber, division, currentRoundName) {
     const allMatchesCompleted = currentRound.matches.every(m => m.completed);
     if (!currentRound.completed && !allMatchesCompleted) {
         alert('⚠️ Terminez d\'abord tous les matchs du tour actuel !');
+        return;
+    }
+
+    // Tour suivant déjà joué (ancien bouton recliqué) : le régénérer effacerait ses scores
+    const plannedNext = currentRound.nextRound || getNextRoundName(currentRoundName);
+    const existingNext = plannedNext && dayData.pools.manualFinalPhase.divisions[division].rounds[plannedNext];
+    if (existingNext && existingNext.matches.some(m => m.completed && !m.isBye) &&
+        !confirm(`⚠️ Les ${plannedNext} existent déjà et ont des résultats.\n\nLes régénérer effacera ces résultats. Continuer ?`)) {
         return;
     }
 
@@ -5867,12 +5762,10 @@ if (originalCheckPoolsCompletion) {
         if (finalButton && result) {
             const dayData = championship.days[dayNumber];
             if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.enabled) {
-                finalButton.innerHTML = '🔄 Gérer Phase Finale';
-                finalButton.style.background = '#057e68';
+                finalButton.innerHTML = '🔄 Gérer la phase finale';
                 finalButton.onclick = () => updateManualFinalPhaseDisplay(dayNumber);
             } else {
-                finalButton.innerHTML = '🏆 Phase Finale Manuelle';
-                finalButton.style.background = 'linear-gradient(135deg, #8b5700, #9c5003)';
+                finalButton.innerHTML = '🏆 Phase finale';
             }
         }
         
@@ -6398,6 +6291,7 @@ global.updateManualMatchScore = updateManualMatchScore;
 global.handleManualMatchEnter = handleManualMatchEnter;
 global.generateManualFinalPhase = generateManualFinalPhase;
 global.generateNextManualRound = generateNextManualRound;
+global.generateRoundControlsHTML = generateRoundControlsHTML;
 global.resetManualFinalPhase = resetManualFinalPhase;
 global.exportManualFinalResults = exportManualFinalResults;
 global.showPlayerPoolSummary = showPlayerPoolSummary;
