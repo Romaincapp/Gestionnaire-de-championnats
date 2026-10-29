@@ -33,6 +33,22 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Courses : « ➕ Participants » à côté de « 📥 Importer ▾ »
+
+- Le bouton « ➕ Ajouter » de l'en-tête « Participants disponibles » (à l'écart, à droite) devient
+  « ➕ Participants » en tête de la barre d'actions, collé à « 📥 Importer ▾ » (même place et
+  même vert que « ➕ Joueurs ▾ » des journées Matchs) : `renderChronoInterfaceForDay`
+  (`multisport.iife.js`). Le formulaire rapide (nom, club, Ajouter) ne change pas.
+- `tests/e2e/natation.e2e.js` : bouton renommé ; étape 9 adaptée à l'onglet 🏅 Multisport masqué
+  sans journée Matchs (changement précédent, le scénario cliquait encore dessus).
+
+### 2026-10-29 — Icône ⏱️ du libellé « Mode: » en journée Courses
+
+- Le libellé `#day-type-icon-N` (« 🎾 Mode: ») restait 🎾 après avoir choisi « ⏱️ Courses » :
+  mis à jour par `handleDayTypeChange` et `initializeDayTypeSelectorForDay1` (`ui.iife.js`),
+  id ajouté dans `index.html` (J1) et `generateDayContentHTML`.
+- Test : `tests/unit/dayTypeIcon.test.js`.
+
 ### 2026-10-29 — Divisions / Terrains appliqués dès le changement, bouton « Appliquer » retiré
 
 - `updateDivisionConfig` / `updateCourtConfig` (`config.iife.js`) appellent directement

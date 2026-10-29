@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ➕ Courses : bouton « Participants » à côté d'« Importer »
+- Ajouter des participants se fait depuis la barre d'actions, comme « ➕ Joueurs » en journée Matchs.
+
+### 🐛 Icône du mode Courses
+- Le libellé « Mode: » affiche ⏱️ sur une journée Courses (il restait 🎾).
+
 ### ⚙️ Divisions et terrains appliqués tout de suite
 - Changer le nombre de divisions ou de terrains met l'affichage à jour immédiatement, sans
   rechargement : le bouton « ✅ Appliquer » disparaît. Réduire les divisions masque les divisions

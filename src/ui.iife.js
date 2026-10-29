@@ -200,7 +200,7 @@
         return `
             <!-- Sélecteur de type de journée (compact et intelligent) -->
             <div class="day-type-selector" id="day-type-selector-${dayNumber}" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-left: 4px solid ${isChrono ? '#9c5003' : '#09679e'}; border-radius: 8px; color: #2c3e50;">
-                <span style="font-size: 13px; font-weight: 500;">${isChrono ? '⏱️' : '🎾'} Mode:</span>
+                <span id="day-type-icon-${dayNumber}" style="font-size: 13px; font-weight: 500;">${isChrono ? '⏱️' : '🎾'} Mode:</span>
                 <select id="day-type-select-${dayNumber}" onchange="handleDayTypeChange(${dayNumber}, this.value)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ced4da; font-size: 13px; cursor: pointer; background: white; color: #333; min-width: 140px;">
                     <option value="championship" ${!isChrono ? 'selected' : ''}>🏆 Matchs</option>
                     <option value="chrono" ${isChrono ? 'selected' : ''}>⏱️ Courses</option>
@@ -456,6 +456,8 @@
         if (label) {
             label.textContent = isChrono ? 'Chronométrage' : 'Championnat';
         }
+        const icon = document.getElementById(`day-type-icon-${dayNumber}`);
+        if (icon) icon.textContent = (isChrono ? '⏱️' : '🎾') + ' Mode:';
 
         if (typeof global.refreshDayScoringControl === 'function') global.refreshDayScoringControl(dayNumber);
         
@@ -524,6 +526,9 @@
                 if (label) label.textContent = 'Championnat';
             }
         }
+        // Icône du libellé « Mode: » (⏱️ Courses, 🎾 Matchs)
+        const icon = document.getElementById(`day-type-icon-${dayNumber}`);
+        if (icon) icon.textContent = (type === 'chrono' ? '⏱️' : '🎾') + ' Mode:';
 
         // Le format de score ne concerne que les journées Matchs
         if (typeof global.refreshDayScoringControl === 'function') global.refreshDayScoringControl(dayNumber);

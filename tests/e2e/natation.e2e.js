@@ -91,8 +91,8 @@ async function openFresh(browser) {
     await page.waitForTimeout(500);
     check(await state(page, () => championship.days[1].dayType === 'chrono'), 'J1 en mode Courses');
 
-    step(`2. Ajouter les ${LINES.length} nageurs (➕ Ajouter, collage des lignes brutes)`);
-    await btn(page, '➕ Ajouter');
+    step(`2. Ajouter les ${LINES.length} nageurs (➕ Participants, collage des lignes brutes)`);
+    await btn(page, '➕ Participants');
     await page.fill('#bulk-participants-1', LINES.join('\n'));
     await btn(page, '💾 Ajouter');
     const nPart = await state(page, () => championship.days[1].chronoData.participants.length);
@@ -283,7 +283,7 @@ async function openFresh(browser) {
     await page.evaluate(() => typeof closeRankingModal === 'function' && closeRankingModal(1));
 
     // ---------------------------------------------------------------
-    step('9. Classement par épreuve (onglets 🏅 Multisport et 🏆 Classement)');
+    step('9. Classement par épreuve (onglet 🏆 Classement ; pas d\'onglet 🏅 Multisport sans journée Matchs)');
     // Attendu : les séries 1 et 2 du 50m brasse regroupées, classées au temps, DISQ/DNS non classés
     const expected = await state(page, (ids) => {
         const evt = championship.days[1].chronoData.events.find(e => e.name === '50m brasse');
@@ -293,7 +293,8 @@ async function openFresh(browser) {
         }));
         return rows.sort((a, b) => a.time - b.time);
     }, [serieA.id, serieB.id]);
-    for (const tab of ['🏅 Multisport', '🏆 Classement']) {
+    check(!(await page.locator('#multisportTab').isVisible()), 'courses seules : pas d\'onglet 🏅 Multisport');
+    for (const tab of ['🏆 Classement']) {
         await page.getByText(tab, { exact: true }).filter({ visible: true }).first().click();
         await page.waitForTimeout(700);
         const txt = await visibleText(page);
@@ -361,7 +362,7 @@ async function openFresh(browser) {
     check(await brasseEventCard().locator('.fun-event-badge').count() === 1
         && await state(page, () => championship.days[1].chronoData.events.find(e => e.name === '50m brasse').fun === true),
         'case cochée : badge « 🎉 Fun » sur la carte de l\'épreuve');
-    await page.getByText('🏅 Multisport', { exact: true }).filter({ visible: true }).first().click();
+    await page.getByText('🏆 Classement', { exact: true }).filter({ visible: true }).first().click();
     await page.waitForTimeout(700);
     const funView = await page.locator('#multisportRankingContent').evaluate(el => {
         const card = [...el.querySelectorAll('.event-ranking')].find(c => c.textContent.includes('50m brasse'));
@@ -379,7 +380,7 @@ async function openFresh(browser) {
     await page.getByText('Journée 1', { exact: true }).first().click();
     await page.waitForTimeout(500);
     await setFun(false);
-    await page.getByText('🏅 Multisport', { exact: true }).filter({ visible: true }).first().click();
+    await page.getByText('🏆 Classement', { exact: true }).filter({ visible: true }).first().click();
     await page.waitForTimeout(700);
     const backInClubs = await page.locator('#multisportRankingContent .club-ranking thead th', { hasText: '50m brasse' }).count();
     check(backInClubs === 1 && await brasseEventCard().locator('.fun-event-badge').count() === 0,
@@ -418,7 +419,7 @@ async function openFresh(browser) {
     }, clubTarget.name);
     check(propagated.length > clubTarget.entries && propagated.every(c => c === 'Club Test E2E'),
         `✏️ ${clubTarget.name} (${clubTarget.entries} inscription(s)) : club changé dans la liste, les séries et les résultats (${propagated.length} fiches)`);
-    await page.getByText('🏅 Multisport', { exact: true }).filter({ visible: true }).first().click();
+    await page.getByText('🏆 Classement', { exact: true }).filter({ visible: true }).first().click();
     await page.waitForTimeout(700);
     const clubView = await page.locator('#multisportRankingContent').evaluate((el, name) => {
         const clubRows = [...el.querySelectorAll('.club-ranking tbody tr')].map(tr => tr.cells[1].textContent.trim());
