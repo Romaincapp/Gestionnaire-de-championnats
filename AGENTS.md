@@ -71,7 +71,7 @@ export-print, chrono, search, darkmode, mobile, a11y, init (puis `script.js`). U
 - `getCourtsForDivision(div, nbDiv?, nbTerrains?)` - plage de terrains d'une division (configuration actuelle, ou hypothétique avec les 2 derniers arguments)
 - `getNumberOfDivisions()` - Retourne le nombre de divisions
 - `getNumberOfCourts()` - Retourne le nombre de terrains
-- `applyConfiguration()` - Enregistre `config` dans `championship.config` et réaffiche sur place les journées Matchs (divisions, joueurs, matchs, poules, stats, pastilles de terrains) — plus de `location.reload()` ; les journées Courses ne sont pas redessinées
+- `applyConfiguration()` - Enregistre `config` dans `championship.config` et réaffiche sur place les journées Matchs (divisions, joueurs, matchs, poules, phase finale, stats, pastilles de terrains) — plus de `location.reload()` ; les journées Courses ne sont pas redessinées
 
 ### 2. utils.iife.js
 **Rôle** : Fonctions utilitaires pures
