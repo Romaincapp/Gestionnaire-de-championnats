@@ -367,8 +367,7 @@
 
     // ----- « ➕ Joueurs ▾ » -----
     const ADD_PLAYER_CHOICES = [
-        { type: 'single', icon: '👤', label: 'Un joueur', hint: 'Nom, club et division' },
-        { type: 'bulk', icon: '📋', label: 'Plusieurs joueurs', hint: 'Coller une liste ou un fichier' },
+        { type: 'add', icon: '👤', label: 'Ajouter des joueurs', hint: 'Un nom ou une liste' },
         { type: 'import', icon: '📥', label: "D'une autre journée", hint: 'Reprendre ses joueurs' },
         { type: 'clubs', icon: '🏢', label: 'Gérer les clubs', hint: 'Ajouter ou supprimer un club' }
     ];
@@ -1427,16 +1426,6 @@ function showByeManagementModal(dayNumber) {
         const importFileInput = document.getElementById('importFileInput');
         if (importFileInput) importFileInput.addEventListener('change', handleChampionshipImport);
         
-        ['bulkModal'].forEach(modalId => {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.addEventListener('click', function(event) {
-                    if (event.target === this) {
-                        this.style.display = 'none';
-                    }
-                });
-            }
-        });
         
         const playerModal = document.getElementById('playerModal');
         if (playerModal) {

@@ -94,22 +94,29 @@ describe('« ➕ Joueurs ▾ »', () => {
         window.showImportPlayersModal = jest.fn();
     });
 
-    test('le bouton ouvre un menu de 4 choix, plus de fenêtre directe', () => {
+    test('le bouton ouvre un menu de 3 choix, plus de fenêtre directe', () => {
         pbtn().click();
         expect(pmenu().hidden).toBe(false);
         expect([...pmenu().querySelectorAll('[role="menuitem"]')].map((b) => b.dataset.type))
-            .toEqual(['single', 'bulk', 'import', 'clubs']);
+            .toEqual(['add', 'import', 'clubs']);
         expect(document.getElementById('addPlayerModal').style.display).not.toBe('block');
         expect(pbtn().getAttribute('aria-expanded')).toBe('true');
     });
 
-    test.each(['single', 'bulk', 'clubs'])('%s ouvre la fenêtre sur la bonne section', (type) => {
+    test('« Ajouter des joueurs » ouvre la fenêtre, curseur dans la saisie', () => {
         pbtn().click();
-        pmenu().querySelector(`[data-type="${type}"]`).click();
+        pmenu().querySelector('[data-type="add"]').click();
         expect(pmenu().hidden).toBe(true);
         expect(document.getElementById('addPlayerModal').style.display).toBe('block');
+        expect(document.querySelectorAll('#addPlayerModal .apm-section.open')).toHaveLength(0);
+        expect(document.activeElement.id).toBe('addPlayerNames');
+    });
+
+    test('« Gérer les clubs » ouvre la fenêtre sur la section 🏢', () => {
+        pbtn().click();
+        pmenu().querySelector('[data-type="clubs"]').click();
         expect([...document.querySelectorAll('#addPlayerModal .apm-section.open')].map((s) => s.id))
-            .toEqual([`apm-section-${type}`]);
+            .toEqual(['apm-section-clubs']);
     });
 
     test('« D\'une autre journée » ouvre directement la reprise des joueurs', () => {

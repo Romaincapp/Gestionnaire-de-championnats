@@ -33,6 +33,23 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — « ➕ Ajouter des joueurs » (Matchs) : une seule saisie pour un nom ou une liste
+
+- Fenêtre `#addPlayerModal` : les sections « 👤 Ajouter un joueur » et « 📋 Ajouter plusieurs
+  joueurs » remplacées par une grande zone de saisie toujours visible (`#addPlayerNames`, un nom
+  par ligne, « Nom, Club » / colonnes collées acceptés, comme « ➕ Participants » des Courses),
+  Division + Club par défaut, bouton « ➕ Ajouter » (Ctrl+Entrée). La fenêtre reste ouverte
+  pour enchaîner ; doublons signalés ; nouveaux clubs ajoutés à la liste ; fermer avec une
+  saisie en cours demande confirmation. Restent en accordéon : 📥 Reprendre, 🏢 Clubs.
+- Onglet « 📊 Tableau » (comme en Courses) : grille Nom / Prénom / Club / Division, collage
+  depuis un tableur ; la division de la ligne l'emporte sur le menu Division (libellé « si la
+  ligne n'en a pas » en mode Tableau) ; division inexistante refusée. Dernier onglet mémorisé.
+- Menu « ➕ Joueurs ▾ » : 3 choix (👤 Ajouter des joueurs, 📥 D'une autre journée, 🏢 Clubs).
+- Supprimés (plus atteignables) : `#bulkModal`, `showBulkInput`, `showBulkInputForDay`,
+  `showBulkFromModal`, `closeBulkModal`, `addBulkPlayers`.
+- Fichiers : `index.html`, `styles.css`, `src/players.iife.js`, `src/init.iife.js`,
+  `tests/unit/addPlayerModalAccordion.test.js`, `tests/unit/actionMenus.test.js`, `tests/e2e/screens.js`.
+
 ### 2026-10-29 — Courses : « ➕ Participants » à côté de « 📥 Importer ▾ »
 
 - Le bouton « ➕ Ajouter » de l'en-tête « Participants disponibles » (à l'écart, à droite) devient
