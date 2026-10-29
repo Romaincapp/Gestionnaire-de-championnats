@@ -33,6 +33,18 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — « Depuis les classements » : reprendre les classements des autres journées
+
+- Fenêtre « 🏆 Phase finale depuis vos classements » (`showImportPoolRankingsModal`,
+  `src/pools.iife.js`) : chaque zone a un menu « ↺ Reprendre un classement existant… »
+  (`getImportRankingSources(jour)` : classement de chaque autre journée Matchs par division,
+  joueurs ayant joué, + classement général ; `fillPoolInputFromSource(jour, i, clé)`,
+  confirmation si la zone est déjà remplie). Changer le nombre de classements garde la saisie.
+- `src/ranking.iife.js` : tri du classement de journée extrait (`dayDivisionPlayerStats`,
+  `dayPointsComparator`, sans changement de comportement) et nouvelle
+  `getDayDivisionRanking(jour, div)` exposée.
+- Test : `tests/unit/importRankingSources.test.js`.
+
 ### 2026-10-29 — Phase finale : confirmation avant de regénérer la finale / petite finale
 
 - `generateFinale` / `generatePetiteFinale` (`src/pools.iife.js`) recréaient le match sans
