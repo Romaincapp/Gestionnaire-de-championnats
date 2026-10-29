@@ -33,6 +33,17 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Tableau « Ajouter des joueurs » : résumé, annuler, sélection, colonnes modifiables
+
+- Résumé en direct sous le tableau (« ✅ 3 joueurs seront ajoutés : D1 × 1 · D2 × 1 · D3 × 1 »),
+  case Division vide affichant en gris la division du menu, case invalide en rouge, bouton
+  « ➕ Ajouter N joueurs » : on voit où ira chaque joueur avant d'ajouter.
+- ↶ Annuler (et Ctrl+Z dans le tableau, 50 niveaux), 🗑️ Tout vider, cases à cocher avec barre
+  d'actions groupées (Division, Club, Supprimer).
+- Colonnes : sens choisi dans le titre (Nom, Prénom, Club, Division, Ignorer), ◀ ▶ pour les
+  déplacer, × pour les supprimer, ➕ Colonne ; collage plus large → colonnes « Ignorer ».
+- Fichiers : `index.html`, `styles.css`, `src/players.iife.js`, `tests/unit/addPlayerModalAccordion.test.js`.
+
 ### 2026-10-29 — « ➕ Ajouter des joueurs » (Matchs) : une seule saisie pour un nom ou une liste
 
 - Fenêtre `#addPlayerModal` : les sections « 👤 Ajouter un joueur » et « 📋 Ajouter plusieurs

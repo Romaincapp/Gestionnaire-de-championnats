@@ -278,14 +278,35 @@
                     <p class="apm-hint" style="margin: 0 0 10px;">Un seul nom ou une liste collée (Excel compris). « Nom, Club » donne son club au joueur.</p>
                 </div>
                 <div id="apm-panel-table" role="tabpanel" aria-labelledby="apm-tab-table" hidden>
-                    <p class="apm-hint" style="margin: 0 0 8px;">Une ligne par joueur ; une nouvelle ligne s'ajoute quand vous remplissez la dernière. Vous pouvez coller un bloc copié d'un tableur (Nom, Prénom, Club, Division). Division vide = celle choisie ci-dessous.</p>
-                    <div class="bulk-grid-scroll"><table class="bulk-grid" id="apm-grid"><thead><tr><th class="bulk-grid-num">#</th><th>Nom</th><th>Prénom</th><th>Club</th><th>Division</th><th class="bulk-grid-del"><span class="pt-sr-only">Retirer</span></th></tr></thead><tbody></tbody></table></div>
-                    <button type="button" class="ranking-action-btn" style="margin: 8px 0 10px;" onclick="addPlayerGridRow(null, true)">➕ Ligne</button>
+                    <p class="apm-hint" style="margin: 0 0 8px;">Une ligne par joueur ; collez un bloc copié d'un tableur. Chaque titre de colonne se choisit (Nom, Prénom, Club, Division ou Ignorer) et se déplace avec ◀ ▶, pour suivre l'ordre de votre fichier.</p>
+                    <div class="apm-grid-toolbar">
+                        <button type="button" id="apm-undo-btn" class="ranking-action-btn" onclick="undoPlayerGrid()" title="Annuler la dernière modification du tableau (Ctrl+Z)" disabled>↶ Annuler</button>
+                        <button type="button" class="ranking-action-btn" onclick="addPlayerGridRow(null, true)">➕ Ligne</button>
+                        <button type="button" class="ranking-action-btn" onclick="addPlayerGridColumn()">➕ Colonne</button>
+                        <button type="button" class="ranking-action-btn apm-danger" onclick="clearPlayerGrid()">🗑️ Tout vider</button>
+                    </div>
+                    <div id="apm-grid-selection" class="apm-grid-selection" hidden>
+                        <span id="apm-grid-selection-count"></span>
+                        <span class="apm-bulk-group">
+                            <label for="apm-bulk-division">Division</label>
+                            <select id="apm-bulk-division"></select>
+                            <button type="button" class="ranking-action-btn" onclick="applyPlayerGridBulk('division')">Appliquer</button>
+                        </span>
+                        <span class="apm-bulk-group">
+                            <label for="apm-bulk-club">Club</label>
+                            <input type="text" id="apm-bulk-club" placeholder="Nom du club" list="apm-club-datalist">
+                            <button type="button" class="ranking-action-btn" onclick="applyPlayerGridBulk('club')">Appliquer</button>
+                        </span>
+                        <datalist id="apm-club-datalist"></datalist>
+                        <button type="button" class="ranking-action-btn apm-danger" onclick="removeSelectedPlayerGridRows()">🗑️ Supprimer</button>
+                    </div>
+                    <div class="bulk-grid-scroll"><table class="bulk-grid" id="apm-grid" onkeydown="onPlayerGridKeydown(event)"><thead></thead><tbody></tbody></table></div>
+                    <p id="apm-grid-summary" class="apm-grid-summary" aria-live="polite"></p>
                 </div>
                 <div class="apm-row">
                     <div>
                         <label class="apm-label" for="addPlayerDivision">Division <span id="addPlayerDivisionHint" style="font-weight: 400;"></span></label>
-                        <select id="addPlayerDivision" class="apm-field"></select>
+                        <select id="addPlayerDivision" class="apm-field" onchange="refreshPlayerGridSummary()"></select>
                     </div>
                     <div style="flex: 1; min-width: 140px;">
                         <label class="apm-label" for="addPlayerClub">Club <span style="font-weight: 400;">(facultatif, si la ligne n'en a pas)</span></label>
@@ -295,7 +316,7 @@
                     </div>
                 </div>
                 <input type="text" id="addPlayerClubCustom" class="apm-field" placeholder="Nom du nouveau club" aria-label="Nom du nouveau club" style="display: none;">
-                <button onclick="addPlayerFromModal()" class="apm-primary" style="background: #087f58;">➕ Ajouter</button>
+                <button id="apm-add-btn" onclick="addPlayerFromModal()" class="apm-primary" style="background: #087f58;">➕ Ajouter</button>
                 <div class="file-input-wrapper apm-file">
                     <input type="file" id="modalFileInput" accept=".xlsx,.xls,.csv" onchange="handleModalFileInput(event)">
                     <label for="modalFileInput" class="apm-link" title="Colonne A = nom, colonne B = division">📁 ou importer un fichier CSV / Excel</label>
