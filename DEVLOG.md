@@ -33,6 +33,21 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Courses : la ligne en modification ne grossit plus au survol
+
+- « ⋯ » → ✏️ Modifier d'un participant : au survol, la ligne entière grossissait de 20 % et
+  sortait du cadre (💾 / ✖️ cachés). Cause : effet de l'écran de course
+  `[id^="participant-"]:hover td:first-child { scale(1.2) }` qui attrapait aussi les lignes
+  `participant-row-…` (une seule case en modification). Règles limitées par
+  `:not([id^="participant-row-"])` (`styles.css`) ; boutons qui passent à la ligne sur
+  téléphone (`editParticipantInfo`, `flex-wrap`). Test : `tests/unit/participantRowNoZoom.test.js`.
+
+### 2026-10-29 — Courses : formulaire « un participant à la fois » retiré
+
+- La ligne « Nom du participant / Club / Ajouter » au-dessus de « Participants disponibles »
+  doublait « ➕ Participants » (qui accepte un nom ou une liste) : retirée avec
+  `quickAddParticipantToDay` (`multisport.iife.js`). `tests/e2e/natation.e2e.js` passe par la fenêtre.
+
 ### 2026-10-29 — Tableau « Ajouter des joueurs » : résumé, annuler, sélection, colonnes modifiables
 
 - Résumé en direct sous le tableau (« ✅ 3 joueurs seront ajoutés : D1 × 1 · D2 × 1 · D3 × 1 »),

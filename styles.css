@@ -1516,22 +1516,24 @@ body   * {
             transform: translateY(0);
         }
 
-        /* Animation pour les dossards */
-        [id^="participant-"] td:first-child {
+        /* Animation pour les dossards (écran de course). Pas sur les lignes de
+           « Participants disponibles » (participant-row-…) : en modification, la ligne
+           entière est une seule case et grossissait, cachant 💾 / ✖️ */
+        [id^="participant-"]:not([id^="participant-row-"]) td:first-child {
             transition: all 0.3s ease;
         }
 
-        [id^="participant-"]:hover td:first-child {
+        [id^="participant-"]:not([id^="participant-row-"]):hover td:first-child {
             transform: scale(1.2);
         }
 
         /* Statuts colorés */
-        [id^="participant-"] span[style*="background"] {
+        [id^="participant-"]:not([id^="participant-row-"]) span[style*="background"] {
             display: inline-block;
             transition: all 0.2s ease;
         }
 
-        [id^="participant-"] span[style*="background"]:hover {
+        [id^="participant-"]:not([id^="participant-row-"]) span[style*="background"]:hover {
             transform: scale(1.05);
         }
 
