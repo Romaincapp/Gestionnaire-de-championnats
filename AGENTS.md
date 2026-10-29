@@ -254,6 +254,7 @@ Un sous-ensemble représentatif :
 - `updatePoolsDisplay(dayNumber)`, `togglePoolSection(dayNumber)`, `togglePoolMode(dayNumber)`, `generatePools(dayNumber)`, `updatePoolMatchScore(dayNumber, matchId, scoreField, value)`, `handlePoolMatchEnter(event, dayNumber, matchId)`, `generateFinalPhase(dayNumber)`
 - Panneau « 🏊 Poules » : classes `.pool-panel*` / `.pool-btn` / `.pool-card` dans `styles.css` (plus de couleurs inline). `generateRoundControlsHTML(day, div, round, name, faits, total)` (exposée) n'affiche plus « Passer aux … » quand le tour suivant existe
 - « 📋 Depuis les classements » (`showImportPoolRankingsModal`) : menu « ↺ Reprendre… » par zone, `getImportRankingSources(jour)` (autres journées Matchs par division via `getDayDivisionRanking` de `ranking.iife.js`, + classement général), `fillPoolInputFromSource(jour, i, clé)`
+- **Protection des données** : nombre de divisions = `config.numberOfDivisions` (jamais `config.numDivisions`, ancienne clé figée) ; `initializePoolSystem` / `initializeManualFinalPhase` complètent les divisions manquantes ; `hasExistingFinalPhase(dayData)`, `confirmReplaceFinalPhase(jour, action)` (exposée) avant toute (re)création de phase finale ; `startEliminationBracket` (exposée) repart de tours vides ; décocher « Activer » garde les données. Toute nouvelle action destructrice : l'ajouter à `npm run test:pools-safety`
 - `toggleDayHub(dayNumber)`, `toggleGeneralHub()` - ces deux fonctions vivent ici, pas dans `ui.iife.js`
 - Phase finale manuelle : `initializeManualFinalPhase`, `generateManualFinalPhase`, `generateNextManualRound`, `resetManualFinalPhase`, `exportManualFinalResults`
 - Répartition/pré-remplissage : `preFillFromGeneralRanking`, `applyPreFillStrategy`, `applyPoolRedistribution`, `previewPoolRedistribution`
@@ -516,6 +517,7 @@ npm run test:e2e            # Journée natation complète dans un vrai navigateu
 npm run browser:start       # Session navigateur persistante (un Chromium ouvert, port 9222) : à utiliser par défaut
                             #   pour tous les tests navigateur avec CDP_URL=http://127.0.0.1:9222 (voir claude.md)
 npm run test:pools          # Mode Poules complet par clics : panneau, poules, scores, barrage, finale, rechargement
+npm run test:pools-safety   # Mode Poules : 17 actions (divisions, Activer, regénérations, phases finales…) sans perte de données
 npm run test:sets           # Scores en sets (BO3/BO5) : saisie, poule, phase finale, forfait, classement, impression, import tennisdetable
 npm run test:darkmode       # Audit du mode sombre : contraste de ~50 écrans/fenêtres dans un vrai navigateur
 npm run test:darkmode:mobile # Même audit sur un téléphone (390×844, tactile) + contenu qui déborde de l'écran

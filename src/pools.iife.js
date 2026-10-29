@@ -22,7 +22,7 @@
 // Extension de la structure de données (non-breaking)
 function initializePoolSystem(dayNumber) {
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
     // Ajouter la structure poules si elle n'existe pas
     if (!dayData.pools) {
@@ -35,6 +35,12 @@ function initializePoolSystem(dayNumber) {
             enabled: false,
             divisions: divisions
         };
+    }
+
+    // Divisions ajoutées après coup (menu Divisions passé de 3 à 4…) : les créer
+    if (!dayData.pools.divisions) dayData.pools.divisions = {};
+    for (let div = 1; div <= numDivisions; div++) {
+        if (!dayData.pools.divisions[div]) dayData.pools.divisions[div] = { pools: [], matches: [] };
     }
 
     // Garantir la compatibilité avec l'ancien système
@@ -613,9 +619,23 @@ function togglePoolMode(dayNumber) {
             generateButton.innerHTML = '⚠️ Mode Poules Activé - Utilisez les boutons ci-dessus';
         }
         
+        // Poules / phase finale gardées d'une désactivation précédente : les réafficher
+        const dayPools = championship.days[dayNumber].pools;
+        if (Object.values(dayPools.divisions || {}).some(d => d && d.pools && d.pools.length)) updatePoolsDisplay(dayNumber);
+        if (dayPools.manualFinalPhase && dayPools.manualFinalPhase.enabled && hasExistingFinalPhase(championship.days[dayNumber])) {
+            updateManualFinalPhaseDisplay(dayNumber);
+        }
+
         showNotification('Mode Poules activé ! Utilisez "Générer les Poules" ci-dessus', 'info');
     } else {
         // Désactiver mode poules - Revenir au mode classique
+        const poolsData = championship.days[dayNumber].pools;
+        const hasPoolData = Object.values(poolsData.divisions || {}).some(d => d && d.pools && d.pools.length) ||
+            hasExistingFinalPhase(championship.days[dayNumber]);
+        if (hasPoolData && !confirm('Désactiver le mode Poules pour cette journée ?\n\nLes poules et la phase finale sont conservées mais masquées, et ne comptent plus au classement de la journée. Recochez la case pour les retrouver.')) {
+            checkbox.checked = true;
+            return;
+        }
         championship.days[dayNumber].pools.enabled = false;
         config.style.display = 'none';
         info.style.display = 'none';
@@ -627,14 +647,11 @@ function togglePoolMode(dayNumber) {
             generateButton.innerHTML = '🎯 Générer les Matchs (Round-Robin)';
         }
         
-        // Nettoyer les poules existantes mais préserver les matchs round-robin classiques
-        championship.days[dayNumber].pools.divisions = {
-            1: { pools: [], matches: [] },
-            2: { pools: [], matches: [] },
-            3: { pools: [], matches: [] }
-        };
-        
-        showNotification('Mode Poules désactivé - Retour au mode classique', 'warning');
+        // Poules et phase finale conservées (masquées) : les recocher les fait réapparaître
+        if (typeof global.updateMatchesDisplay === 'function') global.updateMatchesDisplay(dayNumber);
+        document.querySelectorAll(`#day-${dayNumber} .manual-final-phase-container`).forEach(el => el.remove());
+
+        showNotification('Mode Poules désactivé — poules et phase finale conservées, recochez pour les retrouver', 'warning');
     }
     
     saveToLocalStorage();
@@ -721,7 +738,7 @@ function applyPreFillStrategy(strategy) {
     }
 
     const { dayNumber, dayData, rankingData, mode } = preFillContext;
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
     let sourceData = null;
 
@@ -1071,6 +1088,29 @@ function applyPreFillStrategy(strategy) {
 function generatePools(dayNumber) {
     const dayData = championship.days[dayNumber];
     if (!dayData.pools || !dayData.pools.enabled) return;
+    initializePoolSystem(dayNumber);
+
+    // Poules déjà générées : confirmation, ou seulement les divisions qui n'en ont pas
+    let onlyDivisions = null;
+    const divCount = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
+    const withPools = [];
+    const withoutPools = [];
+    for (let div = 1; div <= divCount; div++) {
+        const hasPlayers = (dayData.players[div] || []).length >= 4;
+        if ((dayData.pools.divisions[div].pools || []).length > 0) withPools.push(div);
+        else if (hasPlayers) withoutPools.push(div);
+    }
+    if (withPools.length) {
+        const played = withPools.reduce((n, div) => n + dayData.pools.divisions[div].matches.filter(m => m.completed && !m.isByeMatch).length, 0);
+        const finalExists = hasExistingFinalPhase(dayData);
+        const regenerateAll = confirm(`⚠️ Des poules existent déjà en division ${withPools.join(', ')}` +
+            `${played ? ` (${played} match${played > 1 ? 's' : ''} joué${played > 1 ? 's' : ''})` : ''}.\n\n` +
+            `Les regénérer effacera ${played ? 'leurs résultats' : 'les poules actuelles'}${finalExists ? ' (la phase finale déjà créée ne correspondra plus)' : ''}. Continuer ?`);
+        if (!regenerateAll) {
+            if (!withoutPools.length || !confirm(`Générer seulement les poules de la division ${withoutPools.join(', ')} (pas encore de poules) ?`)) return;
+            onlyDivisions = withoutPools;
+        }
+    }
 
     // Détecter le mode de configuration actif
     const modeRadios = document.querySelectorAll(`input[name="pool-config-mode-${dayNumber}"]`);
@@ -1079,7 +1119,7 @@ function generatePools(dayNumber) {
         if (radio.checked) configMode = radio.value;
     });
 
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
     let totalMatches = 0;
     let poolSize;
     let numPools;
@@ -1109,6 +1149,7 @@ function generatePools(dayNumber) {
     dayData.pools.config.matchesPerPlayer = matchesPerPlayer; // Sauvegarde globale
 
     for (let division = 1; division <= numDivisions; division++) {
+        if (onlyDivisions && !onlyDivisions.includes(division)) continue;
         // Normaliser les joueurs : extraire le nom si c'est un objet {name, club}
         const players = (dayData.players[division] || []).map(p => getPlayerName(p));
         if (players.length < 4) {
@@ -1765,8 +1806,11 @@ function shuffleArray(array) {
 function updatePoolsDisplay(dayNumber) {
     const dayData = championship.days[dayNumber];
     if (!dayData.pools.enabled) return;
+    // Divisions ajoutées depuis (menu Divisions) : structures vides plutôt qu'une erreur
+    initializePoolSystem(dayNumber);
+    if (dayData.pools.manualFinalPhase) initializeManualFinalPhase(dayNumber);
 
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
     for (let division = 1; division <= numDivisions; division++) {
         const container = document.getElementById(`division${dayNumber}-${division}-matches`);
@@ -2163,7 +2207,7 @@ function generatePoolMatchHTML(match, dayNumber) {
 // Les IDs de match ne sont PAS uniques entre divisions (ils repartent de 0
 // dans chaque division), il faut donc impérativement cibler la bonne division.
 function findPoolMatch(dayData, matchId, division) {
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
     // Si la division est connue, chercher uniquement dans celle-ci
     if (division !== undefined && division !== null && dayData.pools.divisions[division]) {
@@ -2333,7 +2377,7 @@ function checkPoolMatchCompletion(dayNumber, matchId, division) {
 
 function checkPoolsCompletion(dayNumber) {
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
     const finalButton = document.getElementById(`final-phase-btn-${dayNumber}`);
 
     let allPoolsCompleted = true;
@@ -3164,7 +3208,36 @@ function initializeManualFinalPhase(dayNumber) {
             divisions: divisions
         };
     }
+
+    // Divisions ajoutées après coup : les créer sans toucher aux autres
+    const finalDivisions = dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions;
+    if (finalDivisions) {
+        for (let div = 1; div <= numDivisions; div++) {
+            if (!finalDivisions[div]) {
+                finalDivisions[div] = { qualified: [], rounds: {}, champion: null, runnerUp: null, third: null, fourth: null };
+            }
+        }
+    }
 }
+
+// Phase finale déjà créée (un tour au moins, toutes divisions) ?
+function hasExistingFinalPhase(dayData) {
+    const divisions = dayData && dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions;
+    return !!divisions && Object.values(divisions).some(d => d && d.rounds && Object.keys(d.rounds).length > 0);
+}
+
+// Avant de (re)créer une phase finale : confirmation si une phase finale existe déjà
+function confirmReplaceFinalPhase(dayNumber, actionLabel) {
+    const dayData = championship.days[dayNumber];
+    if (!hasExistingFinalPhase(dayData)) return true;
+    const played = Object.values(dayData.pools.manualFinalPhase.divisions)
+        .flatMap(d => Object.values((d && d.rounds) || {}))
+        .flatMap(r => r.matches || [])
+        .filter(m => m.completed && !m.isBye).length;
+    return confirm(`⚠️ Une phase finale existe déjà pour cette journée${played ? ` (${played} match${played > 1 ? 's' : ''} joué${played > 1 ? 's' : ''})` : ''}.\n\n` +
+        `${actionLabel} la remplacera${played ? ' et effacera ses résultats' : ''}. Continuer ?`);
+}
+global.confirmReplaceFinalPhase = confirmReplaceFinalPhase;
 
 // ======================================
 // FONCTION MANQUANTE - getQualifiedPlayersFromPools
@@ -3319,7 +3392,7 @@ function generateManualFinalPhase(dayNumber) {
         alert('⚠️ Terminez d\'abord toutes les poules avant de générer la phase finale !');
         return;
     }
-    
+
     initializeManualFinalPhase(dayNumber);
 
     // Détecter le mode de configuration
@@ -3327,8 +3400,25 @@ function generateManualFinalPhase(dayNumber) {
     const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
     let totalQualified = 0;
 
+    // Phase finale déjà créée : tout remplacer (confirmation) ou seulement les divisions
+    // qui ont des poules mais pas encore de phase finale (division ajoutée après coup)
+    let onlyDivisions = null;
+    if (hasExistingFinalPhase(dayData)) {
+        const missing = [];
+        for (let div = 1; div <= numDivisions; div++) {
+            const hasPools = (dayData.pools.divisions[div]?.pools || []).length > 0;
+            const hasRounds = Object.keys(dayData.pools.manualFinalPhase.divisions[div]?.rounds || {}).length > 0;
+            if (hasPools && !hasRounds) missing.push(div);
+        }
+        if (!confirmReplaceFinalPhase(dayNumber, 'Regénérer la phase finale de toutes les divisions')) {
+            if (!missing.length || !confirm(`Créer seulement la phase finale de la division ${missing.join(', ')} (pas encore de phase finale) ?`)) return;
+            onlyDivisions = missing;
+        }
+    }
+
     // Qualifier les joueurs de chaque division
     for (let division = 1; division <= numDivisions; division++) {
+        if (onlyDivisions && !onlyDivisions.includes(division)) continue;
         const pools = dayData.pools.divisions[division].pools;
         const matches = dayData.pools.divisions[division].matches;
 
@@ -3409,6 +3499,7 @@ function generateDirectFinalPhase(dayNumber) {
     }
 
     // Demander confirmation
+    if (!confirmReplaceFinalPhase(dayNumber, 'L\'élimination directe')) return;
     if (!confirm(`⚡ ÉLIMINATION DIRECTE\n\nCette option crée une phase finale directe sans poules.\n\n${totalPlayers} joueur(s) inscrit(s) au total.\n\nContinuer ?`)) {
         return;
     }
@@ -3674,6 +3765,8 @@ function applyImportPoolRankings(dayNumber) {
         if (!confirm('⚠️ Des noms en double ont été détectés. Continuer quand même ?')) return;
     }
 
+    if (!confirmReplaceFinalPhase(dayNumber, 'La phase finale depuis les classements')) return;
+
     document.getElementById('importPoolRankingsModal').remove();
     generateDirectFromImportedRankings(dayNumber, rankings);
 }
@@ -3862,6 +3955,11 @@ function startEliminationBracket(dayNumber, division, qualifiedPlayers) {
     const dayData = championship.days[dayNumber];
     const finalPhaseDiv = dayData.pools.manualFinalPhase.divisions[division];
     finalPhaseDiv.qualified = qualifiedPlayers;
+    // Nouveau tableau : les tours d'une phase finale précédente ne doivent pas rester
+    // (sinon anciennes demies / finale et ancien champion à côté du nouveau premier tour)
+    finalPhaseDiv.rounds = {};
+    delete finalPhaseDiv.barrageDirectQualifiers;
+    finalPhaseDiv.champion = finalPhaseDiv.runnerUp = finalPhaseDiv.third = finalPhaseDiv.fourth = null;
 
     const n = qualifiedPlayers.length;
     if (n < 2) return;
@@ -3999,6 +4097,8 @@ function generateSeasonFinalPhase(dayNumber) {
         alert('⚠️ Aucun joueur dans le classement général !');
         return;
     }
+
+    if (!confirmReplaceFinalPhase(dayNumber, 'La finale de saison')) return;
 
     // Demander le nombre de qualifiés par division
     const promptMsg = `🏆 FINALE DE SAISON\n\nClassement général actuel :\n${divisionInfo.join('\n')}\n\nCombien de joueurs qualifier par division ?\n(Sera arrondi à la puissance de 2 : 4, 8, 16, 32...)\n\nEntrez un nombre :`;
@@ -4757,7 +4857,7 @@ function getQualifiedFromRound(round) {
 
 function updateManualMatchScore(matchId, scoreField, value, dayNumber) {
     const dayData = championship.days[dayNumber];
-    const numDivisions = championship.config.numDivisions || 3;
+    const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
     let matchFound = false;
 
     // Chercher dans toutes les divisions et tous les tours
@@ -6060,6 +6160,7 @@ global.handlePoolMatchEnter = handlePoolMatchEnter;
 // Exposer les fonctions de phase finale manuelle
 global.initializePoolsForDay = initializePoolsForDay;
 global.initializeManualFinalPhase = initializeManualFinalPhase;
+global.startEliminationBracket = startEliminationBracket;
 global.updateManualFinalPhaseDisplay = updateManualFinalPhaseDisplay;
 global.updateManualMatchScore = updateManualMatchScore;
 global.handleManualMatchEnter = handleManualMatchEnter;

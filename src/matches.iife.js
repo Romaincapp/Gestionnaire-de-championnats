@@ -1144,7 +1144,7 @@
         if (matchId) {
             const dayNumber = championship.currentDay;
             const dayData = championship.days[dayNumber];
-            const numDivisions = championship.config.numDivisions || 3;
+            const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
             // Chercher dans les pools
             if (dayData.pools && dayData.pools.enabled) {

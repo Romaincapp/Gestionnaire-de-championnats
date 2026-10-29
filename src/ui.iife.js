@@ -24,7 +24,7 @@
         console.log('Journées existantes:', existingDays);
         
         const newDayNumber = Math.max(...existingDays) + 1;
-        const numDivisions = championship.config.numDivisions || 3;
+        const numDivisions = championship.config?.numberOfDivisions || championship.config?.numDivisions || 3;
 
         // Créer la structure dynamique pour le nombre de divisions configuré
         const players = {};

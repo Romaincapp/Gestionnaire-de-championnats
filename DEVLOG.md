@@ -33,6 +33,29 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-10-29 — Mode Poules : plus aucune perte de poules / phase finale sans confirmation
+
+Audit de tout ce qui peut détruire des poules ou une phase finale en cours : nouveau test
+navigateur `npm run test:pools-safety` (17 scénarios ; 15 défauts sur le code d'avant, 0 après).
+- **Nombre de divisions** : `pools.iife.js` (7 endroits), `matches.iife.js`, `ui.iife.js` lisaient
+  `config.numDivisions`, ancienne clé jamais mise à jour par le menu Divisions (restait à 3) :
+  passé à 4 divisions, la D4 n'avait jamais de poules et l'affichage plantait. Lecture de
+  `numberOfDivisions` ; `initializePoolSystem` / `initializeManualFinalPhase` créent les divisions
+  manquantes (appelées aussi par `updatePoolsDisplay`).
+- **Décocher « Activer le mode Poules »** vidait toutes les poules sans rien demander :
+  confirmation, données gardées (masquées), réaffichées en recochant. Phase finale d'une journée
+  au mode Poules décoché ignorée par `calculatePlayerStats` (comme les poules).
+- **« Générer les poules »** sur des poules existantes : confirmation (matchs joués comptés), à
+  défaut « seulement les divisions sans poules ».
+- **Phase finale / Élimination directe / Depuis les classements / Finale de saison** :
+  `confirmReplaceFinalPhase(jour, action)` si une phase finale existe ; « Phase finale » propose
+  aussi « seulement les divisions sans phase finale ».
+- **Regénérer une phase finale laissait les anciens tours** (demies, finale, champion à côté du
+  nouveau premier tour) : `startEliminationBracket` remet les tours de la division à zéro.
+- Note : `checkPoolsCompletion` n'est pas exposée, son enveloppe `originalCheckPoolsCompletion`
+  (fin de `pools.iife.js`) n'est donc jamais installée (code mort, laissé tel quel).
+- Tests : `tests/unit/poolsDataSafety.test.js`, `tests/e2e/pools-safety.e2e.js`.
+
 ### 2026-10-29 — « Depuis les classements » : reprendre les classements des autres journées
 
 - Fenêtre « 🏆 Phase finale depuis vos classements » (`showImportPoolRankingsModal`,

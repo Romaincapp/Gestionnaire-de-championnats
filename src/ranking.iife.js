@@ -41,8 +41,9 @@
             playerMatches = [...playerMatches, ...playerFinalMatches];
         }
 
-        // Ajouter les matchs de phase finale MANUELLE si présents (nouveau système)
-        if (dayData.pools && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions[division]) {
+        // Ajouter les matchs de phase finale MANUELLE si présents (nouveau système) ;
+        // mode Poules décoché : phase finale conservée mais ignorée, comme les poules
+        if (dayData.pools && dayData.pools.enabled && dayData.pools.manualFinalPhase && dayData.pools.manualFinalPhase.divisions[division]) {
             const manualFinalPhase = dayData.pools.manualFinalPhase.divisions[division];
             if (manualFinalPhase.rounds) {
                 // Parcourir tous les tours (16èmes, 8èmes, Quarts, Demi-finales, Finale, Petite finale)

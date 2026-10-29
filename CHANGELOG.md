@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🛡️ Mode Poules : vos poules et phases finales protégées
+- Corrigé : avec 4 divisions ou plus, la division 4 et suivantes ne recevaient jamais de poules.
+- Décocher « Activer le mode Poules » ne vide plus les poules : elles sont masquées et reviennent en recochant (confirmation demandée).
+- « Générer les poules » et les 4 boutons de phase finale demandent confirmation avant de remplacer des poules ou une phase finale existantes, et peuvent ne traiter que les divisions qui n'en ont pas encore.
+- Corrigé : regénérer une phase finale laissait les anciens tours et l'ancien champion affichés.
+
 ### 📋 Phase finale depuis les classements : reprise des autres journées
 - Dans « Depuis les classements », chaque classement peut être rempli d'un clic avec le classement d'une autre journée (par division) ou le classement général.
 
