@@ -64,3 +64,59 @@ test('réduire après confirmation : division masquée, joueurs conservés', () 
     expect(championship.days[1].players[3]).toHaveLength(1);
     expect(document.querySelectorAll('#divisions-1 .division').length).toBe(2);
 });
+
+describe('protection d\'une journée en cours (matchs déjà générés)', () => {
+    function withMatches() {
+        setup(2, { 1: [], 2: [] });
+        // 4 terrains / 2 divisions : D1 = 1-2, D2 = 3-4
+        championship.days[1].matches = {
+            1: [{ player1: 'A', player2: 'B', court: 1, tour: 1 }, { player1: 'C', player2: 'D', court: 2, tour: 1 }],
+            2: [{ player1: 'E', player2: 'F', court: 3, tour: 1, score1: 11, score2: 5, completed: true },
+                { player1: 'G', player2: 'H', court: 4, tour: 1 }],
+        };
+    }
+
+    test('passer à 2 terrains : confirmation, annuler ne change rien (terrains ni menu)', () => {
+        withMatches();
+        window.confirm = jest.fn(() => false);
+        const sel = document.getElementById('courtConfig');
+        sel.value = '2';
+        window.updateCourtConfig();
+        expect(window.confirm).toHaveBeenCalledTimes(1);
+        expect(window.confirm.mock.calls[0][0]).toContain('3 matchs déjà générés changeront de terrain');
+        expect(sel.value).toBe('4');
+        expect(championship.config.numberOfCourts).toBe(4);
+        expect(championship.days[1].matches[2].map(m => m.court)).toEqual([3, 4]);
+    });
+
+    test('confirmer applique, scores conservés', () => {
+        withMatches();
+        window.confirm = jest.fn(() => true);
+        document.getElementById('courtConfig').value = '2';
+        window.updateCourtConfig();
+        expect(championship.config.numberOfCourts).toBe(2);
+        expect(championship.days[1].matches[2][0]).toMatchObject({ score1: 11, score2: 5, completed: true });
+    });
+
+    test('ajouter des terrains sans déplacer de match : pas de question', () => {
+        withMatches();
+        window.confirm = jest.fn(() => true);
+        // 8 terrains / 2 divisions : D1 = 1-4, D2 = 5-8 → les matchs de D2 (3, 4) bougent
+        expect(window.countMatchesChangingCourt(2, 8)).toBe(2);
+        // 5 terrains : D1 = 1-3, D2 = 4-5 → seul le match sur le terrain 3 bouge
+        expect(window.countMatchesChangingCourt(2, 5)).toBe(1);
+        // Ajouter une division change les plages aussi
+        expect(window.configChangeWarning(3, 4)).toContain('changer');
+        // Même configuration : rien
+        expect(window.configChangeWarning(2, 4)).toBeNull();
+    });
+
+    test('début de journée sans matchs : changement immédiat, sans question', () => {
+        setup(2, { 1: [{ name: 'A' }], 2: [] });
+        window.confirm = jest.fn(() => true);
+        document.getElementById('courtConfig').value = '2';
+        window.updateCourtConfig();
+        expect(window.confirm).not.toHaveBeenCalled();
+        expect(championship.config.numberOfCourts).toBe(2);
+    });
+});

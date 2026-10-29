@@ -42,6 +42,10 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
   pouvait être en retard). Réduction des divisions : confirmation seulement si une division
   retirée a du contenu, données conservées.
 - `#applyConfigBtn` supprimé (`index.html`, `styles.css`).
+- Protection journée en cours : `configChangeWarning` demande confirmation si des matchs déjà
+  générés changeraient de terrain (`countMatchesChangingCourt`, plages calculées par
+  `getCourtsForDivision(div, nbDiv, nbTerrains)`) ou si une division retirée a du contenu ;
+  annuler remet le menu. Sans matchs : immédiat, sans question.
 - Test : `tests/unit/liveDivisionConfig.test.js`.
 
 ### 2026-10-29 — Onglet « 🏅 Multisport » seulement pour un mélange Matchs + Courses

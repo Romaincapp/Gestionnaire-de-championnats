@@ -67,10 +67,10 @@ export-print, chrono, search, darkmode, mobile, a11y, init (puis `script.js`). U
 - `config` (objet global) - Configuration active
 - `DEFAULT_CONFIG` - Configuration par défaut
 - `initializeDivisions(n)` - Initialise les divisions
-- `updateDivisionConfig()` / `updateCourtConfig()` - `onchange` des menus Divisions / Terrains : appliqués aussitôt (plus de bouton « Appliquer » depuis 2026-10-29). Réduire les divisions demande confirmation si une division retirée a des joueurs/matchs (masqués, jamais supprimés ; annuler remet le menu)
+- `updateDivisionConfig()` / `updateCourtConfig()` - `onchange` des menus Divisions / Terrains : appliqués aussitôt (plus de bouton « Appliquer » depuis 2026-10-29), via `changeConfiguration`. Confirmation seulement si le changement touche l'existant (`configChangeWarning(div, terrains)` → texte ou null) : division retirée qui a des joueurs/matchs (masqués, jamais supprimés) ou matchs déjà générés qui changeraient de terrain (`countMatchesChangingCourt(div, terrains)`). Annuler remet le menu
+- `getCourtsForDivision(div, nbDiv?, nbTerrains?)` - plage de terrains d'une division (configuration actuelle, ou hypothétique avec les 2 derniers arguments)
 - `getNumberOfDivisions()` - Retourne le nombre de divisions
 - `getNumberOfCourts()` - Retourne le nombre de terrains
-- `getCourtsForDivision(div)` - Retourne les terrains d'une division
 - `applyConfiguration()` - Enregistre `config` dans `championship.config` et réaffiche sur place les journées Matchs (divisions, joueurs, matchs, poules, stats, pastilles de terrains) — plus de `location.reload()` ; les journées Courses ne sont pas redessinées
 
 ### 2. utils.iife.js

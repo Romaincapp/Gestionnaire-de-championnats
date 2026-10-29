@@ -17,6 +17,8 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 - Changer le nombre de divisions ou de terrains met l'affichage à jour immédiatement, sans
   rechargement : le bouton « ✅ Appliquer » disparaît. Réduire les divisions masque les divisions
   en trop sans supprimer leurs joueurs (confirmation demandée s'il y en a).
+- Journée en cours : si des matchs déjà générés changeraient de terrain, une confirmation indique
+  combien ; annuler ne change rien.
 
 ### 🏅 Onglet Multisport seulement s'il y a à combiner
 - Avec des journées Courses seulement, plus d'onglet « Multisport » en doublon : « 🏆 Classement »
