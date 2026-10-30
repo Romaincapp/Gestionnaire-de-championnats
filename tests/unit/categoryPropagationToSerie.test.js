@@ -11,9 +11,8 @@
  * 1. addExistingParticipantToSerie (bouton qui ajoute un participant déjà
  *    présent dans le pool de la journée à une série) : appelait
  *    addChronoParticipant(...) sans transmettre ni club ni category.
- * 2. addParticipantToSerie (formulaire "+" du modal "Gérer les participants"
- *    d'une série, pour un ajout direct sans passer par le pool du jour) :
- *    n'avait tout simplement aucun champ Catégorie.
+ * 2. l'ajout direct d'un nom dans une série (aujourd'hui la fenêtre
+ *    « ✏️ Éditer la série ») n'avait tout simplement aucun champ Catégorie.
  *
  * Résultat rapporté par l'utilisateur : après avoir ajouté des coureurs
  * "Solo" et "Équipe", aucune trace de la catégorie dans la série, la course,
@@ -66,14 +65,18 @@ test('addExistingParticipantToSerie conserve la catégorie (et le club) du parti
     expect(serie.participants[0].club).toBe('Club A');
 });
 
-test('addParticipantToSerie sauvegarde la catégorie saisie dans le formulaire "+"', () => {
-    document.body.innerHTML +=
-        '<input id="participantName-1-10" value="Bob">' +
-        '<input id="participantBib-1-10" value="2">' +
-        '<input id="participantCategory-1-10" value="Équipe">' +
-        '<div id="participantsList-1-10"></div>';
+// Fenêtre « ✏️ Éditer la série » : ajout d'un nouveau nom (hors liste du jour)
+function addInEditor(name, category) {
+    editChronoSerie(1, 10);
+    document.getElementById('se-add-1').value = name;
+    addSerieEditorRow(1, 10);
+    const row = [...document.querySelectorAll('#se-table-1 tbody tr')].pop();
+    if (category !== undefined) row.querySelector('.se-cat').value = category;
+    saveChronoSerieEditor(1, 10);
+}
 
-    addParticipantToSerie(1, 10);
+test('Éditer la série : un nouveau nom ajouté garde la catégorie saisie', () => {
+    addInEditor('Bob', 'Équipe');
 
     const serie = championship.days[1].chronoData.series[0];
     expect(serie.participants).toHaveLength(1);
@@ -81,14 +84,17 @@ test('addParticipantToSerie sauvegarde la catégorie saisie dans le formulaire "
     expect(serie.participants[0].category).toBe('Équipe');
 });
 
-test('addParticipantToSerie fonctionne toujours sans catégorie saisie (champ optionnel)', () => {
-    document.body.innerHTML +=
-        '<input id="participantName-1-10" value="Carol">' +
-        '<input id="participantBib-1-10" value="3">' +
-        '<div id="participantsList-1-10"></div>';
-
-    expect(() => addParticipantToSerie(1, 10)).not.toThrow();
+test('Éditer la série : ajout sans catégorie (champ optionnel)', () => {
+    expect(() => addInEditor('Carol')).not.toThrow();
 
     const serie = championship.days[1].chronoData.series[0];
     expect(serie.participants[0].category).toBe('');
+});
+
+test('Éditer la série : un participant du jour ajouté garde sa catégorie et son club', () => {
+    addInEditor('Alice');
+
+    const serie = championship.days[1].chronoData.series[0];
+    expect(serie.participants[0].category).toBe('Solo');
+    expect(serie.participants[0].club).toBe('Club A');
 });

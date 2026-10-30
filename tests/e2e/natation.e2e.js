@@ -174,12 +174,12 @@ async function openFresh(browser) {
 
     // ---------------------------------------------------------------
     step(`5. 👥 « ${serieA.ev} / ${serieA.name} » : couloirs affichés = couloirs générés`);
-    await page.click(`button[onclick="manageSerieParticipants(1, ${serieA.id})"]`);
+    await page.click(`button[onclick="editChronoSerie(1, ${serieA.id})"]`);
     await page.waitForTimeout(300);
-    const modalText = (await page.locator('[id^="participantsModal"]').first().textContent()).replace(/\s+/g, ' ');
+    const editorLanes = await page.locator('#se-table-1 tbody tr').evaluateAll(trs => trs.map(tr => tr.querySelector('.se-name').value + ':' + tr.querySelector('.se-lane').value));
     const sA = await serieOf(serieA.id);
-    check(sA.participants.every(p => modalText.includes('Couloir ' + p.laneNumber)), 'badges « Couloir N » présents pour les ' + sA.participants.length + ' nageurs');
-    await btn(page, 'Fermer');
+    check(sA.participants.every(p => editorLanes.includes(p.name + ':' + p.laneNumber)), 'couloirs affichés dans ✏️ Éditer la série pour les ' + sA.participants.length + ' nageurs');
+    await btn(page, 'Annuler');
 
     // ---------------------------------------------------------------
     step(`6. Course 1 (${serieA.name}) : clics sur les couloirs, mauvais clic annulé, DNS`);
@@ -475,11 +475,21 @@ async function openFresh(browser) {
     const added = (await brasseSeries(brasseId)).pop();
     const brasseCard = page.locator('.chrono-event-card').filter({ has: page.locator('h4', { hasText: /^🎯 50m brasse$/ }) });
     check((await brasseCard.innerText()).includes(added.name), `« ${added.name} » apparaît sous « 50m brasse »`);
-    await page.click(`button[onclick="assignSerieLanes(1, ${added.id})"]`);
+    await page.click(`button[onclick="editChronoSerie(1, ${added.id})"]`);
     await page.waitForTimeout(300);
-    const pool = await state(page, () => championship.days[1].chronoData.participants.filter(p => p.swimImport).slice(0, 2).map(p => ({ id: p.id, name: p.name })));
-    await page.selectOption('#laneSel-1-3', String(pool[0].id));
-    await page.selectOption('#laneSel-1-4', String(pool[1].id));
+    // Deux nageurs du jour absents du 50m brasse (sinon ils seraient déplacés d'une autre
+    // série de l'épreuve, ou refusés s'ils y ont déjà nagé)
+    const pool = await state(page, (eventId) => {
+        const cd = championship.days[1].chronoData;
+        const inEvent = new Set(getEventSeries(cd, cd.events.find(e => e.id === eventId)).flatMap(s => s.participants.map(p => p.name.toLowerCase())));
+        return cd.participants.filter(p => p.swimImport && !inEvent.has(p.name.toLowerCase())).slice(0, 2).map(p => ({ id: p.id, name: p.name }));
+    }, brasseId);
+    await page.check('#se-lanes-1');
+    for (const [i, lane] of [[0, '3'], [1, '4']]) {
+        await page.fill('#se-add-1', pool[i].name);
+        await page.press('#se-add-1', 'Enter');
+        await page.locator('#se-table-1 tbody tr').last().locator('.se-lane').selectOption(lane);
+    }
     await btn(page, '💾 Enregistrer');
     await page.click(`button[onclick="startChronoRaceForDay(1, ${added.id})"]`);
     await page.waitForTimeout(400);

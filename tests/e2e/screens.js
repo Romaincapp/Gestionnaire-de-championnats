@@ -134,7 +134,7 @@ function buildScreens(page, info) {
         ['modal-chrono-participants-manuel', call('switchTab(2); showAddParticipantManualModal(2)')],
         ['modal-chrono-participants-tableau', call("switchTab(2); showAddParticipantManualModal(2); setBulkParticipantsMode(2, 'table', true)")],
         ['modal-chrono-modifier-participant', call(`switchTab(2); editParticipantInfo(2, ${JSON.stringify(info.participant)})`)],
-        ['modal-chrono-gerer-participants', call(`switchTab(2); manageSerieParticipants(2, ${JSON.stringify(info.serie)})`)],
+        ['modal-chrono-editer-serie', call(`switchTab(2); editChronoSerie(2, ${JSON.stringify(info.serie)})`)],
         ['modal-chrono-saisie-resultats', call(`switchTab(2); enterSerieResults(2, ${JSON.stringify(info.serie2)})`)],
         ['modal-chrono-classement-serie', call(`switchTab(2); showSerieRanking(2, ${JSON.stringify(info.serie)})`)],
         ['modal-chrono-ajout-serie-participant', call(`switchTab(2); showAddToSerieModal(2, ${JSON.stringify(info.participant)})`)],
