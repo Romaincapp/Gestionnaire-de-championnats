@@ -1194,7 +1194,9 @@
     // Saisie set par set : updateSetScore() est dans scoring.iife.js
 
     function updateMatchScore(dayNumber, division, matchIndex, scoreField, value) {
-        const match = championship.days[dayNumber].matches[division][matchIndex];
+        // onchange tardif d'une case dont la journée a disparu (import, réinitialisation)
+        const match = championship.days[dayNumber]?.matches?.[division]?.[matchIndex];
+        if (!match) return;
         match[scoreField] = value;
         // Annuler le forfait si les scores sont modifiés manuellement
         if (match.forfaitBy) {
@@ -1410,6 +1412,23 @@
         // Mode sets : la grille gère Entrée (set suivant) et décide quand valider
         const setsOutcome = global.handleSetsKeydown(event, match, dayNumber);
         if (setsOutcome === 'handled') return;
+
+        // Mode simple : lire les scores à l'écran, onchange ne s'est pas encore déclenché
+        // au moment du keydown (sinon il fallait appuyer deux fois sur Entrée)
+        if (setsOutcome === 'natural' && event.target && event.target.classList.contains('score-input')) {
+            const inputs = event.target.closest('.score-center').querySelectorAll('.score-input');
+            ['score1', 'score2'].forEach((field, i) => {
+                const value = inputs[i].value.trim();
+                if (String(match[field] ?? '') !== value) updateMatchScore(dayNumber, division, matchIndex, field, value);
+            });
+            // Entrée sur le premier score alors que le second est vide : passer au second
+            if (event.key === 'Enter' && event.target === inputs[0] && inputs[1].value.trim() === '') {
+                event.preventDefault();
+                inputs[1].focus();
+                return;
+            }
+        }
+
         const shouldValidate = setsOutcome === 'validate' || event.key === 'Enter' ||
                                (event.key === 'Tab' && match.score1 !== undefined && match.score1 !== '' &&
                                 match.score2 !== undefined && match.score2 !== '');
@@ -1420,9 +1439,7 @@
                 return; // Laisser Tab naviguer normalement si scores incomplets
             }
 
-            if (event.key === 'Tab') {
-                event.preventDefault(); // Empêcher navigation Tab si on valide
-            }
+            event.preventDefault(); // Empêcher navigation Tab / double traitement d'Entrée
 
             const wasCompleted = match.completed;
 
@@ -1445,6 +1462,8 @@
                 }, 400);
             }
 
+            if (isNowCompleted) focusNextMatchScore(matchElement);
+
             if (!wasCompleted && isNowCompleted) {
                 setTimeout(() => {
                     if (matchElement) {
@@ -1465,6 +1484,21 @@
         }
     }
     window.handleEnterKey = handleEnterKey;
+
+    // Après validation : placer le curseur sur le premier score vide du match suivant non terminé
+    function focusNextMatchScore(matchElement) {
+        if (!matchElement) return;
+        const all = Array.from(document.querySelectorAll('[data-match-id]'));
+        const next = all.slice(all.indexOf(matchElement) + 1).find(el => !el.classList.contains('completed') && el.offsetParent !== null);
+        if (!next) return;
+        const inputs = Array.from(next.querySelectorAll('.score-input, .set-score-input')).filter(inp => !inp.disabled);
+        const target = inputs.find(inp => inp.value.trim() === '') || inputs[0];
+        if (target) {
+            target.focus();
+            if (target.select) target.select();
+            target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+    }
 
     function updateSingleMatchDisplay(dayNumber, division, matchIndex) {
         const match = championship.days[dayNumber].matches[division][matchIndex];
