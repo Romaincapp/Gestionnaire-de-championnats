@@ -407,6 +407,17 @@
     function toggleImportMenu(dayNumber, anchor, kind) {
         const items = (IMPORT_CHOICES[kind] || IMPORT_CHOICES.championship)
             .map(c => Object.assign({}, c, { onclick: c.onclick.replace('%d', dayNumber) }));
+        // Journée Courses : reprise en un clic des participants des journées précédentes
+        // (plus de boutons « 📋 J1, J2… » dans la barre d'actions)
+        if (kind === 'chrono' && typeof window.getChronoQuickCopySources === 'function') {
+            const quick = window.getChronoQuickCopySources(dayNumber).map(src => ({
+                icon: '📋',
+                label: `Participants de J${src.day}`,
+                hint: `${src.count} ${src.type === 'chrono' ? 'participant' : 'joueur'}${src.count > 1 ? 's' : ''} · reprise en un clic`,
+                onclick: `quickCopyToChrono(${dayNumber}, ${src.day})`
+            }));
+            items.unshift(...quick);
+        }
         toggleActionMenu('importMenu', anchor, 'Importer', items, kind + dayNumber);
     }
     window.toggleImportMenu = toggleImportMenu;

@@ -250,16 +250,14 @@
                     <!-- Séparateur visuel -->
                     <span style="color: #cbd5e1;">|</span>
                     <!-- Actions données -->
-                    <button onclick="exportChampionship()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                        💾 Exporter
-                    </button>
+                    <button onclick="exportChampionship()" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Exporter le championnat" aria-label="Exporter le championnat">💾</button>
                     <button onclick="toggleImportMenu(${dayNumber}, this, 'championship')" aria-haspopup="menu" aria-expanded="false" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">
                         📥 Importer ▾
                     </button>
-                    <button onclick="showPrintOptionsModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Options d'impression (feuilles de match, Boccia, récaps)">
+                    <button onclick="showPrintOptionsModal(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Options d'impression (feuilles de match, Boccia, récaps)" aria-label="Imprimer">
                         🖨️
                     </button>
-                    <button onclick="clearDayData(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    <button onclick="clearDayData(${dayNumber})" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Vider la journée" aria-label="Vider la journée">
                         🗑️
                     </button>
                 </div>
@@ -293,9 +291,9 @@
             
             <!-- SECTION CHRONO (affichée si type = chrono) -->
             <div id="chrono-section-${dayNumber}" style="display: ${isChrono ? 'block' : 'none'};">
-                <div class="section" style="background: #057e68;">
-                    <h2 style="color: white;">⏱️ Gestion des Courses - Journée ${dayNumber}</h2>
-                    <div id="chrono-content-${dayNumber}" style="background: white; padding: 20px; border-radius: 10px; margin-top: 15px;">
+                <div class="section">
+                    <h2>⏱️ Gestion des Courses - Journée ${dayNumber}</h2>
+                    <div id="chrono-content-${dayNumber}" style="margin-top: 15px;">
                         ${isChrono && typeof renderChronoInterfaceForDay === 'function' ? renderChronoInterfaceForDay(dayNumber) : '<p style="text-align: center; color: #586566;">Chargement de l\'interface chrono...</p>'}
                     </div>
                 </div>
