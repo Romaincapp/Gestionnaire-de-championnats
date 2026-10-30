@@ -353,7 +353,7 @@ async function openFresh(browser) {
     step('9b. 🎉 Épreuve fun : ✏️ cocher « Épreuve fun » sur 50m brasse, puis décocher');
     const brasseEventCard = () => page.locator('.chrono-event-card', { hasText: '50m brasse' }).filter({ visible: true }).first();
     const setFun = async (on) => {
-        await brasseEventCard().locator('button[title="Modifier"]').click();
+        await brasseEventCard().locator('button[title="Modifier l\'épreuve"]').click();
         await page.waitForTimeout(250);
         await page.locator('[id^="editEventFun-1-"]').filter({ visible: true }).first().setChecked(on);
         await btn(page, '💾 Sauvegarder');

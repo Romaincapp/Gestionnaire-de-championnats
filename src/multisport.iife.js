@@ -444,7 +444,6 @@
         // « ➕ Joueurs ▾ » des journées Matchs)
         html += '<button onclick="showAddParticipantManualModal(' + dayNumber + ')" style="' + PRIMARY + '#087f58; font-weight: 600;">➕ Participants</button>';
         html += '<button onclick="toggleImportMenu(' + dayNumber + ', this, \'chrono\')" aria-haspopup="menu" aria-expanded="false" style="' + NEUTRAL + '">📥 Importer ▾</button>';
-        html += '<span id="chrono-quick-copy-buttons-' + dayNumber + '" style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;"></span>';
         html += SEP;
         html += '<button onclick="showAddEventModalForDay(' + dayNumber + ')" style="' + PRIMARY + '#236bdd;">🎯 Épreuve</button>';
         // Pas de bouton « Série » ici : une série se crée dans son épreuve (➕ Série de la
@@ -462,8 +461,6 @@
         html += '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="' + NEUTRAL + '" title="Actualiser l\'affichage" aria-label="Actualiser l\'affichage">🔄</button>';
         html += '</div>';
         
-        // Générer les boutons de copie rapide après l'affichage
-        setTimeout(function() { generateChronoQuickCopyButtons(dayNumber); }, 0);
         
         // Section Participants globaux
         html += renderParticipantsSection(dayNumber, chronoData);
@@ -1562,8 +1559,8 @@
             '<span id="event-chevron-' + dayNumber + '-' + event.id + '" style="display: inline-block; width: 14px; color: #54637a; font-size: 11px;">' + (eventOpen ? '▼' : '▶') + '</span>' +
             '<h4 style="margin: 0; color: #2c3e50; font-size: 14px;">🎯 ' + event.name + '</h4></span>';
         if (event.fun) html += funEventBadgeHTML();
-        html += '<button onclick="editEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier">✏️</button>';
-        html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #d03427; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer">🗑️</button>';
+        html += '<button onclick="editEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #ecf0f1; border: none; border-radius: 4px; cursor: pointer;" title="Modifier l\'épreuve" aria-label="Modifier l\'épreuve">✏️</button>';
+        html += '<button onclick="deleteEventForDay(' + dayNumber + ', ' + event.id + ')" style="padding: 2px 6px; font-size: 11px; background: #fdecea; color: #d03427; border: none; border-radius: 4px; cursor: pointer;" title="Supprimer l\'épreuve" aria-label="Supprimer l\'épreuve">🗑️</button>';
         html += '</div>';
         html += '<div style="display: flex; align-items: center; gap: 8px;">';
         html += '<span style="color: #586566; font-size: 11px;">' + (event.date || '') + '</span>';
@@ -1629,15 +1626,15 @@
             (outOfRace.length ? ' (dont ' + outOfRace.join(', ') + ')' : '') + '</span>';
         html += '</div>';
         html += '<div style="display: flex; gap: 4px;">';
-        html += '<button onclick="manageSerieParticipants(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #09679e; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Gérer les participants">👥</button>';
-        html += '<button onclick="assignSerieLanes(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #057e68; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Affecter les nageurs aux couloirs">🏊</button>';
+        html += '<button onclick="manageSerieParticipants(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer;" title="Gérer les participants" aria-label="Gérer les participants">👥</button>';
+        html += '<button onclick="assignSerieLanes(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer;" title="Affecter les nageurs aux couloirs" aria-label="Affecter les nageurs aux couloirs">🏊</button>';
         // Bouton Démarrer la course (si des participants existent)
         if (totalCount > 0) {
             html += '<button onclick="startChronoRaceForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #d03427; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;" title="Démarrer la course avec chronométrage">▶️ Course</button>';
         }
-        html += '<button onclick="enterSerieResults(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: ' + (hasResults ? '#017239' : '#566566') + '; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Saisie manuelle des résultats">⏱️</button>';
-        html += '<button onclick="showSerieRanking(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #8b5700; color: white; border: none; border-radius: 5px; cursor: pointer;" title="Voir le classement">🏆</button>';
-        html += '<button onclick="deleteSerieForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #fdecea; color: #d03427; border: none; border-radius: 5px; cursor: pointer;" title="Supprimer la série">🗑️</button>';
+        html += '<button onclick="enterSerieResults(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer;" title="Saisie manuelle des résultats" aria-label="Saisie manuelle des résultats">⏱️</button>';
+        html += '<button onclick="showSerieRanking(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer;" title="Classement de la série" aria-label="Classement de la série">🏆</button>';
+        html += '<button onclick="deleteSerieForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #fdecea; color: #d03427; border: none; border-radius: 5px; cursor: pointer;" title="Supprimer la série" aria-label="Supprimer la série">🗑️</button>';
         html += '</div>';
         html += '</div>';
         if (attachEvents && attachEvents.length > 0) {
@@ -5568,77 +5565,38 @@
     }
 
     /**
-     * Génère les boutons de copie rapide pour le mode chrono
+     * Journées précédentes dont on peut reprendre les participants en un clic :
+     * suggérées en tête du menu « 📥 Importer ▾ » d'une journée Courses, la plus
+     * récente d'abord. → [{ day, count, type: 'chrono' | 'championship' }]
      */
-    function generateChronoQuickCopyButtons(dayNumber) {
-        var container = document.getElementById('chrono-quick-copy-buttons-' + dayNumber);
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
+    function getChronoQuickCopySources(dayNumber) {
         var targetDay = global.championship.days[dayNumber];
-        if (!targetDay) return;
-        
-        // Ne s'afficher que si la journée cible est en mode chrono
-        if (targetDay.dayType !== 'chrono') return;
-        
-        var allDays = Object.keys(global.championship.days).map(Number).sort(function(a, b) { return a - b; });
-        var previousDays = allDays.filter(function(d) { return d < dayNumber; });
-        
-        if (previousDays.length === 0) return;
-        
-        // Ajouter séparateur si des boutons existent déjà
-        if (container.previousElementSibling && container.previousElementSibling.textContent.includes('Importer')) {
-            // OK, le séparateur est déjà là
-        }
-        
-        previousDays.forEach(function(prevDay) {
-            var sourceDay = global.championship.days[prevDay];
-            if (!sourceDay) return;
-            
-            // Compter les participants/joueurs disponibles
-            var count = 0;
-            if (sourceDay.dayType === 'championship') {
-                // Mode championship - compter les joueurs
-                if (sourceDay.players) {
+        if (!targetDay || targetDay.dayType !== 'chrono') return [];
+
+        return Object.keys(global.championship.days).map(Number)
+            .filter(function(d) { return d < dayNumber; })
+            .sort(function(a, b) { return b - a; })
+            .map(function(prevDay) {
+                var sourceDay = global.championship.days[prevDay];
+                var count = 0;
+                if (sourceDay && sourceDay.dayType === 'chrono') {
+                    // Participants uniques (liste de la journée + séries)
+                    var uniqueNames = {};
+                    var cd = sourceDay.chronoData || {};
+                    (cd.participants || []).forEach(function(p) { if (p && p.name) uniqueNames[p.name] = true; });
+                    (cd.series || []).forEach(function(serie) {
+                        (serie.participants || []).forEach(function(p) { if (p && p.name) uniqueNames[p.name] = true; });
+                    });
+                    count = Object.keys(uniqueNames).length;
+                } else if (sourceDay && sourceDay.players) {
                     Object.keys(sourceDay.players).forEach(function(div) {
                         var players = sourceDay.players[div];
-                        if (players && Array.isArray(players)) {
-                            count += players.length;
-                        }
+                        if (Array.isArray(players)) count += players.length;
                     });
                 }
-            } else if (sourceDay.dayType === 'chrono') {
-                // Mode chrono - compter les participants uniques
-                if (sourceDay.chronoData) {
-                    var uniqueNames = {};
-                    if (sourceDay.chronoData.participants) {
-                        sourceDay.chronoData.participants.forEach(function(p) {
-                            if (p && p.name) uniqueNames[p.name] = true;
-                        });
-                    }
-                    if (sourceDay.chronoData.series) {
-                        sourceDay.chronoData.series.forEach(function(serie) {
-                            if (serie.participants) {
-                                serie.participants.forEach(function(p) {
-                                    if (p && p.name) uniqueNames[p.name] = true;
-                                });
-                            }
-                        });
-                    }
-                    count = Object.keys(uniqueNames).length;
-                }
-            }
-            
-            if (count === 0) return;
-            
-            var btn = document.createElement('button');
-            btn.onclick = function() { quickCopyToChrono(dayNumber, prevDay); };
-            btn.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;';
-            btn.title = 'Copier ' + count + ' participant(s) de J' + prevDay;
-            btn.innerHTML = '📋 J' + prevDay + ' (' + count + ')';
-            container.appendChild(btn);
-        });
+                return { day: prevDay, count: count, type: sourceDay && sourceDay.dayType === 'chrono' ? 'chrono' : 'championship' };
+            })
+            .filter(function(src) { return src.count > 0; });
     }
 
     /**
@@ -5772,7 +5730,7 @@
     global.exportChronoDataForDay = exportChronoDataForDay;
     global.importChronoDataForDay = importChronoDataForDay;
     global.clearChronoDataForDay = clearChronoDataForDay;
-    global.generateChronoQuickCopyButtons = generateChronoQuickCopyButtons;
+    global.getChronoQuickCopySources = getChronoQuickCopySources;
     global.quickCopyToChrono = quickCopyToChrono;
     global.calculateMultisportRanking = calculateMultisportRanking;
     global.getMultisportStandings = getMultisportStandings;
