@@ -486,6 +486,10 @@
             });
             html += '</div>';
         }
+
+        // Classement de la journée en bas de page, comme les journées Matchs
+        // (recalculé à chaque rafraîchissement tant qu'il est affiché)
+        if (openChronoDayRankings[dayNumber]) html += renderChronoDayRankingSection(dayNumber);
         
         html += '</div>';
         return html;
@@ -1789,6 +1793,12 @@
             next[(day > removedDay ? day - 1 : day) + '-' + parts.slice(1).join('-')] = true;
         });
         openSerieDetails = next;
+        var rankings = {};
+        Object.keys(openChronoDayRankings).forEach(function(key) {
+            var day = Number(key);
+            if (day !== removedDay) rankings[day > removedDay ? day - 1 : day] = true;
+        });
+        openChronoDayRankings = rankings;
     }
     global.shiftSerieDetailsAfterDayRemoval = shiftSerieDetailsAfterDayRemoval;
     global.toggleSerieDetails = toggleSerieDetails;
@@ -3428,29 +3438,34 @@
     function printChronoDayRanking(dayNumber) { writeChronoDayRankingWindow(dayNumber, true); }
     function openChronoDayRankingWindow(dayNumber) { writeChronoDayRankingWindow(dayNumber, false); }
 
-    function showChronoDayRanking(dayNumber) {
-        closeChronoDayRanking();
-        var btn = 'display:inline-flex; align-items:center; gap:4px; padding:7px 10px; font-size:12px; background:#fff; color:#334155; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;';
-        var modal = document.createElement('div');
-        modal.id = 'chronoDayRankingModal';
-        modal.innerHTML =
-            '<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;" onclick="if(event.target===this)closeChronoDayRanking()">' +
-            '<div role="dialog" aria-modal="true" aria-labelledby="chronoDayRankingTitle" style="background:white; padding:25px; border-radius:10px; max-width:900px; width:94%; max-height:88vh; overflow-y:auto;">' +
-            '<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">' +
-            '<h3 id="chronoDayRankingTitle" style="margin:0;">🏆 Classement — Journée ' + dayNumber + '</h3>' +
-            '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
-            '<button onclick="openChronoDayRankingWindow(' + dayNumber + ')" style="' + btn + '" title="Ouvrir dans une fenêtre (second écran)">📺 Afficher</button>' +
-            '<button onclick="printChronoDayRanking(' + dayNumber + ')" style="' + btn + '">🖨️ Imprimer</button>' +
-            '<button onclick="closeChronoDayRanking()" aria-label="Fermer" style="border:none; background:#ecf0f1; border-radius:6px; padding:6px 12px; cursor:pointer;">✕</button>' +
+    // Journées dont le classement est affiché en bas de page : { dayNumber: true }
+    var openChronoDayRankings = {};
+
+    function renderChronoDayRankingSection(dayNumber) {
+        return '<div class="rankings-section" id="chrono-rankings-' + dayNumber + '">' +
+            '<div class="rankings-header">' +
+            '<div class="rankings-title">🏆 Classements Journée ' + dayNumber + '</div>' +
+            '<div class="rankings-toggle" style="flex-wrap: wrap; gap: 5px;">' +
+            '<button class="ranking-action-btn" onclick="openChronoDayRankingWindow(' + dayNumber + ')" title="Ouvrir dans une fenêtre (second écran)">📺 Afficher</button>' +
+            '<button class="ranking-action-btn" onclick="printChronoDayRanking(' + dayNumber + ')">🖨️ Imprimer</button>' +
+            '<button class="ranking-action-btn" onclick="closeChronoDayRanking(' + dayNumber + ')" title="Masquer le classement">✕ Masquer</button>' +
             '</div></div>' +
-            '<div style="overflow-x:auto;">' + buildChronoDayRankingHTML(dayNumber, true) + '</div>' +
-            '</div></div>';
-        document.body.appendChild(modal);
+            '<div style="overflow-x: auto;">' + buildChronoDayRankingHTML(dayNumber, true) + '</div>' +
+            '</div>';
     }
 
-    function closeChronoDayRanking() {
-        var m = document.getElementById('chronoDayRankingModal');
-        if (m) m.remove();
+    // « 🏆 Classement » : affiche le classement en bas de la journée et y fait défiler
+    function showChronoDayRanking(dayNumber) {
+        openChronoDayRankings[dayNumber] = true;
+        refreshChronoDisplay(dayNumber);
+        var section = document.getElementById('chrono-rankings-' + dayNumber);
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeChronoDayRanking(dayNumber) {
+        delete openChronoDayRankings[dayNumber];
+        var section = document.getElementById('chrono-rankings-' + dayNumber);
+        if (section) section.remove();
     }
 
     global.showChronoDayRanking = showChronoDayRanking;
