@@ -126,7 +126,7 @@ test('régénérer les séries après avoir lancé une course', () => {
     expectRaceMatches(series()[0]);
 });
 
-test('série déjà ouverte une fois, puis couloirs modifiés dans la modale 🏊', () => {
+test('série déjà ouverte une fois, puis couloirs modifiés dans la fenêtre ✏️ Éditer la série', () => {
     setup({ lines: LINES_NL });
     window.generateSwimmingSeries(1, 2, 5);
     const s1 = series()[0];
@@ -135,13 +135,18 @@ test('série déjà ouverte une fois, puis couloirs modifiés dans la modale �
     jest.advanceTimersByTime(150);
     window.backToSeriesList();
 
-    // Échange : Fred (série 2) prend le couloir 1 à la place d'Alice
-    const pool = championship.days[1].chronoData.participants;
-    const fred = pool.find(p => p.name === 'Fred Six');
-    window.assignSerieLanes(1, s1.id);
-    document.getElementById('laneSel-1-1').value = String(fred.id);
-    window.saveSerieLanes(1, s1.id);
+    // Échange (fenêtre ✏️ Éditer la série) : Fred (série 2) prend le couloir 1 à la place d'Alice
+    const alice = lanesOf(s1.participants)[1];
+    window.editChronoSerie(1, s1.id);
+    const rows = () => [...document.querySelectorAll('#se-table-1 tbody tr')];
+    window.toggleSerieEditorRow(rows().find(tr => tr.querySelector('.se-name').value === alice).querySelector('.se-remove'));
+    document.getElementById('se-add-1').value = 'Fred Six';
+    window.addSerieEditorRow(1, s1.id);
+    rows().pop().querySelector('.se-lane').value = '1';
+    window.saveChronoSerieEditor(1, s1.id);
     expect(lanesOf(s1.participants)[1]).toBe('Fred Six');
+    // Déplacé, pas dupliqué : Fred n'est plus dans la série 2
+    expect(series()[1].participants.some(p => p.name === 'Fred Six')).toBe(false);
 
     expectRaceMatches(s1);
 });
@@ -207,11 +212,11 @@ test('reprise d\'une course en cours (sans "Retour") : la progression du cache e
     expect(raceData.currentSerie.currentTime).toBeGreaterThan(0);
 });
 
-test('modale 🏊 ouverte puis enregistrée sans rien changer', () => {
+test('fenêtre ✏️ Éditer la série ouverte puis enregistrée sans rien changer', () => {
     window.generateSwimmingSeries(1, 2, 5);
     const before = lanesOf(series()[0].participants);
-    window.assignSerieLanes(1, series()[0].id);
-    window.saveSerieLanes(1, series()[0].id);
+    window.editChronoSerie(1, series()[0].id);
+    window.saveChronoSerieEditor(1, series()[0].id);
     expect(lanesOf(series()[0].participants)).toEqual(before);
     expectRaceMatches(series()[0]);
 });

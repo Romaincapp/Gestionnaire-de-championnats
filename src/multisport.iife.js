@@ -4213,222 +4213,277 @@
         showNotification('Série supprimée', 'success');
     }
 
-    // « ✏️ Éditer la série » : une fenêtre, deux onglets (👥 Participants, 🏊 Couloirs).
-    // Chaque onglet est la fenêtre d'origine (manageSerieParticipants / assignSerieLanes)
-    // avec cet en-tête commun ; changer d'onglet ferme l'un et ouvre l'autre.
-    function editChronoSerie(dayNumber, serieId, tab) {
-        closeParticipantsModal(dayNumber);
-        closeLaneAssignModal(dayNumber);
-        if (tab === 'lanes') assignSerieLanes(dayNumber, serieId);
-        else manageSerieParticipants(dayNumber, serieId);
-    }
+    // ============================================
+    // ✏️ ÉDITER UNE SÉRIE (participants et couloirs, une seule fenêtre)
+    // ============================================
+    // Tableau des participants de la série, cases modifiables (couloir, dossard, nom,
+    // club, catégorie), retrait (🗑️, annulable) et ajout (participant de la journée ou
+    // nouveau nom). Rien n'est appliqué avant « 💾 Enregistrer ».
 
-    function serieEditHeaderHTML(dayNumber, serie, active) {
-        var tab = function(key, label, hint) {
-            var on = key === active;
-            return '<button type="button" role="tab" class="bulk-mode-tab' + (on ? ' active' : '') + '" aria-selected="' + on + '" title="' + hint + '"' +
-                (on ? '' : ' onclick="editChronoSerie(' + dayNumber + ', ' + serie.id + ', \'' + key + '\')"') + '>' + label + '</button>';
-        };
-        return '<h3 style="margin: 0 0 4px 0;">✏️ Éditer la série — ' + escapeLaneHtml(serie.name) + '</h3>' +
-            '<div class="bulk-mode-tabs" role="tablist" aria-label="Éditer la série">' +
-            tab('participants', '👥 Participants', 'Ajouter, modifier ou retirer des participants') +
-            tab('lanes', '🏊 Couloirs', 'Placer les nageurs dans les couloirs (les choix non enregistrés sont abandonnés)') +
-            '</div>';
-    }
+    function serieEditorModalId(dayNumber) { return 'serieEditModal-' + dayNumber; }
 
-    function manageSerieParticipants(dayNumber, serieId) {
+    function editChronoSerie(dayNumber, serieId) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
-        
         var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
-        
-        if (document.getElementById('participantsModal-' + dayNumber)) return;
-        
+        closeChronoSerieEditor(dayNumber);
+
+        var laneCount = computeDefaultLaneCount(serie);
+        var inSerie = {};
+        (serie.participants || []).forEach(function(p) { inSerie[(p.name || '').toLowerCase()] = true; });
+        var suggestions = (chronoData.participants || []).filter(function(pp) {
+            return pp && pp.name && !inSerie[pp.name.toLowerCase()];
+        }).map(function(pp) {
+            return '<option value="' + escapeLaneHtml(pp.name) + '">' + escapeLaneHtml(pp.club || '') + '</option>';
+        }).join('');
+
+        var th = 'padding: 8px 6px; text-align: left; font-size: 12px; color: #475569; font-weight: 600;';
         var modal = document.createElement('div');
-        modal.id = 'participantsModal-' + dayNumber;
-        modal.innerHTML = 
-            '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
-            'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
-            'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeParticipantsModal(' + dayNumber + ')">' +
-            '<div style="background: white; padding: 24px; border-radius: 10px; max-width: 560px; width: 92%; max-height: 85vh; overflow-y: auto;">' +
-            serieEditHeaderHTML(dayNumber, serie, 'participants') +
-            '<div style="margin: 15px 0;">' +
-            '<label>Ajouter un participant :</label>' +
-            '<div style="display: flex; gap: 10px; margin-top: 5px;">' +
-            '<input type="text" id="participantName-' + dayNumber + '-' + serieId + '" style="flex: 1; padding: 10px;" placeholder="Nom du participant">' +
-            '<input type="number" id="participantBib-' + dayNumber + '-' + serieId + '" style="width: 80px; padding: 10px;" placeholder="Dossard">' +
-            '<input type="text" id="participantCategory-' + dayNumber + '-' + serieId + '" list="categoryListAddToSerie-' + dayNumber + '-' + serieId + '" style="width: 110px; padding: 10px;" placeholder="Catégorie">' +
-            buildCategoryDatalist(dayNumber).replace('categoryList-' + dayNumber, 'categoryListAddToSerie-' + dayNumber + '-' + serieId) +
-            '<button onclick="addParticipantToSerie(' + dayNumber + ', ' + serieId + ')" class="btn btn-primary">+</button>' +
+        modal.id = serieEditorModalId(dayNumber);
+        modal.innerHTML =
+            '<style>#' + modal.id + ' .se-no-lanes .se-lane-col { display: none; }' +
+            '#' + modal.id + ' .se-input { width: 100%; box-sizing: border-box; padding: 6px 7px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px; }' +
+            '#' + modal.id + ' tr.se-removed td { opacity: 0.45; }' +
+            '#' + modal.id + ' tr.se-removed .se-name { text-decoration: line-through; }</style>' +
+            '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;">' +
+            '<div style="background: white; padding: 24px; border-radius: 10px; max-width: 820px; width: 94%; max-height: 88vh; overflow-y: auto;">' +
+            '<h3 id="se-title-' + dayNumber + '" style="margin: 0 0 4px 0;">✏️ Éditer la série — ' + escapeLaneHtml(serie.name) + '</h3>' +
+            '<p style="margin: 0 0 14px 0; font-size: 12px; color: #586566;">Modifiez directement les cases. Rien n\'est appliqué avant « 💾 Enregistrer ».</p>' +
+            // Couloirs
+            '<div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; font-size: 13px; color: #34495e;">' +
+            '<label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" id="se-lanes-' + dayNumber + '"' + (serie.laneMode ? ' checked' : '') +
+            ' onchange="toggleSerieEditorLanes(' + dayNumber + ')"> 🏊 Course en couloirs</label>' +
+            '<label class="se-lanecount" style="display: ' + (serie.laneMode ? 'inline-flex' : 'none') + '; align-items: center; gap: 6px;">Nombre de couloirs ' +
+            '<input type="number" id="se-lanecount-' + dayNumber + '" value="' + laneCount + '" min="1" max="20" onchange="refreshSerieEditorLaneOptions(' + dayNumber + ')" style="width: 64px; padding: 5px; border: 1px solid #cbd5e1; border-radius: 5px;"></label>' +
             '</div>' +
+            // Tableau
+            '<div style="overflow-x: auto;"><table id="se-table-' + dayNumber + '" class="' + (serie.laneMode ? '' : 'se-no-lanes') + '" style="width: 100%; border-collapse: collapse;">' +
+            '<thead><tr style="background: #f8f9fa;">' +
+            '<th class="se-lane-col" style="' + th + ' width: 86px;">Couloir</th><th style="' + th + ' width: 74px;">Dossard</th>' +
+            '<th style="' + th + '">Nom</th><th style="' + th + '">Club</th><th style="' + th + ' width: 120px;">Catégorie</th><th style="' + th + ' width: 40px;"></th>' +
+            '</tr></thead><tbody>' +
+            (serie.participants || []).map(function(p) {
+                return serieEditorRowHTML(dayNumber, { id: p.id, lane: p.laneNumber, bib: p.bib, name: p.name, club: p.club, category: p.category }, laneCount);
+            }).join('') +
+            '</tbody></table></div>' +
+            '<p id="se-empty-' + dayNumber + '" style="display: ' + ((serie.participants || []).length ? 'none' : 'block') + '; text-align: center; color: #586566; font-size: 13px; margin: 12px 0;">Aucun participant : ajoutez-en ci-dessous.</p>' +
+            // Ajout
+            '<div style="display: flex; gap: 8px; margin: 14px 0 6px; flex-wrap: wrap;">' +
+            '<input type="text" id="se-add-' + dayNumber + '" list="se-suggest-' + dayNumber + '" class="se-input" style="flex: 1; min-width: 220px;" ' +
+            'placeholder="Ajouter : participant de la journée ou nouveau nom" onkeydown="if (event.key === \'Enter\') { event.preventDefault(); addSerieEditorRow(' + dayNumber + ', ' + serie.id + '); }">' +
+            '<datalist id="se-suggest-' + dayNumber + '">' + suggestions + '</datalist>' +
+            '<button type="button" onclick="addSerieEditorRow(' + dayNumber + ', ' + serie.id + ')" style="padding: 7px 14px; border: none; background: #087f58; color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">➕ Ajouter</button>' +
             '</div>' +
-            '<div id="participantsList-' + dayNumber + '-' + serieId + '" style="margin: 20px 0;">' +
-            renderParticipantsList(serie, dayNumber) +
-            '</div>' +
-            '<div style="display: flex; gap: 10px; justify-content: flex-end;">' +
-            '<button onclick="closeParticipantsModal(' + dayNumber + ')" class="btn btn-secondary">Fermer</button>' +
+            buildCategoryDatalist(dayNumber).replace('categoryList-' + dayNumber, 'se-catlist-' + dayNumber) +
+            // Actions
+            '<div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">' +
+            '<button type="button" onclick="closeChronoSerieEditor(' + dayNumber + ')" style="padding: 8px 15px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; border-radius: 6px; cursor: pointer; font-size: 13px;">Annuler</button>' +
+            '<button type="button" onclick="saveChronoSerieEditor(' + dayNumber + ', ' + serie.id + ')" style="padding: 8px 15px; border: none; background: #087f58; color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">💾 Enregistrer</button>' +
             '</div></div></div>';
-        
         document.body.appendChild(modal);
     }
 
-    function renderParticipantsList(serie, dayNumber) {
-        if (!serie.participants || serie.participants.length === 0) {
-            return '<p style="color: #586566; text-align: center;">Aucun participant</p>';
+    function laneOptionsHTML(laneCount, selected) {
+        var html = '<option value="">—</option>';
+        for (var k = 1; k <= laneCount; k++) {
+            html += '<option value="' + k + '"' + (String(selected) === String(k) ? ' selected' : '') + '>' + k + '</option>';
         }
-
-        var html = '<table style="width: 100%; border-collapse: collapse;">';
-        html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 10px;">Dossard</th><th style="padding: 10px;">Nom</th><th style="padding: 10px;">Action</th></tr></thead><tbody>';
-
-        serie.participants.forEach(function(p) {
-            html += '<tr id="serie-prow-' + dayNumber + '-' + serie.id + '-' + p.id + '" style="border-bottom: 1px solid #ecf0f1;">';
-            html += '<td style="padding: 10px; text-align: center;">#' + p.bib + '</td>';
-            html += '<td style="padding: 10px;">' +
-                (serie.laneMode && p.laneNumber ? '<span style="font-size:11px; background:#08689d; color:white; padding:2px 6px; border-radius:3px; margin-right:6px;">Couloir ' + p.laneNumber + '</span>' : '') +
-                p.name +
-                (p.club ? '<span style="font-size:11px; background:#057e68; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.club + '</span>' : '') +
-                (p.category ? '<span style="font-size:11px; background:#8e44ad; color:white; padding:2px 6px; border-radius:3px; margin-left:6px;">' + p.category + '</span>' : '') +
-                '</td>';
-            html += '<td style="padding: 10px; text-align: center; white-space: nowrap;">' +
-                '<button onclick="editSerieParticipant(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm" style="background:#8b5700; color:white; margin-right:4px;" title="Éditer nom / dossard">✏️</button>' +
-                '<button onclick="removeParticipantFromSerie(' + dayNumber + ', ' + serie.id + ', ' + p.id + ')" class="btn btn-sm btn-danger" title="Retirer">🗑️</button>' +
-                '</td>';
-            html += '</tr>';
-        });
-
-        html += '</tbody></table>';
+        // Couloir actuel au-delà du nombre choisi : gardé visible plutôt que perdu en silence
+        if (selected && Number(selected) > laneCount) html += '<option value="' + selected + '" selected>' + selected + '</option>';
         return html;
     }
 
-    /**
-     * Passe une ligne du modal "Gérer les participants" en édition (nom + dossard).
-     */
-    function editSerieParticipant(dayNumber, serieId, participantId) {
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        var serie = findSerieInChronoData(chronoData, serieId);
-        if (!serie) return;
-        var p = (serie.participants || []).find(function(x) { return x.id === participantId; });
-        if (!p) return;
-        var row = document.getElementById('serie-prow-' + dayNumber + '-' + serieId + '-' + participantId);
-        if (!row) return;
-
-        var safeName = (p.name || '').replace(/"/g, '&quot;');
-        var safeClub = (p.club || '').replace(/"/g, '&quot;');
-        var safeCategory = (p.category || '').replace(/"/g, '&quot;');
-        row.innerHTML =
-            '<td style="padding: 8px; text-align: center;">' +
-            '<input type="number" id="edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" style="width: 60px; padding: 6px; border: 1px solid #8b5700; border-radius: 4px; text-align: center;">' +
-            '</td>' +
-            '<td style="padding: 8px;">' +
-            '<input type="text" id="edit-spname-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeName + '" placeholder="Nom" style="width: 100%; padding: 6px; border: 1px solid #8b5700; border-radius: 4px; margin-bottom: 4px;">' +
-            '<input type="text" id="edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId + '" value="' + safeClub + '" placeholder="Club" style="width: 100%; padding: 6px; border: 1px solid #8b5700; border-radius: 4px; margin-bottom: 4px;">' +
-            '<input type="text" id="edit-spcategory-' + dayNumber + '-' + serieId + '-' + participantId + '" list="categoryListRow-' + dayNumber + '-' + participantId + '" value="' + safeCategory + '" placeholder="Catégorie" style="width: 100%; padding: 6px; border: 1px solid #8b5700; border-radius: 4px;">' +
-            buildCategoryDatalist(dayNumber).replace('categoryList-' + dayNumber, 'categoryListRow-' + dayNumber + '-' + participantId) +
-            '</td>' +
-            '<td style="padding: 8px; text-align: center; white-space: nowrap;">' +
-            '<button onclick="saveSerieParticipant(' + dayNumber + ', ' + serieId + ', ' + participantId + ')" class="btn btn-sm" style="background:#017239; color:white; margin-right:4px;" title="Enregistrer">💾</button>' +
-            '<button onclick="refreshSerieParticipantsList(' + dayNumber + ', ' + serieId + ')" class="btn btn-sm btn-secondary" title="Annuler">✖️</button>' +
-            '</td>';
-
-        var nameInput = document.getElementById('edit-spname-' + dayNumber + '-' + serieId + '-' + participantId);
-        if (nameInput) { nameInput.focus(); nameInput.select(); }
+    // row : { id (participant existant) | undefined (ajout), lane, bib, name, club, category }
+    function serieEditorRowHTML(dayNumber, row, laneCount) {
+        var val = function(v) { return escapeLaneHtml(v == null ? '' : v); };
+        var cell = 'padding: 4px 6px;';
+        return '<tr' + (row.id != null ? ' data-pid="' + row.id + '"' : ' data-new="1"') + ' style="border-bottom: 1px solid #ecf0f1;">' +
+            '<td class="se-lane-col" style="' + cell + '"><select class="se-input se-lane" aria-label="Couloir">' + laneOptionsHTML(laneCount, row.lane) + '</select></td>' +
+            '<td style="' + cell + '"><input type="number" min="0" class="se-input se-bib" aria-label="Dossard" value="' + val(row.bib) + '"></td>' +
+            '<td style="' + cell + '"><input type="text" class="se-input se-name" aria-label="Nom" value="' + val(row.name) + '"></td>' +
+            '<td style="' + cell + '"><input type="text" class="se-input se-club" aria-label="Club" value="' + val(row.club) + '"></td>' +
+            '<td style="' + cell + '"><input type="text" class="se-input se-cat" aria-label="Catégorie" list="se-catlist-' + dayNumber + '" value="' + val(row.category) + '"></td>' +
+            '<td style="' + cell + ' text-align: center;"><button type="button" class="se-remove" onclick="toggleSerieEditorRow(this)" title="Retirer de la série" aria-label="Retirer de la série" ' +
+            'style="padding: 5px 8px; font-size: 12px; background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 5px; cursor: pointer;">🗑️</button></td>' +
+            '</tr>';
     }
-    global.editSerieParticipant = editSerieParticipant;
 
-    /**
-     * Re-rend la liste des participants dans le modal "Gérer les participants".
-     */
-    function refreshSerieParticipantsList(dayNumber, serieId) {
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        var serie = findSerieInChronoData(chronoData, serieId);
-        var listContainer = document.getElementById('participantsList-' + dayNumber + '-' + serieId);
-        if (serie && listContainer) {
-            listContainer.innerHTML = renderParticipantsList(serie, dayNumber);
-        }
+    function serieEditorRows(dayNumber) {
+        var table = document.getElementById('se-table-' + dayNumber);
+        return table ? Array.prototype.slice.call(table.querySelectorAll('tbody tr')) : [];
     }
-    global.refreshSerieParticipantsList = refreshSerieParticipantsList;
 
-    /**
-     * Enregistre le nom / dossard édités depuis le modal de série.
-     */
-    function saveSerieParticipant(dayNumber, serieId, participantId) {
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        var serie = findSerieInChronoData(chronoData, serieId);
-        if (!serie) return;
-        var p = (serie.participants || []).find(function(x) { return x.id === participantId; });
-        if (!p) return;
+    function serieEditorLaneCount(dayNumber) {
+        var input = document.getElementById('se-lanecount-' + dayNumber);
+        return Math.max(1, Math.min(20, parseInt(input && input.value, 10) || 8));
+    }
 
-        var nameEl = document.getElementById('edit-spname-' + dayNumber + '-' + serieId + '-' + participantId);
-        var bibEl = document.getElementById('edit-spbib-' + dayNumber + '-' + serieId + '-' + participantId);
-        if (!nameEl) return;
-
-        var newName = toTitleCase(nameEl.value.trim());
-        if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
-
-        // Doublon dans la série (autre participant)
-        var dup = (serie.participants || []).some(function(x) {
-            return x.id !== participantId && (x.name || '').toLowerCase() === newName.toLowerCase();
+    function toggleSerieEditorLanes(dayNumber) {
+        var on = document.getElementById('se-lanes-' + dayNumber).checked;
+        document.getElementById('se-table-' + dayNumber).classList.toggle('se-no-lanes', !on);
+        var modal = document.getElementById(serieEditorModalId(dayNumber));
+        modal.querySelector('.se-lanecount').style.display = on ? 'inline-flex' : 'none';
+        // Couloirs activés : les participants sans couloir prennent les premiers libres
+        if (on) serieEditorRows(dayNumber).forEach(function(tr) {
+            var sel = tr.querySelector('.se-lane');
+            if (!sel.value) sel.value = String(nextFreeEditorLane(dayNumber) || '');
         });
-        if (dup) { showNotification('Un participant porte déjà ce nom dans cette série', 'warning'); return; }
+    }
 
-        var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
-        var clubEl = document.getElementById('edit-spclub-' + dayNumber + '-' + serieId + '-' + participantId);
-        var newClub = clubEl ? clubEl.value.trim() : undefined;
-        var categoryEl = document.getElementById('edit-spcategory-' + dayNumber + '-' + serieId + '-' + participantId);
-        var newCategory = categoryEl ? categoryEl.value.trim() : undefined;
+    function refreshSerieEditorLaneOptions(dayNumber) {
+        var count = serieEditorLaneCount(dayNumber);
+        serieEditorRows(dayNumber).forEach(function(tr) {
+            var sel = tr.querySelector('.se-lane');
+            sel.innerHTML = laneOptionsHTML(count, sel.value);
+        });
+    }
 
-        applyParticipantRename(dayNumber, chronoData, participantId, p.name,
-            editedChanges(p, newName, newBib, newClub, newCategory));
+    function nextFreeEditorLane(dayNumber) {
+        var used = {};
+        serieEditorRows(dayNumber).forEach(function(tr) {
+            if (!tr.classList.contains('se-removed')) used[tr.querySelector('.se-lane').value] = true;
+        });
+        for (var k = 1; k <= serieEditorLaneCount(dayNumber); k++) if (!used[k]) return k;
+        return null;
+    }
+
+    // 🗑️ : un participant existant est barré (↩️ pour l'annuler) ; une ligne ajoutée disparaît
+    function toggleSerieEditorRow(btn) {
+        var tr = btn.closest('tr');
+        if (tr.getAttribute('data-new')) { tr.remove(); return; }
+        var removed = tr.classList.toggle('se-removed');
+        btn.textContent = removed ? '↩️' : '🗑️';
+        btn.title = removed ? 'Garder dans la série' : 'Retirer de la série';
+        btn.setAttribute('aria-label', btn.title);
+    }
+
+    function addSerieEditorRow(dayNumber, serieId) {
+        var input = document.getElementById('se-add-' + dayNumber);
+        var name = toTitleCase((input.value || '').trim());
+        if (!name) { input.focus(); return; }
+        var taken = serieEditorRows(dayNumber).some(function(tr) {
+            return !tr.classList.contains('se-removed') && sameName(tr.querySelector('.se-name').value, name);
+        });
+        if (taken) { showNotification(name + ' est déjà dans la série', 'info'); return; }
+
+        var chronoData = getChronoDataForDay(dayNumber);
+        var serie = findSerieInChronoData(chronoData, serieId);
+        var pp = (chronoData.participants || []).find(function(x) { return sameName(x.name, name); });
+        var usedBibs = serieEditorRows(dayNumber).map(function(tr) { return String(tr.querySelector('.se-bib').value); });
+        var bib = pp && pp.bib != null && usedBibs.indexOf(String(pp.bib)) === -1 ? pp.bib
+            : usedBibs.reduce(function(max, b) { return Math.max(max, parseInt(b, 10) || 0); }, 0) + 1;
+        var lanesOn = document.getElementById('se-lanes-' + dayNumber).checked;
+
+        var tbody = document.querySelector('#se-table-' + dayNumber + ' tbody');
+        tbody.insertAdjacentHTML('beforeend', serieEditorRowHTML(dayNumber, {
+            lane: lanesOn ? nextFreeEditorLane(dayNumber) : null,
+            bib: bib, name: pp ? pp.name : name, club: pp ? pp.club : '', category: pp ? pp.category : ''
+        }, serieEditorLaneCount(dayNumber)));
+        document.getElementById('se-empty-' + dayNumber).style.display = 'none';
+        var other = serie && findOtherSerieOfEvent(chronoData, serie, name);
+        if (other) showNotification(name + ' est en « ' + other.name + ' » : il sera déplacé ici', 'info');
+        input.value = '';
+        input.focus();
+    }
+
+    function saveChronoSerieEditor(dayNumber, serieId) {
+        var chronoData = getChronoDataForDay(dayNumber);
+        if (!chronoData) return;
+        var serie = findSerieInChronoData(chronoData, serieId);
+        if (!serie) return;
+        var lanesOn = document.getElementById('se-lanes-' + dayNumber).checked;
+
+        var rows = serieEditorRows(dayNumber).map(function(tr) {
+            var lane = tr.querySelector('.se-lane').value;
+            var bib = tr.querySelector('.se-bib').value;
+            return {
+                pid: tr.getAttribute('data-pid') != null ? parseInt(tr.getAttribute('data-pid'), 10) : null,
+                removed: tr.classList.contains('se-removed'),
+                lane: lanesOn && lane ? parseInt(lane, 10) : null,
+                bib: bib !== '' ? parseInt(bib, 10) : null,
+                name: toTitleCase(tr.querySelector('.se-name').value.trim()),
+                club: tr.querySelector('.se-club').value.trim(),
+                category: tr.querySelector('.se-cat').value.trim()
+            };
+        });
+        var kept = rows.filter(function(r) { return !r.removed; });
+
+        // Contrôles avant toute modification
+        if (kept.some(function(r) { return !r.name; })) { showNotification('Un nom ne peut pas être vide', 'warning'); return; }
+        for (var i = 0; i < kept.length; i++) {
+            for (var j = i + 1; j < kept.length; j++) {
+                if (sameName(kept[i].name, kept[j].name)) { showNotification('« ' + kept[i].name + ' » figure deux fois dans la série', 'warning'); return; }
+                if (kept[i].lane && kept[i].lane === kept[j].lane) { showNotification('Couloir ' + kept[i].lane + ' attribué deux fois', 'warning'); return; }
+            }
+        }
+        var byId = {};
+        (serie.participants || []).forEach(function(p) { byId[p.id] = p; });
+        var swumRemoved = rows.filter(function(r) { return r.removed && byId[r.pid] && hasSwumInSerie(serie, byId[r.pid]); });
+        if (swumRemoved.length && !confirm(swumRemoved.map(function(r) { return byId[r.pid].name; }).join(', ') +
+            ' : résultat déjà enregistré dans cette série. Le retirer supprime ce résultat. Continuer ?')) return;
+
+        // 1. Retraits
+        rows.filter(function(r) { return r.removed && byId[r.pid]; }).forEach(function(r) {
+            var p = byId[r.pid];
+            serie.participants = serie.participants.filter(function(x) { return x !== p; });
+            removeSerieResultOf(serie, p);
+        });
+
+        // 2. Participants existants : modifications propagées (liste, résultats, course)
+        kept.filter(function(r) { return r.pid != null && byId[r.pid]; }).forEach(function(r) {
+            var p = byId[r.pid];
+            var changed = r.name !== p.name || String(r.bib == null ? p.bib : r.bib) !== String(p.bib) ||
+                r.club !== (p.club || '') || r.category !== (p.category || '');
+            if (changed) applyParticipantRename(dayNumber, chronoData, p.id, p.name,
+                editedChanges(p, r.name, r.bib == null ? p.bib : r.bib, r.club, r.category));
+            p.laneNumber = r.lane;
+        });
+
+        // 3. Ajouts : participant de la journée (déplacé d'une autre série de l'épreuve
+        // si besoin) ou nouveau nom. Couloirs posés ensuite, sans attribution automatique.
+        var refused = [];
+        serie.laneMode = false;
+        kept.filter(function(r) { return r.pid == null; }).forEach(function(r) {
+            var pp = (chronoData.participants || []).find(function(x) { return sameName(x.name, r.name); });
+            var added;
+            if (pp) {
+                if (placeParticipantInSerie(dayNumber, chronoData, pp, serie, r.category || null) === 'swum') { refused.push(r.name); return; }
+                added = findInSerieByName(serie, pp.name);
+            } else {
+                added = addChronoParticipant(dayNumber, serie.id, r.name, r.bib, { club: r.club, category: r.category });
+            }
+            if (!added) return;
+            if (r.bib != null) added.bib = r.bib;
+            added.club = r.club;
+            added.category = r.category;
+            added.laneNumber = r.lane;
+        });
+
+        serie.laneMode = lanesOn;
+        if (!lanesOn) (serie.participants || []).forEach(function(p) { delete p.laneNumber; });
 
         saveToLocalStorage();
-        refreshSerieParticipantsList(dayNumber, serieId);
+        closeChronoSerieEditor(dayNumber);
         refreshChronoDisplay(dayNumber);
-        showNotification('Participant mis à jour : ' + newName, 'success');
-    }
-    global.saveSerieParticipant = saveSerieParticipant;
-
-    function addParticipantToSerie(dayNumber, serieId) {
-        var nameInput = document.getElementById('participantName-' + dayNumber + '-' + serieId);
-        var bibInput = document.getElementById('participantBib-' + dayNumber + '-' + serieId);
-        var categoryInput = document.getElementById('participantCategory-' + dayNumber + '-' + serieId);
-
-        if (!nameInput || !nameInput.value.trim()) {
-            showNotification('Veuillez entrer un nom', 'warning');
-            return;
-        }
-
-        var bib = bibInput && bibInput.value ? parseInt(bibInput.value) : null;
-        var category = categoryInput ? categoryInput.value.trim() : '';
-        var participant = addChronoParticipant(dayNumber, serieId, nameInput.value.trim(), bib, { category: category });
-
-        if (participant) {
-            nameInput.value = '';
-            bibInput.value = '';
-            if (categoryInput) categoryInput.value = '';
-            nameInput.focus();
-            
-            // Rafraîchir la liste
-            var chronoData = getChronoDataForDay(dayNumber);
-            var serie = findSerieInChronoData(chronoData, serieId);
-            var listContainer = document.getElementById('participantsList-' + dayNumber + '-' + serieId);
-            if (listContainer) {
-                listContainer.innerHTML = renderParticipantsList(serie, dayNumber);
-            }
-
-            refreshChronoDisplay(dayNumber);
-        }
+        if (refused.length) showNotification(refused.join(', ') + ' : déjà nagé dans une autre série de l\'épreuve, non déplacé', 'warning');
+        else showNotification('Série « ' + serie.name + ' » enregistrée', 'success');
     }
 
-    function closeParticipantsModal(dayNumber) {
-        var modal = document.getElementById('participantsModal-' + dayNumber);
+    function closeChronoSerieEditor(dayNumber) {
+        var modal = document.getElementById(serieEditorModalId(dayNumber));
         if (modal) modal.remove();
     }
 
-    // Retire un participant d'une série (bouton 🗑️ du modal "Gérer les participants")
+    global.editChronoSerie = editChronoSerie;
+    global.toggleSerieEditorLanes = toggleSerieEditorLanes;
+    global.refreshSerieEditorLaneOptions = refreshSerieEditorLaneOptions;
+    global.toggleSerieEditorRow = toggleSerieEditorRow;
+    global.addSerieEditorRow = addSerieEditorRow;
+    global.saveChronoSerieEditor = saveChronoSerieEditor;
+    global.closeChronoSerieEditor = closeChronoSerieEditor;
+
+    // Retire un participant d'une série (avec confirmation) et sa ligne de résultat
     function removeParticipantFromSerie(dayNumber, serieId, participantId) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
@@ -4446,12 +4501,6 @@
         removeSerieResultOf(serie, participant);
 
         saveToLocalStorage();
-
-        var listContainer = document.getElementById('participantsList-' + dayNumber + '-' + serieId);
-        if (listContainer) {
-            listContainer.innerHTML = renderParticipantsList(serie, dayNumber);
-        }
-
         refreshChronoDisplay(dayNumber);
         showNotification('Participant retiré', 'success');
     }
@@ -4473,320 +4522,14 @@
         return Math.max(maxLane, placed, (serie.participants || []).length, 8);
     }
 
-    function assignSerieLanes(dayNumber, serieId) {
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        var serie = findSerieInChronoData(chronoData, serieId);
-        if (!serie) return;
-        if (document.getElementById('laneAssignModal-' + dayNumber)) return;
 
-        var modal = document.createElement('div');
-        modal.id = 'laneAssignModal-' + dayNumber;
-        modal.innerHTML =
-            '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); ' +
-            'display: flex; justify-content: center; align-items: center; z-index: 10000;" ' +
-            'onclick="if(event.target===this)closeLaneAssignModal(' + dayNumber + ')">' +
-            '<div id="laneAssignBody-' + dayNumber + '" style="background: white; padding: 24px; border-radius: 10px; max-width: 560px; width: 92%; max-height: 85vh; overflow-y: auto;">' +
-            renderLaneAssignBody(dayNumber, serieId, computeDefaultLaneCount(serie)) +
-            '</div></div>';
-        document.body.appendChild(modal);
-    }
-    global.assignSerieLanes = assignSerieLanes;
-    global.editChronoSerie = editChronoSerie;
 
-    function renderLaneAssignBody(dayNumber, serieId, laneCount) {
-        var chronoData = getChronoDataForDay(dayNumber);
-        var serie = findSerieInChronoData(chronoData, serieId);
-        if (!serie) return '';
-        laneCount = Math.max(1, Math.min(20, laneCount || 8));
 
-        var pool = chronoData.participants || [];
 
-        // Options : tous les « Participants disponibles » de la journée
-        function optionsFor(selectedId) {
-            var html = '<option value="">— vide —</option>';
-            pool.forEach(function(pp) {
-                var label = (pp.name && pp.name.trim()) ? pp.name : ('Nageur ' + (pp.bib != null ? pp.bib : '?'));
-                if (pp.club) label += ' — ' + pp.club;
-                html += '<option value="' + pp.id + '"' + (pp.id === selectedId ? ' selected' : '') + '>' +
-                    escapeLaneHtml(label) + '</option>';
-            });
-            return html;
-        }
 
-        // Occupant actuel de chaque couloir (participant de la série ↔ pool, lié par le nom)
-        var poolByName = {};
-        pool.forEach(function(pp) { poolByName[(pp.name || '').toLowerCase()] = pp; });
-        var byLane = {};
-        (serie.participants || []).forEach(function(p) {
-            if (p.laneNumber) {
-                var match = poolByName[(p.name || '').toLowerCase()];
-                byLane[p.laneNumber] = match ? match.id : null;
-            }
-        });
 
-        var html = '';
-        html += serieEditHeaderHTML(dayNumber, serie, 'lanes');
-        html += '<p style="color:#586566; font-size:12px; margin:0 0 14px 0;">Choisis le nageur de chaque couloir dans la liste des « Participants disponibles » de la journée. Les nageurs non placés restent disponibles pour les autres séries.</p>';
 
-        // Nombre de couloirs
-        html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">';
-        html += '<label style="font-size:13px; color:#555; font-weight:600;">Nombre de couloirs :</label>';
-        html += '<input type="number" id="laneCount-' + dayNumber + '" value="' + laneCount + '" min="1" max="20" style="width:70px; padding:6px; border:1px solid #ddd; border-radius:4px;" onchange="changeLaneCount(' + dayNumber + ', ' + serieId + ')">';
-        html += '</div>';
 
-        // Grille des couloirs
-        html += '<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">';
-        for (var k = 1; k <= laneCount; k++) {
-            var occId = byLane[k];
-            html += '<div style="display:flex; align-items:center; gap:8px;">';
-            html += '<span style="flex:0 0 78px; font-size:12px; font-weight:600; color:#057e68;">Couloir ' + k + '</span>';
-            html += '<select id="laneSel-' + dayNumber + '-' + k + '" style="flex:1; padding:7px; border:1px solid #ddd; border-radius:4px; font-size:13px;">' +
-                optionsFor(occId != null ? occId : null) + '</select>';
-            html += '<button onclick="editLaneSwimmer(' + dayNumber + ', ' + serieId + ', ' + k + ')" title="Éditer nom / club / dossard" style="flex:0 0 auto; padding:6px 9px; font-size:12px; background:#8b5700; color:white; border:none; border-radius:4px; cursor:pointer;">✏️</button>';
-            html += '</div>';
-            html += '<div id="laneEdit-' + dayNumber + '-' + k + '"></div>';
-        }
-        html += '</div>';
-
-        // Coller une liste de noms → pool "Participants disponibles"
-        html += '<div style="margin-bottom:14px; padding:10px; background:#f0fbf9; border:1px solid #cdeae4; border-radius:6px;">';
-        html += '<label style="display:block; font-size:12px; color:#057e68; font-weight:600; margin-bottom:5px;">➕ Ajouter des nageurs aux Participants disponibles (un nom par ligne) :</label>';
-        html += '<textarea id="laneReserve-' + dayNumber + '" rows="3" placeholder="Dupont Jean\nMartin Alice\n…" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:13px; box-sizing:border-box;"></textarea>';
-        html += '<button onclick="addReserveNamesToSerie(' + dayNumber + ', ' + serieId + ')" style="margin-top:6px; padding:6px 12px; border:none; background:#057e68; color:white; border-radius:4px; cursor:pointer; font-size:12px;">Ajouter à la liste</button>';
-        html += '<span style="font-size:11px; color:#586566; margin-left:8px;">Ils apparaîtront dans les listes déroulantes ci-dessus.</span>';
-        html += '</div>';
-
-        // Actions
-        html += '<div style="display:flex; gap:10px; justify-content:flex-end;">';
-        html += '<button onclick="closeLaneAssignModal(' + dayNumber + ')" style="padding:8px 15px; border:1px solid #ddd; background:#f5f5f5; border-radius:4px; cursor:pointer; font-size:13px;">Annuler</button>';
-        html += '<button onclick="saveSerieLanes(' + dayNumber + ', ' + serieId + ')" style="padding:8px 15px; border:none; background:#057e68; color:white; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">💾 Enregistrer</button>';
-        html += '</div>';
-
-        return html;
-    }
-    global.renderLaneAssignBody = renderLaneAssignBody;
-
-    function changeLaneCount(dayNumber, serieId) {
-        var input = document.getElementById('laneCount-' + dayNumber);
-        var body = document.getElementById('laneAssignBody-' + dayNumber);
-        if (!input || !body) return;
-        // Conserver les choix déjà faits dans les couloirs avant de redessiner
-        var count = Math.max(1, Math.min(20, parseInt(input.value) || 8));
-        var picks = readLaneSelections(dayNumber);
-        body.innerHTML = renderLaneAssignBody(dayNumber, serieId, count);
-        // Restaurer les sélections
-        Object.keys(picks).forEach(function(k) {
-            var sel = document.getElementById('laneSel-' + dayNumber + '-' + k);
-            if (sel) sel.value = picks[k];
-        });
-    }
-    global.changeLaneCount = changeLaneCount;
-
-    // Lire les sélections courantes { laneNumber: participantId(str) }
-    function readLaneSelections(dayNumber) {
-        var picks = {};
-        for (var k = 1; k <= 20; k++) {
-            var sel = document.getElementById('laneSel-' + dayNumber + '-' + k);
-            if (sel && sel.value) picks[k] = sel.value;
-        }
-        return picks;
-    }
-
-    function addReserveNamesToSerie(dayNumber, serieId) {
-        var ta = document.getElementById('laneReserve-' + dayNumber);
-        if (!ta || !ta.value.trim()) { showNotification('Aucun nom à ajouter', 'warning'); return; }
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        if (!chronoData.participants) chronoData.participants = [];
-        var names = ta.value.split(/\r?\n/).map(function(s) { return s.trim(); }).filter(Boolean);
-        var added = 0;
-        names.forEach(function(name) {
-            var exists = chronoData.participants.some(function(p) {
-                return (p.name || '').toLowerCase() === name.toLowerCase();
-            });
-            if (exists) return;
-            chronoData.participants.push({
-                id: chronoData.nextParticipantId++,
-                name: toTitleCase(name),
-                club: '',
-                bib: chronoData.participants.length + 1,
-                totalTime: null,
-                laps: 0
-            });
-            added++;
-        });
-        saveToLocalStorage();
-        showNotification(added + ' nageur(s) ajouté(s) aux Participants disponibles', 'success');
-        // Redessiner en conservant les sélections en cours
-        var input = document.getElementById('laneCount-' + dayNumber);
-        var count = input ? (parseInt(input.value) || 8) : 8;
-        var picks = readLaneSelections(dayNumber);
-        var body = document.getElementById('laneAssignBody-' + dayNumber);
-        if (body) {
-            body.innerHTML = renderLaneAssignBody(dayNumber, serieId, count);
-            Object.keys(picks).forEach(function(k) {
-                var sel = document.getElementById('laneSel-' + dayNumber + '-' + k);
-                if (sel) sel.value = picks[k];
-            });
-        }
-    }
-    global.addReserveNamesToSerie = addReserveNamesToSerie;
-
-    // Éditer (inline) le nageur actuellement choisi dans un couloir
-    function editLaneSwimmer(dayNumber, serieId, lane) {
-        var sel = document.getElementById('laneSel-' + dayNumber + '-' + lane);
-        if (!sel || !sel.value) {
-            showNotification('Choisis d\'abord un nageur dans ce couloir', 'warning');
-            return;
-        }
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        var pid = parseInt(sel.value);
-        var p = (chronoData.participants || []).find(function(x) { return x.id === pid; });
-        if (!p) return;
-        var wrap = document.getElementById('laneEdit-' + dayNumber + '-' + lane);
-        if (!wrap) return;
-
-        var safeName = (p.name || '').replace(/"/g, '&quot;');
-        var safeClub = (p.club || '').replace(/"/g, '&quot;');
-        wrap.innerHTML =
-            '<div style="display:flex; gap:6px; align-items:center; margin:2px 0 6px 86px; flex-wrap:wrap;">' +
-            '<input type="number" id="laneEditBib-' + dayNumber + '-' + lane + '" value="' + (p.bib != null ? p.bib : '') + '" min="0" placeholder="#" style="width:52px; padding:5px; border:1px solid #8b5700; border-radius:4px; font-size:12px; text-align:center;">' +
-            '<input type="text" id="laneEditName-' + dayNumber + '-' + lane + '" value="' + safeName + '" placeholder="Nom" style="flex:1; min-width:120px; padding:5px; border:1px solid #8b5700; border-radius:4px; font-size:12px;">' +
-            '<input type="text" id="laneEditClub-' + dayNumber + '-' + lane + '" value="' + safeClub + '" placeholder="Club" style="width:100px; padding:5px; border:1px solid #8b5700; border-radius:4px; font-size:12px;">' +
-            '<button onclick="saveLaneSwimmer(' + dayNumber + ', ' + serieId + ', ' + lane + ', ' + p.id + ')" style="padding:4px 8px; font-size:11px; background:#017239; color:white; border:none; border-radius:4px; cursor:pointer;" title="Enregistrer">💾</button>' +
-            '<button onclick="document.getElementById(\'laneEdit-' + dayNumber + '-' + lane + '\').innerHTML=\'\'" style="padding:4px 8px; font-size:11px; background:#566566; color:white; border:none; border-radius:4px; cursor:pointer;" title="Annuler">✖️</button>' +
-            '</div>';
-        var ni = document.getElementById('laneEditName-' + dayNumber + '-' + lane);
-        if (ni) { ni.focus(); ni.select(); }
-    }
-    global.editLaneSwimmer = editLaneSwimmer;
-
-    function saveLaneSwimmer(dayNumber, serieId, lane, participantId) {
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        var p = (chronoData.participants || []).find(function(x) { return x.id === participantId; });
-        if (!p) return;
-
-        var nameEl = document.getElementById('laneEditName-' + dayNumber + '-' + lane);
-        var bibEl = document.getElementById('laneEditBib-' + dayNumber + '-' + lane);
-        var clubEl = document.getElementById('laneEditClub-' + dayNumber + '-' + lane);
-        if (!nameEl) return;
-
-        var newName = toTitleCase(nameEl.value.trim());
-        if (!newName) { showNotification('Le nom ne peut pas être vide', 'warning'); return; }
-
-        if (nameTakenByOther(chronoData.participants, participantId, p.name, newName)) {
-            showNotification('Un participant porte déjà ce nom', 'warning');
-            return;
-        }
-
-        var newBib = (bibEl && bibEl.value !== '') ? parseInt(bibEl.value, 10) : p.bib;
-        var newClub = clubEl ? clubEl.value.trim() : undefined;
-
-        applyParticipantRename(dayNumber, chronoData, participantId, p.name,
-            editedChanges(p, newName, newBib, newClub, undefined));
-        saveToLocalStorage();
-
-        // Redessiner la modale en conservant les sélections (identifiées par id du pool)
-        var input = document.getElementById('laneCount-' + dayNumber);
-        var count = input ? (parseInt(input.value) || 8) : 8;
-        var picks = readLaneSelections(dayNumber);
-        var body = document.getElementById('laneAssignBody-' + dayNumber);
-        if (body) {
-            body.innerHTML = renderLaneAssignBody(dayNumber, serieId, count);
-            Object.keys(picks).forEach(function(k) {
-                var s = document.getElementById('laneSel-' + dayNumber + '-' + k);
-                if (s) s.value = picks[k];
-            });
-        }
-        refreshChronoDisplay(dayNumber);
-        showNotification('Nageur mis à jour : ' + newName, 'success');
-    }
-    global.saveLaneSwimmer = saveLaneSwimmer;
-
-    function saveSerieLanes(dayNumber, serieId) {
-        var chronoData = getChronoDataForDay(dayNumber);
-        if (!chronoData) return;
-        var serie = findSerieInChronoData(chronoData, serieId);
-        if (!serie) return;
-
-        // Source : les « Participants disponibles » de la journée
-        var pool = chronoData.participants || [];
-        var poolById = {};
-        pool.forEach(function(pp) { poolById[pp.id] = pp; });
-
-        // Lire les couloirs + détecter les doublons
-        var chosen = [];
-        var seen = {};
-        var input = document.getElementById('laneCount-' + dayNumber);
-        var laneCount = input ? Math.max(1, Math.min(20, parseInt(input.value) || 8)) : 20;
-        for (var k = 1; k <= laneCount; k++) {
-            var sel = document.getElementById('laneSel-' + dayNumber + '-' + k);
-            if (!sel || !sel.value) continue;
-            var pid = parseInt(sel.value);
-            if (seen[pid]) {
-                var dupName = poolById[pid] ? poolById[pid].name : ('#' + pid);
-                showNotification('« ' + dupName + ' » est affecté à deux couloirs', 'warning');
-                return;
-            }
-            seen[pid] = true;
-            chosen.push({ lane: k, pid: pid });
-        }
-
-        // Reconstruire les participants de la série depuis les choix.
-        // On réutilise l'objet participant existant (même nom) pour conserver
-        // son dossard et d'éventuels résultats ; sinon on crée une copie.
-        var existingByName = {};
-        (serie.participants || []).forEach(function(sp) {
-            existingByName[(sp.name || '').toLowerCase()] = sp;
-        });
-
-        var newParticipants = [];
-        chosen.forEach(function(c) {
-            var src = poolById[c.pid];
-            if (!src) return;
-            var key = (src.name || '').toLowerCase();
-            var sp = existingByName[key];
-            if (sp) {
-                sp.laneNumber = c.lane;
-                delete existingByName[key];
-                newParticipants.push(sp);
-            } else {
-                newParticipants.push({
-                    id: chronoData.nextParticipantId++,
-                    name: src.name,
-                    bib: (src.bib != null ? src.bib : newParticipants.length + 1),
-                    club: src.club || '',
-                    category: src.category || '',
-                    division: src.division || null,
-                    laneNumber: c.lane,
-                    status: 'ready',
-                    totalTime: 0,
-                    finishTime: null,
-                    laps: [],
-                    totalDistance: 0,
-                    bestLap: null,
-                    lastLapStartTime: 0
-                });
-            }
-        });
-
-        serie.participants = newParticipants;
-        serie.laneMode = true;
-        saveToLocalStorage();
-        closeLaneAssignModal(dayNumber);
-        refreshChronoDisplay(dayNumber);
-        showNotification(chosen.length + ' nageur(s) placé(s) dans « ' + serie.name + ' »', 'success');
-    }
-    global.saveSerieLanes = saveSerieLanes;
-
-    function closeLaneAssignModal(dayNumber) {
-        var modal = document.getElementById('laneAssignModal-' + dayNumber);
-        if (modal) modal.remove();
-    }
-    global.closeLaneAssignModal = closeLaneAssignModal;
 
     // Course de cette série en train de tourner (chrono lancé) dans l'écran de course
     function isSerieRaceRunning(dayNumber, serieId) {
@@ -5813,9 +5556,6 @@
     global.closeSerieModalForDay = closeSerieModalForDay;
     global.saveSerieForDay = saveSerieForDay;
     global.toggleRelayOptionsForDay = toggleRelayOptionsForDay;
-    global.manageSerieParticipants = manageSerieParticipants;
-    global.addParticipantToSerie = addParticipantToSerie;
-    global.closeParticipantsModal = closeParticipantsModal;
     global.removeParticipantFromSerie = removeParticipantFromSerie;
     global.renderParticipantsSection = renderParticipantsSection;
     global.showAddParticipantManualModal = showAddParticipantManualModal;
