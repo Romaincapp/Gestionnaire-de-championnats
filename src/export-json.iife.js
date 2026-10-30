@@ -653,6 +653,9 @@
             // Initialiser le sélecteur de type pour J1
             initializeDayTypeSelectorForDay1();
 
+            // Onglets Classement / Multisport selon les types des journées importées
+            if (typeof global.updateMultisportTabVisibility === 'function') global.updateMultisportTabVisibility();
+
             // Rafraîchir l'affichage des phases finales pour toutes les journées
             Object.keys(championship.days).forEach(dayNumber => {
                 const dayData = championship.days[dayNumber];
