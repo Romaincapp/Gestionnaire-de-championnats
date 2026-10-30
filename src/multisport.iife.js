@@ -1065,9 +1065,9 @@
             '<div class="bulk-mode-tabs" role="tablist" aria-label="Mode de saisie">' + tab('list', '📝 Liste') + tab('table', '📊 Tableau') + '</div>' +
             // Panneau Liste (saisie historique)
             '<div id="bulk-panel-list-' + dayNumber + '" role="tabpanel" aria-labelledby="bulk-tab-list-' + dayNumber + '">' +
-            '<p style="color: #586566; font-size: 13px;">Entrez les noms (un par ligne). Formats acceptés : Nom · Nom, Club · Dossard + Nom (séparés par tabulation ou virgule, colonnes en trop ignorées)</p>' +
+            '<p style="color: #586566; font-size: 13px;">Un participant par ligne. Optionnel : son club après une virgule, ou son numéro de dossard devant. Un copier-coller depuis un tableur fonctionne aussi.</p>' +
             '<div style="margin: 15px 0;">' +
-            '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\n1\tGringos 1\n2\tGringos 2\n..."></textarea>' +
+            '<textarea id="bulk-participants-' + dayNumber + '" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;" placeholder="Dupont Jean\nMartin Pierre, Club ABC\n12 Durand Sophie"></textarea>' +
             '</div>' +
             // Astuce : avec l'épreuve (et le temps d'engagement) sur la ligne, « 🏁 Séries
             // automatiques » crée les séries en un clic (generateSwimmingSeries)
@@ -1293,6 +1293,12 @@
         } else {
             name = parts[0];
             club = parts[1] || '';
+            // Dossard séparé du nom par un simple espace (« 12 Durand Sophie »)
+            var leadBib = name.match(/^(\d+)\s+(?=\D)/);
+            if (leadBib) {
+                bib = parseInt(leadBib[1], 10);
+                name = name.slice(leadBib[0].length);
+            }
         }
         name = toTitleCase(name);
         return name ? { bib: bib, name: name, club: club } : null;
