@@ -2599,7 +2599,7 @@
         var label = escapeLaneHtml(club);
         if (!interactive) return label;
         return '<span onclick="showClubDetail(\'' + encodeURIComponent(club) + '\')" ' +
-            'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
+            'style="cursor: pointer;" ' +
             'title="Voir le détail du club">' + label + '</span>';
     }
 
@@ -2732,7 +2732,7 @@
             html += '<td style="' + cell + ' font-weight: bold;">' + stat.rank + '</td>';
             var name = interactive
                 ? '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(stat.player) + '\')" ' +
-                  'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
+                  'style="cursor: pointer;" ' +
                   'title="Voir le détail des matchs et épreuves">' + stat.player + '</span>'
                 : stat.player;
             html += '<td style="' + cell + ' text-align: left; font-weight: bold; color: #2c3e50;">' + name + '</td>';
@@ -2879,7 +2879,7 @@
                 html += '<td style="padding: 15px; text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
                 html += '<td style="padding: 15px; text-align: left; font-weight: bold; color: #2c3e50;">' +
                     '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(stat.player) + '\')" ' +
-                    'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
+                    'style="cursor: pointer;" ' +
                     'title="Voir le détail des épreuves">' + stat.player + '</span></td>';
                 html += '<td style="padding: 15px; text-align: center;">' + (stat.club || '-') + '</td>';
                 html += '<td style="padding: 15px; text-align: center; font-weight: bold; color: #08689d;">' + formatDistance(stat.chronoDistance) + '</td>';
@@ -3338,7 +3338,7 @@
         var th = function(label, align) { return '<th style="' + cell + (align ? ' text-align:' + align + ';' : '') + '">' + label + '</th>'; };
         var nameHTML = function(name) {
             return interactive
-                ? '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(name) + '\')" style="cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;" title="Voir la fiche du participant">' + escapeLaneHtml(name) + '</span>'
+                ? '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(name) + '\')" style="cursor:pointer;" title="Voir la fiche du participant">' + escapeLaneHtml(name) + '</span>'
                 : escapeLaneHtml(name);
         };
         var medal = function(rank) { return rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] + ' ' : ''; };
@@ -3486,7 +3486,7 @@
         var td = function(value, extra) { return '<td style="padding:6px 8px; text-align:center;' + (extra || '') + '">' + value + '</td>'; };
         var playerLink = function(name) {
             return '<span onclick="closeClubDetail(); showPlayerChronoDetail(\'' + encodeURIComponent(name) + '\')" ' +
-                'style="cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;" title="Voir la fiche du joueur">' +
+                'style="cursor:pointer;" title="Voir la fiche du joueur">' +
                 escapeLaneHtml(name) + '</span>';
         };
         var stat = function(label, value) {
