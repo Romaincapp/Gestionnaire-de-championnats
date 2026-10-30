@@ -433,30 +433,33 @@
         
         var html = '<div class="chrono-day-interface">';
         
-        // En-tête compact avec actions sur une ligne (comme Championship)
-        html += '<div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px;">';
-        html += '<span style="font-size: 13px; color: #54637a; margin-right: 5px;">⏱️ Actions:</span>';
+        // Barre d'actions sobre, sur le modèle des journées Matchs : actions principales
+        // en couleur (mêmes tons), actions secondaires en gris, impression / export /
+        // vidage réduits à leur icône.
+        var PRIMARY = 'display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; background: ';
+        var NEUTRAL = 'display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;';
+        var SEP = '<span style="color: #cbd5e1;">|</span>';
+        html += '<div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 15px;">';
         // Ajouter / importer des participants en tête, côte à côte (même place que
         // « ➕ Joueurs ▾ » des journées Matchs)
-        html += '<button onclick="showAddParticipantManualModal(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #087f58; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">➕ Participants</button>';
-        html += '<button onclick="toggleImportMenu(' + dayNumber + ', this, \'chrono\')" aria-haspopup="menu" aria-expanded="false" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #804fe8; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">📥 Importer ▾</button>';
-        html += '<span id="chrono-quick-copy-buttons-' + dayNumber + '" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;"></span>';
-        html += '<span style="color: #cbd5e1;">|</span>';
-        html += '<button onclick="showAddEventModalForDay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; font-size: 12px; background: #9c5003; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🎯 Épreuve</button>';
+        html += '<button onclick="showAddParticipantManualModal(' + dayNumber + ')" style="' + PRIMARY + '#087f58; font-weight: 600;">➕ Participants</button>';
+        html += '<button onclick="toggleImportMenu(' + dayNumber + ', this, \'chrono\')" aria-haspopup="menu" aria-expanded="false" style="' + NEUTRAL + '">📥 Importer ▾</button>';
+        html += '<span id="chrono-quick-copy-buttons-' + dayNumber + '" style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;"></span>';
+        html += SEP;
+        html += '<button onclick="showAddEventModalForDay(' + dayNumber + ')" style="' + PRIMARY + '#236bdd;">🎯 Épreuve</button>';
         // Pas de bouton « Série » ici : une série se crée dans son épreuve (➕ Série de la
         // carte). Créée d'ici, elle n'avait pas d'épreuve : ni imprimée ni classée par épreuve.
+        html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'events') + ' style="' + PRIMARY + '#9c6304;" title="Répartir les participants en séries par couloirs, au temps d\'engagement (natation, athlétisme…)">🏁 Séries automatiques</button>';
+        html += '<button onclick="showChronoDayRanking(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="' + PRIMARY + '#804fe8;" title="Classement de la journée : épreuves, participants et clubs">🏆 Classement</button>';
         var allSeries = [];
         getDaySerieGroups(chronoData).forEach(function(g) { allSeries = allSeries.concat(g.series); });
         var allOpen = allSeries.length > 0 && allSeries.every(function(s) { return isSerieDetailsOpen(dayNumber, s.id); });
-        html += '<button id="toggle-all-series-' + dayNumber + '" onclick="toggleAllSeriesDetails(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Afficher / masquer les participants de toutes les séries">' + (allOpen ? '📁 Tout replier' : '📂 Tout déplier') + '</button>';
-        html += '<span style="color: #cbd5e1;">|</span>';
-        html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'events') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #057e68; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Répartir les participants en séries par couloirs, au temps d\'engagement (natation, athlétisme…)">🏁 Séries automatiques</button>';
-        html += '<button onclick="showChronoDayRanking(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #8b5700; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Classement de la journée : épreuves, participants et clubs">🏆 Classement</button>';
-        html += '<button onclick="printChronoCompetition(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #9654b1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🖨️ Imprimer séries</button>';
-        html += '<span style="color: #cbd5e1;">|</span>';
-        html += '<button onclick="exportChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #017239; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">💾 Exporter</button>';
-        html += '<button onclick="clearChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;">🗑️ Vider</button>';
-        html += '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;">🔄</button>';
+        html += '<button id="toggle-all-series-' + dayNumber + '" onclick="toggleAllSeriesDetails(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="' + NEUTRAL + '" title="Afficher / masquer les participants de toutes les séries">' + (allOpen ? '📁 Tout replier' : '📂 Tout déplier') + '</button>';
+        html += SEP;
+        html += '<button onclick="printChronoCompetition(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="' + NEUTRAL + '" title="Imprimer les séries" aria-label="Imprimer les séries">🖨️</button>';
+        html += '<button onclick="exportChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="' + NEUTRAL + '" title="Exporter la journée" aria-label="Exporter la journée">💾</button>';
+        html += '<button onclick="clearChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #fef2f2; color: #d92223; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Vider la journée" aria-label="Vider la journée">🗑️</button>';
+        html += '<button onclick="refreshChronoDisplay(' + dayNumber + ')" style="' + NEUTRAL + '" title="Actualiser l\'affichage" aria-label="Actualiser l\'affichage">🔄</button>';
         html += '</div>';
         
         // Générer les boutons de copie rapide après l'affichage
@@ -5631,7 +5634,7 @@
             
             var btn = document.createElement('button');
             btn.onclick = function() { quickCopyToChrono(dayNumber, prevDay); };
-            btn.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 11px; background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; border-radius: 6px; cursor: pointer; font-weight: 500;';
+            btn.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;';
             btn.title = 'Copier ' + count + ' participant(s) de J' + prevDay;
             btn.innerHTML = '📋 J' + prevDay + ' (' + count + ')';
             container.appendChild(btn);

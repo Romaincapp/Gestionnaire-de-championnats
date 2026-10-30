@@ -293,9 +293,9 @@
             
             <!-- SECTION CHRONO (affichée si type = chrono) -->
             <div id="chrono-section-${dayNumber}" style="display: ${isChrono ? 'block' : 'none'};">
-                <div class="section" style="background: #057e68;">
-                    <h2 style="color: white;">⏱️ Gestion des Courses - Journée ${dayNumber}</h2>
-                    <div id="chrono-content-${dayNumber}" style="background: white; padding: 20px; border-radius: 10px; margin-top: 15px;">
+                <div class="section">
+                    <h2>⏱️ Gestion des Courses - Journée ${dayNumber}</h2>
+                    <div id="chrono-content-${dayNumber}" style="margin-top: 15px;">
                         ${isChrono && typeof renderChronoInterfaceForDay === 'function' ? renderChronoInterfaceForDay(dayNumber) : '<p style="text-align: center; color: #586566;">Chargement de l\'interface chrono...</p>'}
                     </div>
                 </div>

@@ -162,7 +162,7 @@ async function openFresh(browser) {
     await page.mouse.move(listBox.x + listBox.width - 3, listBox.y + listBox.height + 197, { steps: 8 });
     await page.mouse.up();
     const grown = Math.round((await page.locator('#participants-list-1').boundingBox()).height);
-    await btn(page, '🔄');
+    await btn(page, 'Actualiser l\'affichage');
     const kept = Math.round((await page.locator('#participants-list-1').boundingBox()).height);
     check(grown >= listBox.height + 150 && Math.abs(kept - grown) <= 2,
         `liste agrandie à la souris (${Math.round(listBox.height)} → ${grown} px) et gardée après 🔄 (${kept} px)`);
@@ -435,7 +435,7 @@ async function openFresh(browser) {
 
     // ---------------------------------------------------------------
     step('10. 💾 Exporter la journée, puis 📥 Importer dans un navigateur vierge');
-    const [download] = await Promise.all([page.waitForEvent('download'), btn(page, '💾 Exporter')]);
+    const [download] = await Promise.all([page.waitForEvent('download'), btn(page, 'Exporter la journée')]);
     const file = path.join(OUT, 'export-J1.json');
     await download.saveAs(file);
     ok('fichier exporté : ' + download.suggestedFilename() + ' (' + Math.round(fs.statSync(file).size / 1024) + ' Ko)');
@@ -586,7 +586,7 @@ async function openFresh(browser) {
 
     // ---------------------------------------------------------------
     step('13. 🖨️ Imprimer séries');
-    const [printPopup] = await Promise.all([context.waitForEvent('page', { timeout: 5000 }).catch(() => null), btn(page, '🖨️ Imprimer séries')]);
+    const [printPopup] = await Promise.all([context.waitForEvent('page', { timeout: 5000 }).catch(() => null), btn(page, 'Imprimer les séries')]);
     check(!!printPopup, 'fenêtre d\'impression des séries ouverte');
     if (printPopup) {
         await printPopup.waitForTimeout(500);
