@@ -2600,7 +2600,7 @@
         if (!interactive) return label;
         return '<span onclick="showClubDetail(\'' + encodeURIComponent(club) + '\')" ' +
             'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
-            'title="Voir le détail du club">' + label + ' 🔍</span>';
+            'title="Voir le détail du club">' + label + '</span>';
     }
 
     function buildClubRankingHTML(events, clubs, multiDay, interactive) {
@@ -2714,7 +2714,7 @@
     }
 
     // Tableau du classement multisport (une colonne par journée). Partagé par l'onglet,
-    // la fenêtre « Afficher » et l'impression ; interactive = loupe 🔍 vers la fiche.
+    // la fenêtre « Afficher » et l'impression ; interactive = nom cliquable vers la fiche.
     function buildMultisportStandingsTable(standings, interactive) {
         var columns = getMultisportDayColumns();
         var cell = 'padding: ' + (interactive ? '12px 10px' : '7px 9px') + '; text-align: center;';
@@ -2733,7 +2733,7 @@
             var name = interactive
                 ? '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(stat.player) + '\')" ' +
                   'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
-                  'title="Voir le détail des matchs et épreuves">' + stat.player + ' 🔍</span>'
+                  'title="Voir le détail des matchs et épreuves">' + stat.player + '</span>'
                 : stat.player;
             html += '<td style="' + cell + ' text-align: left; font-weight: bold; color: #2c3e50;">' + name + '</td>';
             html += '<td style="' + cell + '">' + (stat.club || '-') + '</td>';
@@ -2880,7 +2880,7 @@
                 html += '<td style="padding: 15px; text-align: left; font-weight: bold; color: #2c3e50;">' +
                     '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(stat.player) + '\')" ' +
                     'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
-                    'title="Voir le détail des épreuves">' + stat.player + ' 🔍</span></td>';
+                    'title="Voir le détail des épreuves">' + stat.player + '</span></td>';
                 html += '<td style="padding: 15px; text-align: center;">' + (stat.club || '-') + '</td>';
                 html += '<td style="padding: 15px; text-align: center; font-weight: bold; color: #08689d;">' + formatDistance(stat.chronoDistance) + '</td>';
                 html += '<td style="padding: 15px; text-align: center; font-family: monospace; color: #9c5003;">' + (stat.chronoTime ? formatDurationHMS(stat.chronoTime) : '-') + '</td>';
