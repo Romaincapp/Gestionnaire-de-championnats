@@ -422,7 +422,7 @@ async function openFresh(browser) {
     await page.getByText('🏆 Classement', { exact: true }).filter({ visible: true }).first().click();
     await page.waitForTimeout(700);
     const clubView = await page.locator('#multisportRankingContent').evaluate((el, name) => {
-        const clubRows = [...el.querySelectorAll('.club-ranking tbody tr')].map(tr => tr.cells[1].textContent.trim());
+        const clubRows = [...el.querySelectorAll('.club-ranking tbody tr')].map(tr => tr.cells[1].textContent.replace('🔍', '').trim()); // loupe 🔍 : ouvre la fiche club
         const card = [...el.querySelectorAll('.event-ranking')].find(c => c.textContent.includes('50m brasse'));
         const heads = [...card.querySelectorAll('thead th')].map(th => th.textContent.trim());
         const row = [...card.querySelectorAll('tbody tr')].find(tr => tr.textContent.includes(name));

@@ -71,23 +71,11 @@
     // DÉTECTION INTELLIGENTE DU MODE MULTISPORT
     // ============================================
     
+    // Matchs ET Courses. Une journée sans dayType est une journée Matchs (comme
+    // hasChampionshipDays), sinon l'onglet Multisport s'affichait avec des points
+    // calculés hors barème.
     function isMultisportMode() {
-        var hasChampionship = false;
-        var hasChrono = false;
-        
-        Object.keys(global.championship.days).forEach(function(dayNumber) {
-            var dayData = global.championship.days[dayNumber];
-            if (!dayData || !dayData.dayType) return;
-            
-            if (dayData.dayType === DAY_TYPES.CHAMPIONSHIP) {
-                hasChampionship = true;
-            } else if (dayData.dayType === DAY_TYPES.CHRONO) {
-                hasChrono = true;
-            }
-        });
-        
-        // Mode multisport = au moins une journée de chaque type
-        return hasChampionship && hasChrono;
+        return hasChampionshipDays() && hasChronoDays();
     }
 
     // Vrai s'il existe au moins une journée en mode Courses (chrono)
@@ -1941,48 +1929,71 @@
     // 100 m ne sont jamais comparés entre eux. Séries sans épreuve : regroupées par
     // distance. Épreuves « fun » : sans points. Ex æquo = même rang.
     // → [{ name, club, eventPoints, rank }] trié par rang
-    function getChronoDayMultisportOrder(dayNumber) {
+    // Épreuves d'une journée Courses : chaque épreuve (séries regroupées) ; séries sans
+    // épreuve regroupées par distance. Épreuves « fun » exclues (sans points).
+    // → [{ name, series }]
+    function getChronoDayEventGroups(dayNumber) {
         var cd = getChronoDataForDay(dayNumber);
         if (!cd) return [];
-
         var groups = [];
         var used = [];
         (cd.events || []).forEach(function(evt) {
             var series = getEventSeries(cd, evt);
             series.forEach(function(serie) { used.push(serie); });
-            if (!evt.fun) groups.push(series);
+            if (!evt.fun) groups.push({ name: evt.name, series: series });
         });
-        var byDistance = {};
+        var byDistance = {}, order = [];
         (cd.series || []).forEach(function(serie) {
             if (!serie || used.indexOf(serie) !== -1) return;
             var key = String(serie.distance || 0);
-            (byDistance[key] = byDistance[key] || []).push(serie);
+            if (!byDistance[key]) { byDistance[key] = []; order.push(key); }
+            byDistance[key].push(serie);
         });
-        Object.keys(byDistance).forEach(function(key) { groups.push(byDistance[key]); });
+        order.forEach(function(key) {
+            var series = byDistance[key];
+            var name = series.length === 1 && series[0].name ? series[0].name : formatDistance(Number(key));
+            groups.push({ name: name, series: series });
+        });
+        return groups;
+    }
 
+    // Classement d'une épreuve : une ligne par participant (sa meilleure performance),
+    // distance décroissante puis temps, ex æquo au centième = même rang.
+    function rankEventGroup(series) {
+        var best = {};
+        series.forEach(function(serie) {
+            rankSerieResults(serie).entries.forEach(function(e) {
+                var key = e.name.toLowerCase();
+                var cur = best[key];
+                if (!cur || e.distance > cur.distance || (e.distance === cur.distance && e.time < cur.time)) {
+                    best[key] = Object.assign({}, e, { serieName: serie.name });
+                }
+            });
+        });
+        var entries = Object.keys(best).map(function(k) { return best[k]; });
+        entries.sort(function(a, b) {
+            if (b.distance !== a.distance) return b.distance - a.distance;
+            return a.time - b.time;
+        });
+        var prev = null;
+        entries.forEach(function(e, i) {
+            e.rank = (prev && prev.distance === e.distance && Math.round(prev.time / 10) === Math.round(e.time / 10)) ? prev.rank : i + 1;
+            prev = e;
+        });
+        return entries;
+    }
+
+    // Classement d'une journée COURSES en mode multisport. Chaque épreuve est classée
+    // séparément et chaque place rapporte les points du barème ; la somme de ces points
+    // classe la journée. Ainsi un 50 m et un 100 m ne sont jamais comparés entre eux.
+    // → [{ name, club, eventPoints, rank }] trié par rang
+    function getChronoDayMultisportOrder(dayNumber) {
         var players = {};
-        groups.forEach(function(series) {
-            // Une ligne par participant dans l'épreuve (sa meilleure performance)
-            var best = {};
-            series.forEach(function(serie) {
-                rankSerieResults(serie).entries.forEach(function(e) {
-                    var key = e.name.toLowerCase();
-                    var cur = best[key];
-                    if (!cur || e.distance > cur.distance || (e.distance === cur.distance && e.time < cur.time)) best[key] = e;
-                });
-            });
-            var entries = Object.keys(best).map(function(k) { return best[k]; });
-            entries.sort(function(a, b) {
-                if (b.distance !== a.distance) return b.distance - a.distance;
-                return a.time - b.time;
-            });
-            var prev = null;
-            entries.forEach(function(e, i) {
-                var rank = (prev && prev.distance === e.distance && Math.round(prev.time / 10) === Math.round(e.time / 10)) ? prev.rank : i + 1;
-                prev = { distance: e.distance, time: e.time, rank: rank };
+        getChronoDayEventGroups(dayNumber).forEach(function(group) {
+            rankEventGroup(group.series).forEach(function(e) {
                 var key = e.name.toLowerCase();
                 if (!players[key]) players[key] = { name: e.name, club: e.club || '', eventPoints: 0 };
-                players[key].eventPoints += calculateMultisportPositionPoints(rank);
+                players[key].eventPoints += calculateMultisportPositionPoints(e.rank);
             });
         });
 
@@ -1995,6 +2006,23 @@
             row.rank = (i > 0 && order[i - 1].eventPoints === row.eventPoints) ? order[i - 1].rank : i + 1;
         });
         return order;
+    }
+
+    // Courses (hors natation) : épreuves de toutes les journées, au même format que
+    // calculateEventRankings, pour le classement des clubs (un club marque une fois
+    // par course, avec son meilleur classé).
+    function calculateRaceClubEvents() {
+        var out = [];
+        Object.keys(global.championship.days).map(Number).sort(function(a, b) { return a - b; }).forEach(function(day) {
+            if (getDayType(day) !== DAY_TYPES.CHRONO) return;
+            getChronoDayEventGroups(day).forEach(function(group) {
+                var entries = rankEventGroup(group.series);
+                if (!entries.length) return;
+                assignEventClubPoints(entries);
+                out.push({ dayNumber: day, eventName: group.name, fun: false, entries: entries, outOfRace: [] });
+            });
+        });
+        return out;
     }
 
     // Classement d'UNE série, seule source pour la fenêtre 🏆 de la série et les points
@@ -2312,10 +2340,14 @@
         standings.forEach(function(s) {
             var name = String(s.club || '').trim();
             if (!name) return;
-            var key = name.toLowerCase().replace(/\s+/g, ' ');
-            if (!clubs[key]) clubs[key] = { club: name, members: 0, totalPoints: 0 };
-            clubs[key].members++;
-            clubs[key].totalPoints += s.totalPoints;
+            var key = clubKey(name);
+            if (!clubs[key]) clubs[key] = { club: name, members: [], perDay: {}, totalPoints: 0 };
+            var c = clubs[key];
+            c.members.push(s);
+            c.totalPoints += s.totalPoints;
+            s.days.forEach(function(d) {
+                if (!d.dropped) c.perDay[d.day] = (c.perDay[d.day] || 0) + d.points;
+            });
         });
         var list = Object.keys(clubs).map(function(k) { return clubs[k]; });
         list.sort(function(a, b) { return (b.totalPoints - a.totalPoints) || a.club.localeCompare(b.club); });
@@ -2550,11 +2582,22 @@
         return '<span class="fun-event-badge" title="Épreuve fun : hors classement des clubs" style="display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8e44ad; background: #f4ecf7; border-radius: 10px;">🎉 Fun</span>';
     }
 
-    function buildClubRankingHTML(events, clubs, multiDay) {
+    // Nom de club ouvrant sa fiche (onglet seulement : la fenêtre « Afficher » et
+    // l'impression n'ont pas la fonction)
+    function clubNameHTML(club, interactive) {
+        var label = escapeLaneHtml(club);
+        if (!interactive) return label;
+        return '<span onclick="showClubDetail(\'' + encodeURIComponent(club) + '\')" ' +
+            'style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;" ' +
+            'title="Voir le détail du club">' + label + ' 🔍</span>';
+    }
+
+    function buildClubRankingHTML(events, clubs, multiDay, interactive) {
         var th = 'padding: 6px; text-align: center; font-size: 11px; vertical-align: bottom;';
         var html = '<div class="club-ranking" style="margin: 0 0 26px 0; page-break-inside: avoid;">';
         html += '<h3 style="margin: 0 0 4px 0; color: #057e68;">🏆 Classement des clubs (toutes épreuves)</h3>';
-        html += '<p style="margin: 0 0 8px 0; font-size: 12px; color: #586566;">Barème 25-19-17-15-12-10-8-6-4-2 : un club marque une fois par épreuve, avec son meilleur classé.</p>';
+        html += '<p style="margin: 0 0 8px 0; font-size: 12px; color: #586566;">Barème ' + getMultisportSettings().bareme.join('-') + ' : un club marque une fois par épreuve, avec son meilleur classé.' +
+            (interactive ? ' Cliquez sur un club pour le détail.' : '') + '</p>';
         html += '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
         html += '<thead><tr><th style="' + th + '">Rang</th><th style="' + th + ' text-align: left;">Club</th>';
         events.forEach(function(evt) {
@@ -2564,7 +2607,7 @@
         clubs.forEach(function(c) {
             html += '<tr style="border-bottom: 1px solid #ecf0f1;">' +
                 '<td style="padding: 6px; text-align: center; font-weight: bold;">' + c.rank + '</td>' +
-                '<td style="padding: 6px; text-align: left; font-weight: bold;">' + escapeLaneHtml(c.club) + '</td>';
+                '<td style="padding: 6px; text-align: left; font-weight: bold;">' + clubNameHTML(c.club, interactive) + '</td>';
             c.perEvent.forEach(function(pts) {
                 html += '<td style="padding: 6px; text-align: center;' + (pts == null ? ' color: #bdc3c7;' : '') + '">' + (pts == null ? '–' : pts) + '</td>';
             });
@@ -2576,7 +2619,7 @@
 
     // Tableaux HTML du classement par épreuve (un par épreuve), utilisés par
     // l'onglet, l'impression / export HTML et le second écran « Afficher ».
-    function buildEventRankingsHTML() {
+    function buildEventRankingsHTML(interactive) {
         var events = calculateEventRankings();
         if (events.length === 0) {
             return '<p style="text-align: center; padding: 40px; color: #586566;">Aucun résultat pour le moment</p>';
@@ -2587,7 +2630,7 @@
         // Les épreuves fun n'ont pas de colonne dans le classement des clubs
         var scored = events.filter(function(e) { return !e.fun; });
         var clubs = calculateClubEventRanking(scored);
-        if (clubs.length > 0) html += buildClubRankingHTML(scored, clubs, multiDay);
+        if (clubs.length > 0) html += buildClubRankingHTML(scored, clubs, multiDay, interactive);
         events.forEach(function(evt) {
             var withPoints = !evt.fun;
             html += '<div class="event-ranking" style="margin: 0 0 22px 0; page-break-inside: avoid;">';
@@ -2639,9 +2682,17 @@
         html += '<button class="ranking-action-btn" onclick="normalizeAllNamesCase()">Aa Normaliser la casse</button>';
         html += '<button class="ranking-action-btn" onclick="printGeneralRanking()">🖨️ Imprimer</button>';
         html += '</div>';
-        html += '<div>' + buildEventRankingsHTML() + '</div>';
+        html += '<div>' + buildEventRankingsHTML(true) + '</div>';
         html += '</div>';
         return html;
+    }
+
+    function buildRaceClubRankingHTML(interactive) {
+        var events = calculateRaceClubEvents();
+        var clubs = calculateClubEventRanking(events);
+        if (clubs.length < 2) return '';
+        var multiDay = events.some(function(e) { return e.dayNumber !== events[0].dayNumber; });
+        return buildClubRankingHTML(events, clubs, multiDay, interactive);
     }
 
     var multisportCategoryFilter = ''; // filtre de catégorie de l'onglet (non enregistré)
@@ -2691,15 +2742,24 @@
     }
 
     function buildMultisportClubTable(clubs, interactive) {
+        var columns = getMultisportDayColumns();
         var cell = 'padding: ' + (interactive ? '10px' : '7px 9px') + '; text-align: center;';
         var html = '<table class="ranking-table" style="width: 100%; border-collapse: collapse;">';
         html += '<thead><tr' + (interactive ? ' style="background: #f8f9fa;"' : '') + '><th style="' + cell + '">#</th><th style="' + cell + ' text-align: left;">Club</th>' +
-            '<th style="' + cell + '">Membres classés</th><th style="' + cell + '">Total</th></tr></thead><tbody>';
+            '<th style="' + cell + '">Membres</th>';
+        columns.forEach(function(c) {
+            html += '<th style="' + cell + '">J' + c.day + ' ' + (c.type === 'courses' ? '🏁' : '⚔️') + '</th>';
+        });
+        html += '<th style="' + cell + '">Total</th></tr></thead><tbody>';
         clubs.forEach(function(c) {
             html += '<tr style="border-bottom: 1px solid #ecf0f1;"><td style="' + cell + ' font-weight: bold;">' + c.rank + '</td>' +
-                '<td style="' + cell + ' text-align: left; font-weight: bold;">' + c.club + '</td>' +
-                '<td style="' + cell + '">' + c.members + '</td>' +
-                '<td style="' + cell + '"><strong>' + c.totalPoints + '</strong></td></tr>';
+                '<td style="' + cell + ' text-align: left; font-weight: bold;">' + clubNameHTML(c.club, interactive) + '</td>' +
+                '<td style="' + cell + '">' + c.members.length + '</td>';
+            columns.forEach(function(col) {
+                var pts = c.perDay[col.day];
+                html += '<td style="' + cell + (pts == null ? ' color: #aab;' : '') + '">' + (pts == null ? '–' : pts) + '</td>';
+            });
+            html += '<td style="' + cell + '"><strong>' + c.totalPoints + '</strong></td></tr>';
         });
         return html + '</tbody></table>';
     }
@@ -2774,8 +2834,8 @@
                 var clubs = getMultisportClubStandings(standings);
                 if (clubs.length >= 2) {
                     html += '<h3 style="margin: 28px 0 10px 0; color: #2c3e50;">🏛️ Classement des clubs</h3>';
-                    html += '<p style="margin: 0 0 10px 0; color: #586566; font-size: 13px;">Somme des totaux des membres classés' +
-                        (multisportCategoryFilter ? ' (catégorie ' + multisportCategoryFilter + ')' : '') + '.</p>';
+                    html += '<p style="margin: 0 0 10px 0; color: #586566; font-size: 13px;">Somme des points retenus des membres' +
+                        (multisportCategoryFilter ? ' (catégorie ' + multisportCategoryFilter + ')' : '') + '. Cliquez sur un club pour le détail.</p>';
                     html += buildMultisportClubTable(clubs, true);
                 }
             }
@@ -2818,6 +2878,7 @@
             });
 
             html += '</tbody></table>';
+            html += buildRaceClubRankingHTML(true).replace('margin: 0 0 26px 0', 'margin: 28px 0 0 0');
         }
 
         html += '</div>';
@@ -2910,7 +2971,8 @@
             (swimmingOnly
                 // Natation : un tableau par épreuve (séries regroupées), pas de général
                 ? '<style>h3{font-size:16px;margin:18px 0 6px;}</style>' + buildEventRankingsHTML()
-                : (table || '<table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>')) +
+                : (table || '<table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>' +
+                    buildRaceClubRankingHTML(false).replace('margin: 0 0 26px 0', 'margin: 24px 0 0 0'))) +
             (autoPrint ? '<script>window.onload=function(){window.print();};<\/script>' : '') +
             '</body></html>';
     }
@@ -3246,6 +3308,113 @@
         document.body.appendChild(modal);
     }
     global.showPlayerChronoDetail = showPlayerChronoDetail;
+
+    // Fiche d'un club : multisport → points de chaque membre par journée ;
+    // natation / courses → chaque épreuve, ses membres classés et celui qui marque.
+    function showClubDetail(encodedClub) {
+        var clubName = decodeURIComponent(encodedClub);
+        var key = clubKey(clubName);
+        var existing = document.getElementById('clubDetailModal');
+        if (existing) existing.remove();
+
+        var th = function(label, align) { return '<th style="padding:6px 8px; text-align:' + (align || 'center') + ';">' + label + '</th>'; };
+        var td = function(value, extra) { return '<td style="padding:6px 8px; text-align:center;' + (extra || '') + '">' + value + '</td>'; };
+        var playerLink = function(name) {
+            return '<span onclick="closeClubDetail(); showPlayerChronoDetail(\'' + encodeURIComponent(name) + '\')" ' +
+                'style="cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;" title="Voir la fiche du joueur">' +
+                escapeLaneHtml(name) + '</span>';
+        };
+        var stat = function(label, value) {
+            return '<div><div style="font-size:11px;">' + label + '</div><div style="font-size:18px; font-weight:700;">' + value + '</div></div>';
+        };
+        var summaryBox = function(inner) {
+            return '<div style="margin-top:16px; padding:12px; background:linear-gradient(135deg,#5267d0,#764ba2); color:white; border-radius:8px; display:flex; justify-content:space-around; flex-wrap:wrap; gap:8px; text-align:center;">' + inner + '</div>';
+        };
+
+        var body = '';
+        var mixed = hasChampionshipDays() && hasChronoDays();
+
+        if (mixed) {
+            var standings = getMultisportStandings(multisportCategoryFilter);
+            var clubs = getMultisportClubStandings(standings);
+            var club = clubs.find(function(c) { return clubKey(c.club) === key; });
+            if (club) {
+                var columns = getMultisportDayColumns();
+                body += '<table style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="background:#f4f6fb; color:#34495e;">' +
+                    th('Place') + th('Membre', 'left');
+                columns.forEach(function(c) { body += th('J' + c.day + ' ' + (c.type === 'courses' ? '🏁' : '⚔️')); });
+                body += th('Total') + '</tr></thead><tbody>';
+                club.members.forEach(function(m) {
+                    body += '<tr style="border-bottom:1px solid #ecf0f1;">' + td(m.rank, ' font-weight:600;') +
+                        '<td style="padding:6px 8px;">' + playerLink(m.player) + '</td>';
+                    columns.forEach(function(c) {
+                        var d = m.days.find(function(x) { return x.day === c.day; });
+                        body += !d ? td('–', ' color:#aab;') : td(d.dropped ? '<s style="color:#8a9499;">' + d.points + '</s>' : d.points,
+                            '" title="' + (d.type === 'courses' ? 'Place de la journée : ' : 'Place dans la division : ') + d.position);
+                    });
+                    body += td('<strong>' + m.totalPoints + '</strong>') + '</tr>';
+                });
+                body += '<tr style="background:#fbfbfd; font-weight:700;">' + '<td colspan="2" style="padding:6px 8px; text-align:right;">Club :</td>';
+                columns.forEach(function(c) { body += td(club.perDay[c.day] != null ? club.perDay[c.day] : '–'); });
+                body += td(club.totalPoints) + '</tr></tbody></table>';
+                var best = club.members[0];
+                body += summaryBox(stat('Place du club', club.rank + ' / ' + clubs.length) + stat('Membres classés', club.members.length) +
+                    stat('Meilleur membre', escapeLaneHtml(best.player) + ' (' + best.rank + (best.rank === 1 ? 'er' : 'e') + ')') + stat('Total', club.totalPoints));
+            }
+        } else {
+            var events = isSwimmingOnlyCompetition()
+                ? calculateEventRankings().filter(function(e) { return !e.fun; })
+                : calculateRaceClubEvents();
+            var ranking = calculateClubEventRanking(events);
+            var clubRow = ranking.find(function(c) { return clubKey(c.club) === key; });
+            var multiDay = events.some(function(e) { return e.dayNumber !== (events[0] && events[0].dayNumber); });
+            var members = {};
+            events.forEach(function(evt) {
+                var mine = evt.entries.filter(function(e) { return clubKey(e.club) === key; });
+                if (!mine.length) return;
+                mine.forEach(function(e) { members[e.name.toLowerCase()] = true; });
+                var scorer = mine.find(function(e) { return e.clubPoints != null; });
+                body += '<div style="margin:14px 0 6px; font-weight:700; color:#2c3e50; border-bottom:2px solid #5267d0; padding-bottom:4px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">' +
+                    '<span>' + escapeLaneHtml(evt.eventName) + (multiDay ? ' · Journée ' + evt.dayNumber : '') + '</span>' +
+                    '<span style="color:#057e68;">' + (scorer ? '+' + scorer.clubPoints + ' pts · ' + scorer.clubRank + (scorer.clubRank === 1 ? 'er' : 'e') + ' club' : '') + '</span></div>';
+                body += '<table style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="background:#f4f6fb; color:#34495e;">' +
+                    th('Place') + th('Membre', 'left') + th('Temps') + th('Points club') + '</tr></thead><tbody>';
+                mine.forEach(function(e) {
+                    body += '<tr style="border-bottom:1px solid #ecf0f1;">' + td(e.rank + ' / ' + evt.entries.length, ' font-weight:600;') +
+                        '<td style="padding:6px 8px;">' + playerLink(e.name) + '</td>' +
+                        td(formatDurationHMS(e.time), ' font-family:monospace; color:#9c5003;') +
+                        (e.clubPoints != null ? td('⭐ ' + e.clubPoints, ' font-weight:700; color:#057e68;') : td('–', ' color:#aab;" title="Un club ne marque qu\'avec son meilleur classé')) +
+                        '</tr>';
+                });
+                body += '</tbody></table>';
+            });
+            if (clubRow) {
+                body += summaryBox(stat('Place du club', clubRow.rank + ' / ' + ranking.length) + stat('Membres', Object.keys(members).length) +
+                    stat('Épreuves marquées', clubRow.perEvent.filter(function(p) { return p != null; }).length) +
+                    stat('1res places', clubRow.wins) + stat('Total', clubRow.total));
+            }
+        }
+
+        if (!body) body = '<p style="color:#586566; text-align:center; padding:20px;">Aucun résultat trouvé pour ce club.</p>';
+
+        var modal = document.createElement('div');
+        modal.id = 'clubDetailModal';
+        modal.innerHTML =
+            '<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;" onclick="if(event.target===this)closeClubDetail()">' +
+            '<div style="background:white; padding:25px; border-radius:10px; max-width:820px; width:94%; max-height:88vh; overflow-y:auto;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+            '<h3 style="margin:0;">🏛️ ' + escapeLaneHtml(clubName) + '</h3>' +
+            '<button onclick="closeClubDetail()" aria-label="Fermer" style="border:none; background:#ecf0f1; border-radius:6px; padding:6px 12px; cursor:pointer;">✕</button>' +
+            '</div><div style="overflow-x:auto;">' + body + '</div></div></div>';
+        document.body.appendChild(modal);
+    }
+    global.showClubDetail = showClubDetail;
+
+    function closeClubDetail() {
+        var m = document.getElementById('clubDetailModal');
+        if (m) m.remove();
+    }
+    global.closeClubDetail = closeClubDetail;
 
     function closePlayerChronoDetail() {
         var m = document.getElementById('playerChronoDetailModal');
@@ -5467,6 +5636,8 @@
     global.buildMultisportClubTable = buildMultisportClubTable;
     global.exportMultisportRankingCSV = exportMultisportRankingCSV;
     global.getChronoDayMultisportOrder = getChronoDayMultisportOrder;
+    global.calculateRaceClubEvents = calculateRaceClubEvents;
+    global.buildRaceClubRankingHTML = buildRaceClubRankingHTML;
     global.renderMultisportRanking = renderMultisportRanking;
     global.calculateChronoPoints = calculateChronoPoints;
     global.MULTISPORT_POINTS = MULTISPORT_POINTS;

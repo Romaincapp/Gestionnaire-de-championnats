@@ -675,7 +675,7 @@
             </tr>`).join('');
             return `<table>
             <thead><tr><th>#</th><th>Participant</th><th>Club</th><th>📏 Distance</th><th>⏱️ Temps total</th><th>Séries</th></tr></thead>
-            <tbody>${rows}</tbody></table>`;
+            <tbody>${rows}</tbody></table>` + (typeof buildRaceClubRankingHTML === 'function' ? buildRaceClubRankingHTML(false) : '');
         }
         const standings = getMultisportStandings(getMultisportCategoryFilter());
         if (!standings.length) return '<p style="text-align: center; color: #586566;">Aucun résultat pour le moment</p>';
