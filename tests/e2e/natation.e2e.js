@@ -174,7 +174,7 @@ async function openFresh(browser) {
 
     // ---------------------------------------------------------------
     step(`5. 👥 « ${serieA.ev} / ${serieA.name} » : couloirs affichés = couloirs générés`);
-    await page.click(`button[onclick="manageSerieParticipants(1, ${serieA.id})"]`);
+    await page.click(`button[onclick="editChronoSerie(1, ${serieA.id})"]`); // onglet 👥 Participants par défaut
     await page.waitForTimeout(300);
     const modalText = (await page.locator('[id^="participantsModal"]').first().textContent()).replace(/\s+/g, ' ');
     const sA = await serieOf(serieA.id);
@@ -475,7 +475,8 @@ async function openFresh(browser) {
     const added = (await brasseSeries(brasseId)).pop();
     const brasseCard = page.locator('.chrono-event-card').filter({ has: page.locator('h4', { hasText: /^🎯 50m brasse$/ }) });
     check((await brasseCard.innerText()).includes(added.name), `« ${added.name} » apparaît sous « 50m brasse »`);
-    await page.click(`button[onclick="assignSerieLanes(1, ${added.id})"]`);
+    await page.click(`button[onclick="editChronoSerie(1, ${added.id})"]`);
+    await page.click('[id^="participantsModal"] [role="tab"]:has-text("🏊 Couloirs")');
     await page.waitForTimeout(300);
     const pool = await state(page, () => championship.days[1].chronoData.participants.filter(p => p.swimImport).slice(0, 2).map(p => ({ id: p.id, name: p.name })));
     await page.selectOption('#laneSel-1-3', String(pool[0].id));

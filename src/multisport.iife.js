@@ -1630,8 +1630,7 @@
             (outOfRace.length ? ' (dont ' + outOfRace.join(', ') + ')' : '') + '</span>';
         html += '</div>';
         html += '<div style="display: flex; gap: 4px;">';
-        html += '<button onclick="manageSerieParticipants(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer;" title="Gérer les participants" aria-label="Gérer les participants">👥</button>';
-        html += '<button onclick="assignSerieLanes(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer;" title="Affecter les nageurs aux couloirs" aria-label="Affecter les nageurs aux couloirs">🏊</button>';
+        html += '<button onclick="editChronoSerie(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer;" title="Éditer la série : participants et couloirs" aria-label="Éditer la série">✏️</button>';
         // Bouton Démarrer la course (si des participants existent)
         if (totalCount > 0) {
             html += '<button onclick="startChronoRaceForDay(' + dayNumber + ', ' + serie.id + ')" style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; font-size: 11px; background: #d03427; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;" title="Démarrer la course avec chronométrage">▶️ Course</button>';
@@ -4214,6 +4213,29 @@
         showNotification('Série supprimée', 'success');
     }
 
+    // « ✏️ Éditer la série » : une fenêtre, deux onglets (👥 Participants, 🏊 Couloirs).
+    // Chaque onglet est la fenêtre d'origine (manageSerieParticipants / assignSerieLanes)
+    // avec cet en-tête commun ; changer d'onglet ferme l'un et ouvre l'autre.
+    function editChronoSerie(dayNumber, serieId, tab) {
+        closeParticipantsModal(dayNumber);
+        closeLaneAssignModal(dayNumber);
+        if (tab === 'lanes') assignSerieLanes(dayNumber, serieId);
+        else manageSerieParticipants(dayNumber, serieId);
+    }
+
+    function serieEditHeaderHTML(dayNumber, serie, active) {
+        var tab = function(key, label, hint) {
+            var on = key === active;
+            return '<button type="button" role="tab" class="bulk-mode-tab' + (on ? ' active' : '') + '" aria-selected="' + on + '" title="' + hint + '"' +
+                (on ? '' : ' onclick="editChronoSerie(' + dayNumber + ', ' + serie.id + ', \'' + key + '\')"') + '>' + label + '</button>';
+        };
+        return '<h3 style="margin: 0 0 4px 0;">✏️ Éditer la série — ' + escapeLaneHtml(serie.name) + '</h3>' +
+            '<div class="bulk-mode-tabs" role="tablist" aria-label="Éditer la série">' +
+            tab('participants', '👥 Participants', 'Ajouter, modifier ou retirer des participants') +
+            tab('lanes', '🏊 Couloirs', 'Placer les nageurs dans les couloirs (les choix non enregistrés sont abandonnés)') +
+            '</div>';
+    }
+
     function manageSerieParticipants(dayNumber, serieId) {
         var chronoData = getChronoDataForDay(dayNumber);
         if (!chronoData) return;
@@ -4229,8 +4251,8 @@
             '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
             'background: rgba(0,0,0,0.5); display: flex; justify-content: center; ' +
             'align-items: center; z-index: 10000;" onclick="if(event.target===this)closeParticipantsModal(' + dayNumber + ')">' +
-            '<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">' +
-            '<h3>👥 Participants - ' + serie.name + '</h3>' +
+            '<div style="background: white; padding: 24px; border-radius: 10px; max-width: 560px; width: 92%; max-height: 85vh; overflow-y: auto;">' +
+            serieEditHeaderHTML(dayNumber, serie, 'participants') +
             '<div style="margin: 15px 0;">' +
             '<label>Ajouter un participant :</label>' +
             '<div style="display: flex; gap: 10px; margin-top: 5px;">' +
@@ -4470,6 +4492,7 @@
         document.body.appendChild(modal);
     }
     global.assignSerieLanes = assignSerieLanes;
+    global.editChronoSerie = editChronoSerie;
 
     function renderLaneAssignBody(dayNumber, serieId, laneCount) {
         var chronoData = getChronoDataForDay(dayNumber);
@@ -4503,7 +4526,7 @@
         });
 
         var html = '';
-        html += '<h3 style="margin:0 0 4px 0; color:#057e68;">🏊 Couloirs — ' + escapeLaneHtml(serie.name) + '</h3>';
+        html += serieEditHeaderHTML(dayNumber, serie, 'lanes');
         html += '<p style="color:#586566; font-size:12px; margin:0 0 14px 0;">Choisis le nageur de chaque couloir dans la liste des « Participants disponibles » de la journée. Les nageurs non placés restent disponibles pour les autres séries.</p>';
 
         // Nombre de couloirs
