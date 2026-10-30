@@ -116,7 +116,13 @@
         // Onglet « 🏅 Multisport » seulement s'il y a à combiner (journées Matchs
         // ET Courses). Courses seules : leur classement s'ouvre par
         // « 🏆 Classement » (switchToGeneralRanking), un second onglet ferait doublon.
-        if (hasChampionshipDays() && hasChronoDays()) {
+        // Journées Matchs ET Courses : « 🏆 Classement » ouvrirait ce même classement
+        // multisport (switchToGeneralRanking), il ferait doublon → masqué.
+        var mixed = hasChampionshipDays() && hasChronoDays();
+        var generalTab = document.getElementById('generalRankingTab');
+        if (generalTab) generalTab.style.display = mixed ? 'none' : '';
+
+        if (mixed) {
             multisportTab.style.display = 'inline-block';
             // Petite animation pour attirer l'attention
             multisportTab.style.animation = 'pulse 1s ease-in-out';
