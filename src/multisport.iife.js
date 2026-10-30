@@ -451,6 +451,7 @@
         html += '<button id="toggle-all-series-' + dayNumber + '" onclick="toggleAllSeriesDetails(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Afficher / masquer les participants de toutes les séries">' + (allOpen ? '📁 Tout replier' : '📂 Tout déplier') + '</button>';
         html += '<span style="color: #cbd5e1;">|</span>';
         html += '<button onclick="showSwimmingImportModal(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'events') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #057e68; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Répartir les participants en séries par couloirs, au temps d\'engagement (natation, athlétisme…)">🏁 Séries automatiques</button>';
+        html += '<button onclick="showChronoDayRanking(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #8b5700; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;" title="Classement de la journée : épreuves, participants et clubs">🏆 Classement</button>';
         html += '<button onclick="printChronoCompetition(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'series') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #9654b1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🖨️ Imprimer séries</button>';
         html += '<span style="color: #cbd5e1;">|</span>';
         html += '<button onclick="exportChronoDataForDay(' + dayNumber + ')" ' + global.dayActionAttrs(dayNumber, 'content') + ' style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 10px; font-size: 12px; background: #017239; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">💾 Exporter</button>';
@@ -1932,7 +1933,7 @@
     // Épreuves d'une journée Courses : chaque épreuve (séries regroupées) ; séries sans
     // épreuve regroupées par distance. Épreuves « fun » exclues (sans points).
     // → [{ name, series }]
-    function getChronoDayEventGroups(dayNumber) {
+    function getChronoDayEventGroups(dayNumber, includeFun) {
         var cd = getChronoDataForDay(dayNumber);
         if (!cd) return [];
         var groups = [];
@@ -1940,7 +1941,7 @@
         (cd.events || []).forEach(function(evt) {
             var series = getEventSeries(cd, evt);
             series.forEach(function(serie) { used.push(serie); });
-            if (!evt.fun) groups.push({ name: evt.name, series: series });
+            if (!evt.fun || includeFun) groups.push({ name: evt.name, series: series, fun: !!evt.fun });
         });
         var byDistance = {}, order = [];
         (cd.series || []).forEach(function(serie) {
@@ -3308,6 +3309,155 @@
         document.body.appendChild(modal);
     }
     global.showPlayerChronoDetail = showPlayerChronoDetail;
+
+    // ============================================
+    // CLASSEMENT D'UNE JOURNÉE COURSES
+    // ============================================
+    // Classement de la journée (somme des points d'épreuves, comme pour la colonne de
+    // la journée du classement multisport), classement des clubs du jour, puis chaque
+    // épreuve. interactive : noms cliquables vers la fiche joueur (fenêtre de l'onglet).
+    function buildChronoDayRankingHTML(dayNumber, interactive) {
+        var groups = getChronoDayEventGroups(dayNumber, true).map(function(g) {
+            return { name: g.name, fun: g.fun, entries: rankEventGroup(g.series) };
+        }).filter(function(g) { return g.entries.length > 0; });
+        if (!groups.length) {
+            return '<p style="text-align:center; padding:30px; color:#586566;">Aucun résultat pour cette journée : saisissez des temps dans les séries.</p>';
+        }
+
+        var cell = 'padding:7px 9px; text-align:center;';
+        var th = function(label, align) { return '<th style="' + cell + (align ? ' text-align:' + align + ';' : '') + '">' + label + '</th>'; };
+        var nameHTML = function(name) {
+            return interactive
+                ? '<span onclick="showPlayerChronoDetail(\'' + encodeURIComponent(name) + '\')" style="cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;" title="Voir la fiche du participant">' + escapeLaneHtml(name) + '</span>'
+                : escapeLaneHtml(name);
+        };
+        var medal = function(rank) { return rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] + ' ' : ''; };
+        var section = function(title, note) {
+            return '<h3 style="margin:22px 0 4px; color:#2c3e50; font-size:16px;">' + title + '</h3>' +
+                (note ? '<p style="margin:0 0 8px; font-size:12px; color:#586566;">' + note + '</p>' : '');
+        };
+        var html = '';
+
+        // 1. Classement de la journée
+        var counts = {};
+        groups.forEach(function(g) {
+            if (g.fun) return;
+            g.entries.forEach(function(e) { var k = e.name.toLowerCase(); counts[k] = (counts[k] || 0) + 1; });
+        });
+        var order = getChronoDayMultisportOrder(dayNumber);
+        if (order.length) {
+            var multisport = isMultisportMode();
+            html += section('🏆 Classement de la journée',
+                'Chaque place dans une épreuve rapporte ' + multisportBaremeText() + ' points ; le total classe la journée.' +
+                (multisport ? ' La dernière colonne est reportée au classement multisport.' : ''));
+            html += '<table class="ranking-table" style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr>' +
+                th('Place') + th('Participant', 'left') + th('Club') + th('Épreuves') + th('Points d\'épreuves') +
+                (multisport ? th('Points multisport') : '') + '</tr></thead><tbody>';
+            order.forEach(function(r) {
+                html += '<tr class="' + (r.rank <= 3 ? 'rank-' + r.rank : '') + '" style="border-bottom:1px solid #ecf0f1;">' +
+                    '<td style="' + cell + ' font-weight:bold;">' + medal(r.rank) + r.rank + '</td>' +
+                    '<td style="' + cell + ' text-align:left; font-weight:bold;">' + nameHTML(r.name) + '</td>' +
+                    '<td style="' + cell + '">' + (r.club ? escapeLaneHtml(r.club) : '-') + '</td>' +
+                    '<td style="' + cell + '">' + (counts[r.name.toLowerCase()] || 0) + '</td>' +
+                    '<td style="' + cell + ' font-weight:bold;">' + r.eventPoints + '</td>' +
+                    (multisport ? '<td style="' + cell + ' font-weight:bold; color:#5267d0;">' + calculateMultisportPositionPoints(r.rank) + '</td>' : '') +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+        }
+
+        // 2. Classement des clubs du jour (mêmes règles que le classement général des clubs)
+        var clubEvents = (isSwimmingOnlyCompetition()
+            ? calculateEventRankings().filter(function(e) { return !e.fun; })
+            : calculateRaceClubEvents()
+        ).filter(function(e) { return e.dayNumber === Number(dayNumber); });
+        var clubs = calculateClubEventRanking(clubEvents);
+        if (clubs.length >= 2) {
+            html += '<div style="margin-top:22px;">' + buildClubRankingHTML(clubEvents, clubs, false, false)
+                .replace('Classement des clubs (toutes épreuves)', 'Classement des clubs de la journée') + '</div>';
+        }
+
+        // 3. Chaque épreuve
+        html += section('🎯 Résultats par épreuve', 'Toutes les séries d\'une épreuve regroupées, classées au temps.');
+        groups.forEach(function(g) {
+            html += '<h4 style="margin:16px 0 6px; color:#057e68; font-size:14px;">' + escapeLaneHtml(g.name) +
+                ' <span style="font-size:12px; color:#586566; font-weight:normal;">(' + g.entries.length + ' classé' + (g.entries.length > 1 ? 's' : '') + ')</span>' +
+                (g.fun ? ' ' + funEventBadgeHTML() : '') + '</h4>';
+            html += '<table class="ranking-table" style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr>' +
+                th('Place') + th('Participant', 'left') + th('Club') + th('Série') + th('Temps') + (g.fun ? '' : th('Points')) + '</tr></thead><tbody>';
+            g.entries.forEach(function(e) {
+                html += '<tr style="border-bottom:1px solid #ecf0f1;">' +
+                    '<td style="' + cell + ' font-weight:bold;">' + medal(e.rank) + e.rank + '</td>' +
+                    '<td style="' + cell + ' text-align:left; font-weight:bold;">' + nameHTML(e.name) + '</td>' +
+                    '<td style="' + cell + '">' + (e.club ? escapeLaneHtml(e.club) : '-') + '</td>' +
+                    '<td style="' + cell + '">' + escapeLaneHtml(e.serieName || '') + '</td>' +
+                    '<td style="' + cell + ' font-family:monospace; color:#9c5003;">' + formatDurationHMS(e.time) + '</td>' +
+                    (g.fun ? '' : '<td style="' + cell + ' font-weight:bold; color:#057e68;">' + calculateMultisportPositionPoints(e.rank) + '</td>') +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+        });
+        return html;
+    }
+
+    function chronoDayRankingDoc(dayNumber, autoPrint) {
+        var champName = (global.championship && global.championship.name) ? global.championship.name : '';
+        var title = 'Classement — Journée ' + dayNumber;
+        return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>' + title + '</title>' +
+            '<style>body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:24px;}h1{font-size:20px;margin:0 0 4px;}' +
+            '.sub{color:#666;font-size:13px;margin-bottom:8px;}table{width:100%;border-collapse:collapse;font-size:13px;}' +
+            'th,td{border:1px solid #ccc;padding:7px 9px;text-align:center;}thead th{background:#34495e;color:#fff;}' +
+            'tbody tr:nth-child(even){background:#f4f6fb;}.no-print{margin-bottom:12px;}@media print{.no-print{display:none;}}' +
+            global.rankingPrintCSS() + '</style></head><body>' +
+            (autoPrint ? '' : '<div class="no-print"><button onclick="if (window.opener && window.opener.openChronoDayRankingWindow) window.opener.openChronoDayRankingWindow(' + dayNumber + ')">🔄 Actualiser</button></div>') +
+            '<h1>🏆 ' + title + '</h1>' +
+            '<div class="sub">' + (champName ? escapeLaneHtml(champName) + ' — ' : '') + 'Édité le ' + new Date().toLocaleDateString('fr-FR') + '</div>' +
+            buildChronoDayRankingHTML(dayNumber, false) +
+            (autoPrint ? '<script>window.onload=function(){window.print();};<\/script>' : '') +
+            '</body></html>';
+    }
+
+    function writeChronoDayRankingWindow(dayNumber, autoPrint) {
+        var w = window.open('', autoPrint ? '_blank' : 'chronoDayRanking-' + dayNumber);
+        if (!w) { showNotification('Autorisez les fenêtres pop-up pour afficher le classement', 'warning'); return; }
+        w.document.open();
+        w.document.write(chronoDayRankingDoc(dayNumber, autoPrint));
+        w.document.close();
+    }
+
+    function printChronoDayRanking(dayNumber) { writeChronoDayRankingWindow(dayNumber, true); }
+    function openChronoDayRankingWindow(dayNumber) { writeChronoDayRankingWindow(dayNumber, false); }
+
+    function showChronoDayRanking(dayNumber) {
+        closeChronoDayRanking();
+        var btn = 'display:inline-flex; align-items:center; gap:4px; padding:7px 10px; font-size:12px; background:#fff; color:#334155; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;';
+        var modal = document.createElement('div');
+        modal.id = 'chronoDayRankingModal';
+        modal.innerHTML =
+            '<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;" onclick="if(event.target===this)closeChronoDayRanking()">' +
+            '<div role="dialog" aria-modal="true" aria-labelledby="chronoDayRankingTitle" style="background:white; padding:25px; border-radius:10px; max-width:900px; width:94%; max-height:88vh; overflow-y:auto;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">' +
+            '<h3 id="chronoDayRankingTitle" style="margin:0;">🏆 Classement — Journée ' + dayNumber + '</h3>' +
+            '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+            '<button onclick="openChronoDayRankingWindow(' + dayNumber + ')" style="' + btn + '" title="Ouvrir dans une fenêtre (second écran)">📺 Afficher</button>' +
+            '<button onclick="printChronoDayRanking(' + dayNumber + ')" style="' + btn + '">🖨️ Imprimer</button>' +
+            '<button onclick="closeChronoDayRanking()" aria-label="Fermer" style="border:none; background:#ecf0f1; border-radius:6px; padding:6px 12px; cursor:pointer;">✕</button>' +
+            '</div></div>' +
+            '<div style="overflow-x:auto;">' + buildChronoDayRankingHTML(dayNumber, true) + '</div>' +
+            '</div></div>';
+        document.body.appendChild(modal);
+    }
+
+    function closeChronoDayRanking() {
+        var m = document.getElementById('chronoDayRankingModal');
+        if (m) m.remove();
+    }
+
+    global.showChronoDayRanking = showChronoDayRanking;
+    global.closeChronoDayRanking = closeChronoDayRanking;
+    global.printChronoDayRanking = printChronoDayRanking;
+    global.openChronoDayRankingWindow = openChronoDayRankingWindow;
+    global.buildChronoDayRankingHTML = buildChronoDayRankingHTML;
 
     // Fiche d'un club : multisport → points de chaque membre par journée ;
     // natation / courses → chaque épreuve, ses membres classés et celui qui marque.
