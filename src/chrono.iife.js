@@ -1577,6 +1577,34 @@ window.showRaceRanking = function() {
     }
 };
 
+// Distance lisible : « 50 m », « 1,50 km »
+function raceDistanceLabel(meters) {
+    meters = meters || 0;
+    return meters >= 1000 ? (meters / 1000).toFixed(2).replace('.', ',') + ' km' : Math.round(meters) + ' m';
+}
+
+// Résumé d'une série : distance DE LA COURSE (pas la somme des participants), sauf en
+// relais où chacun parcourt une distance différente (meilleure distance) ; colonnes
+// Tours / Meilleur tour seulement si des tours ont été enregistrés.
+function raceRankingSummary(serie) {
+    const participants = serie.participants || [];
+    const finished = participants.filter(p => p.status === 'finished');
+    const distances = [...new Set(participants.map(p => p.totalDistance || 0).filter(d => d > 0))];
+    const relay = serie.raceType === 'relay';
+    const best = finished.reduce((min, p) => {
+        const t = p.finishTime || p.totalTime;
+        return t && (min == null || t < min) ? t : min;
+    }, null);
+    return {
+        finished: finished.length,
+        hasLaps: participants.some(p => (p.laps || []).length > 0),
+        showDistance: relay || distances.length > 1,
+        distanceLabel: relay ? 'Meilleure distance' : 'Distance',
+        distance: raceDistanceLabel(relay ? Math.max(0, ...distances) : (serie.distance || Math.max(0, ...distances))),
+        bestTime: best != null ? formatTime(best) : '-'
+    };
+}
+
 // Générer le classement
 function generateRaceRanking() {
     const serie = raceData.currentSerie;
@@ -1615,109 +1643,69 @@ function generateRaceRanking() {
     const medals = ['🥇', '🥈', '🥉'];
     if (typeof assignCategoryRanks === 'function') assignCategoryRanks(ranked);
     const showCategory = !!ranked.hasMultipleCategories;
+    const sum = raceRankingSummary(serie);
+    const cell = 'text-align: center;';
 
     let html = `
-        <div style="background: #057e68; padding: 20px; border-radius: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <h3 style="color: white; margin: 0;">🏆 Classement Général</h3>
-                <button onclick="exportRaceRankingToPDF()" style="background: white; color: #057e68; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                    📄 Exporter en PDF
-                </button>
+        <div class="rankings-section" style="margin-top: 0;">
+            <div class="rankings-header">
+                <div class="rankings-title">🏆 Classement de la série</div>
+                <div class="rankings-toggle">
+                    <button class="ranking-action-btn" onclick="exportRaceRankingToPDF()">📄 PDF</button>
+                </div>
             </div>
-            <div style="background: white; border-radius: 10px; padding: 20px;">
-                <table style="width: 100%; border-collapse: collapse;">
+            <div style="overflow-x: auto;">
+                <table class="ranking-table">
                     <thead>
-                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                            <th style="padding: 12px; text-align: center;">${showCategory ? 'Pos. Scratch' : 'Pos.'}</th>
-                            <th style="padding: 12px; text-align: center;">Dossard</th>
-                            <th style="padding: 12px; text-align: left;">Participant</th>
-                            <th style="padding: 12px; text-align: left;">Club</th>
-                            ${showCategory ? '<th style="padding: 12px; text-align: left;">Catégorie</th>' : ''}
-                            <th style="padding: 12px; text-align: center;">Tours</th>
-                            <th style="padding: 12px; text-align: center;">Distance Totale</th>
-                            <th style="padding: 12px; text-align: center;">Temps Total</th>
-                            <th style="padding: 12px; text-align: center;">Meilleur Tour</th>
-                            <th style="padding: 12px; text-align: center;">Statut</th>
+                        <tr>
+                            <th style="${cell}">${showCategory ? 'Pos. scratch' : 'Place'}</th>
+                            <th style="${cell}">Dossard</th>
+                            <th>Participant</th>
+                            <th>Club</th>
+                            ${showCategory ? '<th>Catégorie</th>' : ''}
+                            ${sum.hasLaps ? `<th style="${cell}">Tours</th>` : ''}
+                            ${sum.showDistance ? `<th style="${cell}">Distance</th>` : ''}
+                            <th style="${cell}">Temps</th>
+                            ${sum.hasLaps ? `<th style="${cell}">Meilleur tour</th>` : ''}
+                            <th style="${cell}">Statut</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${ranked.map((p, index) => {
                             const position = index + 1;
                             const isDNS = isOutOfRaceStatus(p.status);
-                            const medal = isDNS ? outOfRaceLabel(p.status) : (position <= 3 ? medals[position - 1] : position);
-                            const rowBg = isDNS ? 'background: #fdeaea;' : (position <= 3 ? 'background: linear-gradient(135deg, #fff9e6, #ffe9b3);' : '');
-
+                            const place = isDNS ? outOfRaceLabel(p.status) : (position <= 3 ? medals[position - 1] + ' ' + position : position);
                             return `
-                                <tr style="${rowBg} border-bottom: 1px solid #ecf0f1;">
-                                    <td style="padding: 12px; text-align: center; font-size: ${isDNS ? '14px' : '24px'}; font-weight: bold; color: ${isDNS ? '#d03427' : 'inherit'};">
-                                        ${medal}
+                                <tr class="${!isDNS && position <= 3 ? 'rank-' + position : ''}">
+                                    <td style="${cell} font-weight: bold; ${isDNS ? 'color: #d03427;' : ''}">${place}</td>
+                                    <td style="${cell} color: #586566;">#${p.bib}</td>
+                                    <td>
+                                        <div style="font-weight: bold;">${p.name}</div>
+                                        ${p.category && !showCategory ? `<div style="font-size: 12px; color: #586566;">${p.category}</div>` : ''}
                                     </td>
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 20px; color: #09679e;">
-                                        #${p.bib}
-                                    </td>
-                                    <td style="padding: 12px;">
-                                        <div style="font-weight: bold; font-size: 16px;">${p.name}</div>
-                                        ${p.category ? `<div style="font-size: 12px; color: #586566;">${p.category}</div>` : ''}
-                                    </td>
-                                    <td style="padding: 12px;">
-                                        <div style="font-weight: bold; color: #057e68; font-size: 14px;">${p.club || '-'}</div>
-                                    </td>
-                                    ${showCategory ? `
-                                    <td style="padding: 12px;">
-                                        ${p.category || '-'}${p.category ? ` (${p.catRank}e/${p.catTotal})` : ''}
-                                    </td>` : ''}
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 18px;">
-                                        ${p.laps.length}
-                                    </td>
-                                    <td style="padding: 12px; text-align: center; font-weight: bold; font-size: 16px;">
-                                        ${(p.totalDistance / 1000).toFixed(2)} km
-                                    </td>
-                                    <td style="padding: 12px; text-align: center; font-family: monospace; font-weight: bold; font-size: 16px;">
-                                        ${p.status === 'finished' ? formatTime(p.finishTime) : formatTime(p.totalTime)}
-                                    </td>
-                                    <td style="padding: 12px; text-align: center; font-family: monospace; font-size: 14px;">
-                                        ${p.bestLap ? formatTime(p.bestLap) : '-'}
-                                    </td>
-                                    <td style="padding: 12px; text-align: center;">
-                                        ${p.status === 'finished' ?
-                                            '<span style="color: #017239; font-weight: bold;">✅ Terminé</span>' :
-                                            p.status === 'dns' ?
-                                            '<span style="color: #d03427; font-weight: bold;">🚫 DNS</span>' :
-                                            p.status === 'disq' ?
-                                            '<span style="color: #8e44ad; font-weight: bold;">⛔ DISQ</span>' :
-                                            '<span style="color: #9c5003; font-weight: bold;">⏳ En cours</span>'
-                                        }
+                                    <td>${p.club || '-'}</td>
+                                    ${showCategory ? `<td>${p.category || '-'}${p.category ? ` <span style="color: #586566;">(${p.catRank}e/${p.catTotal})</span>` : ''}</td>` : ''}
+                                    ${sum.hasLaps ? `<td style="${cell}">${p.laps.length}</td>` : ''}
+                                    ${sum.showDistance ? `<td style="${cell}">${raceDistanceLabel(p.totalDistance)}</td>` : ''}
+                                    <td style="${cell} font-family: monospace; font-weight: bold;">${p.status === 'finished' ? formatTime(p.finishTime) : formatTime(p.totalTime)}</td>
+                                    ${sum.hasLaps ? `<td style="${cell} font-family: monospace;">${p.bestLap ? formatTime(p.bestLap) : '-'}</td>` : ''}
+                                    <td style="${cell}">
+                                        ${p.status === 'finished' ? '<span style="color: #017239;">✅ Terminé</span>' :
+                                            p.status === 'dns' ? '<span style="color: #d03427;">🚫 DNS</span>' :
+                                            p.status === 'disq' ? '<span style="color: #8e44ad;">⛔ DISQ</span>' :
+                                            '<span style="color: #9c5003;">⏳ En cours</span>'}
                                     </td>
                                 </tr>
                             `;
                         }).join('')}
                     </tbody>
                 </table>
-
-                <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                    <div style="background: #057e68; color: white; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 14px; opacity: 0.9;">Participants Totaux</div>
-                        <div style="font-size: 32px; font-weight: bold;">${serie.participants.length}</div>
-                    </div>
-                    <div style="background: #057e68; color: white; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 14px; opacity: 0.9;">Terminés</div>
-                        <div style="font-size: 32px; font-weight: bold;">
-                            ${serie.participants.filter(p => p.status === 'finished').length}
-                        </div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #fa709a, #fee140); color: white; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 14px; opacity: 0.9;">Distance Totale</div>
-                        <div style="font-size: 32px; font-weight: bold;">
-                            ${(serie.participants.reduce((sum, p) => sum + p.totalDistance, 0) / 1000).toFixed(2)} km
-                        </div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #30cfd0, #330867); color: white; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 14px; opacity: 0.9;">Tours Totaux</div>
-                        <div style="font-size: 32px; font-weight: bold;">
-                            ${serie.participants.reduce((sum, p) => sum + p.laps.length, 0)}
-                        </div>
-                    </div>
-                </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 16px; font-size: 14px; color: #586566;">
+                <span>Participants : <strong style="color: var(--color-text);">${serie.participants.length}</strong></span>
+                <span>Terminés : <strong style="color: var(--color-text);">${sum.finished}</strong></span>
+                <span>${sum.distanceLabel} : <strong style="color: var(--color-text);">${sum.distance}</strong></span>
+                <span>Meilleur temps : <strong style="color: var(--color-text); font-family: monospace;">${sum.bestTime}</strong></span>
             </div>
         </div>
     `;
@@ -1935,9 +1923,7 @@ window.exportRaceRankingToPDF = function() {
         </tr>`;
     }).join('');
 
-    const totalDistance = (serie.participants.reduce((sum, p) => sum + p.totalDistance, 0) / 1000).toFixed(2);
-    const finishedCount = serie.participants.filter(p => p.status === 'finished').length;
-    const totalLaps = serie.participants.reduce((sum, p) => sum + p.laps.length, 0);
+    const sum = raceRankingSummary(serie);
 
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`<!DOCTYPE html>
@@ -1961,7 +1947,7 @@ window.exportRaceRankingToPDF = function() {
 </head>
 <body>
     <h1>🏆 Classement Général</h1>
-    <p class="subtitle">${serieName} &nbsp;|&nbsp; ${serie.participants.length} participants · ${finishedCount} terminés · ${totalDistance} km · ${totalLaps} tours &nbsp;|&nbsp; Généré le ${currentDate}</p>
+    <p class="subtitle">${serieName} &nbsp;|&nbsp; ${serie.participants.length} participants · ${sum.finished} terminés · ${sum.distanceLabel.toLowerCase()} ${sum.distance} · meilleur temps ${sum.bestTime} &nbsp;|&nbsp; Généré le ${currentDate}</p>
     <table>
         <thead>
             <tr>
