@@ -2730,58 +2730,160 @@
         return days;
     }
 
+    // Rassemble les journées Matchs d'un joueur : position dans la division, bilan,
+    // points (barème multisport ou points de championnat) et matchs joués.
+    function collectPlayerMatchsDetail(playerName) {
+        var lower = (playerName || '').toLowerCase();
+        var multisport = isMultisportMode();
+        var numDivisions = (global.config && global.config.numberOfDivisions) ? global.config.numberOfDivisions : 3;
+        var days = [];
+
+        Object.keys(global.championship.days).sort(function(a, b) { return a - b; }).forEach(function(dayNumber) {
+            var dayNum = parseInt(dayNumber, 10);
+            var dayData = global.championship.days[dayNumber];
+            if (!dayData || !dayData.players || getDayType(dayNumber) !== DAY_TYPES.CHAMPIONSHIP) return;
+
+            for (var division = 1; division <= numDivisions; division++) {
+                var order = getMatchsDayDivisionOrder(dayNum, division);
+                var index = -1;
+                order.forEach(function(row, i) { if (row.name.toLowerCase() === lower) index = i; });
+                if (index === -1) continue;
+                var name = order[index].name;
+                var stats = global.calculatePlayerStats(dayNum, division, name);
+                if (!stats) continue;
+
+                var matches = (stats.matches || []).filter(function(m) { return m.completed; }).map(function(m) {
+                    var isP1 = m.player1 === name;
+                    var result;
+                    if (m.forfaitBy) result = m.forfaitBy === (isP1 ? 'player1' : 'player2') ? 'F' : 'V';
+                    else if (m.winner === null || m.winner === undefined) result = 'N';
+                    else result = m.winner === name ? 'V' : 'D';
+                    var mine = isP1 ? m.score1 : m.score2, theirs = isP1 ? m.score2 : m.score1;
+                    return {
+                        opponent: isP1 ? m.player2 : m.player1,
+                        score: (mine === '' || mine == null ? '-' : mine) + ' – ' + (theirs === '' || theirs == null ? '-' : theirs),
+                        result: result
+                    };
+                });
+
+                days.push({
+                    day: dayNum,
+                    division: division,
+                    position: index + 1,
+                    total: order.length,
+                    stats: stats,
+                    points: multisport ? calculateMultisportPositionPoints(index + 1) : stats.totalPoints,
+                    matches: matches
+                });
+            }
+        });
+
+        return days;
+    }
+
     function showPlayerChronoDetail(encodedName) {
         var playerName = decodeURIComponent(encodedName);
         var existing = document.getElementById('playerChronoDetailModal');
         if (existing) existing.remove();
 
         var days = collectPlayerChronoDetail(playerName);
+        var matchDays = collectPlayerMatchsDetail(playerName);
 
-        var grandDistance = 0, grandTime = 0, grandSeries = 0, grandPoints = 0;
-        var body = '';
+        // Totaux identiques à ceux du tableau du classement multisport
+        var lower = playerName.toLowerCase();
+        var ranking = calculateMultisportRanking();
+        var totals = null;
+        Object.keys(ranking).forEach(function(k) { if (k.toLowerCase() === lower) totals = ranking[k]; });
 
-        if (days.length === 0) {
-            body = '<p style="color:#586566; text-align:center; padding:20px;">Aucune épreuve trouvée pour ce participant.</p>';
-        } else {
-            days.forEach(function(d) {
-                var dayDistance = 0, dayTime = 0;
-                body += '<div style="margin:14px 0 6px; font-weight:700; color:#2c3e50; border-bottom:2px solid #5267d0; padding-bottom:4px;">📅 Journée ' + d.day + '</div>';
-                body += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
-                body += '<thead><tr style="background:#f4f6fb; color:#34495e;">' +
-                    '<th style="padding:6px 8px; text-align:left;">Épreuve</th>' +
-                    '<th style="padding:6px 8px; text-align:left;">Série</th>' +
-                    '<th style="padding:6px 8px; text-align:center;">Pos.</th>' +
-                    '<th style="padding:6px 8px; text-align:center;">Tours</th>' +
-                    '<th style="padding:6px 8px; text-align:center;">Distance</th>' +
-                    '<th style="padding:6px 8px; text-align:center;">Temps</th>' +
-                    '</tr></thead><tbody>';
-                d.rows.forEach(function(r) {
-                    dayDistance += r.distance; dayTime += r.time;
-                    grandDistance += r.distance; grandTime += r.time; grandSeries++; grandPoints += r.points;
-                    var posTxt = r.position ? (r.position + ' / ' + r.total) : '-';
-                    body += '<tr style="border-bottom:1px solid #ecf0f1;">' +
-                        '<td style="padding:6px 8px;">' + (r.eventName || '<span style="color:#bbb;">—</span>') + '</td>' +
-                        '<td style="padding:6px 8px;">' + (r.serieName || '') + '</td>' +
-                        '<td style="padding:6px 8px; text-align:center; font-weight:600;">' + posTxt + '</td>' +
-                        '<td style="padding:6px 8px; text-align:center;">' + (r.laps != null ? r.laps : '-') + '</td>' +
-                        '<td style="padding:6px 8px; text-align:center; color:#08689d;">' + formatDistance(r.distance) + '</td>' +
-                        '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#9c5003;">' + (r.time ? formatDurationHMS(r.time) : '-') + '</td>' +
+        var grandDistance = 0, grandTime = 0, grandSeries = 0;
+        var sections = [];
+        var th = function(label, align) { return '<th style="padding:6px 8px; text-align:' + (align || 'center') + ';">' + label + '</th>'; };
+        var dayTitle = function(day, suffix) {
+            return '<div style="margin:14px 0 6px; font-weight:700; color:#2c3e50; border-bottom:2px solid #5267d0; padding-bottom:4px;">📅 Journée ' + day + suffix + '</div>';
+        };
+        var RESULT_STYLE = {
+            V: ['Victoire', '#017239', '#d5f4e6'],
+            N: ['Nul', '#6b5b00', '#fdf3c4'],
+            D: ['Défaite', '#a12a1d', '#fbe1dd'],
+            F: ['Forfait', '#586566', '#ecf0f1']
+        };
+
+        matchDays.forEach(function(d) {
+            var st = d.stats;
+            var html = dayTitle(d.day, ' · ⚔️ Matchs · Division ' + d.division);
+            html += '<div style="display:flex; flex-wrap:wrap; gap:6px 18px; font-size:13px; color:#34495e; margin:4px 0 8px;">' +
+                '<span><strong>Position :</strong> ' + d.position + ' / ' + d.total + '</span>' +
+                '<span><strong>Bilan :</strong> ' + st.wins + 'V · ' + st.draws + 'N · ' + st.losses + 'D' + (st.forfeits ? ' · ' + st.forfeits + 'F' : '') + '</span>' +
+                '<span><strong>Points marqués :</strong> ' + st.pointsWon + ' – ' + st.pointsLost + '</span>' +
+                '<span style="color:#08689d;"><strong>' + d.points + ' pts</strong></span>' +
+                '</div>';
+            if (d.matches.length) {
+                html += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
+                html += '<thead><tr style="background:#f4f6fb; color:#34495e;">' + th('Adversaire', 'left') + th('Score') + th('Résultat') + '</tr></thead><tbody>';
+                d.matches.forEach(function(m) {
+                    var r = RESULT_STYLE[m.result];
+                    html += '<tr style="border-bottom:1px solid #ecf0f1;">' +
+                        '<td style="padding:6px 8px;">' + m.opponent + '</td>' +
+                        '<td style="padding:6px 8px; text-align:center; font-weight:600;">' + m.score + '</td>' +
+                        '<td style="padding:6px 8px; text-align:center;"><span style="padding:2px 8px; border-radius:10px; font-size:12px; color:' + r[1] + '; background:' + r[2] + ';">' + r[0] + '</span></td>' +
                         '</tr>';
                 });
-                body += '<tr style="background:#fbfbfd; font-weight:700;">' +
-                    '<td colspan="4" style="padding:6px 8px; text-align:right;">Sous-total journée :</td>' +
-                    '<td style="padding:6px 8px; text-align:center; color:#08689d;">' + formatDistance(dayDistance) + '</td>' +
-                    '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#9c5003;">' + formatDurationHMS(dayTime) + '</td>' +
-                    '</tr>';
-                body += '</tbody></table>';
-            });
+                html += '</tbody></table>';
+            }
+            sections.push({ day: d.day, html: html });
+        });
 
+        days.forEach(function(d) {
+            var dayDistance = 0, dayTime = 0;
+            var html = dayTitle(d.day, matchDays.length ? ' · 🏁 Courses' : '');
+            html += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
+            html += '<thead><tr style="background:#f4f6fb; color:#34495e;">' +
+                th('Épreuve', 'left') + th('Série', 'left') + th('Pos.') + th('Tours') + th('Distance') + th('Temps') +
+                '</tr></thead><tbody>';
+            d.rows.forEach(function(r) {
+                dayDistance += r.distance; dayTime += r.time;
+                grandDistance += r.distance; grandTime += r.time; grandSeries++;
+                var posTxt = r.position ? (r.position + ' / ' + r.total) : '-';
+                html += '<tr style="border-bottom:1px solid #ecf0f1;">' +
+                    '<td style="padding:6px 8px;">' + (r.eventName || '<span style="color:#bbb;">—</span>') + '</td>' +
+                    '<td style="padding:6px 8px;">' + (r.serieName || '') + '</td>' +
+                    '<td style="padding:6px 8px; text-align:center; font-weight:600;">' + posTxt + '</td>' +
+                    '<td style="padding:6px 8px; text-align:center;">' + (r.laps != null ? r.laps : '-') + '</td>' +
+                    '<td style="padding:6px 8px; text-align:center; color:#08689d;">' + formatDistance(r.distance) + '</td>' +
+                    '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#9c5003;">' + (r.time ? formatDurationHMS(r.time) : '-') + '</td>' +
+                    '</tr>';
+            });
+            html += '<tr style="background:#fbfbfd; font-weight:700;">' +
+                '<td colspan="4" style="padding:6px 8px; text-align:right;">Sous-total journée :</td>' +
+                '<td style="padding:6px 8px; text-align:center; color:#08689d;">' + formatDistance(dayDistance) + '</td>' +
+                '<td style="padding:6px 8px; text-align:center; font-family:monospace; color:#9c5003;">' + formatDurationHMS(dayTime) + '</td>' +
+                '</tr>';
+            html += '</tbody></table>';
+            sections.push({ day: d.day, html: html });
+        });
+
+        var body = '';
+        if (sections.length === 0) {
+            body = '<p style="color:#586566; text-align:center; padding:20px;">Aucun match ni épreuve trouvé pour ce participant.</p>';
+        } else {
+            sections.sort(function(a, b) { return a.day - b.day; });
+            body = sections.map(function(x) { return x.html; }).join('');
+
+            var stat = function(label, value) {
+                return '<div><div style="font-size:11px;">' + label + '</div><div style="font-size:18px; font-weight:700;">' + value + '</div></div>';
+            };
+            var summary = '';
+            if (matchDays.length) {
+                summary += stat('Matchs', totals ? totals.championshipWins + 'V / ' + totals.championshipMatches + 'J' : '-');
+                summary += stat('Points matchs', totals ? totals.championshipPoints : 0);
+            }
+            if (days.length) {
+                summary += stat('Séries', grandSeries) + stat('Distance totale', formatDistance(grandDistance)) + stat('Temps total', formatDurationHMS(grandTime));
+                summary += stat('Points courses', totals ? totals.chronoPoints : 0);
+            }
+            summary += stat('Total', totals ? totals.totalPoints : 0);
             body += '<div style="margin-top:16px; padding:12px; background:linear-gradient(135deg,#5267d0,#764ba2); color:white; border-radius:8px; display:flex; justify-content:space-around; flex-wrap:wrap; gap:8px; text-align:center;">' +
-                '<div><div style="font-size:11px;">Séries</div><div style="font-size:18px; font-weight:700;">' + grandSeries + '</div></div>' +
-                '<div><div style="font-size:11px;">Distance totale</div><div style="font-size:18px; font-weight:700;">' + formatDistance(grandDistance) + '</div></div>' +
-                '<div><div style="font-size:11px;">Temps total</div><div style="font-size:18px; font-weight:700;">' + formatDurationHMS(grandTime) + '</div></div>' +
-                '<div><div style="font-size:11px;">Points (multisport)</div><div style="font-size:18px; font-weight:700;">' + grandPoints + '</div></div>' +
-                '</div>';
+                summary + '</div>';
         }
 
         var modal = document.createElement('div');
