@@ -165,18 +165,17 @@ function displayRaceInterface(serie) {
                         <p style="color: #ecf0f1; margin: 0; font-size: 13px;">Appuyez sur les touches <strong>1-9</strong> du clavier (<strong>0</strong> = couloir 10) pour arrêter les chronos instantanément</p>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-                        ${serie.participants
-                            .filter(p => p.laneNumber)
-                            .sort((a, b) => a.laneNumber - b.laneNumber)
-                            .map(p => {
-                            const laneNumber = p.laneNumber;
-                            const isFinished = p.status === 'finished';
+                        ${[...new Set(serie.participants.filter(p => p.laneNumber).map(p => p.laneNumber))]
+                            .sort((a, b) => a - b)
+                            .map(laneNumber => {
+                            // Un bouton par couloir, même s'il est partagé par plusieurs nageurs
+                            const isFinished = laneOccupants(serie, laneNumber).every(p => p.status === 'finished');
                             const bgColor = isFinished ? '#017239' : '#d03427';
                             return `
                                 <div id="lane-${laneNumber}"
                                      onclick="finishLane(${laneNumber})"
                                      style="background: ${bgColor}; color: white; padding: 15px 20px; border-radius: 10px; cursor: ${isFinished ? 'default' : 'pointer'}; min-width: 120px; text-align: center; transition: transform 0.1s, background 0.2s; ${!isFinished ? 'box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);' : ''}">
-                                    ${laneButtonInnerHTML(laneNumber, p, p.finishTime || p.totalTime)}
+                                    ${laneGroupInnerHTML(serie, laneNumber)}
                                 </div>
                             `;
                         }).join('')}
@@ -306,8 +305,9 @@ window.finishLane = function(laneNumber) {
         return;
     }
 
-    // Récupérer le participant assigné à ce couloir
-    const participant = serie.participants.find(p => p.laneNumber === laneNumber);
+    // Participant du couloir : le prochain encore en course si le couloir est partagé
+    const occupants = laneOccupants(serie, laneNumber);
+    const participant = occupants.find(p => p.status !== 'finished') || occupants[0];
     if (!participant) {
         // Aucun participant assigné à ce couloir
         return;
@@ -391,17 +391,44 @@ function stopRaceIfAllDone(serie, triggeringAction) {
     return true;
 }
 
+// Nageurs d'un couloir (plusieurs si la série autorise les couloirs partagés)
+function laneOccupants(serie, laneNumber) {
+    return (serie.participants || []).filter(p => p.laneNumber === laneNumber);
+}
+
+// Contenu du bouton d'un couloir : un nageur (affichage habituel) ou plusieurs
+function laneGroupInnerHTML(serie, laneNumber) {
+    const occupants = laneOccupants(serie, laneNumber);
+    if (occupants.length <= 1) {
+        const p = occupants[0];
+        return p ? laneButtonInnerHTML(laneNumber, p, p.finishTime || p.totalTime) : '';
+    }
+    return `
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Couloir</div>
+        <div style="font-size: 36px; font-weight: bold; line-height: 1;">${laneNumber}</div>
+        ${occupants.map(p => `
+            <div class="lane-name" style="font-size: 12px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
+                ${p.status === 'finished' ? '✅' : '🏃'} ${p.name}${p.status === 'finished' ? ` <span style="font-family: monospace; font-size: 11px;">${formatTime(p.finishTime || p.totalTime)}</span>` : ''}
+            </div>`).join('')}
+    `;
+}
+
 // Mettre à jour l'affichage d'un couloir après finish
 function updateLaneDisplay(laneNumber, participant, finishTime) {
     const laneElement = document.getElementById(`lane-${laneNumber}`);
     if (!laneElement) return;
 
-    laneElement.style.background = '#017239';
-    laneElement.style.cursor = 'default';
-    laneElement.style.boxShadow = 'none';
+    const serie = raceData.currentSerie;
+    const occupants = serie ? laneOccupants(serie, laneNumber) : [participant];
+    if (occupants.every(p => p.status === 'finished')) {
+        laneElement.style.background = '#017239';
+        laneElement.style.cursor = 'default';
+        laneElement.style.boxShadow = 'none';
+    }
 
     // Mettre à jour le contenu
-    laneElement.innerHTML = laneButtonInnerHTML(laneNumber, participant, finishTime);
+    laneElement.innerHTML = occupants.length > 1 ? laneGroupInnerHTML(serie, laneNumber)
+        : laneButtonInnerHTML(laneNumber, participant, finishTime);
 }
 
 // Contenu d'un gros bouton de couloir : légende « Couloir », grand numéro, nom.
