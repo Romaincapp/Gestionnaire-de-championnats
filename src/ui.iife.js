@@ -622,6 +622,8 @@
             : (mixed ? '🏅 Classement Multisport (Matchs + Courses)' : '🏆 Classement des Courses');
         const info = document.querySelector('#multisport-ranking .multisport-info');
         if (info) info.style.display = swimmingOnly || !mixed ? 'none' : '';
+        const bareme = document.getElementById('multisport-bareme-text');
+        if (bareme && typeof multisportBaremeText === 'function') bareme.textContent = multisportBaremeText();
 
         if (typeof renderMultisportRanking === 'function') {
             container.innerHTML = renderMultisportRanking();
@@ -656,25 +658,32 @@
             && typeof buildEventRankingsHTML === 'function') {
             return buildEventRankingsHTML();
         }
-        const ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
-        const sorted = Object.values(ranking).sort((a, b) => b.totalPoints - a.totalPoints);
-
-        let rows = '';
-        sorted.forEach((stat, index) => {
-            const clubBadge = stat.club ? `<span class="club-badge">${stat.club}</span>` : '-';
-            rows += `<tr>
+        const mixed = typeof hasChampionshipDays === 'function' && hasChampionshipDays()
+            && typeof hasChronoDays === 'function' && hasChronoDays();
+        if (!mixed) {
+            // Courses seules : distance & temps, sans barème multisport
+            const ranking = typeof calculateMultisportRanking === 'function' ? calculateMultisportRanking() : {};
+            const sorted = Object.values(ranking).sort((a, b) =>
+                (b.chronoDistance - a.chronoDistance) || (a.chronoTime - b.chronoTime));
+            const rows = sorted.map((stat, index) => `<tr>
                 <td>${index + 1}</td>
                 <td><strong>${stat.player}</strong></td>
-                <td>${clubBadge}</td>
-                <td>${stat.championshipPoints} pts<br><small>${stat.championshipWins}V/${stat.championshipMatches}J</small></td>
-                <td>${stat.chronoPoints} pts<br><small>${stat.chronoSeries} séries</small></td>
-                <td class="total">${stat.totalPoints}</td>
-            </tr>`;
-        });
-
-        return `<table>
-        <thead><tr><th>#</th><th>Joueur</th><th>Club</th><th>🎾 Matchs</th><th>⏱️ Courses</th><th>Total</th></tr></thead>
-        <tbody>${rows}</tbody></table>`;
+                <td>${stat.club || '-'}</td>
+                <td>${formatDistance(stat.chronoDistance)}</td>
+                <td>${stat.chronoTime ? formatDurationHMS(stat.chronoTime) : '-'}</td>
+                <td>${stat.chronoSeries}</td>
+            </tr>`).join('');
+            return `<table>
+            <thead><tr><th>#</th><th>Participant</th><th>Club</th><th>📏 Distance</th><th>⏱️ Temps total</th><th>Séries</th></tr></thead>
+            <tbody>${rows}</tbody></table>`;
+        }
+        const standings = getMultisportStandings(getMultisportCategoryFilter());
+        if (!standings.length) return '<p style="text-align: center; color: #586566;">Aucun résultat pour le moment</p>';
+        let html = `<p style="text-align: center; color: #586566; font-size: 0.9em;">${multisportRulesText()}</p>` +
+            buildMultisportStandingsTable(standings, false);
+        const clubs = getMultisportClubStandings(standings);
+        if (clubs.length >= 2) html += '<h2 style="text-align: center; color: #5267d0; margin-top: 30px;">🏛️ Classement des clubs</h2>' + buildMultisportClubTable(clubs, false);
+        return html;
     }
 
     window.buildMultisportRankingContentHTML = buildMultisportRankingContentHTML;
