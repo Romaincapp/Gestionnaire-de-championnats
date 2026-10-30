@@ -2001,7 +2001,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                 ">
                     <div class="player-names" style="font-weight: 600; color: #6c5103;">
                         🎯 <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(realPlayer)}')"
-                                style="cursor: pointer; text-decoration: underline dotted;"
+                                style="cursor: pointer;"
                                 title="Cliquez pour voir les statistiques"
                                 onmouseover="this.style.color='#09679e'"
                                 onmouseout="this.style.color='#6c5103'">${realPlayer}</span> VS ${byePlayer}
@@ -2018,7 +2018,7 @@ function generatePoolMatchHTML(match, dayNumber) {
 
                 <div style="text-align: center; padding: 10px; background: rgba(255, 193, 7, 0.1); border-radius: 6px;">
                     <strong style="color: #6c5103;">✅ <span onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(realPlayer)}')"
-                                                            style="cursor: pointer; text-decoration: underline dotted;"
+                                                            style="cursor: pointer;"
                                                             title="Cliquez pour voir les statistiques"
                                                             onmouseover="this.style.color='#09679e'"
                                                             onmouseout="this.style.color='#6c5103'">${realPlayer}</span> qualifié(e) automatiquement</strong>
@@ -2083,7 +2083,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                             onchange="editPoolMatchPlayerName(${dayNumber}, ${match.division}, '${match.id}', 'player1', this.value)"
                             style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white; cursor: text;">`
                     : `<span class="player-name-left" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player1)}')"
-                          style="cursor: pointer; text-decoration: underline dotted;"
+                          style="cursor: pointer;"
                           title="Cliquez pour voir les statistiques"
                           onmouseover="this.style.color='#09679e'"
                           onmouseout="this.style.color='#2c3e50'">${match.player1}</span>`}
@@ -2108,7 +2108,7 @@ function generatePoolMatchHTML(match, dayNumber) {
                             onchange="editPoolMatchPlayerName(${dayNumber}, ${match.division}, '${match.id}', 'player2', this.value)"
                             style="flex: 1; min-width: 80px; padding: 4px 8px; font-size: 14px; border: 1px solid #09679e; border-radius: 4px; background: white; cursor: text;">`
                     : `<span class="player-name-right" onclick="showPlayerPoolSummary(${dayNumber}, ${match.division}, '${escapeForOnclick(match.player2)}')"
-                          style="cursor: pointer; text-decoration: underline dotted;"
+                          style="cursor: pointer;"
                           title="Cliquez pour voir les statistiques"
                           onmouseover="this.style.color='#09679e'"
                           onmouseout="this.style.color='#2c3e50'">${match.player2}</span>`}
@@ -2922,7 +2922,7 @@ function generatePoolRankingHTML(pool, poolMatches, poolIndex, qualifiedPlayers 
                                 </td>
                                 <td style="padding: 8px; font-weight: 600; color: ${textColor};">
                                     <span ${dayNumber && division ? `onclick="showPlayerPoolSummary(${dayNumber}, ${division}, '${escapeForOnclick(player.name)}')"` : ''}
-                                          style="cursor: ${dayNumber && division ? 'pointer' : 'default'}; ${dayNumber && division ? 'text-decoration: underline dotted;' : ''}"
+                                          style="cursor: ${dayNumber && division ? 'pointer' : 'default'};"
                                           ${dayNumber && division ? `title="Cliquez pour voir les statistiques"` : ''}
                                           ${dayNumber && division ? `onmouseover="this.style.color='#09679e'"` : ''}
                                           ${dayNumber && division ? `onmouseout="this.style.color='${textColor}'"` : ''}>${player.name}</span>${badge}
