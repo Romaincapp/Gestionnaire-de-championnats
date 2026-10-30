@@ -4245,6 +4245,8 @@
             '<style>#' + modal.id + ' .se-no-lanes .se-lane-col { display: none; }' +
             '#' + modal.id + ' .se-input { width: 100%; box-sizing: border-box; padding: 6px 7px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px; }' +
             '#' + modal.id + ' tr.se-removed td { opacity: 0.45; }' +
+            '#' + modal.id + ' .se-lane.se-lane-dup { background-color: #ffe6c7; border-color: #f0a04b; }' +
+            'body.dark-mode #' + modal.id + ' .se-lane.se-lane-dup { background-color: #5a3e1c; border-color: #c98a3d; color: #fff; }' +
             '#' + modal.id + ' tr.se-removed .se-name { text-decoration: line-through; }</style>' +
             '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;">' +
             '<div style="background: white; padding: 24px; border-radius: 10px; max-width: 820px; width: 94%; max-height: 88vh; overflow-y: auto;">' +
@@ -4256,6 +4258,8 @@
             ' onchange="toggleSerieEditorLanes(' + dayNumber + ')"> 🏊 Course en couloirs</label>' +
             '<label class="se-lanecount" style="display: ' + (serie.laneMode ? 'inline-flex' : 'none') + '; align-items: center; gap: 6px;">Nombre de couloirs ' +
             '<input type="number" id="se-lanecount-' + dayNumber + '" value="' + laneCount + '" min="1" max="20" onchange="refreshSerieEditorLaneOptions(' + dayNumber + ')" style="width: 64px; padding: 5px; border: 1px solid #cbd5e1; border-radius: 5px;"></label>' +
+            '<label class="se-lanecount" style="display: ' + (serie.laneMode ? 'inline-flex' : 'none') + '; align-items: center; gap: 6px; cursor: pointer;" title="Ex. eau libre, échauffement : plusieurs nageurs partagent un couloir">' +
+            '<input type="checkbox" id="se-shared-' + dayNumber + '"' + (serie.sharedLanes ? ' checked' : '') + ' onchange="markSerieEditorLaneDuplicates(' + dayNumber + ')"> Plusieurs nageurs par couloir</label>' +
             '</div>' +
             // Tableau
             '<div style="overflow-x: auto;"><table id="se-table-' + dayNumber + '" class="' + (serie.laneMode ? '' : 'se-no-lanes') + '" style="width: 100%; border-collapse: collapse;">' +
@@ -4282,6 +4286,22 @@
             '<button type="button" onclick="saveChronoSerieEditor(' + dayNumber + ', ' + serie.id + ')" style="padding: 8px 15px; border: none; background: #087f58; color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">💾 Enregistrer</button>' +
             '</div></div></div>';
         document.body.appendChild(modal);
+        markSerieEditorLaneDuplicates(dayNumber);
+    }
+
+    // Couloir attribué à plusieurs participants alors que ce n'est pas autorisé : orange pâle
+    function markSerieEditorLaneDuplicates(dayNumber) {
+        var lanesOn = document.getElementById('se-lanes-' + dayNumber).checked;
+        var shared = document.getElementById('se-shared-' + dayNumber).checked;
+        var count = {};
+        var rows = serieEditorRows(dayNumber).filter(function(tr) { return !tr.classList.contains('se-removed'); });
+        rows.forEach(function(tr) { var v = tr.querySelector('.se-lane').value; if (v) count[v] = (count[v] || 0) + 1; });
+        serieEditorRows(dayNumber).forEach(function(tr) {
+            var sel = tr.querySelector('.se-lane');
+            var dup = lanesOn && !shared && !tr.classList.contains('se-removed') && sel.value && count[sel.value] > 1;
+            sel.classList.toggle('se-lane-dup', !!dup);
+            sel.title = dup ? 'Couloir ' + sel.value + ' attribué à plusieurs participants' : '';
+        });
     }
 
     function laneOptionsHTML(laneCount, selected) {
@@ -4299,7 +4319,7 @@
         var val = function(v) { return escapeLaneHtml(v == null ? '' : v); };
         var cell = 'padding: 4px 6px;';
         return '<tr' + (row.id != null ? ' data-pid="' + row.id + '"' : ' data-new="1"') + ' style="border-bottom: 1px solid #ecf0f1;">' +
-            '<td class="se-lane-col" style="' + cell + '"><select class="se-input se-lane" aria-label="Couloir">' + laneOptionsHTML(laneCount, row.lane) + '</select></td>' +
+            '<td class="se-lane-col" style="' + cell + '"><select class="se-input se-lane" aria-label="Couloir" onchange="markSerieEditorLaneDuplicates(' + dayNumber + ')">' + laneOptionsHTML(laneCount, row.lane) + '</select></td>' +
             '<td style="' + cell + '"><input type="number" min="0" class="se-input se-bib" aria-label="Dossard" value="' + val(row.bib) + '"></td>' +
             '<td style="' + cell + '"><input type="text" class="se-input se-name" aria-label="Nom" value="' + val(row.name) + '"></td>' +
             '<td style="' + cell + '"><input type="text" class="se-input se-club" aria-label="Club" value="' + val(row.club) + '"></td>' +
@@ -4323,12 +4343,13 @@
         var on = document.getElementById('se-lanes-' + dayNumber).checked;
         document.getElementById('se-table-' + dayNumber).classList.toggle('se-no-lanes', !on);
         var modal = document.getElementById(serieEditorModalId(dayNumber));
-        modal.querySelector('.se-lanecount').style.display = on ? 'inline-flex' : 'none';
+        modal.querySelectorAll('.se-lanecount').forEach(function(el) { el.style.display = on ? 'inline-flex' : 'none'; });
         // Couloirs activés : les participants sans couloir prennent les premiers libres
         if (on) serieEditorRows(dayNumber).forEach(function(tr) {
             var sel = tr.querySelector('.se-lane');
             if (!sel.value) sel.value = String(nextFreeEditorLane(dayNumber) || '');
         });
+        markSerieEditorLaneDuplicates(dayNumber);
     }
 
     function refreshSerieEditorLaneOptions(dayNumber) {
@@ -4337,6 +4358,7 @@
             var sel = tr.querySelector('.se-lane');
             sel.innerHTML = laneOptionsHTML(count, sel.value);
         });
+        markSerieEditorLaneDuplicates(dayNumber);
     }
 
     function nextFreeEditorLane(dayNumber) {
@@ -4351,11 +4373,15 @@
     // 🗑️ : un participant existant est barré (↩️ pour l'annuler) ; une ligne ajoutée disparaît
     function toggleSerieEditorRow(btn) {
         var tr = btn.closest('tr');
-        if (tr.getAttribute('data-new')) { tr.remove(); return; }
-        var removed = tr.classList.toggle('se-removed');
-        btn.textContent = removed ? '↩️' : '🗑️';
-        btn.title = removed ? 'Garder dans la série' : 'Retirer de la série';
-        btn.setAttribute('aria-label', btn.title);
+        var dayNumber = parseInt(tr.closest('table').id.replace('se-table-', ''), 10);
+        if (tr.getAttribute('data-new')) tr.remove();
+        else {
+            var removed = tr.classList.toggle('se-removed');
+            btn.textContent = removed ? '↩️' : '🗑️';
+            btn.title = removed ? 'Garder dans la série' : 'Retirer de la série';
+            btn.setAttribute('aria-label', btn.title);
+        }
+        markSerieEditorLaneDuplicates(dayNumber);
     }
 
     function addSerieEditorRow(dayNumber, serieId) {
@@ -4381,6 +4407,7 @@
             bib: bib, name: pp ? pp.name : name, club: pp ? pp.club : '', category: pp ? pp.category : ''
         }, serieEditorLaneCount(dayNumber)));
         document.getElementById('se-empty-' + dayNumber).style.display = 'none';
+        markSerieEditorLaneDuplicates(dayNumber);
         var other = serie && findOtherSerieOfEvent(chronoData, serie, name);
         if (other) showNotification(name + ' est en « ' + other.name + ' » : il sera déplacé ici', 'info');
         input.value = '';
@@ -4393,6 +4420,7 @@
         var serie = findSerieInChronoData(chronoData, serieId);
         if (!serie) return;
         var lanesOn = document.getElementById('se-lanes-' + dayNumber).checked;
+        var shared = document.getElementById('se-shared-' + dayNumber).checked;
 
         var rows = serieEditorRows(dayNumber).map(function(tr) {
             var lane = tr.querySelector('.se-lane').value;
@@ -4414,7 +4442,10 @@
         for (var i = 0; i < kept.length; i++) {
             for (var j = i + 1; j < kept.length; j++) {
                 if (sameName(kept[i].name, kept[j].name)) { showNotification('« ' + kept[i].name + ' » figure deux fois dans la série', 'warning'); return; }
-                if (kept[i].lane && kept[i].lane === kept[j].lane) { showNotification('Couloir ' + kept[i].lane + ' attribué deux fois', 'warning'); return; }
+                if (!shared && kept[i].lane && kept[i].lane === kept[j].lane) {
+                    showNotification('Couloir ' + kept[i].lane + ' attribué deux fois (cochez « Plusieurs nageurs par couloir » pour l\'autoriser)', 'warning');
+                    return;
+                }
             }
         }
         var byId = {};
@@ -4461,6 +4492,7 @@
         });
 
         serie.laneMode = lanesOn;
+        if (lanesOn && shared) serie.sharedLanes = true; else delete serie.sharedLanes;
         if (!lanesOn) (serie.participants || []).forEach(function(p) { delete p.laneNumber; });
 
         saveToLocalStorage();
@@ -4477,6 +4509,7 @@
 
     global.editChronoSerie = editChronoSerie;
     global.toggleSerieEditorLanes = toggleSerieEditorLanes;
+    global.markSerieEditorLaneDuplicates = markSerieEditorLaneDuplicates;
     global.refreshSerieEditorLaneOptions = refreshSerieEditorLaneOptions;
     global.toggleSerieEditorRow = toggleSerieEditorRow;
     global.addSerieEditorRow = addSerieEditorRow;
