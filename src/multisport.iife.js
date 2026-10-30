@@ -1076,8 +1076,8 @@
             '</div>' +
             // Panneau Tableau
             '<div id="bulk-panel-table-' + dayNumber + '" role="tabpanel" aria-labelledby="bulk-tab-table-' + dayNumber + '" hidden>' +
-            '<p style="color: #586566; font-size: 13px;">Une ligne par participant. Une nouvelle ligne s\'ajoute quand vous remplissez la dernière ; vous pouvez aussi coller un bloc copié depuis un tableur (Nom, Prénom, Club, Catégorie, Épreuve).</p>' +
-            '<p class="bulk-tip" style="margin: 0 0 10px;">💡 <strong>Astuce :</strong> avec l\'épreuve, et même le temps d\'engagement (ex. <em>50m brasse 45.20</em>), le bouton «&nbsp;🏁 Séries automatiques&nbsp;» créera les séries en un clic.</p>' +
+            '<p style="color: #586566; font-size: 13px;">Un participant par ligne : seul le nom est obligatoire. Vous pouvez aussi coller des lignes copiées depuis un tableur, dans l\'ordre des colonnes.</p>' +
+            '<p class="bulk-tip" style="margin: 0 0 10px;">💡 <strong>Astuce :</strong> remplissez la colonne Épreuve (avec le temps si vous l\'avez) pour créer ensuite les séries en un clic via «&nbsp;🏁 Séries automatiques&nbsp;».</p>' +
             '<div class="bulk-grid-scroll"><table class="bulk-grid" id="bulk-grid-' + dayNumber + '"><thead><tr><th class="bulk-grid-num">#</th>' +
             BULK_COLUMNS.map(function(c) { return '<th>' + c.label + '</th>'; }).join('') +
             '<th class="bulk-grid-del"><span class="pt-sr-only">Retirer</span></th></tr></thead><tbody></tbody></table></div>' +
