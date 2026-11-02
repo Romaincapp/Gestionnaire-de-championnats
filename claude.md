@@ -113,7 +113,10 @@ to new days by `addNewDay()`. Logic in `src/scoring.iife.js`.
   instead of matches; `calculatePlayerStats` returns the score as `totalPoints`/`pointsWon` (so the
   general ranking sums scores); missed days add no forfeit. Match-only buttons carry
   `data-match-only` and are hidden by `refreshDayActionButtons()`. Matches kept while in single mode
-  are hidden and not counted.
+  are hidden and not counted. General ranking tiebreak: best day (`bestSingleScore`), then shared
+  rank (`player.rank` — renderers must display it, not `index + 1`). 🖨️ and the 👤 player sheets
+  have single-score variants (`showSingleScorePrintModal`, `showSingleScorePlayerDetails`,
+  `showSingleScoreGeneralPlayerDetails`).
 
 Rules:
 - **Never write a winner/completion rule by hand**: call `applyMatchResult(match, getDayScoring(day))`

@@ -1592,10 +1592,11 @@ function exportGeneralRankingToHTML() {
         `;
 
         generalRanking.divisions[division].forEach((player, index) => {
-            const rankClass = index < 3 ? `rank-${index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze'}` : '';
+            const rank = player.rank || index + 1;
+            const rankClass = rank <= 3 ? `rank-${rank === 1 ? 'gold' : rank === 2 ? 'silver' : 'bronze'}` : '';
             htmlContent += `
                 <tr>
-                    <td class="rank-position ${rankClass}">${index + 1}</td>
+                    <td class="rank-position ${rankClass}">${rank}</td>
                     <td>${player.name}</td>
                     ${singleOnly ? window.generalSingleCells(player) : `<td>${player.totalPoints}</td>
                     <td>${player.daysPlayed}</td>

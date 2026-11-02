@@ -156,7 +156,94 @@
         };
     }
 
+    // ----- Fiche joueur en score unique -----
+    function ordinal(n) {
+        return n === 1 ? '1<sup>er</sup>' : `${n}<sup>e</sup>`;
+    }
+
+    // Titre et visibilité de la section du bas de la fiche (« 📋 Historique des matchs » par défaut)
+    function setPlayerModalHistory(title) {
+        const section = document.querySelector('#playerModal .matches-history');
+        const heading = section && section.querySelector('h3');
+        if (heading) heading.textContent = title;
+    }
+
+    function openPlayerModal(title, overviewHtml, historyTitle, historyHtml) {
+        const titleEl = document.getElementById('playerNameTitle');
+        if (titleEl) titleEl.textContent = title;
+        const overview = document.getElementById('playerOverview');
+        if (overview) overview.innerHTML = overviewHtml;
+        setPlayerModalHistory(historyTitle);
+        const history = document.getElementById('playerMatches');
+        if (history) history.innerHTML = historyHtml;
+        const modal = document.getElementById('playerModal');
+        if (modal) modal.style.display = 'block';
+    }
+
+    function overviewItem(value, label) {
+        return `<div class="overview-card"><div class="overview-number">${value}</div><div class="overview-label">${label}</div></div>`;
+    }
+
+    // Score et rang du joueur dans sa division pour une journée (null si pas de score)
+    function singleDayResult(dayNumber, division, playerName) {
+        const ranking = global.singleScoreRanking(dayNumber, division);
+        const row = ranking.find(r => r.name === playerName);
+        return {
+            score: row ? row.score : null,
+            rank: row ? row.rank : null,
+            ranked: ranking.filter(r => r.score !== null).length,
+        };
+    }
+
+    function showSingleScorePlayerDetails(dayNumber, division, playerName) {
+        const r = singleDayResult(dayNumber, division, playerName);
+        const ranking = global.singleScoreRanking(dayNumber, division).filter(x => x.score !== null);
+        const best = ranking.length ? ranking[0].score : null;
+        const overview = r.score === null
+            ? overviewItem('—', 'Pas encore de score')
+            : overviewItem(r.score, 'Score') +
+              overviewItem(`${ordinal(r.rank)} / ${r.ranked}`, 'Rang') +
+              (r.rank > 1 && best !== null ? overviewItem(`${r.score - best}`, 'Écart au 1<sup>er</sup>') : '');
+        const rows = ranking.map(x => `
+                <div class="history-match${x.name === playerName ? ' win' : ''}">
+                    <div class="history-opponent">${ordinal(x.rank)} · ${escapeDocText(x.name)}</div>
+                    <div class="history-score">${x.score}</div>
+                </div>`).join('');
+        openPlayerModal(`${playerName} - Division ${division} - Journée ${dayNumber}`, overview,
+            '📋 Classement de la journée',
+            rows || '<p style="text-align: center; color: #586566;">Aucun score saisi</p>');
+    }
+
+    function showSingleScoreGeneralPlayerDetails(playerName, division) {
+        const general = calculateGeneralRanking().divisions[division] || [];
+        const player = general.find(p => p.name === playerName);
+        const days = Object.keys(championship.days).map(d => parseInt(d)).sort((a, b) => a - b)
+            .filter(d => (championship.days[d].dayType || 'championship') !== 'chrono');
+        const overview = player
+            ? overviewItem(player.totalPoints, 'Score total') +
+              overviewItem(`${ordinal(player.rank)} / ${general.length}`, 'Rang général') +
+              overviewItem(player.daysPlayed, 'Journées jouées') +
+              overviewItem(singleAverage(player), 'Moyenne') +
+              overviewItem(player.bestSingleScore === null ? '-' : player.bestSingleScore, 'Meilleure journée')
+            : overviewItem('—', 'Pas encore de score');
+        const rows = days.map(d => {
+            const r = singleDayResult(d, division, playerName);
+            const best = player && r.score !== null && r.score === player.bestSingleScore;
+            return `
+                <div class="history-match${r.score === null ? ' forfait' : ''}">
+                    <div class="history-opponent">Journée ${d}</div>
+                    <div class="history-score">${r.score === null ? 'Absent' : `${r.score}${best ? ' ★' : ''} <span style="font-weight: normal; color: #586566;">· ${ordinal(r.rank)} / ${r.ranked}</span>`}</div>
+                </div>`;
+        }).join('');
+        openPlayerModal(`${playerName} - Division ${division} - Vue Générale`, overview, '📋 Scores par journée', rows);
+    }
+
     function showPlayerDetails(dayNumber, division, playerName) {
+        if (global.isSingleScoreMode(dayNumber)) {
+            showSingleScorePlayerDetails(dayNumber, division, playerName);
+            return;
+        }
+        setPlayerModalHistory('📋 Historique des matchs');
         const stats = calculatePlayerStats(dayNumber, division, playerName);
         if (!stats) return;
         
@@ -712,9 +799,10 @@ playerStats.forEach((player, index) => {
     }
 
     // En-têtes / cellules du classement général en score unique (écran, PDF, HTML)
-    const GENERAL_SINGLE_HEAD = '<th>Score total</th><th>Journées</th><th title="Moyenne par journée jouée">Moyenne</th>';
+    const GENERAL_SINGLE_HEAD = '<th>Score total</th><th>Journées</th><th title="Moyenne par journée jouée">Moyenne</th><th title="Meilleure journée (départage à total égal)">Meilleure</th>';
     function generalSingleCells(player) {
-        return `<td class="stat-value points-total">${player.totalPoints}</td><td>${player.daysPlayed}</td><td>${singleAverage(player)}</td>`;
+        const best = player.bestSingleScore === null || player.bestSingleScore === undefined ? '-' : player.bestSingleScore;
+        return `<td class="stat-value points-total">${player.totalPoints}</td><td>${player.daysPlayed}</td><td>${singleAverage(player)}</td><td>${best}</td>`;
     }
     window.generalSingleOnly = generalSingleOnly;
     window.GENERAL_SINGLE_HEAD = GENERAL_SINGLE_HEAD;
@@ -860,7 +948,8 @@ playerStats.forEach((player, index) => {
 `;
 
 generalRanking.divisions[division].forEach((player, index) => {
-    const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : '';
+    const rank = player.rank || index + 1;
+    const rankClass = rank === 1 ? 'rank-gold' : rank === 2 ? 'rank-silver' : rank === 3 ? 'rank-bronze' : '';
     const diffStyle = player.goalAveragePoints > 0 ? 'color: #017239; font-weight: bold;' :
                       player.goalAveragePoints < 0 ? 'color: #d03427; font-weight: bold;' : '';
     const escapedPlayerName = escapeForOnclick(player.name);
@@ -891,7 +980,7 @@ generalRanking.divisions[division].forEach((player, index) => {
 
     rankingHtml += `
         <tr style="cursor: pointer;" onclick="showGeneralPlayerDetails('${escapedPlayerName}', ${division})">
-            <td class="rank-position ${rankClass}">${index + 1}</td>
+            <td class="rank-position ${rankClass}">${rank}</td>
             <td style="font-weight: 600;">${player.name}</td>
             ${isPoolMode ? `<td style="${stageStyle} text-align: center; border-radius: 4px;">${stageIcon}${player.stageLabel}</td>` : ''}
             ${singleOnly ? generalSingleCells(player) : `<td class="stat-value">${player.totalPoints}</td>
@@ -1001,6 +1090,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                                 totalSetsWon: 0,
                                 totalSetsLost: 0,
                                 totalMatchesPlayed: 0,
+                                bestSingleScore: null, // score unique : meilleure journée (départage)
                                 winRates: [],
                                 firstDay: playerFirstAppearance[playerName]
                             };
@@ -1044,6 +1134,10 @@ generalRanking.divisions[division].forEach((player, index) => {
                             }
                             playersData[playerName].totalMatchesPlayed += dayStats.matchesPlayed;
                             playersData[playerName].winRates.push(dayStats.winRate);
+                            if (dayStats.singleScore !== undefined && dayStats.singleScore !== null) {
+                                const best = playersData[playerName].bestSingleScore;
+                                playersData[playerName].bestSingleScore = best === null ? dayStats.singleScore : Math.max(best, dayStats.singleScore);
+                            }
 
                             generalRanking.hasData = true;
                         }
@@ -1127,6 +1221,9 @@ generalRanking.divisions[division].forEach((player, index) => {
         // 2. Points totaux
         if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
 
+        // 2b. Score unique : meilleure journée (sans effet sur les journées en matchs)
+        if ((b.bestSingleScore || 0) !== (a.bestSingleScore || 0)) return (b.bestSingleScore || 0) - (a.bestSingleScore || 0);
+
         // 3. Nombre de victoires
         if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
 
@@ -1146,6 +1243,13 @@ generalRanking.divisions[division].forEach((player, index) => {
         return a.name.localeCompare(b.name);
     });
             
+            // Rang affiché : en score unique, même total et même meilleure journée = même rang
+            const singleOnly = generalSingleOnly();
+            playersArray.forEach((player, i) => {
+                const prev = playersArray[i - 1];
+                player.rank = singleOnly && prev && prev.totalPoints === player.totalPoints &&
+                    (prev.bestSingleScore || 0) === (player.bestSingleScore || 0) ? prev.rank : i + 1;
+            });
             generalRanking.divisions[division] = playersArray;
         }
         
@@ -1153,6 +1257,11 @@ generalRanking.divisions[division].forEach((player, index) => {
     }
 
     function showGeneralPlayerDetails(playerName, division) {
+        if (generalSingleOnly()) {
+            showSingleScoreGeneralPlayerDetails(playerName, division);
+            return;
+        }
+        setPlayerModalHistory('📋 Historique des matchs');
         const playerHistory = [];
 
         // Déterminer la première ET dernière journée où le joueur apparaît
@@ -1949,19 +2058,20 @@ generalRanking.divisions[division].forEach((player, index) => {
         `;
 
         generalRanking.divisions[division].forEach((player, index) => {
+            const rank = player.rank || index + 1;
             let rankClass = '';
             let rankDisplay = '';
-            if (index === 0) {
+            if (rank === 1) {
                 rankClass = 'rank-gold';
                 rankDisplay = '<span class="rank-medal rank-gold">🥇</span>';
-            } else if (index === 1) {
+            } else if (rank === 2) {
                 rankClass = 'rank-silver';
                 rankDisplay = '<span class="rank-medal rank-silver">🥈</span>';
-            } else if (index === 2) {
+            } else if (rank === 3) {
                 rankClass = 'rank-bronze';
                 rankDisplay = '<span class="rank-medal rank-bronze">🥉</span>';
             } else {
-                rankDisplay = `<span style="font-weight: 600; color: #4a5568;">${index + 1}</span>`;
+                rankDisplay = `<span style="font-weight: 600; color: #4a5568;">${rank}</span>`;
             }
 
             const diffClass = player.goalAveragePoints > 0 ? 'diff-positive' : 
