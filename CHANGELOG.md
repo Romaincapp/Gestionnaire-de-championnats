@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎳 Format de score « Score unique »
+- Nouveau choix « Score unique » dans 🎯 Score : chaque joueur a une seule case (bowling,
+  fléchettes…), sans matchs. Entrée passe au joueur suivant, le rang s'affiche en direct.
+- Classement de la journée par score (le plus haut gagne) ; classement général = somme des scores
+  de toutes les journées, avec la moyenne.
+- « Vider la journée » garde le format de score choisi.
+
 ### 🐛 Phase finale et nombre de divisions
 - Changer le nombre de divisions pendant une phase finale ne la cache plus (elle n'était visible
   qu'après rechargement de la page).

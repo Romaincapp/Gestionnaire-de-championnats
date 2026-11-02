@@ -67,6 +67,9 @@
         flags.matches = someValue(day.matches, hasItems) ||
             someValue(pools.divisions, function(d) { return d && (hasItems(d.matches) || hasItems(d.finalPhase)); }) ||
             !!pools.manualFinalPhase;
+        // Score unique : pas de matchs ; « matches » = au moins un score (bouton 🏆 Classements)
+        flags.single = !!(day.scoring && day.scoring.mode === 'single');
+        if (flags.single) flags.matches = typeof global.countSingleScores === 'function' && global.countSingleScores(day) > 0;
         var cd = day.chronoData || {};
         flags.events = hasItems(cd.events);
         flags.series = hasItems(cd.series) || (cd.events || []).some(function(e) { return e && hasItems(e.series); });
@@ -74,15 +77,18 @@
         return flags;
     }
 
-    function isDayActionAvailable(dayNumber, needs) {
+    // « data-match-only » : bouton propre aux matchs (🎯 Matchs, 🏊 Poules, 👋 BYE, 🔓),
+    // masqué quand la journée est en score unique.
+    function isDayActionAvailable(dayNumber, needs, matchOnly) {
         var flags = dayActionFlags(dayNumber);
+        if (matchOnly && flags.single) return false;
         return String(needs).split('|').some(function(k) { return !!flags[k.trim()]; });
     }
 
     // Attributs à mettre dans le HTML d'un bouton généré : masqué d'emblée si besoin.
-    function dayActionAttrs(dayNumber, needs) {
-        return 'data-day="' + dayNumber + '" data-needs="' + needs + '"' +
-            (isDayActionAvailable(dayNumber, needs) ? '' : ' hidden');
+    function dayActionAttrs(dayNumber, needs, matchOnly) {
+        return 'data-day="' + dayNumber + '" data-needs="' + needs + '"' + (matchOnly ? ' data-match-only' : '') +
+            (isDayActionAvailable(dayNumber, needs, matchOnly) ? '' : ' hidden');
     }
 
     function refreshDayActionButtons() {
@@ -92,6 +98,7 @@
             var day = btn.getAttribute('data-day');
             var flags = cache[day] || (cache[day] = dayActionFlags(day));
             var ok = btn.getAttribute('data-needs').split('|').some(function(k) { return !!flags[k.trim()]; });
+            if (flags.single && btn.hasAttribute('data-match-only')) ok = false;
             if (btn.hidden === ok) btn.hidden = !ok;
         });
     }

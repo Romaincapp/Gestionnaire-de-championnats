@@ -1565,6 +1565,7 @@ function exportGeneralRankingToHTML() {
     const numDivisions = championship.config?.numberOfDivisions || 3;
     const setsMode = window.generalSetsMode();
     const setsHead = window.generalSetsHeaders(setsMode);
+    const singleOnly = window.generalSingleOnly();
     for (let division = 1; division <= numDivisions; division++) {
         if (generalRanking.divisions[division].length === 0) continue;
 
@@ -1578,13 +1579,13 @@ function exportGeneralRankingToHTML() {
                         <tr>
                             <th>Rang</th>
                             <th>Joueur</th>
-                            <th>Points</th>
+                            ${singleOnly ? window.GENERAL_SINGLE_HEAD : `<th>Points</th>
                             <th>Journées</th>
                             <th>V/N/D/F</th>
                             <th>% Vict.</th>
                             <th>${setsHead.pp}</th>
                             <th>${setsHead.diff}</th>
-                            ${setsHead.extra}
+                            ${setsHead.extra}`}
                         </tr>
                     </thead>
                     <tbody>
@@ -1596,13 +1597,13 @@ function exportGeneralRankingToHTML() {
                 <tr>
                     <td class="rank-position ${rankClass}">${index + 1}</td>
                     <td>${player.name}</td>
-                    <td>${player.totalPoints}</td>
+                    ${singleOnly ? window.generalSingleCells(player) : `<td>${player.totalPoints}</td>
                     <td>${player.daysPlayed}</td>
                     <td>${player.totalWins}/${player.totalDraws || 0}/${player.totalLosses}/${player.totalForfaits}</td>
                     <td>${player.avgWinRate}%</td>
                     <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
                     <td>${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
-                    ${window.generalSetsCells(player, setsMode)}
+                    ${window.generalSetsCells(player, setsMode)}`}
                 </tr>
             `;
         });
@@ -1619,7 +1620,7 @@ function exportGeneralRankingToHTML() {
                 </div>
                 <div class="footer">
                     <p>Championnat Sportif - Gestion Esenca Sport</p>
-                    <p>Système de points: Victoire = 3pts, Nul = 2pts, Défaite = 1pt, Forfait = 0pt</p>
+                    <p>${singleOnly ? 'Classement : somme des scores de toutes les journées' : 'Système de points: Victoire = 3pts, Nul = 2pts, Défaite = 1pt, Forfait = 0pt'}</p>
                 </div>
             </div>
         </body>

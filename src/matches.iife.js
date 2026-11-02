@@ -904,6 +904,12 @@
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
+        // Score unique : pas de matchs affichés, une case de score par joueur
+        if (global.isSingleScoreMode(dayNumber)) {
+            global.renderSingleScoresForDay(dayNumber);
+            return;
+        }
+
         const numDivisions = getNumberOfDivisions();
         const numCourts = getNumberOfCourts();
 

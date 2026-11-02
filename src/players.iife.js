@@ -957,6 +957,8 @@
             // Mettre à jour le compteur de joueurs dynamiquement
             updatePlayerCount(dayNumber, division);
         }
+        // Score unique : la liste des scores suit la liste des joueurs
+        if (global.isSingleScoreMode && global.isSingleScoreMode(dayNumber)) global.renderSingleScoresForDay(dayNumber);
     }
     window.updatePlayersDisplay = updatePlayersDisplay;
 
@@ -1376,6 +1378,7 @@
         
         // Mettre à jour les matchs si le nom a changé
         if (newName !== oldPlayerName) {
+            global.renameSingleScore(championship.days[dayNumber], oldPlayerName, newName);
             championship.days[dayNumber].matches[division].forEach(match => {
                 if (match.player1 === oldPlayerName) match.player1 = newName;
                 if (match.player2 === oldPlayerName) match.player2 = newName;

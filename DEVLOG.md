@@ -33,6 +33,29 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-11-02 — Format de score « Score unique » (bowling…)
+
+- **Contexte** : ouvrir l'appli à des sports sans adversaire direct (bowling, fléchettes, tir) :
+  une seule case de score par joueur, sans matchs.
+- **Fait** : nouveau format `scoring = { mode: 'single' }` dans « 🎯 Score ». Scores dans
+  `day.singleScores[division][nom]` (helpers `getSingleScore`/`setSingleScore`/`singleScoreRanking`,
+  `scoring.iife.js`). La zone des matchs de chaque division affiche la liste des joueurs avec une
+  case (Entrée → joueur suivant, rang mis à jour en direct). Le plus haut gagne, ex æquo au même
+  rang. `calculatePlayerStats` renvoie le score comme `totalPoints`/`pointsWon` : le classement
+  général fait la somme des journées (choix de l'utilisateur), une journée manquée vaut 0 sans
+  forfait. Tableau simplifié (Score total, Journées, Moyenne) sur l'écran, le PDF et l'export HTML
+  quand toutes les journées Matchs sont en score unique. Boutons propres aux matchs (🎯 Matchs,
+  🏊 Poules, 👋 BYE, 🔓) masqués (`data-match-only`, `state.iife.js`). Changer de format garde les
+  matchs / scores existants (masqués, avec confirmation). Renommer un joueur renomme sa clé de
+  score. Au passage : « Vider la journée » garde désormais le format de score.
+- **Fichiers/modules touchés** : `src/scoring.iife.js`, `src/ranking.iife.js`, `src/init.iife.js`,
+  `src/matches.iife.js`, `src/players.iife.js`, `src/state.iife.js`, `src/ui.iife.js`, `index.html`,
+  `styles.css`, `tests/unit/singleScore.test.js`
+- **Doc à jour ?** : CHANGELOG ✅ · claude.md ✅
+- **Suite possible** : feuilles imprimées et fiche joueur (👤) ne sont pas adaptées au score unique ;
+  classement général mixte (journées en matchs + en score unique) additionne points et scores tel
+  quel ; pas de réglage « le plus bas gagne » (golf).
+
 ### 2026-10-29 — Changer le nombre de divisions ne cache plus la phase finale
 
 - Retirer une division (ex. D2 oubliée) pendant la phase finale de D1 la faisait disparaître de
