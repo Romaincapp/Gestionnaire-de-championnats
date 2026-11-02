@@ -33,6 +33,25 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-11-02 — Score unique : impressions, fiche joueur, égalités au général
+
+- **Contexte** : suite du format « Score unique » (points laissés ouverts par l'entrée précédente).
+- **Fait** : 🖨️ d'une journée en score unique ouvre `showSingleScorePrintModal` (au lieu des
+  feuilles de match) : feuille de saisie (une page par division, case vide + signature,
+  `printSingleScoreEntrySheet`) et résultats de la journée (`printSingleScoreResults`), dans
+  `export-print.iife.js`. Fiche joueur 👤 : `showPlayerDetails` → score, rang, écart au 1er et
+  classement de la journée ; `showGeneralPlayerDetails` (si toutes les journées Matchs sont en
+  score unique) → total, rang général, moyenne, meilleure journée, score/rang par journée
+  (« Absent » sinon). Le titre du bas de la fiche est remis à « 📋 Historique des matchs » dans les
+  chemins classiques. Classement général : départage par la meilleure journée
+  (`bestSingleScore`), puis même rang (`player.rank`, utilisé par l'écran, le PDF et l'export
+  HTML) ; colonne « Meilleure » ajoutée.
+- **Fichiers/modules touchés** : `src/ranking.iife.js`, `src/export-print.iife.js`,
+  `src/init.iife.js`, `tests/unit/singleScore.test.js`
+- **Doc à jour ?** : CHANGELOG ✅ · claude.md ✅
+- **Suite possible** : championnat mixte matchs + score unique (le général additionne points et
+  scores tels quels) — laissé de côté volontairement par l'utilisateur.
+
 ### 2026-11-02 — Format de score « Score unique » (bowling…)
 
 - **Contexte** : ouvrir l'appli à des sports sans adversaire direct (bowling, fléchettes, tir) :

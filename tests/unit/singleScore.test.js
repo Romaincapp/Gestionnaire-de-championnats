@@ -80,9 +80,9 @@ test('classement général : somme des scores, journée manquée = 0 sans forfai
 
     updateGeneralRanking();
     const headers = [...document.querySelectorAll('#generalRankingContent th')].map(t => t.textContent.trim());
-    expect(headers).toEqual(['Rang', 'Joueur', 'Score total', 'Journées', 'Moyenne']);
+    expect(headers).toEqual(['Rang', 'Joueur', 'Score total', 'Journées', 'Moyenne', 'Meilleure']);
     const alice = [...document.querySelectorAll('#generalRankingContent tbody tr')][0];
-    expect([...alice.cells].map(td => td.textContent.trim())).toEqual(['1', 'Alice', '330', '2', '165']);
+    expect([...alice.cells].map(td => td.textContent.trim())).toEqual(['1', 'Alice', '330', '2', '165', '180']);
 });
 
 test('renommer un joueur garde son score', () => {
@@ -114,4 +114,91 @@ test('passer en score unique garde les matchs existants (masqués) après confir
     expect(window.confirm).toHaveBeenCalled();
     expect(championship.days[1].matches[1]).toHaveLength(1);
     expect(calculatePlayerStats(1, 1, 'Alice').totalPoints).toBe(0); // le match ne compte plus
+});
+
+test('général : à total égal, la meilleure journée départage, sinon même rang', () => {
+    championship.days[1].players[1] = ['Alice', 'Bob', 'Chloé', 'David'];
+    championship.days[2].players[1] = ['Alice', 'Bob', 'Chloé', 'David'];
+    // Alice 150+150, Bob 100+200 (meilleure journée 200), Chloé 200+100, David 120+120
+    [['Alice', 150, 150], ['Bob', 100, 200], ['Chloé', 200, 100], ['David', 120, 120]].forEach(([n, a, b]) => {
+        setSingleScore(1, 1, n, a);
+        setSingleScore(2, 1, n, b);
+    });
+    const ranking = calculateGeneralRanking().divisions[1];
+    expect(ranking.map(p => [p.rank, p.name])).toEqual([[1, 'Bob'], [1, 'Chloé'], [3, 'Alice'], [4, 'David']]);
+
+    updateGeneralRanking();
+    const ranks = [...document.querySelectorAll('#generalRankingContent tbody tr')].map(tr => tr.cells[0].textContent.trim());
+    expect(ranks).toEqual(['1', '1', '3', '4']);
+});
+
+function playerModalDom() {
+    document.body.innerHTML += `<div id="playerModal" style="display:none"><div id="playerNameTitle"></div>
+        <div id="playerOverview"></div><div class="matches-history"><h3>📋 Historique des matchs</h3><div id="playerMatches"></div></div></div>`;
+}
+
+test('fiche joueur de journée : score, rang et classement de la journée', () => {
+    playerModalDom();
+    setSingleScore(1, 1, 'Alice', 150);
+    setSingleScore(1, 1, 'Bob', 210);
+    showPlayerDetails(1, 1, 'Alice');
+    const overview = [...document.querySelectorAll('#playerOverview .overview-card')].map(c => c.querySelector('.overview-number').textContent + ' ' + c.querySelector('.overview-label').textContent).join(' | ');
+    expect(overview).toContain('150 Score');
+    expect(overview).toContain('2e / 2 Rang');
+    expect(overview).toContain('-60');
+    expect(document.querySelector('#playerModal h3').textContent).toBe('📋 Classement de la journée');
+    expect(document.querySelectorAll('#playerMatches .history-match')).toHaveLength(2);
+    expect(document.getElementById('playerModal').style.display).toBe('block');
+});
+
+test('fiche joueur générale : total, rang, moyenne, meilleure journée, score par journée', () => {
+    playerModalDom();
+    setSingleScore(1, 1, 'Alice', 150);
+    setSingleScore(2, 1, 'Alice', 180);
+    setSingleScore(1, 1, 'Chloé', 100);
+    showGeneralPlayerDetails('Chloé', 1);
+    const rows = [...document.querySelectorAll('#playerMatches .history-match')].map(r => r.textContent.replace(/\s+/g, ' ').trim());
+    expect(rows[0]).toContain('Journée 1');
+    expect(rows[0]).toContain('100');
+    expect(rows[1]).toContain('Absent');
+
+    showGeneralPlayerDetails('Alice', 1);
+    const overview = [...document.querySelectorAll('#playerOverview .overview-card')].map(c => c.querySelector('.overview-number').textContent + ' ' + c.querySelector('.overview-label').textContent).join(' | ');
+    expect(overview).toContain('330 Score total');
+    expect(overview).toContain('1er / 2 Rang général');
+    expect(overview).toContain('165 Moyenne');
+    expect(overview).toContain('180 Meilleure journée');
+    expect(document.querySelector('#playerModal h3').textContent).toBe('📋 Scores par journée');
+});
+
+describe('impressions', () => {
+    let written;
+    beforeEach(() => {
+        written = '';
+        window.open = jest.fn(() => ({ document: { write: html => { written += html; }, close() {} }, focus() {}, confirm: () => false, print() {} }));
+    });
+
+    test('le bouton 🖨️ propose les feuilles de score, pas les feuilles de match', () => {
+        showPrintOptionsModal(1);
+        const modal = document.getElementById('singleScorePrintModal');
+        expect(modal.textContent).toContain('Feuille de saisie des scores');
+        expect(modal.textContent).not.toContain('Feuilles de match');
+        modal.querySelector('#print-single-close').click();
+    });
+
+    test('feuille de saisie : tous les joueurs, case vide', () => {
+        setSingleScore(1, 1, 'Alice', 150);
+        printSingleScoreEntrySheet(1);
+        expect(written).toContain('Feuille de scores · Journée 1 · Division 1');
+        ['Alice', 'Bob', 'Chloé'].forEach(n => expect(written).toContain(n));
+        expect(written).not.toContain('>150<');
+    });
+
+    test('résultats : seulement les joueurs avec un score, le plus haut d\'abord', () => {
+        setSingleScore(1, 1, 'Alice', 150);
+        setSingleScore(1, 1, 'Bob', 210);
+        printSingleScoreResults(1);
+        expect(written.indexOf('Bob')).toBeLessThan(written.indexOf('Alice'));
+        expect(written).not.toContain('Chloé');
+    });
 });

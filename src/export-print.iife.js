@@ -901,11 +901,126 @@ function openPrintWindow(htmlContent, filename) {
     }, 1000);
 }
 
+// ======================================
+// SCORE UNIQUE : feuille de saisie et résultats de la journée
+// ======================================
+
+function escapePrint(text) {
+    return String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function singleScoreDivisions(dayNumber) {
+    const out = [];
+    for (let division = 1; division <= getNumberOfDivisions(); division++) {
+        const rows = global.singleScoreRanking(dayNumber, division);
+        if (rows.length > 0) out.push({ division, rows });
+    }
+    return out;
+}
+
+function singleScorePrintPage(title, body) {
+    return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>${escapePrint(title)}</title>
+<style>
+    @page { size: A4 portrait; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #1a1a1a; margin: 0; font-size: 13px; }
+    .sheet { page-break-after: always; }
+    .sheet:last-child { page-break-after: auto; }
+    h1 { font-size: 18px; margin: 0 0 2px; }
+    .sub { color: #555; font-size: 12px; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #bbb; padding: 7px 6px; text-align: left; }
+    th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #555; border-bottom: 2px solid #333; }
+    td.num, th.num { width: 40px; text-align: right; color: #555; }
+    td.score, th.score { width: 110px; text-align: center; }
+    td.score.blank { border: 1px solid #333; height: 30px; }
+    td.sign, th.sign { width: 160px; }
+    tr { page-break-inside: avoid; }
+    .podium td { font-weight: bold; }
+    @media screen { body { padding: 20px; max-width: 800px; margin: 0 auto; } }
+</style></head><body>${body}</body></html>`;
+}
+
+/** Feuille de saisie : une page par division, une case vide par joueur. */
+function printSingleScoreEntrySheet(dayNumber) {
+    const divisions = singleScoreDivisions(dayNumber);
+    if (divisions.length === 0) {
+        alert('Aucun joueur dans cette journée !');
+        return;
+    }
+    const body = divisions.map(({ division, rows }) => {
+        const names = rows.map(r => r.name).sort((a, b) => a.localeCompare(b));
+        return `<div class="sheet">
+            <h1>Feuille de scores · Journée ${dayNumber} · Division ${division}</h1>
+            <div class="sub">${names.length} joueur${names.length > 1 ? 's' : ''} · Date : ____________</div>
+            <table>
+                <thead><tr><th class="num">#</th><th>Joueur</th><th class="score">Score</th><th class="sign">Signature</th></tr></thead>
+                <tbody>${names.map((name, i) => `<tr><td class="num">${i + 1}</td><td>${escapePrint(name)}</td><td class="score blank"></td><td class="sign"></td></tr>`).join('')}</tbody>
+            </table>
+        </div>`;
+    }).join('');
+    openPrintWindow(singleScorePrintPage(`Feuille de scores J${dayNumber}`, body), `Feuille_scores_J${dayNumber}`);
+}
+
+/** Résultats de la journée : classement par division (rang, joueur, score). */
+function printSingleScoreResults(dayNumber) {
+    const divisions = singleScoreDivisions(dayNumber)
+        .map(d => ({ division: d.division, rows: d.rows.filter(r => r.score !== null) }))
+        .filter(d => d.rows.length > 0);
+    if (divisions.length === 0) {
+        alert('Aucun score saisi dans cette journée !');
+        return;
+    }
+    const date = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const body = divisions.map(({ division, rows }, i) => `<div class="${i === divisions.length - 1 ? '' : 'sheet'}" style="margin-bottom: 24px;">
+            <h1>Résultats · Journée ${dayNumber} · Division ${division}</h1>
+            <div class="sub">${rows.length} joueur${rows.length > 1 ? 's' : ''} classé${rows.length > 1 ? 's' : ''} · ${date}</div>
+            <table>
+                <thead><tr><th class="num">Rang</th><th>Joueur</th><th class="score">Score</th></tr></thead>
+                <tbody>${rows.map(r => `<tr${r.rank <= 3 ? ' class="podium"' : ''}><td class="num">${r.rank}</td><td>${escapePrint(r.name)}</td><td class="score">${r.score}</td></tr>`).join('')}</tbody>
+            </table>
+        </div>`).join('');
+    openPrintWindow(singleScorePrintPage(`Résultats J${dayNumber}`, body), `Resultats_J${dayNumber}`);
+}
+
+function showSingleScorePrintModal(dayNumber) {
+    const modal = document.createElement('div');
+    modal.id = 'singleScorePrintModal';
+    modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+    const button = (id, label, hint) => `<button id="${id}" style="padding: 12px; background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; cursor: pointer; text-align: left;">
+            <div style="font-weight: 600;">${label}</div><div style="font-size: 12px; color: #586566; margin-top: 2px;">${hint}</div></button>`;
+    modal.innerHTML = `<div style="background: white; border-radius: 8px; padding: 20px; max-width: 460px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <h2 style="margin: 0 0 4px; color: #2c3e50; font-size: 18px; text-align: center;">🖨️ Impression</h2>
+            <p style="margin: 0 0 15px; color: #586566; font-size: 12px; text-align: center;">Journée ${dayNumber} · Score unique</p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${button('print-single-entry', '📝 Feuille de saisie des scores', 'Une page par division : joueurs, case de score vide, signature')}
+                ${button('print-single-results', '🏆 Résultats de la journée', 'Classement par division : rang, joueur, score')}
+            </div>
+            <button id="print-single-close" style="margin-top: 15px; padding: 8px 12px; background: #566566; color: white; border: none; border-radius: 5px; font-size: 12px; cursor: pointer; width: 100%;">Annuler</button>
+        </div>`;
+    document.body.appendChild(modal);
+    const close = () => { if (modal.parentNode) modal.parentNode.removeChild(modal); };
+    modal.querySelector('#print-single-entry').onclick = () => { close(); printSingleScoreEntrySheet(dayNumber); };
+    modal.querySelector('#print-single-results').onclick = () => { close(); printSingleScoreResults(dayNumber); };
+    modal.querySelector('#print-single-close').onclick = close;
+    modal.onclick = (e) => { if (e.target === modal) close(); };
+}
+
+window.printSingleScoreEntrySheet = printSingleScoreEntrySheet;
+window.printSingleScoreResults = printSingleScoreResults;
+window.showSingleScorePrintModal = showSingleScorePrintModal;
+
 // Afficher le modal des options d'impression
 function showPrintOptionsModal(dayNumber) {
     const dayData = championship.days[dayNumber];
     if (!dayData) {
         alert('Aucune donnée trouvée pour cette journée !');
+        return;
+    }
+    // Score unique : pas de feuilles de match, des feuilles de scores
+    if (global.isSingleScoreMode(dayNumber)) {
+        showSingleScorePrintModal(dayNumber);
         return;
     }
 

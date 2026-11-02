@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🎳 Score unique : impressions, fiche joueur, égalités
+- 🖨️ propose une feuille de saisie des scores (une page par division) et les résultats de la journée.
+- La fiche joueur montre le score, le rang et le classement de la journée ; la vue générale
+  montre le total, le rang, la moyenne, la meilleure journée et le score de chaque journée.
+- Classement général : à total égal, la meilleure journée départage ; sinon même rang.
+
 ### 🎳 Format de score « Score unique »
 - Nouveau choix « Score unique » dans 🎯 Score : chaque joueur a une seule case (bowling,
   fléchettes…), sans matchs. Entrée passe au joueur suivant, le rang s'affiche en direct.
