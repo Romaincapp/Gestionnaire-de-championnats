@@ -155,20 +155,20 @@
                     <div class="overview-number">${stats.matchesPlayed}</div>
                     <div class="overview-label">Matchs joués</div>
                 </div>
-                <div class="overview-card" style="background: #d4edda;">
-                    <div class="overview-number" style="color: #155724;">${stats.wins}</div>
+                <div class="overview-card">
+                    <div class="overview-number">${stats.wins}</div>
                     <div class="overview-label">Victoires</div>
                 </div>
-                <div class="overview-card" style="background: #e3f2fd;">
-                    <div class="overview-number" style="color: #1565c0;">${stats.draws || 0}</div>
+                <div class="overview-card">
+                    <div class="overview-number">${stats.draws || 0}</div>
                     <div class="overview-label">Nuls</div>
                 </div>
-                <div class="overview-card" style="background: #f8d7da;">
-                    <div class="overview-number" style="color: #721c24;">${stats.losses}</div>
+                <div class="overview-card">
+                    <div class="overview-number">${stats.losses}</div>
                     <div class="overview-label">Défaites</div>
                 </div>
-                <div class="overview-card" style="background: #fff3cd;">
-                    <div class="overview-number" style="color: #6c5103;">${stats.forfeits || 0}</div>
+                <div class="overview-card">
+                    <div class="overview-number">${stats.forfeits || 0}</div>
                     <div class="overview-label">Forfaits</div>
                 </div>
                 <div class="overview-card">
@@ -1211,20 +1211,20 @@ generalRanking.divisions[division].forEach((player, index) => {
                     <div class="overview-number">${totals.totalPoints}</div>
                     <div class="overview-label">Points total</div>
                 </div>
-                <div class="overview-card" style="background: #d4edda;">
-                    <div class="overview-number" style="color: #155724;">${totals.totalWins}</div>
+                <div class="overview-card">
+                    <div class="overview-number">${totals.totalWins}</div>
                     <div class="overview-label">Victoires</div>
                 </div>
-                <div class="overview-card" style="background: #e3f2fd;">
-                    <div class="overview-number" style="color: #1565c0;">${totals.totalDraws}</div>
+                <div class="overview-card">
+                    <div class="overview-number">${totals.totalDraws}</div>
                     <div class="overview-label">Nuls</div>
                 </div>
-                <div class="overview-card" style="background: #f8d7da;">
-                    <div class="overview-number" style="color: #721c24;">${totals.totalLosses}</div>
+                <div class="overview-card">
+                    <div class="overview-number">${totals.totalLosses}</div>
                     <div class="overview-label">Défaites</div>
                 </div>
-                <div class="overview-card" style="background: #fff3cd;">
-                    <div class="overview-number" style="color: #6c5103;">${totals.totalForfaits}</div>
+                <div class="overview-card">
+                    <div class="overview-number">${totals.totalForfaits}</div>
                     <div class="overview-label">Forfaits</div>
                 </div>
                 <div class="overview-card">
