@@ -1,9 +1,12 @@
 // ============================================
 // MODULE SCORING (IIFE) — format de score par journée
 // ============================================
-// Deux formats :
+// Trois formats :
 //   - 'simple' : deux scores (score1/score2), match nul permis (comportement historique)
 //   - 'sets'   : best-of N, détail set par set dans match.setScores = [{s1, s2}, ...]
+//   - 'single' : score unique par joueur (bowling…), pas de matchs. Les scores vivent dans
+//                day.singleScores[division][nom] ; le plus haut gagne. calculatePlayerStats
+//                les expose comme totalPoints/pointsWon, donc le classement général les somme.
 //
 // En mode sets, score1/score2 restent la vérité « résumée » = nombre de sets gagnés,
 // recalculés depuis setScores. Tout le code qui lit score1/score2/winner/completed
@@ -16,6 +19,7 @@
     'use strict';
 
     const SIMPLE = Object.freeze({ mode: 'simple' });
+    const SINGLE = Object.freeze({ mode: 'single' });
     const DEFAULT_SETS = Object.freeze({ mode: 'sets', setsToWin: 2, pointsPerSet: 11 });
 
     function isBlank(v) {
@@ -23,6 +27,7 @@
     }
 
     function normalizeScoring(scoring) {
+        if (scoring && scoring.mode === 'single') return SINGLE;
         if (!scoring || scoring.mode !== 'sets') return SIMPLE;
         const setsToWin = Math.min(4, Math.max(1, parseInt(scoring.setsToWin) || DEFAULT_SETS.setsToWin));
         const pps = parseInt(scoring.pointsPerSet);
@@ -39,6 +44,10 @@
 
     function isSetsMode(dayNumber) {
         return getDayScoring(dayNumber).mode === 'sets';
+    }
+
+    function isSingleScoreMode(dayNumber) {
+        return getDayScoring(dayNumber).mode === 'single';
     }
 
     function maxSets(scoring) {
@@ -206,6 +215,7 @@
 
     /** Score encaissé par forfait pour une journée : 5 (2 scores) ou setsToWin (sets). */
     function forfeitPenaltyForDay(dayNumber) {
+        if (isSingleScoreMode(dayNumber)) return 0;
         const r = forfeitResult(getDayScoring(dayNumber), 'player1');
         return parseInt(r.score2) || 0;
     }
@@ -320,6 +330,7 @@
 
     function scoringLabel(scoring) {
         const s = normalizeScoring(scoring);
+        if (s.mode === 'single') return 'Score unique';
         if (s.mode !== 'sets') return '2 scores';
         return `BO${maxSets(s)}${s.pointsPerSet ? ` · ${s.pointsPerSet} pts` : ''}`;
     }
@@ -381,6 +392,7 @@
 
     function scoringToKey(scoring) {
         const s = normalizeScoring(scoring);
+        if (s.mode === 'single') return 'single';
         return s.mode === 'sets' ? `sets-${s.setsToWin}` : 'simple';
     }
 
@@ -396,6 +408,7 @@
                 ${opt('sets-2', 'Sets · BO3')}
                 ${opt('sets-3', 'Sets · BO5')}
                 ${opt('sets-4', 'Sets · BO7')}
+                ${opt('single', 'Score unique')}
             </select>
             <select id="day-scoring-pps-${dayNumber}" onchange="changeDayScoringFromControl(${dayNumber})" aria-label="Points par set" title="Points par set (pour pré-remplir BYE/forfait et signaler un set incomplet)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ced4da; font-size: 13px; cursor: pointer; background: white; color: #333; display: ${s.mode === 'sets' ? 'inline-block' : 'none'};">
                 ${ppsOpt('', 'Points libres')}
@@ -418,7 +431,7 @@
         const select = document.getElementById(`day-scoring-select-${dayNumber}`);
         const pps = document.getElementById(`day-scoring-pps-${dayNumber}`);
         if (!select) return;
-        let scoring = SIMPLE;
+        let scoring = select.value === 'single' ? SINGLE : SIMPLE;
         if (select.value.indexOf('sets-') === 0) {
             const previous = getDayScoring(dayNumber);
             const ppsValue = pps && pps.style.display !== 'none' ? pps.value
@@ -447,7 +460,13 @@
             if ((m.score1 !== '' && m.score1 !== undefined) || hasSetDetail(m)) scored++;
         });
         const skipConfirm = options && options.confirm === false;
-        if (scored > 0 && !skipConfirm && typeof global.confirm === 'function') {
+        const singleScored = countSingleScores(day);
+        const matchCount = countDayMatches(day);
+        if (!skipConfirm && typeof global.confirm === 'function' && next.mode === 'single' && matchCount > 0) {
+            if (!global.confirm(`${matchCount} match(s) existent dans cette journée.\n\nPasser en « Score unique » : les matchs sont conservés mais masqués, et ne comptent plus dans les classements tant que la journée reste en score unique.\n\nContinuer ?`)) return false;
+        } else if (!skipConfirm && typeof global.confirm === 'function' && prev.mode === 'single' && singleScored > 0) {
+            if (!global.confirm(`${singleScored} score(s) individuel(s) saisi(s).\n\nPasser en « ${scoringLabel(next)} » : ces scores sont conservés mais masqués, et ne comptent plus dans les classements.\n\nContinuer ?`)) return false;
+        } else if (scored > 0 && !skipConfirm && typeof global.confirm === 'function' && next.mode !== 'single' && prev.mode !== 'single') {
             const msg = prev.mode !== next.mode
                 ? `${scored} match(s) ont déjà un score.\n\nPasser en « ${scoringLabel(next)} » : les scores saisis sont conservés` +
                   (next.mode === 'sets' ? ' et lus comme des sets gagnés.' : ' (le détail des sets est gardé mais n\'est plus affiché).') +
@@ -458,7 +477,7 @@
 
         day.scoring = next;
         // Recalculer vainqueurs/états avec la nouvelle règle (BYE/forfaits inclus)
-        forEachDayMatch(day, m => {
+        if (next.mode !== 'single') forEachDayMatch(day, m => {
             if (m.isBye || m.isByeMatch || m.forfaitBy) return;
             if (next.mode === 'sets') ensureSetScores(m, next);
             applyMatchResult(m, next);
@@ -467,6 +486,9 @@
         if (typeof global.saveToLocalStorage === 'function') global.saveToLocalStorage();
         refreshDayScoringControl(dayNumber);
         if (typeof global.updateMatchesDisplay === 'function') global.updateMatchesDisplay(dayNumber);
+        if (typeof global.updateStats === 'function') global.updateStats(dayNumber);
+        const rankingsEl = typeof document !== 'undefined' ? document.getElementById(`rankings-${dayNumber}`) : null;
+        if (rankingsEl) rankingsEl.style.display = 'none'; // classement affiché calculé avec l'ancien format
         if (day.pools && day.pools.enabled) {
             if (typeof global.updatePoolsDisplay === 'function') global.updatePoolsDisplay(dayNumber);
             if (typeof global.updateManualFinalPhaseDisplay === 'function') global.updateManualFinalPhaseDisplay(dayNumber);
@@ -650,6 +672,174 @@
         if (next) { next.focus(); if (next.select) next.select(); return 'handled'; }
         return 'validate';
     }
+
+    // ======================================
+    // SCORE UNIQUE (une case par joueur, le plus haut gagne)
+    // ======================================
+
+    function parseSingleScore(value) {
+        if (isBlank(value)) return null;
+        const n = parseFloat(String(value).replace(',', '.'));
+        return isNaN(n) ? null : n;
+    }
+
+    function countSingleScores(day) {
+        let n = 0;
+        Object.values(day && day.singleScores || {}).forEach(div => {
+            Object.values(div || {}).forEach(v => { if (parseSingleScore(v) !== null) n++; });
+        });
+        return n;
+    }
+
+    function countDayMatches(day) {
+        let n = 0;
+        forEachDayMatch(day, m => { if (!(m.isBye || m.isByeMatch)) n++; });
+        return n;
+    }
+
+    function dayPlayerNames(day, division) {
+        return ((day && day.players && day.players[division]) || [])
+            .map(p => (p && typeof p === 'object') ? p.name : p)
+            .filter(name => name && String(name).toUpperCase() !== 'BYE');
+    }
+
+    /** Score d'un joueur (nombre) ou null s'il n'a rien saisi. */
+    function getSingleScore(dayNumber, division, name) {
+        const day = global.championship && global.championship.days ? global.championship.days[dayNumber] : null;
+        const div = day && day.singleScores && day.singleScores[division];
+        return div ? parseSingleScore(div[name]) : null;
+    }
+
+    function setSingleScore(dayNumber, division, name, value) {
+        const day = global.championship && global.championship.days ? global.championship.days[dayNumber] : null;
+        if (!day || !name) return;
+        const score = parseSingleScore(value);
+        if (!day.singleScores) day.singleScores = {};
+        if (!day.singleScores[division]) day.singleScores[division] = {};
+        if (score === null) delete day.singleScores[division][name];
+        else day.singleScores[division][name] = score;
+    }
+
+    /** Renomme un joueur dans les scores uniques d'une journée (toutes divisions). */
+    function renameSingleScore(day, oldName, newName) {
+        if (!day || !day.singleScores || !oldName || !newName || oldName === newName) return;
+        const oldLower = String(oldName).trim().toLowerCase();
+        Object.values(day.singleScores).forEach(div => {
+            if (!div) return;
+            Object.keys(div).forEach(key => {
+                if (key !== newName && key.trim().toLowerCase() === oldLower) {
+                    if (!(newName in div)) div[newName] = div[key]; // fusion : le score déjà au bon nom gagne
+                    delete div[key];
+                }
+            });
+        });
+    }
+
+    /**
+     * Classement d'une division en score unique : [{name, score, rank}], le plus haut
+     * d'abord, ex æquo au même rang ; les joueurs sans score à la fin (rank null).
+     */
+    function singleScoreRanking(dayNumber, division) {
+        const day = global.championship && global.championship.days ? global.championship.days[dayNumber] : null;
+        const rows = dayPlayerNames(day, division).map(name => ({ name, score: getSingleScore(dayNumber, division, name), rank: null }));
+        const scored = rows.filter(r => r.score !== null).sort((a, b) => (b.score - a.score) || a.name.localeCompare(b.name));
+        scored.forEach((r, i) => { r.rank = i > 0 && scored[i - 1].score === r.score ? scored[i - 1].rank : i + 1; });
+        return scored.concat(rows.filter(r => r.score === null));
+    }
+
+    function escapeHtml(v) {
+        return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /** Liste des joueurs d'une division, une case de score chacun (ordre de la liste des joueurs). */
+    function renderSingleScoreList(dayNumber, division) {
+        const day = global.championship && global.championship.days ? global.championship.days[dayNumber] : null;
+        const names = dayPlayerNames(day, division);
+        if (names.length === 0) return '';
+        const ranks = {};
+        singleScoreRanking(dayNumber, division).forEach(r => { ranks[r.name] = r.rank; });
+        const rows = names.map(name => {
+            const score = getSingleScore(dayNumber, division, name);
+            const rank = ranks[name];
+            return `<li class="single-score-row" data-name="${escapeHtml(name)}">
+                    <span class="single-score-rank" title="Rang">${rank ? rank : ''}</span>
+                    <span class="single-score-name">${escapeHtml(name)}</span>
+                    <input type="number" inputmode="decimal" step="any" class="score-input single-score-input"
+                           aria-label="Score de ${escapeHtml(name)}" placeholder="—"
+                           value="${score === null ? '' : score}"
+                           data-day="${dayNumber}" data-division="${division}" data-name="${escapeHtml(name)}"
+                           onchange="onSingleScoreChange(this)" onkeydown="onSingleScoreKeydown(event)">
+                </li>`;
+        }).join('');
+        const done = names.filter(n => getSingleScore(dayNumber, division, n) !== null).length;
+        return `<div class="single-score-list" id="single-score-${dayNumber}-${division}">
+                <div class="single-score-header">
+                    <span>Scores</span>
+                    <span class="single-score-progress">${done}/${names.length} saisis</span>
+                </div>
+                <ol class="single-score-rows">${rows}</ol>
+            </div>`;
+    }
+
+    function renderSingleScoresForDay(dayNumber) {
+        if (typeof document === 'undefined') return;
+        const champ = global.championship;
+        const numDivisions = (champ && champ.config && champ.config.numberOfDivisions) || 3;
+        for (let division = 1; division <= numDivisions; division++) {
+            const container = document.getElementById(`division${dayNumber}-${division}-matches`);
+            if (container) container.innerHTML = renderSingleScoreList(dayNumber, division);
+        }
+    }
+
+    /** Met à jour rangs et compteur sans re-rendre la liste (le focus reste en place). */
+    function refreshSingleScoreRanks(dayNumber, division) {
+        const list = document.getElementById(`single-score-${dayNumber}-${division}`);
+        if (!list) return;
+        const ranking = singleScoreRanking(dayNumber, division);
+        const ranks = {};
+        ranking.forEach(r => { ranks[r.name] = r.rank; });
+        list.querySelectorAll('.single-score-row').forEach(row => {
+            const cell = row.querySelector('.single-score-rank');
+            const rank = ranks[row.dataset.name];
+            if (cell) cell.textContent = rank ? rank : '';
+        });
+        const progress = list.querySelector('.single-score-progress');
+        if (progress) progress.textContent = `${ranking.filter(r => r.score !== null).length}/${ranking.length} saisis`;
+    }
+
+    function onSingleScoreChange(input) {
+        const dayNumber = parseInt(input.dataset.day);
+        const division = parseInt(input.dataset.division);
+        setSingleScore(dayNumber, division, input.dataset.name, input.value);
+        if (typeof global.saveToLocalStorage === 'function') global.saveToLocalStorage();
+        refreshSingleScoreRanks(dayNumber, division);
+        if (typeof global.updateStats === 'function') global.updateStats(dayNumber);
+    }
+
+    /** Entrée : enregistre et passe au joueur suivant (puis à la division suivante). */
+    function onSingleScoreKeydown(event) {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        const input = event.target;
+        onSingleScoreChange(input);
+        const all = Array.from(document.querySelectorAll(`.single-score-input[data-day="${input.dataset.day}"]`));
+        const next = all[all.indexOf(input) + 1];
+        if (next) { next.focus(); if (next.select) next.select(); }
+        else input.blur();
+    }
+
+    global.SCORING_SINGLE = SINGLE;
+    global.isSingleScoreMode = isSingleScoreMode;
+    global.parseSingleScore = parseSingleScore;
+    global.countSingleScores = countSingleScores;
+    global.getSingleScore = getSingleScore;
+    global.setSingleScore = setSingleScore;
+    global.renameSingleScore = renameSingleScore;
+    global.singleScoreRanking = singleScoreRanking;
+    global.renderSingleScoreList = renderSingleScoreList;
+    global.renderSingleScoresForDay = renderSingleScoresForDay;
+    global.onSingleScoreChange = onSingleScoreChange;
+    global.onSingleScoreKeydown = onSingleScoreKeydown;
 
     global.SCORING_SIMPLE = SIMPLE;
     global.SCORING_DEFAULT_SETS = DEFAULT_SETS;

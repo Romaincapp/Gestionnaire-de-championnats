@@ -1361,6 +1361,68 @@ body   * {
             color: var(--color-text);
         }
         
+        /* Score unique (bowling…) : une case par joueur */
+        .single-score-list {
+            margin-top: 10px;
+        }
+
+        .single-score-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            padding: 0 4px 6px;
+            border-bottom: 1px solid rgba(127,127,127,0.25);
+        }
+
+        .single-score-progress {
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 500;
+        }
+
+        .single-score-rows {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .single-score-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 4px;
+            border-bottom: 1px solid rgba(127,127,127,0.12);
+        }
+
+        .single-score-rank {
+            width: 2em;
+            text-align: right;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            flex-shrink: 0;
+        }
+
+        .single-score-name {
+            flex: 1;
+            min-width: 0;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .single-score-input.score-input {
+            width: 80px;
+            flex-shrink: 0;
+            text-align: center;
+        }
+
         .empty-state {
             text-align: center;
             color: var(--color-text-muted);
@@ -2260,6 +2322,10 @@ body.dark-mode .player-name-title {
 }
 
 /* Overview cards */
+body.dark-mode .single-score-name {
+    color: #e0e0e0;
+}
+
 body.dark-mode .overview-number {
     color: #e0e0e0;
 }

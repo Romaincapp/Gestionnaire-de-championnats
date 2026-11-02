@@ -18,6 +18,23 @@
         const dayData = championship.days[dayNumber];
         if (!dayData) return null;
 
+        // Score unique : pas de matchs, le score saisi tient lieu de points (et de PP).
+        // Le classement général additionne donc les scores des journées.
+        if (global.isSingleScoreMode(dayNumber)) {
+            const score = global.getSingleScore(dayNumber, division, playerName);
+            const value = score === null ? 0 : score;
+            return {
+                matchesPlayed: score === null ? 0 : 1,
+                wins: 0, draws: 0, losses: 0, forfeits: 0,
+                pointsWon: value, pointsLost: 0,
+                gamePointsWon: 0, gamePointsLost: 0,
+                winRate: 0,
+                totalPoints: value,
+                singleScore: score,
+                matches: []
+            };
+        }
+
         // Collecter les matchs classiques
         let playerMatches = (dayData.matches[division] || []).filter(match =>
             match.player1 === playerName || match.player2 === playerName
@@ -275,6 +292,24 @@
         let totalMatches = 0;
         let completedMatches = 0;
 
+        if (global.isSingleScoreMode(dayNumber)) {
+            const statsDiv = document.getElementById(`stats-${dayNumber}`);
+            const statsContent = document.getElementById(`statsContent-${dayNumber}`);
+            if (!statsDiv || !statsContent) return;
+            let scored = 0;
+            for (let division = 1; division <= numDivisions; division++) {
+                const ranking = global.singleScoreRanking(dayNumber, division);
+                totalPlayers += ranking.length;
+                scored += ranking.filter(r => r.score !== null).length;
+            }
+            statsDiv.style.display = totalPlayers > 0 ? 'block' : 'none';
+            statsContent.innerHTML = `
+                <div class="stat-card"><div class="stat-number">${totalPlayers}</div><div>Joueurs inscrits</div></div>
+                <div class="stat-card"><div class="stat-number">${scored}</div><div>Scores saisis</div></div>
+            `;
+            return;
+        }
+
         for (let division = 1; division <= numDivisions; division++) {
             totalPlayers += (dayData.players[division] || []).length;
             totalMatches += (dayData.matches[division] || []).length;
@@ -386,11 +421,51 @@
             .sort(dayPointsComparator(!!(dayData.pools && dayData.pools.enabled)));
     }
 
+    // Classement de journée en score unique : rang, joueur, score (le plus haut d'abord)
+    function renderSingleScoreDayRanking(dayNumber, numDivisions) {
+        const medals = ['🥇', '🥈', '🥉', '🏅', '🎖️', '⭐'];
+        let html = '';
+        for (let division = 1; division <= numDivisions; division++) {
+            const rows = global.singleScoreRanking(dayNumber, division).filter(r => r.score !== null);
+            if (rows.length === 0) continue;
+            html += `
+    <div class="ranking-division" style="margin-bottom: 30px;">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">${medals[division - 1] || '📊'} Division ${division}</h3>
+        <table class="ranking-table">
+            <thead><tr><th>Rang</th><th>Joueur</th><th>Score</th></tr></thead>
+            <tbody>
+                ${rows.map(r => {
+                    const rankClass = r.rank === 1 ? 'rank-gold' : r.rank === 2 ? 'rank-silver' : r.rank === 3 ? 'rank-bronze' : '';
+                    return `<tr><td class="rank-position ${rankClass}">${r.rank}</td><td style="font-weight: 600;">${escapeDocText(r.name)}</td><td class="stat-value">${r.score}</td></tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    </div>`;
+        }
+        if (!html) {
+            alert(`Aucun score saisi dans la Journée ${dayNumber} pour établir un classement !`);
+            return;
+        }
+        const rankingsContentEl = document.getElementById(`rankingsContent-${dayNumber}`);
+        const rankingsEl = document.getElementById(`rankings-${dayNumber}`);
+        if (rankingsContentEl && rankingsEl) {
+            rankingsContentEl.innerHTML = html;
+            // « Par Points / Par % Victoires » et « 📊 Complet » (poules) n'ont pas de sens sans matchs
+            rankingsEl.querySelectorAll('.toggle-btn, [onclick^="showCompleteDayRanking"]').forEach(b => { b.hidden = true; });
+            rankingsEl.style.display = 'block';
+            rankingsEl.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
     function updateRankingsForDay(dayNumber, sortBy = 'points') {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
         const numDivisions = championship.config?.numberOfDivisions || 3;
+        if (global.isSingleScoreMode(dayNumber)) {
+            renderSingleScoreDayRanking(dayNumber, numDivisions);
+            return;
+        }
         let rankingsHtml = '';
         let hasAnyMatches = false;
 
@@ -581,6 +656,7 @@ playerStats.forEach((player, index) => {
         
         if (rankingsContentEl && rankingsEl) {
             rankingsContentEl.innerHTML = rankingsHtml;
+            rankingsEl.querySelectorAll('.toggle-btn, [onclick^="showCompleteDayRanking"]').forEach(b => { b.hidden = false; });
             rankingsEl.style.display = 'block';
             rankingsEl.scrollIntoView({ behavior: 'smooth' });
         }
@@ -623,6 +699,26 @@ playerStats.forEach((player, index) => {
         const gp = `<td title="${player.gamePointsWon}/${player.gamePointsLost}">${d > 0 ? '+' : ''}${d}</td>`;
         return (mode === 'mixed' ? `<td>${player.totalSetsWon || 0}/${player.totalSetsLost || 0}</td>` : '') + gp;
     }
+    /** true si toutes les journées Matchs sont en score unique : tableau simplifié. */
+    function generalSingleOnly() {
+        const days = Object.keys(championship.days || {}).map(d => parseInt(d))
+            .filter(d => (championship.days[d].dayType || 'championship') !== 'chrono');
+        return days.length > 0 && days.every(d => global.isSingleScoreMode(d));
+    }
+
+    function singleAverage(player) {
+        if (!player.daysPlayed) return '-';
+        return String(Math.round((player.totalPoints / player.daysPlayed) * 10) / 10).replace('.', ',');
+    }
+
+    // En-têtes / cellules du classement général en score unique (écran, PDF, HTML)
+    const GENERAL_SINGLE_HEAD = '<th>Score total</th><th>Journées</th><th title="Moyenne par journée jouée">Moyenne</th>';
+    function generalSingleCells(player) {
+        return `<td class="stat-value points-total">${player.totalPoints}</td><td>${player.daysPlayed}</td><td>${singleAverage(player)}</td>`;
+    }
+    window.generalSingleOnly = generalSingleOnly;
+    window.GENERAL_SINGLE_HEAD = GENERAL_SINGLE_HEAD;
+    window.generalSingleCells = generalSingleCells;
     window.generalSetsMode = generalSetsMode;
     window.generalSetsHeaders = generalSetsHeaders;
     window.generalSetsCells = generalSetsCells;
@@ -735,6 +831,7 @@ playerStats.forEach((player, index) => {
         const isPoolMode = Object.values(championship.days).some(day => day.pools?.enabled);
         const setsMode = generalSetsMode();
         const setsHead = generalSetsHeaders(setsMode);
+        const singleOnly = generalSingleOnly();
 
         for (let division = 1; division <= numDivisions; division++) {
             if (!generalRanking.divisions[division] || generalRanking.divisions[division].length === 0) continue;
@@ -750,13 +847,13 @@ playerStats.forEach((player, index) => {
                     <th>Rang</th>
                     <th>Joueur</th>
                     ${isPoolMode ? '<th>Étape</th>' : ''}
-                    <th>Points Total</th>
+                    ${singleOnly ? GENERAL_SINGLE_HEAD : `<th>Points Total</th>
                     <th>Journées</th>
                     <th>V/N/D/F</th>
                     <th>% Vict. Moy.</th>
                     <th>${setsHead.pp}</th>
                     <th>${setsHead.diff}</th>
-                    ${setsHead.extra}
+                    ${setsHead.extra}`}
                 </tr>
             </thead>
             <tbody>
@@ -797,13 +894,13 @@ generalRanking.divisions[division].forEach((player, index) => {
             <td class="rank-position ${rankClass}">${index + 1}</td>
             <td style="font-weight: 600;">${player.name}</td>
             ${isPoolMode ? `<td style="${stageStyle} text-align: center; border-radius: 4px;">${stageIcon}${player.stageLabel}</td>` : ''}
-            <td class="stat-value">${player.totalPoints}</td>
+            ${singleOnly ? generalSingleCells(player) : `<td class="stat-value">${player.totalPoints}</td>
             <td>${player.daysPlayed}</td>
             <td>${player.totalWins}/${player.totalDraws || 0}/${player.totalLosses}/${player.totalForfaits}</td>
             <td>${player.avgWinRate}%</td>
             <td>${player.totalPointsWon}/${player.totalPointsLost}</td>
             <td style="${diffStyle}">${player.goalAveragePoints > 0 ? '+' : ''}${player.goalAveragePoints}</td>
-            ${generalSetsCells(player, setsMode)}
+            ${generalSetsCells(player, setsMode)}`}
         </tr>
     `;
 });
@@ -913,6 +1010,8 @@ generalRanking.divisions[division].forEach((player, index) => {
                             const missedDays = allDays.filter(d => d < playerFirstAppearance[playerName]);
 
                             missedDays.forEach(missedDay => {
+                                // Score unique : une journée manquée compte simplement 0
+                                if (global.isSingleScoreMode(missedDay)) return;
                                 // 4 forfaits par journée manquée = 0 points, -20 goal average (5 buts encaissés par match)
                                 playersData[playerName].totalForfaits += 4;
                                 playersData[playerName].totalPoints += 0; // 4 forfaits × 0 point
@@ -969,6 +1068,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                 const missedDaysBetween = allDays.filter(d => d > firstDay && d < lastDay && !playerDays.includes(d));
                 
                 missedDaysBetween.forEach(missedDay => {
+                    if (global.isSingleScoreMode(missedDay)) return; // score unique : 0, pas de forfait
                     // 4 forfaits par journée manquée = 0 points, -20 goal average
                     playersData[playerName].totalForfaits += 4;
                     playersData[playerName].totalPoints += 0;
@@ -983,6 +1083,7 @@ generalRanking.divisions[division].forEach((player, index) => {
             Object.keys(playersData).forEach(playerName => {
                 const missedDaysAfter = allDays.filter(d => d > playerLastAppearance[playerName]);
                 missedDaysAfter.forEach(missedDay => {
+                    if (global.isSingleScoreMode(missedDay)) return; // score unique : 0, pas de forfait
                     // 4 forfaits par journée manquée = 0 points, -20 goal average
                     playersData[playerName].totalForfaits += 4;
                     playersData[playerName].totalPoints += 0;
@@ -1819,6 +1920,7 @@ generalRanking.divisions[division].forEach((player, index) => {
     const numDivisions = championship.config?.numberOfDivisions || 3;
     const setsMode = generalSetsMode();
     const setsHead = generalSetsHeaders(setsMode);
+    const singleOnly = generalSingleOnly();
     for (let division = 1; division <= numDivisions; division++) {
         if (generalRanking.divisions[division].length === 0) continue;
 
@@ -1834,13 +1936,13 @@ generalRanking.divisions[division].forEach((player, index) => {
                         <tr>
                             <th>Rang</th>
                             <th>Joueur</th>
-                            <th>Points</th>
+                            ${singleOnly ? GENERAL_SINGLE_HEAD : `<th>Points</th>
                             <th>Journées</th>
                             <th>V/N/D/F</th>
                             <th>% Vict.</th>
                             <th>${setsHead.pp}</th>
                             <th>${setsHead.diff}</th>
-                            ${setsHead.extra}
+                            ${setsHead.extra}`}
                         </tr>
                     </thead>
                     <tbody>
@@ -1870,13 +1972,13 @@ generalRanking.divisions[division].forEach((player, index) => {
                 <tr>
                     <td class="rank-position">${rankDisplay}</td>
                     <td class="player-name">${player.name}</td>
-                    <td class="points-total">${player.totalPoints}</td>
+                    ${singleOnly ? generalSingleCells(player) : `<td class="points-total">${player.totalPoints}</td>
                     <td>${player.daysPlayed}</td>
                     <td><span style="color: #38a169; font-weight: 500;">${player.totalWins}</span>/<span style="color: #d69e2e;">${player.totalDraws || 0}</span>/<span style="color: #e53e3e;">${player.totalLosses}</span>/<span style="color: #718096;">${player.totalForfaits}</span></td>
                     <td class="win-rate">${player.avgWinRate}%</td>
                     <td><span style="color: #38a169;">${player.totalPointsWon}</span> <span style="color: #a0aec0;">/</span> <span style="color: #e53e3e;">${player.totalPointsLost}</span></td>
                     <td class="${diffClass}">${diffSign}${player.goalAveragePoints}</td>
-                    ${generalSetsCells(player, setsMode)}
+                    ${generalSetsCells(player, setsMode)}`}
                 </tr>
             `;
         });
@@ -1892,7 +1994,7 @@ generalRanking.divisions[division].forEach((player, index) => {
     htmlContent += `
             <div class="footer">
                 <p>🏓 Championnat Sportif - Gestion Esenca Sport</p>
-                <p>Système de points : Victoire = 3 pts | Match nul = 2 pts | Défaite = 1 pt | Forfait = 0 pt</p>
+                <p>${singleOnly ? 'Classement : somme des scores de toutes les journées' : 'Système de points : Victoire = 3 pts | Match nul = 2 pts | Défaite = 1 pt | Forfait = 0 pt'}</p>
                 <p>Document généré automatiquement le ${currentDate} • Classement officiel</p>
             </div>
         </div>
@@ -2112,6 +2214,9 @@ function renamePlayerEverywhereInChampionship(oldName, newName) {
     Object.keys(championship.days).forEach(dayNumber => {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
+
+        // Scores uniques (clés = noms)
+        if (typeof renameSingleScore === 'function') renameSingleScore(dayData, oldName, newName);
 
         // Listes de joueurs (format string ou objet {name, club})
         Object.keys(dayData.players || {}).forEach(div => {
