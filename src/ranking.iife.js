@@ -293,34 +293,6 @@
         if (totalMatches > 0) {
             statsDiv.style.display = 'block';
             
-            let tourStats = '';
-            // Couvrir tous les tours présents dans les données (pas de borne en dur à 4)
-            let maxTour = 4;
-            for (let division = 1; division <= numDivisions; division++) {
-                (dayData.matches[division] || []).forEach(m => {
-                    if (Number.isFinite(m.tour) && m.tour > maxTour) maxTour = m.tour;
-                });
-            }
-            for (let tour = 1; tour <= maxTour; tour++) {
-                let tourTotal = 0;
-                let tourCompleted = 0;
-
-                for (let division = 1; division <= numDivisions; division++) {
-                    const tourMatches = (dayData.matches[division] || []).filter(m => m.tour === tour);
-                    tourTotal += tourMatches.length;
-                    tourCompleted += tourMatches.filter(m => m.completed).length;
-                }
-                
-                if (tourTotal > 0) {
-                    tourStats += `
-                        <div class="stat-card">
-                            <div class="stat-number">${tourCompleted}/${tourTotal}</div>
-                            <div>Tour ${tour}</div>
-                        </div>
-                    `;
-                }
-            }
-            
             statsContent.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${totalPlayers}</div>
@@ -334,7 +306,6 @@
                     <div class="stat-number">${completedMatches}</div>
                     <div>Matchs terminés</div>
                 </div>
-                ${tourStats}
             `;
         } else {
             statsDiv.style.display = 'none';
