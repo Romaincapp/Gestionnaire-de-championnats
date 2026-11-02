@@ -284,7 +284,7 @@
             </div>
             
             <div class="stats" id="stats-${dayNumber}" style="display: none;">
-                <h3>📊 Statistiques Journée ${dayNumber}</h3>
+                <h3>Statistiques Journée ${dayNumber}</h3>
                 <div class="stats-grid" id="statsContent-${dayNumber}"></div>
             </div>
             </div><!-- Fin championship-section -->

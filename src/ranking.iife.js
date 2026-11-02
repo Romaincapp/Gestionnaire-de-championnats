@@ -292,7 +292,6 @@
         
         if (totalMatches > 0) {
             statsDiv.style.display = 'block';
-            const completionRate = Math.round((completedMatches / totalMatches) * 100);
             
             let tourStats = '';
             // Couvrir tous les tours présents dans les données (pas de borne en dur à 4)
@@ -313,11 +312,10 @@
                 }
                 
                 if (tourTotal > 0) {
-                    const tourRate = Math.round((tourCompleted / tourTotal) * 100);
                     tourStats += `
                         <div class="stat-card">
-                            <div class="stat-number">${tourRate}%</div>
-                            <div>Tour ${tour} (${tourCompleted}/${tourTotal})</div>
+                            <div class="stat-number">${tourCompleted}/${tourTotal}</div>
+                            <div>Tour ${tour}</div>
                         </div>
                     `;
                 }
@@ -335,10 +333,6 @@
                 <div class="stat-card">
                     <div class="stat-number">${completedMatches}</div>
                     <div>Matchs terminés</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${completionRate}%</div>
-                    <div>Progression</div>
                 </div>
                 ${tourStats}
             `;
