@@ -33,6 +33,14 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-11-06 — « Vérifier les noms » : scénarios humains (inversion, déterminant, initiale…)
+
+- **Contexte** : affûter « 🔍 Vérifier les noms » (classement général) sur les saisies réelles : déterminant en plus devant le club, nom/prénom inversés d'une journée à l'autre, etc.
+- **Fait** : moteur réécrit en comparaison mot par mot (`compareNamesForCheck`) au lieu d'une distance sur la chaîne entière : ordre libre, articles/« club » ignorés, mots en plus (club), initiale, mots collés. Regroupement par paires (union) avec garde-fous : adversaires jamais reliés (même par transitivité), liens fragiles uniques et pas deux inscrits du même jour, numéros différents = entrées différentes, clubs différents → incertain. Raisons affichées par variante, club visible, bouton « 🙅 Personnes différentes » (`championship.nameCheckIgnored`), dédoublonnage des listes après fusion. Vérifié sur tous les JSON de `examples/` et `tests/fixtures/` : les faux positifs d'équipes numérotées ont disparu, seul un vrai doublon de casse reste signalé.
+- **Fichiers/modules touchés** : `src/ranking.iife.js`, `tests/unit/nameCheck.test.js` (45 tests), `AGENTS.md`, `CHANGELOG.md`
+- **Commit(s)** : voir branche `claude/blissful-albattani-8w5o15`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+
 ### 2026-11-02 — Score unique : impressions, fiche joueur, égalités au général
 
 - **Contexte** : suite du format « Score unique » (points laissés ouverts par l'entrée précédente).

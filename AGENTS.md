@@ -323,7 +323,8 @@ lors du même nettoyage.
 - `rankingDocHeaderHTML(subtitle)`, `rankingDocHeaderCSS()`, `rankingDocTitle()`, `saveRankingTitle(text)`, `escapeDocText(text)` - en-tête compact des documents de classement (PDF, export HTML) : titre et sous-titre modifiables ; le titre modifié revient à l'application (`championship.rankingTitle`) via `window.opener.saveRankingTitle`
 - `closePlayerModal()` - vit ici, pas dans `players.iife.js` (voir section 7)
 - `toggleGeneralExportMenu(bouton)` - « 📤 Exporter ▾ » de l'onglet Classement général (menu PDF / HTML / JSON via `toggleActionMenu`)
-- `showPlayerDetails()`, `exportGeneralRanking()`, `exportGeneralRankingToPDF()`, `showNameCheckModal()`, `applyNameCheckMerge()`, `toggleDayMatches()`, `updateStats()`
+- `showPlayerDetails()`, `exportGeneralRanking()`, `exportGeneralRankingToPDF()`, `toggleDayMatches()`, `updateStats()`
+- **🔍 Vérifier les noms** : `showNameCheckModal()`, `applyNameCheckMerge(i)`, `ignoreNameCheckGroup(i)` (« 🙅 Personnes différentes », paires mémorisées dans `championship.nameCheckIgnored`). Moteur testable : `compareNamesForCheck(a, b)` (→ `null` ou `{score, reasons, weak}` : comparaison mot par mot dans n'importe quel ordre — inversion nom/prénom, fautes de frappe, articles/« club » ignorés, mots en plus (club), initiale ; numéros différents = entrées différentes), `collectChampionshipPlayerNames()` (occurrences, clubs, inscriptions par journée, adversaires), `groupSimilarPlayerNames(items, ignorés)` (jamais deux noms qui se sont affrontés ; liens fragiles — un seul mot, initiale — gardés seulement s'ils ne visent qu'une personne et pas deux inscrits du même jour ; clubs différents → incertain), `suggestNameForGroup(members)`. Après fusion, doublons de la liste d'une journée retirés. Tests : `tests/unit/nameCheck.test.js`
 
 ### 13. export-json.iife.js et export-print.iife.js
 **Rôle** : Export/Import JSON et impression/PDF. `export.iife.js` (l'ancien
