@@ -1579,7 +1579,7 @@ function exportGeneralRankingToHTML() {
                         <tr>
                             <th>Rang</th>
                             <th>Joueur</th>
-                            ${singleOnly ? window.GENERAL_SINGLE_HEAD : `<th>Points</th>
+                            ${singleOnly ? window.generalSingleHead() : `<th>Points</th>
                             <th>Journées</th>
                             <th>V/N/D/F</th>
                             <th>% Vict.</th>

@@ -798,14 +798,28 @@ playerStats.forEach((player, index) => {
         return String(Math.round((player.totalPoints / player.daysPlayed) * 10) / 10).replace('.', ',');
     }
 
-    // En-têtes / cellules du classement général en score unique (écran, PDF, HTML)
-    const GENERAL_SINGLE_HEAD = '<th>Score total</th><th>Journées</th><th title="Moyenne par journée jouée">Moyenne</th><th title="Meilleure journée (départage à total égal)">Meilleure</th>';
+    /** Journées Matchs (score unique) du championnat, dans l'ordre : une colonne chacune. */
+    function generalSingleDays() {
+        return Object.keys(championship.days || {}).map(d => parseInt(d))
+            .filter(d => (championship.days[d].dayType || 'championship') !== 'chrono')
+            .sort((a, b) => a - b);
+    }
+
+    // En-têtes / cellules du classement général en score unique (écran, PDF, HTML) :
+    // une colonne par journée (0 si absent), puis total, journées, moyenne, meilleure.
+    function generalSingleHead() {
+        const dayCols = generalSingleDays().map(d => `<th title="Score de la journée ${d}">J${d}</th>`).join('');
+        return dayCols + '<th>Score total</th><th>Journées</th><th title="Moyenne par journée jouée">Moyenne</th><th title="Meilleure journée (départage à total égal)">Meilleure</th>';
+    }
     function generalSingleCells(player) {
+        const byDay = player.singleScoresByDay || {};
+        const dayCells = generalSingleDays().map(d => `<td>${byDay[d] === undefined || byDay[d] === null ? 0 : byDay[d]}</td>`).join('');
         const best = player.bestSingleScore === null || player.bestSingleScore === undefined ? '-' : player.bestSingleScore;
-        return `<td class="stat-value points-total">${player.totalPoints}</td><td>${player.daysPlayed}</td><td>${singleAverage(player)}</td><td>${best}</td>`;
+        return `${dayCells}<td class="stat-value points-total">${player.totalPoints}</td><td>${player.daysPlayed}</td><td>${singleAverage(player)}</td><td>${best}</td>`;
     }
     window.generalSingleOnly = generalSingleOnly;
-    window.GENERAL_SINGLE_HEAD = GENERAL_SINGLE_HEAD;
+    window.generalSingleHead = generalSingleHead;
+    window.generalSingleDays = generalSingleDays;
     window.generalSingleCells = generalSingleCells;
     window.generalSetsMode = generalSetsMode;
     window.generalSetsHeaders = generalSetsHeaders;
@@ -935,7 +949,7 @@ playerStats.forEach((player, index) => {
                     <th>Rang</th>
                     <th>Joueur</th>
                     ${isPoolMode ? '<th>Étape</th>' : ''}
-                    ${singleOnly ? GENERAL_SINGLE_HEAD : `<th>Points Total</th>
+                    ${singleOnly ? generalSingleHead() : `<th>Points Total</th>
                     <th>Journées</th>
                     <th>V/N/D/F</th>
                     <th>% Vict. Moy.</th>
@@ -1091,6 +1105,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                                 totalSetsLost: 0,
                                 totalMatchesPlayed: 0,
                                 bestSingleScore: null, // score unique : meilleure journée (départage)
+                                singleScoresByDay: {}, // score unique : score de chaque journée (colonnes J1, J2…)
                                 winRates: [],
                                 firstDay: playerFirstAppearance[playerName]
                             };
@@ -1137,6 +1152,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                             if (dayStats.singleScore !== undefined && dayStats.singleScore !== null) {
                                 const best = playersData[playerName].bestSingleScore;
                                 playersData[playerName].bestSingleScore = best === null ? dayStats.singleScore : Math.max(best, dayStats.singleScore);
+                                playersData[playerName].singleScoresByDay[dayNum] = (playersData[playerName].singleScoresByDay[dayNum] || 0) + dayStats.singleScore;
                             }
 
                             generalRanking.hasData = true;
@@ -2045,7 +2061,7 @@ generalRanking.divisions[division].forEach((player, index) => {
                         <tr>
                             <th>Rang</th>
                             <th>Joueur</th>
-                            ${singleOnly ? GENERAL_SINGLE_HEAD : `<th>Points</th>
+                            ${singleOnly ? generalSingleHead() : `<th>Points</th>
                             <th>Journées</th>
                             <th>V/N/D/F</th>
                             <th>% Vict.</th>
