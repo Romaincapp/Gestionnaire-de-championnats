@@ -33,6 +33,14 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-11-06 — Score unique : une colonne par journée au classement général
+
+- **Contexte** : demande utilisateur — voir le score de chaque journée dans le classement général en score unique.
+- **Fait** : colonnes J1, J2… (avant « Score total ») dans l'onglet, le PDF et l'export HTML ; 0 si le joueur était absent. `GENERAL_SINGLE_HEAD` (constante) remplacée par `generalSingleHead()` ; `calculateGeneralRanking` remplit `singleScoresByDay`.
+- **Fichiers/modules touchés** : `src/ranking.iife.js`, `src/init.iife.js`, `tests/unit/singleScore.test.js`
+- **Commit(s)** : voir branche `claude/keen-fermi-raqv0i`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ · claude.md ❌
+
 ### 2026-11-06 — Sets : Tab bloqué dans les matchs par tours
 
 - **Contexte** : en mode sets, Tab depuis la 2e case d'un set ne passait pas à la suivante.

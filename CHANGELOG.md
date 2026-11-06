@@ -13,6 +13,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 📊 Score unique : colonnes par journée au classement général
+- Le classement général des journées en score unique affiche une colonne par journée
+  (J1, J2…) avant le score total, à l'écran comme dans le PDF et l'export HTML. Un joueur
+  absent à une journée a 0 dans sa colonne.
+
 ### ⇥ Scores en sets : Tab passe à la case suivante
 - En mode sets (BO3/BO5/BO7), dans les matchs par tours, Tab restait bloqué sur la 2e case
   du set 1 (et le match pouvait être validé avec « 11-2 » comme score de sets). Tab parcourt

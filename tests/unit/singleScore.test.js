@@ -80,9 +80,11 @@ test('classement général : somme des scores, journée manquée = 0 sans forfai
 
     updateGeneralRanking();
     const headers = [...document.querySelectorAll('#generalRankingContent th')].map(t => t.textContent.trim());
-    expect(headers).toEqual(['Rang', 'Joueur', 'Score total', 'Journées', 'Moyenne', 'Meilleure']);
-    const alice = [...document.querySelectorAll('#generalRankingContent tbody tr')][0];
-    expect([...alice.cells].map(td => td.textContent.trim())).toEqual(['1', 'Alice', '330', '2', '165', '180']);
+    expect(headers).toEqual(['Rang', 'Joueur', 'J1', 'J2', 'Score total', 'Journées', 'Moyenne', 'Meilleure']);
+    const rows = [...document.querySelectorAll('#generalRankingContent tbody tr')].map(tr => [...tr.cells].map(td => td.textContent.trim()));
+    expect(rows[0]).toEqual(['1', 'Alice', '150', '180', '330', '2', '165', '180']);
+    // Chloé absente en J2 : 0 dans la colonne de la journée
+    expect(rows[2]).toEqual(['3', 'Chloé', '190', '0', '190', '1', '190', '190']);
 });
 
 test('renommer un joueur garde son score', () => {

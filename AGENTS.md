@@ -319,6 +319,7 @@ lors du même nettoyage.
 **Fonctions exposées** :
 - `calculatePlayerStats(dayNumber, division, playerName)`, `updateRankings()`, `updateRankingsForDay(dayNumber)`, `showRankings(type)`, `showRankingsForDay(dayNumber)`, `updateGeneralRanking()`, `showGeneralPlayerDetails(playerName)`
 - `calculateGeneralStats()` - journées, joueurs, matchs (exposée pour `exportGeneralRankingToHTML`)
+- `generalSingleOnly()`, `generalSingleDays()`, `generalSingleHead()`, `generalSingleCells(player)` - classement général en score unique : une colonne par journée (J1, J2…, 0 si absent, lu dans `player.singleScoresByDay`), puis Score total / Journées / Moyenne / Meilleure ; utilisées par l'onglet et les deux exports
 - `generalSetsMode()`, `generalSetsHeaders(mode)`, `generalSetsCells(player, mode)` - colonnes de sets du classement général (`'none'` / `'all'` : Sets G/P, Diff sets, Pts jeu ± / `'mixed'` : PP/PC + Sets G/P + Pts jeu ±), utilisées par l'onglet et les deux exports HTML
 - `rankingDocHeaderHTML(subtitle)`, `rankingDocHeaderCSS()`, `rankingDocTitle()`, `saveRankingTitle(text)`, `escapeDocText(text)` - en-tête compact des documents de classement (PDF, export HTML) : titre et sous-titre modifiables ; le titre modifié revient à l'application (`championship.rankingTitle`) via `window.opener.saveRankingTitle`
 - `closePlayerModal()` - vit ici, pas dans `players.iife.js` (voir section 7)
