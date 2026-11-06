@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-11-06 — Fenêtres : un clic à côté ne les ferme plus
+
+- **Contexte** : la fenêtre « Modifier le joueur » (et beaucoup d'autres) se fermait au moindre clic à côté, saisie perdue.
+- **Fait** : un seul garde-fou dans `a11y.iife.js` (`onBackdropClick`, écouteur `click` en capture sur `document`) : un clic dont la cible est le fond d'une fenêtre (`isDialog`) ayant un bouton de fermeture (`findCloseControl`) est stoppé, quel que soit le gestionnaire de fond (≈ 20 variantes dans les modules). Fenêtres sans bouton inchangées. Échap passe toujours par le bouton.
+- **Fichiers/modules touchés** : `src/a11y.iife.js`, `tests/unit/a11yKeyboard.test.js` (+4 tests), `AGENTS.md`, `CHANGELOG.md`
+- **Commit(s)** : voir branche `claude/blissful-albattani-8w5o15`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Vérifs** : `npm test` 656 ✅, `npm run test:a11y` 0 défaut, essai réel « Modifier le joueur » (clic à côté, sélection relâchée dehors)
+
 ### 2026-11-06 — « Vérifier les noms » : scénarios humains (inversion, déterminant, initiale…)
 
 - **Contexte** : affûter « 🔍 Vérifier les noms » (classement général) sur les saisies réelles : déterminant en plus devant le club, nom/prénom inversés d'une journée à l'autre, etc.

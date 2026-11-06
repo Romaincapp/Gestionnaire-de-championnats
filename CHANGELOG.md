@@ -13,6 +13,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🪟 Fenêtres : un clic à côté ne les ferme plus
+- Un clic à côté d'une fenêtre (ou une sélection de texte relâchée hors du panneau) ne la
+  ferme plus : seul son bouton (×, Fermer, Annuler, OK) ou Échap la ferme. Vaut pour toutes
+  les fenêtres. Une fenêtre sans bouton de fermeture se ferme toujours d'un clic à côté.
+
 ### 🔍 « Vérifier les noms » plus fin
 - Reconnaît aussi : nom et prénom inversés (« Dupont Jean » / « Jean Dupont »), article ou
   « club » en plus devant le club (« Les Archers » / « Archers »), club ajouté avant ou après
