@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-11-06 — Sets : Tab bloqué dans les matchs par tours
+
+- **Contexte** : en mode sets, Tab depuis la 2e case d'un set ne passait pas à la suivante.
+- **Fait** : `handleEnterKey` (`matches.iife.js`) retombait, pour un Tab « naturel » dans une grille de sets, dans le code 2 scores : il lisait les 2 premières cases de la grille (`.score-center`) comme `score1`/`score2`, puis `preventDefault` + validation avec ces faux scores. Retour anticipé quand la cible est dans `.set-score-grid` et que `handleSetsKeydown` n'a pas demandé la validation (même garde que `handlePoolMatchEnter` / `handleManualMatchEnter`, déjà corrects). Vérifié au clavier en vrai navigateur : 2 scores, BO3/BO5 par tours, poule, phase finale.
+- **Fichiers/modules touchés** : `src/matches.iife.js`, `tests/unit/setsTabNavigation.test.js` (échoue sans le correctif), `CHANGELOG.md`
+- **Commit(s)** : voir branche `claude/blissful-albattani-8w5o15`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ❌ (n/a, aucune fonction exposée changée) · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Vérifs** : `npm test` 658 ✅, `npm run test:sets` 0 problème
+
 ### 2026-11-06 — Fenêtres : un clic à côté ne les ferme plus
 
 - **Contexte** : la fenêtre « Modifier le joueur » (et beaucoup d'autres) se fermait au moindre clic à côté, saisie perdue.
