@@ -417,7 +417,7 @@ son parent. Les tableaux qui tiennent et tout l'affichage ordinateur restent int
   Maj+Tab restent dans la fenêtre du dessus ; **Échap** clique son bouton de fermeture
   (× / ✕ d'abord, puis « Fermer » / « Annuler », émojis de tête ignorés) ou, à défaut, son fond
   cliquable (`onclick="if (event.target === this) …"`) : la fenêtre se ferme donc par sa propre
-  logique. À la fermeture, le focus revient à l'élément d'origine (ou dans la fenêtre restée
+  logique. **Clic sur le fond** d'une fenêtre qui a un bouton de fermeture : ignoré (`onBackdropClick`, capture sur `document`, avant tous les gestionnaires `if (event.target === this) …`) ; seul le bouton ou Échap ferme. À la fermeture, le focus revient à l'élément d'origine (ou dans la fenêtre restée
   ouverte en dessous). Ancien gestionnaire Échap de `init.iife.js` retiré (remplacé)
 - **les éléments cliquables non natifs** (`[onclick]` sur div/span/h2/td/tr…) : `tabindex="0"`,
   `role="button"` (pas sur `<tr>`), Entrée / Espace = clic. Ignorés : fonds de fenêtre,

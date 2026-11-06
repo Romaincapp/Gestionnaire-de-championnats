@@ -287,3 +287,44 @@ test('« réduire les animations » : un défilement en douceur demandé en JS d
     expect(calls[2][1]).toEqual({ behavior: 'smooth' });
     delete window.matchMedia;
 });
+
+describe('clic à côté de la fenêtre (sur son fond)', () => {
+    test('ne ferme pas une fenêtre qui a un bouton de fermeture ; le bouton, lui, la ferme', async () => {
+        window.closeBg = jest.fn();
+        window.closeBtn = jest.fn();
+        const dlg = overlay('<div><h3>Modifier le joueur</h3><input><button onclick="closeBtn()">Annuler</button></div>',
+            'onclick="if (event.target === this) closeBg()"');
+        const listener = jest.fn();
+        dlg.addEventListener('click', listener);
+        await tick();
+        dlg.click();
+        expect(window.closeBg).not.toHaveBeenCalled();
+        expect(listener).not.toHaveBeenCalled();
+        dlg.querySelector('button').click();
+        expect(window.closeBtn).toHaveBeenCalledTimes(1);
+    });
+
+    test('un clic dans le panneau fonctionne normalement', async () => {
+        window.inside = jest.fn();
+        const dlg = overlay('<div><h3>T</h3><span onclick="inside()">x</span><button>Fermer</button></div>');
+        await tick();
+        dlg.querySelector('span').click();
+        expect(window.inside).toHaveBeenCalledTimes(1);
+    });
+
+    test('fenêtre sans bouton de fermeture : le fond reste cliquable (sinon impossible à quitter)', async () => {
+        window.closeBg2 = jest.fn();
+        const dlg = overlay('<div><h3>T</h3><p>Info</p></div>', 'onclick="if (event.target === this) closeBg2()"');
+        await tick();
+        dlg.click();
+        expect(window.closeBg2).toHaveBeenCalledTimes(1);
+    });
+
+    test('Échap ferme toujours par le bouton', async () => {
+        window.closeEsc = jest.fn();
+        overlay('<div><h3>T</h3><input><button onclick="closeEsc()">×</button></div>');
+        await tick();
+        key(document.activeElement, 'Escape');
+        expect(window.closeEsc).toHaveBeenCalledTimes(1);
+    });
+});

@@ -18,6 +18,7 @@
 //   - champ sans libellé : nom accessible (aria-label) déduit du contexte —
 //     case de score « Score de A contre B », champ de nom de joueur, libellé
 //     voisin non relié, en-tête de colonne, placeholder parlant ;
+//   - clic sur le fond d'une fenêtre qui a un bouton de fermeture : ignoré ;
 //   - réglage « réduire les animations » : défilements JS « smooth » instantanés.
 // Aucune fonction d'affichage n'a besoin de connaître ce module.
 (function(global) {
@@ -174,6 +175,21 @@
         return false;
     }
 
+    // Clic à côté d'une fenêtre (sur son fond) : ignoré si elle a un bouton de fermeture.
+    // Un clic de travers, ou une sélection de texte relâchée hors du panneau, fermait la
+    // fenêtre et perdait la saisie ; seul son bouton (×, Fermer, Annuler, OK) la ferme.
+    // Phase de capture sur document : passe avant les ~20 gestionnaires de fond
+    // (onclick="if (event.target === this) …", modal.onclick, addEventListener).
+    // Une fenêtre sans bouton de fermeture garde son fond cliquable (sinon impossible à quitter).
+    function onBackdropClick(event) {
+        var target = event.target;
+        if (!target || target.nodeType !== 1 || !isDialog(target)) return;
+        if (!findCloseControl(target)) return;
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        event.preventDefault();
+    }
+
     function trapTab(event, dialog) {
         var items = focusables(dialog);
         var active = document.activeElement;
@@ -326,6 +342,7 @@
         nameFields(document.body);
         syncDialogs();
         document.addEventListener('keydown', onKeydown);
+        document.addEventListener('click', onBackdropClick, true);
         if (typeof MutationObserver !== 'function') return;
         new MutationObserver(function(mutations) {
             if (!global.document || !document.body) return;   // page en cours de fermeture
