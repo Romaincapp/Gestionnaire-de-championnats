@@ -13,6 +13,17 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🔍 « Vérifier les noms » plus fin
+- Reconnaît aussi : nom et prénom inversés (« Dupont Jean » / « Jean Dupont »), article ou
+  « club » en plus devant le club (« Les Archers » / « Archers »), club ajouté avant ou après
+  le nom, initiale du prénom (« J. Dupont »), nom composé, mots collés ou coupés.
+- Chaque variante dit pourquoi elle a été rapprochée et affiche son club.
+- Moins de fausses alertes : numéros différents (« Équipe 1 » / « Équipe 2 », « 25m » / « 50m »),
+  noms qui se sont affrontés, « Jean » seul face à plusieurs Jean ne sont plus proposés ;
+  clubs différents ou prénoms courts proches (Léa / Léo) passent en « incertain ».
+- Nouveau bouton « 🙅 Personnes différentes » : le groupe n'est plus proposé (mémorisé).
+- Une fusion ne laisse plus le même joueur deux fois dans la liste d'une journée.
+
 ### 🎳 Score unique : impressions, fiche joueur, égalités
 - 🖨️ propose une feuille de saisie des scores (une page par division) et les résultats de la journée.
 - La fiche joueur montre le score, le rang et le classement de la journée ; la vue générale

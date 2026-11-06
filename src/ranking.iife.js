@@ -2158,11 +2158,12 @@ function escapeHtmlForNameCheck(text) {
         .replace(/"/g, '&quot;');
 }
 
-// Clé de comparaison : minuscules, sans accents ni ponctuation
+// Clé de comparaison : minuscules, sans accents, ponctuation ni zéros de tête
 function normalizeNameForCheck(name) {
     return String(name).toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\b0+(\d)/g, '$1')   // « 01 » = « 1 »
         .trim();
 }
 
@@ -2191,34 +2192,53 @@ function levenshteinForCheck(a, b) {
 }
 
 // Recense tous les noms de joueurs du championnat (toutes journées, toutes divisions),
-// dans les listes de joueurs ET dans les matchs (classiques, poules, phases finales)
+// dans les listes de joueurs ET dans les matchs (classiques, poules, phases finales).
+// Pour chaque nom : occurrences, journées, divisions, clubs (listes de joueurs),
+// journées où il est inscrit dans la liste (listed) et adversaires rencontrés.
 function collectChampionshipPlayerNames() {
     const byName = {};
+    const entry = (rawName) => {
+        // Conserver le nom brut (espaces compris) : le classement compare les
+        // chaînes exactes, donc « Jean Dupont » et « Jean Dupont  » sont deux
+        // joueurs différents qu'il faut pouvoir détecter et fusionner
+        const name = rawName === null || rawName === undefined ? '' : String(rawName);
+        if (!name.trim() || name.trim().toUpperCase().startsWith('BYE')) return null;
+        if (!byName[name]) {
+            byName[name] = { name: name, count: 0, days: {}, divisions: {}, clubs: {}, listed: {}, opponents: {} };
+        }
+        return byName[name];
+    };
     Object.keys(championship.days).forEach(dayNumber => {
         const dayData = championship.days[dayNumber];
         if (!dayData) return;
 
         const add = (rawName, div) => {
-            // Conserver le nom brut (espaces compris) : le classement compare les
-            // chaînes exactes, donc « Jean Dupont » et « Jean Dupont  » sont deux
-            // joueurs différents qu'il faut pouvoir détecter et fusionner
-            const name = rawName === null || rawName === undefined ? '' : String(rawName);
-            if (!name.trim() || name.trim().toUpperCase().startsWith('BYE')) return;
-            if (!byName[name]) {
-                byName[name] = { name: name, count: 0, days: {}, divisions: {} };
-            }
-            byName[name].count++;
-            byName[name].days[dayNumber] = true;
-            if (div) byName[name].divisions[div] = true;
+            const e = entry(rawName);
+            if (!e) return null;
+            e.count++;
+            e.days[dayNumber] = true;
+            if (div) e.divisions[div] = true;
+            return e;
         };
         const addFromMatch = (m, div) => {
             if (!m) return;
-            add(m.player1, div);
-            add(m.player2, div);
+            const a = add(m.player1, div);
+            const b = add(m.player2, div);
+            // Deux noms qui se sont affrontés sont forcément deux personnes
+            if (a && b && a !== b) {
+                a.opponents[b.name] = true;
+                b.opponents[a.name] = true;
+            }
         };
 
         Object.keys(dayData.players || {}).forEach(div => {
-            (dayData.players[div] || []).forEach(p => add(getPlayerName(p), div));
+            (dayData.players[div] || []).forEach(p => {
+                const e = add(getPlayerName(p), div);
+                if (!e) return;
+                e.listed[dayNumber] = true;
+                const club = p && typeof p === 'object' && p.club ? String(p.club).trim() : '';
+                if (club) e.clubs[club] = true;
+            });
         });
         Object.keys(dayData.matches || {}).forEach(div => {
             (dayData.matches[div] || []).forEach(m => addFromMatch(m, div));
@@ -2244,65 +2264,260 @@ function collectChampionshipPlayerNames() {
     return Object.values(byName);
 }
 
-// Vrai si le nom court (normalisé) correspond exactement aux premiers mots du nom
-// long : typiquement « jean » vs « jean la boule joyeuse » (nom saisi avec le club)
-function isNameIncludedIn(shortNorm, longNorm) {
-    if (shortNorm.length < 3 || shortNorm.length >= longNorm.length) return false;
-    return longNorm.startsWith(shortNorm + ' ');
+// Mots ignorés à la comparaison : articles et « club ». « Jean Dupont La Boule »,
+// « Jean Dupont Boule » et « Jean Dupont Club de la Boule » ont le même cœur
+const NAME_CHECK_STOPWORDS = {
+    le: 1, la: 1, les: 1, l: 1, de: 1, du: 1, des: 1, d: 1, un: 1, une: 1, et: 1, club: 1
+};
+
+// Mots du nom normalisé, et « cœur » (sans articles ; le nom entier s'il n'y a que ça)
+function nameCheckTokens(norm) {
+    const tokens = norm.split(' ').filter(Boolean);
+    let core = tokens.filter(t => !NAME_CHECK_STOPWORDS[t]);
+    if (!core.length) core = tokens;
+    return { tokens: tokens, core: core, stop: tokens.filter(t => NAME_CHECK_STOPWORDS[t]).sort().join(' ') };
 }
 
-// Score de similitude 0-100 entre deux noms normalisés
-// (100 = identiques après normalisation, inclusion = score sur la partie commune)
-function nameSimilarityScore(normA, normB) {
-    if (normA === normB) return 100;
-    if (isNameIncludedIn(normA, normB) || isNameIncludedIn(normB, normA)) {
-        const short = normA.length < normB.length ? normA : normB;
-        const long = normA.length < normB.length ? normB : normA;
-        return Math.max(50, Math.round(100 * short.length / long.length));
-    }
-    const d = levenshteinForCheck(normA, normB);
-    const maxLen = Math.max(normA.length, normB.length) || 1;
-    return Math.max(0, Math.round(100 * (1 - d / maxLen)));
-}
-
-// Regroupe les noms très similaires : clé normalisée identique, distance d'édition
-// faible, ou inclusion (nom court = début d'un nom long, ex. nom + club)
-function groupSimilarPlayerNames(names) {
-    const groups = [];
-    names.forEach(item => {
-        const norm = normalizeNameForCheck(item.name);
-        let target = null;
-        for (let i = 0; i < groups.length; i++) {
-            const g = groups[i];
-            if (g.norm === norm) { target = g; break; }
-            if (isNameIncludedIn(norm, g.norm) || isNameIncludedIn(g.norm, norm)) { target = g; break; }
-            const tolerance = Math.max(1, Math.floor(Math.min(g.norm.length, norm.length) / 6));
-            if (levenshteinForCheck(g.norm, norm) <= tolerance) { target = g; break; }
-        }
-        if (target) {
-            target.members.push(item);
-            // Garder la clé la plus courte comme référence du groupe pour que
-            // d'autres variantes longues du même nom puissent s'y rattacher
-            if (norm.length < target.norm.length && isNameIncludedIn(norm, target.norm)) target.norm = norm;
-        }
-        else groups.push({ norm: norm, members: [item] });
+// Associe chaque mot de `a` (le plus court) à un mot distinct de `b`, dans n'importe
+// quel ordre : identique, faute de frappe (1 lettre, 2 pour les mots de 7+ lettres)
+// ou initiale (« J » ↔ « Jean »). null si un mot de `a` reste sans partenaire.
+function alignNameTokens(a, b) {
+    const used = b.map(() => false);
+    const pos = a.map(() => -1);
+    let edits = 0, shortTypos = 0, initials = 0;
+    // 1) mots identiques
+    a.forEach((t, i) => {
+        const j = b.findIndex((u, k) => !used[k] && u === t);
+        if (j >= 0) { used[j] = true; pos[i] = j; }
     });
-    // Ne garder que les groupes avec au moins 2 noms distincts,
-    // triés des plus sûrs aux plus incertains (score minimal du groupe)
-    return groups
+    // 2) fautes de frappe
+    a.forEach((t, i) => {
+        if (pos[i] >= 0 || t.length < 2) return;
+        let best = -1, bestD = Infinity;
+        b.forEach((u, k) => {
+            if (used[k] || u.length < 2) return;
+            const minLen = Math.min(t.length, u.length);
+            const limit = minLen <= 2 ? 0 : minLen <= 6 ? 1 : 2;
+            const d = levenshteinForCheck(t, u);
+            if (d <= limit && d < bestD) { best = k; bestD = d; }
+        });
+        if (best >= 0) {
+            used[best] = true; pos[i] = best; edits += bestD;
+            if (Math.min(t.length, b[best].length) <= 3) shortTypos++;
+        }
+    });
+    // 3) initiales
+    a.forEach((t, i) => {
+        if (pos[i] >= 0) return;
+        const j = b.findIndex((u, k) => !used[k] && u !== t &&
+            ((t.length === 1 && u[0] === t) || (u.length === 1 && t[0] === u)));
+        if (j >= 0) { used[j] = true; pos[i] = j; initials++; }
+    });
+    if (pos.some(p => p < 0)) return null;
+    let orderChanged = false;
+    for (let i = 1; i < pos.length; i++) if (pos[i] < pos[i - 1]) orderChanged = true;
+    return { edits: edits, shortTypos: shortTypos, initials: initials, orderChanged: orderChanged };
+}
+
+// Compare deux noms tels qu'un humain les écrirait pour la même personne.
+// Renvoie null (personnes différentes) ou { score 0-100, reasons[], weak, shorter }.
+//  - weak : lien fragile (un seul mot, ou initiale) — gardé seulement s'il ne
+//    désigne qu'une personne (« Jean » ne doit pas relier Jean Dupont et Jean Martin)
+//  - shorter : 'a' ou 'b', côté du lien fragile (le nom au moins de mots, ou à l'initiale)
+function compareNamesForCheck(nameA, nameB) {
+    const na = normalizeNameForCheck(nameA);
+    const nb = normalizeNameForCheck(nameB);
+    if (!na || !nb) return null;
+    if (na === nb) return { score: 100, reasons: ['majuscules, accents ou espaces'], weak: false, shorter: 'a' };
+    // Numéros différents = entrées différentes (équipes « Apri1 » / « Apri2 », « 25m » / « 50m »)
+    const numbers = n => (n.match(/\d+/g) || []).map(x => String(parseInt(x, 10))).sort().join(',');
+    if (numbers(na) !== numbers(nb)) return null;
+    const ca = na.replace(/ /g, ''), cb = nb.replace(/ /g, '');
+    if (ca === cb) return { score: 98, reasons: ['espace ou tiret'], weak: false, shorter: 'a' };
+
+    const A = nameCheckTokens(na), B = nameCheckTokens(nb);
+    const swap = A.core.length > B.core.length;
+    const s = swap ? B.core : A.core;
+    const l = swap ? A.core : B.core;
+    const shorter = swap ? 'b' : 'a';
+    const al = alignNameTokens(s, l);
+
+    if (!al) {
+        // Mots collés ou coupés en plus d'une faute (« Jeanpiere Martin » / « Jean Pierre Martin »)
+        if (A.core.length === B.core.length) return null;
+        const cs = A.core.join(''), cl = B.core.join('');
+        if (Math.min(cs.length, cl.length) < 8) return null;
+        const d = levenshteinForCheck(cs, cl);
+        if (d > (Math.min(cs.length, cl.length) >= 14 ? 2 : 1)) return null;
+        return { score: 100 - 8 * d, reasons: ['espace ou tiret', 'faute de frappe'], weak: false, shorter: shorter };
+    }
+
+    const extra = l.length - s.length;
+    // Mots porteurs de sens (un numéro seul ne suffit pas à reconnaître quelqu'un)
+    const words = s.filter(t => /[a-z]/.test(t));
+    if (al.initials && (extra > 0 || al.initials >= words.length)) return null;
+    if (extra > 0 && words.length < 2 && (al.edits > 0 || !words.length || words[0].length < 3)) return null;
+    if (extra > 0 && al.edits > 1) return null;
+    const letters = s.join('').length;
+    if (al.edits > Math.max(1, Math.min(2, Math.floor(letters / 6)))) return null;
+
+    let score = 100;
+    const reasons = [];
+    if (al.edits) {
+        score -= 8 * al.edits;
+        reasons.push(al.shortTypos ? 'prénom court différent (frère/sœur ?)' : 'faute de frappe');
+        if (al.shortTypos) score = Math.min(score, 60);
+    }
+    if (al.initials) { score = Math.min(score, 70); reasons.push('initiale au lieu du prénom'); }
+    if (al.orderChanged) { score -= 3; reasons.push('nom et prénom inversés'); }
+    if (A.stop !== B.stop && !extra) { score -= 3; reasons.push('article ou « club » en plus'); }
+    if (extra > 0) {
+        const ratio = Math.round(100 * letters / l.join('').length);
+        score = Math.min(score, Math.max(s.length >= 2 ? 70 : 50, ratio));
+        reasons.push(extra + ' mot' + (extra > 1 ? 's' : '') + ' en plus (club ? nom composé ?)');
+    }
+    if (!reasons.length) reasons.push('ponctuation');
+    // Lien par initiale : le côté fragile est le nom qui porte l'initiale
+    let weakSide = shorter;
+    if (al.initials) weakSide = A.core.some(t => t.length === 1) ? 'a' : 'b';
+    return {
+        score: Math.max(0, Math.min(100, score)),
+        reasons: reasons,
+        weak: al.initials > 0 || (extra > 0 && words.length < 2),
+        shorter: weakSide
+    };
+}
+
+// Paires marquées « personnes différentes » (clé = noms normalisés triés)
+function nameCheckPairKey(a, b) {
+    return [normalizeNameForCheck(a), normalizeNameForCheck(b)].sort().join('|');
+}
+function getIgnoredNamePairs() {
+    const list = Array.isArray(championship.nameCheckIgnored) ? championship.nameCheckIgnored : [];
+    const set = {};
+    list.forEach(k => { set[k] = true; });
+    return set;
+}
+
+// Clubs comparables : sans casse, accents ni articles
+function normalizeClubForCheck(club) {
+    return nameCheckTokens(normalizeNameForCheck(club)).core.join(' ');
+}
+
+// Indices de contexte qui nuancent la ressemblance des noms
+function nameCheckContext(a, b) {
+    const notes = [];
+    let cap = 100;
+    const clubsA = Object.keys(a.clubs || {}).map(normalizeClubForCheck).filter(Boolean);
+    const clubsB = Object.keys(b.clubs || {}).map(normalizeClubForCheck).filter(Boolean);
+    if (clubsA.length && clubsB.length && !clubsA.some(c => clubsB.indexOf(c) >= 0)) {
+        notes.push('clubs différents');
+        cap = Math.min(cap, 50);
+    }
+    const bothListed = Object.keys(a.listed || {}).filter(d => b.listed && b.listed[d]);
+    const sameDay = bothListed.length > 0;
+    if (sameDay) {
+        notes.push('inscrits tous les deux en J' + bothListed.sort((x, y) => x - y).join(', J'));
+        cap = Math.min(cap, 75);
+    }
+    return { notes: notes, cap: cap, sameDay: sameDay };
+}
+
+// Regroupe les noms qui désignent probablement la même personne. Chaque paire est
+// comparée (compareNamesForCheck) ; les noms qui se sont affrontés ou marqués
+// « personnes différentes » ne sont jamais reliés. Renvoie les groupes de 2+ noms,
+// des plus sûrs aux plus incertains : { norm, members, minScore, edges }.
+function groupSimilarPlayerNames(names, ignoredPairs) {
+    const items = names.map(n => (typeof n === 'string' ? { name: n, count: 1, days: {}, divisions: {} } : n));
+    const ignored = ignoredPairs || {};
+    const parent = items.map((_, i) => i);
+    const find = i => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+    const membersOf = items.map((_, i) => [i]);
+    const faced = (i, j) => !!((items[i].opponents && items[i].opponents[items[j].name]) ||
+        (items[j].opponents && items[j].opponents[items[i].name]));
+    // Réunit deux groupes, sauf si l'un contient un adversaire de l'autre :
+    // « Jean Dupond » (adversaire de Jean Dupont) ne rejoint pas son groupe via « Dupont Jean »
+    const union = (i, j) => {
+        const ri = find(i), rj = find(j);
+        if (ri === rj) return true;
+        if (membersOf[ri].some(x => membersOf[rj].some(y => faced(x, y)))) return false;
+        parent[ri] = rj;
+        membersOf[rj] = membersOf[rj].concat(membersOf[ri]);
+        return true;
+    };
+
+    const edges = [];
+    const strong = [];
+    const weakByShort = {};
+    for (let i = 0; i < items.length; i++) {
+        for (let j = i + 1; j < items.length; j++) {
+            const a = items[i], b = items[j];
+            if (faced(i, j)) continue;
+            if (ignored[nameCheckPairKey(a.name, b.name)]) continue;
+            const cmp = compareNamesForCheck(a.name, b.name);
+            if (!cmp) continue;
+            const ctx = nameCheckContext(a, b);
+            // Lien fragile + deux inscriptions le même jour : deux personnes (« Panda 1 » / « Panda Olivier 1 »)
+            if (cmp.weak && ctx.sameDay) continue;
+            const edge = {
+                i: i, j: j, a: a.name, b: b.name,
+                score: Math.min(cmp.score, ctx.cap),
+                reasons: cmp.reasons, notes: ctx.notes
+            };
+            edges.push(edge);
+            if (cmp.weak) {
+                const shortIdx = cmp.shorter === 'a' ? i : j;
+                (weakByShort[shortIdx] = weakByShort[shortIdx] || []).push(edge);
+            } else {
+                strong.push(edge);
+            }
+        }
+    }
+    // Liens solides d'abord, des plus sûrs aux moins sûrs
+    strong.sort((x, y) => y.score - x.score).forEach(e => { e.used = union(e.i, e.j); });
+    // Liens fragiles : seulement si le nom court ne désigne qu'une seule personne
+    Object.keys(weakByShort).forEach(k => {
+        const list = weakByShort[k];
+        const shortIdx = parseInt(k, 10);
+        const roots = {};
+        list.forEach(e => { roots[find(e.i === shortIdx ? e.j : e.i)] = true; });
+        if (Object.keys(roots).length !== 1) return;
+        list.forEach(e => { e.used = union(e.i, e.j); });
+    });
+
+    const byRoot = {};
+    items.forEach((item, i) => {
+        const r = find(i);
+        (byRoot[r] = byRoot[r] || { members: [], edges: [] }).members.push(item);
+    });
+    edges.forEach(e => { if (e.used) byRoot[find(e.i)].edges.push(e); });
+
+    return Object.values(byRoot)
         .filter(g => g.members.length > 1)
         .map(g => {
-            const norms = g.members.map(m => normalizeNameForCheck(m.name));
-            let minScore = 100;
-            for (let i = 0; i < norms.length; i++) {
-                for (let j = i + 1; j < norms.length; j++) {
-                    minScore = Math.min(minScore, nameSimilarityScore(norms[i], norms[j]));
-                }
-            }
-            g.minScore = minScore;
+            g.norm = normalizeNameForCheck(g.members[0].name);
+            g.minScore = g.edges.reduce((m, e) => Math.min(m, e.score), 100);
             return g;
         })
         .sort((a, b) => b.minScore - a.minScore);
+}
+
+// Nom proposé pour la fusion : le plus complet sans mot en trop (club) ni initiale,
+// puis le plus fréquent ; espaces superflus retirés
+function suggestNameForGroup(members) {
+    const info = members.map(m => {
+        const t = nameCheckTokens(normalizeNameForCheck(m.name));
+        return { m: m, n: t.core.length, initial: t.core.some(x => x.length === 1) };
+    });
+    let pool = info.filter(x => !x.initial);
+    if (!pool.length) pool = info;
+    const multi = pool.filter(x => x.n >= 2);
+    if (multi.length) {
+        const minN = Math.min.apply(null, multi.map(x => x.n));
+        pool = multi.filter(x => x.n === minN);
+    }
+    pool.sort((x, y) => (y.m.count - x.m.count) || (x.m.name.trim().length - y.m.name.trim().length));
+    return pool[0].m.name.trim().replace(/\s+/g, ' ');
 }
 
 // Renomme un joueur partout dans le championnat : listes de joueurs, matchs,
@@ -2381,53 +2596,117 @@ function renamePlayerEverywhereInChampionship(oldName, newName) {
     return changed;
 }
 
+// Après une fusion, une journée peut lister deux fois le même joueur (les deux
+// variantes y étaient inscrites) : garder une seule entrée, avec le club connu
+function dedupePlayerListsAfterMerge(canonical) {
+    const key = String(canonical).trim().toLowerCase();
+    let removed = 0;
+    Object.keys(championship.days).forEach(dayNumber => {
+        const dayData = championship.days[dayNumber];
+        if (!dayData) return;
+        Object.keys(dayData.players || {}).forEach(div => {
+            const arr = dayData.players[div];
+            if (!Array.isArray(arr)) return;
+            let first = -1;
+            for (let idx = 0; idx < arr.length; idx++) {
+                if (String(getPlayerName(arr[idx])).trim().toLowerCase() !== key) continue;
+                if (first < 0) { first = idx; continue; }
+                const kept = arr[first], dup = arr[idx];
+                if (dup && typeof dup === 'object' && dup.club) {
+                    if (kept && typeof kept === 'object') { if (!kept.club) kept.club = dup.club; }
+                    else arr[first] = { name: canonical, club: dup.club };
+                }
+                arr.splice(idx, 1);
+                idx--;
+                removed++;
+            }
+        });
+        if (dayData.pools && dayData.pools.divisions) {
+            Object.values(dayData.pools.divisions).forEach(divPools => {
+                if (!divPools) return;
+                (divPools.pools || []).forEach(pool => {
+                    if (!Array.isArray(pool)) return;
+                    let seen = false;
+                    for (let idx = 0; idx < pool.length; idx++) {
+                        const p = pool[idx];
+                        const n = p && typeof p === 'object' ? p.name : p;
+                        if (String(n).trim().toLowerCase() !== key) continue;
+                        if (!seen) { seen = true; continue; }
+                        pool.splice(idx, 1);
+                        idx--;
+                    }
+                });
+            });
+        }
+    });
+    return removed;
+}
+
+function nameCheckScoreColor(score) {
+    return score >= 85 ? '#017239' : score >= 65 ? '#9c5003' : '#d03427';
+}
+
+// Pourquoi deux variantes ont été rapprochées (lien direct, ou via une 3e variante)
+function nameCheckWhy(group, name, suggestion) {
+    const edge = group.edges.find(e => (e.a === name && e.b === suggestion) || (e.b === name && e.a === suggestion)) ||
+        group.edges.find(e => e.a === name || e.b === name);
+    const direct = compareNamesForCheck(name, suggestion);
+    const score = edge && (edge.a === suggestion || edge.b === suggestion) ? edge.score
+        : direct ? direct.score : (edge ? edge.score : 0);
+    const reasons = direct ? direct.reasons : ['lié via une autre variante'];
+    const notes = edge ? edge.notes : [];
+    return { score: score, text: reasons.concat(notes.map(n => '⚠️ ' + n)).join(', ') };
+}
+
 function showNameCheckModal() {
     closeNameCheckModal();
-    nameCheckGroups = groupSimilarPlayerNames(collectChampionshipPlayerNames());
+    nameCheckGroups = groupSimilarPlayerNames(collectChampionshipPlayerNames(), getIgnoredNamePairs());
 
     let body;
     if (nameCheckGroups.length === 0) {
         body = '<p style="color:#586566; text-align:center; padding:20px;">✅ Aucun nom similaire détecté. Les noms des joueurs semblent cohérents.</p>';
     } else {
         body = '<p style="color:#586566; font-size:13px;">' + nameCheckGroups.length +
-            ' groupe(s) de noms très similaires détecté(s). Pour chaque ligne, vérifie le nom final suggéré (modifiable) puis clique sur Fusionner : toutes les variantes seront renommées dans toutes les journées.</p>';
+            ' groupe(s) de noms qui désignent peut-être la même personne (fautes de frappe, nom et prénom inversés, club ou article ajouté, initiale…). ' +
+            'Vérifie le nom final suggéré (modifiable) puis clique sur Fusionner : toutes les variantes seront renommées dans toutes les journées. ' +
+            'Si ce sont bien des personnes différentes, clique sur « Personnes différentes » : le groupe ne sera plus proposé.</p>';
 
         nameCheckGroups.forEach((group, gi) => {
-            // Suggestion : la variante la plus fréquente
-            const sorted = group.members.slice().sort((a, b) => b.count - a.count);
-            const suggestion = sorted[0].name.trim();
-            const suggestionNorm = normalizeNameForCheck(suggestion);
+            const suggestion = suggestNameForGroup(group.members);
+            group.suggestion = suggestion;
 
             // Badge de confiance du groupe selon le score minimal entre variantes
             const score = group.minScore;
-            const badgeColor = score >= 85 ? '#017239' : score >= 65 ? '#9c5003' : '#d03427';
             const badgeLabel = score >= 85 ? 'similitude forte' : score >= 65 ? 'à vérifier' : 'incertain';
-            const badgeHtml = '<div style="margin-bottom:6px;"><span style="background:' + badgeColor +
+            const badgeHtml = '<div style="margin-bottom:6px;"><span style="background:' + nameCheckScoreColor(score) +
                 '; color:white; font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px;">🎯 ' +
                 score + '% — ' + badgeLabel + '</span></div>';
 
-            const variantsHtml = group.members.map(m => {
+            const variantsHtml = group.members.slice().sort((a, b) => b.count - a.count).map(m => {
                 const days = Object.keys(m.days).map(d => parseInt(d)).sort((a, b) => a - b);
                 const divisions = Object.keys(m.divisions).sort();
-                const mNorm = normalizeNameForCheck(m.name);
-                let scoreHtml = '';
-                if (mNorm !== suggestionNorm) {
-                    const inclusion = isNameIncludedIn(suggestionNorm, mNorm) || isNameIncludedIn(mNorm, suggestionNorm);
-                    const s = nameSimilarityScore(mNorm, suggestionNorm);
-                    scoreHtml = ' — <span style="color:' + (s >= 85 ? '#017239' : s >= 65 ? '#9c5003' : '#d03427') +
-                        '; font-weight:600;">' + s + '%' + (inclusion ? ' (nom inclus, club ajouté ?)' : '') + '</span>';
+                const clubs = Object.keys(m.clubs || {});
+                let whyHtml = '';
+                if (m.name.trim().replace(/\s+/g, ' ') !== suggestion) {
+                    const why = nameCheckWhy(group, m.name, suggestion);
+                    whyHtml = ' — <span style="color:' + nameCheckScoreColor(why.score) + '; font-weight:600;">' +
+                        why.score + '% (' + escapeHtmlForNameCheck(why.text) + ')</span>';
                 }
                 return '<div style="font-size:12px; color:#555; padding:2px 0;">• <strong>' +
-                    escapeHtmlForNameCheck(m.name) + '</strong> — ' + m.count + ' occurrence(s), J' +
-                    days.join(', J') + ', Div ' + divisions.join('/') + scoreHtml + '</div>';
+                    escapeHtmlForNameCheck(m.name) + '</strong>' +
+                    (clubs.length ? ' <span style="color:#586566;">[' + escapeHtmlForNameCheck(clubs.join(', ')) + ']</span>' : '') +
+                    ' — ' + m.count + ' occurrence(s)' +
+                    (days.length ? ', J' + days.join(', J') : '') +
+                    (divisions.length ? ', Div ' + divisions.join('/') : '') + whyHtml + '</div>';
             }).join('');
 
             body += '<div id="nameCheckGroup-' + gi + '" style="border:1px solid #e0e0e0; border-radius:8px; padding:12px; margin:10px 0; background:#fbfbfd;">' +
                 badgeHtml + variantsHtml +
-                '<div style="display:flex; gap:8px; align-items:center; margin-top:8px;">' +
+                '<div style="display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap;">' +
                 '<input type="text" id="nameCheckInput-' + gi + '" aria-label="Nom retenu pour la fusion" value="' + escapeHtmlForNameCheck(suggestion) + '" ' +
-                'style="flex:1; padding:8px; border:1px solid #9c5003; border-radius:5px; box-sizing:border-box;">' +
+                'style="flex:1; min-width:160px; padding:8px; border:1px solid #9c5003; border-radius:5px; box-sizing:border-box;">' +
                 '<button class="btn btn-warning" style="padding:8px 14px; font-size:13px; white-space:nowrap;" onclick="applyNameCheckMerge(' + gi + ')">🔁 Fusionner</button>' +
+                '<button class="btn btn-secondary" style="padding:8px 14px; font-size:13px; white-space:nowrap;" onclick="ignoreNameCheckGroup(' + gi + ')" title="Ces noms désignent des personnes différentes : ne plus les proposer">🙅 Personnes différentes</button>' +
                 '</div></div>';
         });
     }
@@ -2452,12 +2731,20 @@ function closeNameCheckModal() {
 }
 window.closeNameCheckModal = closeNameCheckModal;
 
+function markNameCheckGroupDone(groupIndex, html, bg, border) {
+    const groupEl = document.getElementById('nameCheckGroup-' + groupIndex);
+    if (!groupEl) return;
+    groupEl.innerHTML = html;
+    groupEl.style.background = bg;
+    groupEl.style.borderColor = border;
+}
+
 function applyNameCheckMerge(groupIndex) {
     const group = nameCheckGroups[groupIndex];
     const input = document.getElementById('nameCheckInput-' + groupIndex);
     if (!group || !input) return;
 
-    const canonical = input.value.trim();
+    const canonical = input.value.trim().replace(/\s+/g, ' ');
     if (!canonical) {
         showNotification('Veuillez entrer un nom final', 'warning');
         return;
@@ -2469,17 +2756,12 @@ function applyNameCheckMerge(groupIndex) {
             changed += renamePlayerEverywhereInChampionship(m.name, canonical);
         }
     });
+    dedupePlayerListsAfterMerge(canonical);
 
     saveToLocalStorage();
 
-    // Marquer la ligne comme traitée
-    const groupEl = document.getElementById('nameCheckGroup-' + groupIndex);
-    if (groupEl) {
-        groupEl.innerHTML = '<div style="color:#017239; font-weight:600; font-size:13px;">✅ Fusionné en « ' +
-            escapeHtmlForNameCheck(canonical) + ' » (' + changed + ' remplacement(s))</div>';
-        groupEl.style.background = '#eafaf1';
-        groupEl.style.borderColor = '#017239';
-    }
+    markNameCheckGroupDone(groupIndex, '<div style="color:#017239; font-weight:600; font-size:13px;">✅ Fusionné en « ' +
+        escapeHtmlForNameCheck(canonical) + ' » (' + changed + ' remplacement(s))</div>', '#eafaf1', '#017239');
 
     showNotification(changed + ' remplacement(s) : noms fusionnés en « ' + canonical + ' »', 'success');
 
@@ -2487,6 +2769,31 @@ function applyNameCheckMerge(groupIndex) {
     updateGeneralRanking();
 }
 window.applyNameCheckMerge = applyNameCheckMerge;
+
+// « Personnes différentes » : mémorise toutes les paires du groupe dans le
+// championnat (championship.nameCheckIgnored) pour ne plus les proposer
+function ignoreNameCheckGroup(groupIndex) {
+    const group = nameCheckGroups[groupIndex];
+    if (!group) return;
+    const list = Array.isArray(championship.nameCheckIgnored) ? championship.nameCheckIgnored : [];
+    for (let i = 0; i < group.members.length; i++) {
+        for (let j = i + 1; j < group.members.length; j++) {
+            const key = nameCheckPairKey(group.members[i].name, group.members[j].name);
+            if (list.indexOf(key) < 0) list.push(key);
+        }
+    }
+    championship.nameCheckIgnored = list;
+    saveToLocalStorage();
+    markNameCheckGroupDone(groupIndex, '<div style="color:#586566; font-weight:600; font-size:13px;">🙅 Gardés séparés : ' +
+        escapeHtmlForNameCheck(group.members.map(m => m.name.trim()).join(' / ')) + '</div>', '#f4f6f6', '#c8cfd0');
+}
+window.ignoreNameCheckGroup = ignoreNameCheckGroup;
+
+// Moteur exposé pour les tests
+window.compareNamesForCheck = compareNamesForCheck;
+window.groupSimilarPlayerNames = groupSimilarPlayerNames;
+window.collectChampionshipPlayerNames = collectChampionshipPlayerNames;
+window.suggestNameForGroup = suggestNameForGroup;
 
 // Assigner la fonction à l'objet window pour qu'elle soit accessible globalement
 window.exportGeneralRanking = exportGeneralRanking;
