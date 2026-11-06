@@ -1418,6 +1418,11 @@
         // Mode sets : la grille gère Entrée (set suivant) et décide quand valider
         const setsOutcome = global.handleSetsKeydown(event, match, dayNumber);
         if (setsOutcome === 'handled') return;
+        // Mode sets : Tab vers la case suivante (ou autre touche) → laisser faire le navigateur.
+        // Sans ce retour, la suite lisait les 2 premières cases de la grille (set 1) comme
+        // score1/score2, bloquait Tab et validait le match avec ces faux scores.
+        if (setsOutcome !== 'validate' && event.target && event.target.closest &&
+            event.target.closest('.set-score-grid')) return;
 
         // Mode simple : lire les scores à l'écran, onchange ne s'est pas encore déclenché
         // au moment du keydown (sinon il fallait appuyer deux fois sur Entrée)

@@ -13,6 +13,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ⇥ Scores en sets : Tab passe à la case suivante
+- En mode sets (BO3/BO5/BO7), dans les matchs par tours, Tab restait bloqué sur la 2e case
+  du set 1 (et le match pouvait être validé avec « 11-2 » comme score de sets). Tab parcourt
+  maintenant toutes les cases, puis valide le match en quittant le dernier set utile.
+  Poules, phase finale et mode 2 scores vérifiés : déjà corrects.
+
 ### 🪟 Fenêtres : un clic à côté ne les ferme plus
 - Un clic à côté d'une fenêtre (ou une sélection de texte relâchée hors du panneau) ne la
   ferme plus : seul son bouton (×, Fermer, Annuler, OK) ou Échap la ferme. Vaut pour toutes
