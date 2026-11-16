@@ -13,6 +13,19 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### 🏛️ Harmoniser les clubs
+- Nouveau bouton « 🏛️ Harmoniser les clubs » à côté de « Harmoniser les noms ». Il liste
+  les nageurs sans club (ils ne marquaient aucun point au classement des clubs) et propose
+  pour chacun un nom nettoyé et un club : le club resté collé au nom (« Rogge Maxime
+  Boulaie » → « Rogge Maxime », club Boulaie), le club du même nageur dans une autre
+  journée, ou une fin de nom commune à plusieurs nageurs (« … La Cordée »). Chaque ligne se
+  corrige ou se décoche avant d'appliquer.
+- La même fenêtre regroupe les variantes d'un club (« Aquaphiles » / « Aquaphiles Sra »)
+  pour les fusionner sous un seul nom.
+- À l'import d'une liste natation, un club connu écrit **en fin de ligne**
+  (« 25m Libre Rogge Maxime Boulaie 0:21.07 ») est maintenant reconnu, comme en tête de
+  ligne : le nageur n'arrive plus sans club.
+
 ### 📊 Score unique : colonnes par journée au classement général
 - Le classement général des journées en score unique affiche une colonne par journée
   (J1, J2…) avant le score total, à l'écran comme dans le PDF et l'export HTML. Un joueur

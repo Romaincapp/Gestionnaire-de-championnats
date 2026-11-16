@@ -2689,6 +2689,7 @@
         html += '<p style="margin: 0 0 15px 0; color: #586566; font-size: 14px;">Toutes les séries d\'une même épreuve regroupées, classées au temps</p>';
         html += '<div style="padding: 0 0 15px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">';
         html += '<button class="ranking-action-btn" onclick="showNameHarmonizationModal()">🔤 Harmoniser les noms</button>';
+        html += '<button class="ranking-action-btn" onclick="showClubHarmonizationModal()">🏛️ Harmoniser les clubs</button>';
         html += '<button class="ranking-action-btn" onclick="normalizeAllNamesCase()">Aa Normaliser la casse</button>';
         html += '<button class="ranking-action-btn" onclick="printGeneralRanking()">🖨️ Imprimer</button>';
         html += '</div>';
@@ -2796,6 +2797,7 @@
         if (multisportCategoryFilter && categories.indexOf(multisportCategoryFilter) === -1) multisportCategoryFilter = '';
         html += '<div style="padding: 0 0 15px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">';
         html += '<button class="ranking-action-btn" onclick="showNameHarmonizationModal()">🔤 Harmoniser les noms</button>';
+        html += '<button class="ranking-action-btn" onclick="showClubHarmonizationModal()">🏛️ Harmoniser les clubs</button>';
         html += '<button class="ranking-action-btn" onclick="normalizeAllNamesCase()">Aa Normaliser la casse</button>';
         html += '<button class="ranking-action-btn" onclick="printGeneralRanking()">🖨️ Imprimer</button>';
         if (mixed) {
@@ -3836,6 +3838,311 @@
         return changed;
     }
     global.renameNameEverywhere = renameNameEverywhere;
+
+    // ============================================
+    // HARMONISATION DES CLUBS
+    // ============================================
+    // Deux problèmes réglés depuis une même fenêtre :
+    // 1. Nageurs « orphelins » (sans club) : souvent le club est resté collé au nom
+    //    (« Rogge Maxime Boulaie ») parce que la ligne d'import le portait en fin de
+    //    ligne — l'import ne le reconnaît qu'en tête. Sans club, un nageur ne marque
+    //    aucun point au classement des clubs.
+    // 2. Variantes d'un même club (« Aquaphiles » / « Aquaphiles Sra ») : fusion.
+
+    function clubTokens(str) {
+        return deburr(str).toLowerCase().replace(/[.,'’\-_]/g, ' ').split(/\s+/).filter(Boolean);
+    }
+
+    function forEachChronoEntry(fn) {
+        Object.keys(global.championship.days).forEach(function(dayKey) {
+            var day = global.championship.days[dayKey];
+            if (!day || !day.chronoData) return;
+            var cd = day.chronoData;
+            var visit = function(list) { (list || []).forEach(function(p) { if (p) fn(p, Number(dayKey), cd); }); };
+            visit(cd.participants);
+            var scan = function(series) {
+                (series || []).forEach(function(s) { visit(s.participants); visit(s.results); });
+            };
+            scan(cd.series);
+            (cd.events || []).forEach(function(ev) { scan(ev.series); });
+        });
+    }
+
+    // Clubs connus : ceux déjà présents dans la compétition, la liste des clubs
+    // (onglet Clubs) et la liste des clubs reconnus à l'import natation.
+    function collectKnownClubs() {
+        var byKey = {};
+        var add = function(c) {
+            c = String((c && c.name) || c || '').trim();
+            if (!c) return;
+            var key = clubTokens(c).join(' ');
+            if (key && !byKey[key]) byKey[key] = c;
+        };
+        forEachChronoEntry(function(p) { add(p.club); });
+        if (global.clubsModule && global.clubsModule.getClubsList) {
+            try { (global.clubsModule.getClubsList() || []).forEach(add); } catch (e) { /* ignore */ }
+        }
+        (global.KNOWN_SWIMMING_CLUBS || []).forEach(add);
+        return Object.keys(byKey).map(function(k) { return byKey[k]; });
+    }
+
+    // Repère les nageurs sans club, par journée, et propose un club :
+    //  a) un club connu collé en fin (ou en tête) du nom → retiré du nom ;
+    //  b) le même nageur a un club dans une autre ligne / journée ;
+    //  c) une fin de nom commune à plusieurs orphelins (« … La Cordée ») = club inconnu.
+    // Si le nom nettoyé correspond à un nageur qui a déjà un club, ce club l'emporte.
+    // Retourne [{ day, name, newName, club, source }] (club '' = pas de suggestion).
+    function findClubOrphans() {
+        var hasClub = {}, seen = {}, orphans = [], personClub = {};
+        forEachChronoEntry(function(p, day) {
+            if (!p.name) return;
+            var k = day + '|' + String(p.name).toLowerCase();
+            if (String(p.club || '').trim()) {
+                hasClub[k] = true;
+                var pk = normalizeNameKey(p.name);
+                if (!personClub[pk]) personClub[pk] = String(p.club).trim();
+            }
+        });
+        forEachChronoEntry(function(p, day) {
+            if (!p.name) return;
+            var k = day + '|' + String(p.name).toLowerCase();
+            if (hasClub[k] || seen[k]) return;
+            seen[k] = true;
+            orphans.push({ day: day, name: String(p.name).trim() });
+        });
+
+        var known = collectKnownClubs()
+            .map(function(c) { return { club: c, tokens: clubTokens(c) }; })
+            .sort(function(a, b) { return b.tokens.length - a.tokens.length; });
+
+        // Fins de nom (1 à 3 mots) partagées par plusieurs orphelins distincts
+        var tailCount = {};
+        var distinctOrphans = {};
+        orphans.forEach(function(o) { distinctOrphans[o.name.toLowerCase()] = o.name; });
+        Object.keys(distinctOrphans).forEach(function(key) {
+            var t = clubTokens(distinctOrphans[key]);
+            for (var n = 1; n <= 3 && t.length - n >= 2; n++) {
+                var tail = t.slice(t.length - n).join(' ');
+                tailCount[tail] = (tailCount[tail] || 0) + 1;
+            }
+        });
+
+        function sameTokens(a, b) {
+            return a.length === b.length && a.every(function(x, i) { return x === b[i]; });
+        }
+
+        return orphans.map(function(o) {
+            var words = o.name.split(/\s+/).filter(Boolean);
+            var t = words.map(function(w) { return clubTokens(w).join(' '); });
+            var split = null;
+            // a) club connu en fin, puis en tête
+            for (var i = 0; i < known.length && !split; i++) {
+                var ct = known[i].tokens, n = ct.length;
+                if (!n || t.length - n < 1) continue;
+                if (sameTokens(t.slice(t.length - n), ct)) {
+                    split = { name: words.slice(0, words.length - n).join(' '), club: known[i].club, source: 'suffix' };
+                } else if (sameTokens(t.slice(0, n), ct)) {
+                    split = { name: words.slice(n).join(' '), club: known[i].club, source: 'prefix' };
+                }
+            }
+            // c) fin de nom récurrente (club absent des listes)
+            if (!split) {
+                for (var m = 3; m >= 1 && !split; m--) {
+                    if (words.length - m < 2) continue;
+                    var tail = t.slice(t.length - m).join(' ');
+                    if ((tailCount[tail] || 0) >= 2) {
+                        split = { name: words.slice(0, words.length - m).join(' '), club: words.slice(words.length - m).join(' '), source: 'recurring' };
+                    }
+                }
+            }
+            var newName = split ? split.name : o.name;
+            var club = split ? split.club : '';
+            var source = split ? split.source : '';
+            // b) même nageur avec un club ailleurs (nom nettoyé ou nom d'origine)
+            var other = personClub[normalizeNameKey(newName)] || (!split && personClub[normalizeNameKey(o.name)]);
+            if (other) { club = other; source = split ? split.source + '+person' : 'person'; }
+            return { day: o.day, name: o.name, newName: newName, club: club, source: source };
+        });
+    }
+    global.findClubOrphans = findClubOrphans;
+
+    // Clubs à fusionner : même clé normalisée, faute de frappe, ou l'un contient
+    // tous les mots de l'autre (« Aquaphiles » ⊂ « Aquaphiles Sra »).
+    // extraClubs : clubs proposés aux orphelins (pas encore appliqués), pour que
+    // « Aquaphiles Sra » proposé soit rapproché d'« Aquaphiles » existant.
+    function findClubVariantGroups(extraClubs) {
+        var counts = {};
+        forEachChronoEntry(function(p) {
+            var c = String(p.club || '').trim();
+            if (c) counts[c] = (counts[c] || 0) + 1;
+        });
+        (extraClubs || []).forEach(function(c) {
+            c = String(c || '').trim();
+            if (c) counts[c] = (counts[c] || 0) + 1;
+        });
+        var groups = [];
+        Object.keys(counts).sort(function(a, b) { return counts[b] - counts[a]; }).forEach(function(c) {
+            var tk = clubTokens(c);
+            var norm = tk.slice().sort().join(' ');
+            var best = null;
+            for (var i = 0; i < groups.length && !best; i++) {
+                var g = groups[i];
+                if (g.norm === norm) { best = g; break; }
+                var d = levenshtein(g.norm, norm);
+                if (d <= Math.max(1, Math.floor(Math.min(g.norm.length, norm.length) / 6))) { best = g; break; }
+                var small = tk.length <= g.tokens.length ? tk : g.tokens;
+                var big = small === tk ? g.tokens : tk;
+                if (small.length && small.every(function(x) { return big.indexOf(x) !== -1; })) best = g;
+            }
+            if (best) best.members.push({ club: c, count: counts[c] });
+            else groups.push({ norm: norm, tokens: tk, members: [{ club: c, count: counts[c] }] });
+        });
+        return groups.filter(function(g) { return g.members.length > 1; }).map(function(g) {
+            return { members: g.members, suggestion: g.members[0].club };
+        });
+    }
+    global.findClubVariantGroups = findClubVariantGroups;
+
+    // Remplace un club partout (Courses + joueurs objets du Championnat)
+    function renameClubEverywhere(oldClub, newClub) {
+        if (!oldClub || !newClub || oldClub === newClub) return 0;
+        var changed = 0;
+        forEachChronoEntry(function(p) {
+            if (sameName(String(p.club || '').trim(), oldClub)) { p.club = newClub; changed++; }
+        });
+        Object.keys(global.championship.days).forEach(function(dayKey) {
+            var players = (global.championship.days[dayKey] || {}).players;
+            if (!players) return;
+            Object.keys(players).forEach(function(div) {
+                (players[div] || []).forEach(function(pl) {
+                    if (pl && typeof pl === 'object' && sameName(String(pl.club || '').trim(), oldClub)) { pl.club = newClub; changed++; }
+                });
+            });
+        });
+        return changed;
+    }
+    global.renameClubEverywhere = renameClubEverywhere;
+
+    // Applique { day, name, newName, club } : nom nettoyé + club, partout dans la journée
+    function assignClubToOrphan(fix) {
+        var day = global.championship.days[fix.day];
+        if (!day || !day.chronoData || !fix.club) return 0;
+        var changes = { club: fix.club };
+        if (fix.newName && fix.newName !== fix.name) changes.name = fix.newName;
+        updateParticipantEverywhere(fix.day, day.chronoData, function(sp) { return sameName(sp.name, fix.name); }, changes);
+        return 1;
+    }
+    global.assignClubToOrphan = assignClubToOrphan;
+
+    var CLUB_SOURCE_LABELS = {
+        suffix: 'club retiré de la fin du nom',
+        prefix: 'club retiré du début du nom',
+        recurring: 'fin de nom commune à plusieurs nageurs',
+        person: 'même nageur avec un club ailleurs'
+    };
+
+    function showClubHarmonizationModal() {
+        if (document.getElementById('clubHarmonizationModal')) return;
+        var orphans = findClubOrphans();
+        var groups = findClubVariantGroups(orphans.map(function(o) { return o.club; }));
+        var known = collectKnownClubs();
+        var multiDay = orphans.some(function(o) { return orphans[0] && o.day !== orphans[0].day; }) ||
+            Object.keys(global.championship.days).length > 1;
+        var input = 'padding:6px; border:1px solid #cbd5e1; border-radius:5px; width:100%; box-sizing:border-box;';
+
+        var body = '';
+        body += '<h4 style="margin:10px 0 4px;">Nageurs sans club (' + orphans.length + ')</h4>';
+        if (!orphans.length) {
+            body += '<p style="color:#586566; font-size:13px;">✅ Tous les nageurs ont un club.</p>';
+        } else {
+            body += '<p style="color:#586566; font-size:13px; margin:0 0 8px;">Sans club, un nageur ne marque aucun point au classement des clubs. Vérifie le nom et le club proposés, corrige au besoin, décoche ce que tu veux laisser tel quel.</p>';
+            body += '<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px;">' +
+                '<thead><tr><th></th>' + (multiDay ? '<th style="text-align:left;">J.</th>' : '') +
+                '<th style="text-align:left;">Ligne actuelle</th><th style="text-align:left;">Nom</th><th style="text-align:left;">Club</th></tr></thead><tbody>';
+            orphans.forEach(function(o, i) {
+                var src = o.source ? o.source.split('+').map(function(s) { return CLUB_SOURCE_LABELS[s]; }).join(' · ') : 'aucune suggestion';
+                body += '<tr class="club-orphan-row" data-index="' + i + '" style="border-bottom:1px solid #ecf0f1;">' +
+                    '<td style="padding:4px;"><input type="checkbox" class="club-orphan-check" data-index="' + i + '"' + (o.club ? ' checked' : '') + ' aria-label="Corriger ' + escapeLaneHtml(o.name) + '"></td>' +
+                    (multiDay ? '<td style="padding:4px;">J' + o.day + '</td>' : '') +
+                    '<td style="padding:4px;" title="' + escapeLaneHtml(src) + '">' + escapeLaneHtml(o.name) + '</td>' +
+                    '<td style="padding:4px;"><input type="text" class="club-orphan-name" data-index="' + i + '" value="' + escapeLaneHtml(o.newName) + '" style="' + input + '" aria-label="Nom"></td>' +
+                    '<td style="padding:4px;"><input type="text" list="clubHarmoKnown" class="club-orphan-club" data-index="' + i + '" value="' + escapeLaneHtml(o.club) + '" style="' + input + '" aria-label="Club" ' +
+                    'oninput="var c=this.closest(\'tr\').querySelector(\'.club-orphan-check\'); if (c) c.checked = !!this.value.trim();"></td>' +
+                    '</tr>';
+            });
+            body += '</tbody></table></div>';
+            body += '<datalist id="clubHarmoKnown">' + known.map(function(c) { return '<option value="' + escapeLaneHtml(c) + '">'; }).join('') + '</datalist>';
+        }
+
+        body += '<h4 style="margin:18px 0 4px;">Variantes d\'un même club (' + groups.length + ')</h4>';
+        if (!groups.length) {
+            body += '<p style="color:#586566; font-size:13px;">✅ Aucune variante détectée.</p>';
+        } else {
+            body += '<p style="color:#586566; font-size:13px; margin:0 0 8px;">Écrit de plusieurs façons, un club compte comme plusieurs clubs. Choisis le nom final (appliqué aussi aux clubs proposés ci-dessus).</p>';
+            groups.forEach(function(g, gi) {
+                body += '<div style="border:1px solid #e0e0e0; border-radius:8px; padding:10px; margin:8px 0; background:#fbfbfd;">' +
+                    '<label style="display:flex; align-items:center; gap:8px; font-weight:600;"><input type="checkbox" class="club-group-check" data-group="' + gi + '" checked> Fusionner</label>' +
+                    '<div style="font-size:12px; color:#586566; margin:6px 0;">Variantes : ' + g.members.map(function(m) { return escapeLaneHtml(m.club) + ' (' + m.count + ')'; }).join(' · ') + '</div>' +
+                    '<input type="text" class="club-group-canonical" data-group="' + gi + '" value="' + escapeLaneHtml(g.suggestion) + '" style="' + input + '" aria-label="Nom final du club">' +
+                    '<input type="hidden" class="club-group-variants" data-group="' + gi + '" value="' + escapeLaneHtml(g.members.map(function(m) { return m.club; }).join('||')) + '">' +
+                    '</div>';
+            });
+        }
+
+        var modal = document.createElement('div');
+        modal.id = 'clubHarmonizationModal';
+        modal._orphans = orphans;
+        modal.innerHTML =
+            '<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;" onclick="if(event.target===this)closeClubHarmonizationModal()">' +
+            '<div style="background:white; padding:25px; border-radius:10px; max-width:820px; width:94%; max-height:88vh; overflow-y:auto;">' +
+            '<h3 style="margin-top:0;">🏛️ Harmoniser les clubs</h3>' + body +
+            '<div style="display:flex; gap:10px; justify-content:flex-end; margin-top:18px;">' +
+            '<button onclick="closeClubHarmonizationModal()" class="btn btn-secondary">Fermer</button>' +
+            (orphans.length || groups.length ? '<button onclick="applyClubHarmonization()" class="btn btn-primary" style="background:#057e68;">Appliquer</button>' : '') +
+            '</div></div></div>';
+        document.body.appendChild(modal);
+    }
+    global.showClubHarmonizationModal = showClubHarmonizationModal;
+
+    function closeClubHarmonizationModal() {
+        var m = document.getElementById('clubHarmonizationModal');
+        if (m) m.remove();
+    }
+    global.closeClubHarmonizationModal = closeClubHarmonizationModal;
+
+    function applyClubHarmonization() {
+        var modal = document.getElementById('clubHarmonizationModal');
+        if (!modal) return;
+        var orphans = modal._orphans || [];
+        var fixed = 0, merged = 0;
+        modal.querySelectorAll('.club-orphan-check').forEach(function(ch) {
+            if (!ch.checked) return;
+            var i = Number(ch.getAttribute('data-index'));
+            var o = orphans[i];
+            var nameEl = modal.querySelector('.club-orphan-name[data-index="' + i + '"]');
+            var clubEl = modal.querySelector('.club-orphan-club[data-index="' + i + '"]');
+            var club = clubEl ? clubEl.value.trim() : '';
+            var newName = (nameEl ? nameEl.value.trim() : '') || o.name;
+            if (!o || !club) return;
+            fixed += assignClubToOrphan({ day: o.day, name: o.name, newName: newName, club: club });
+        });
+        modal.querySelectorAll('.club-group-check').forEach(function(ch) {
+            if (!ch.checked) return;
+            var gi = ch.getAttribute('data-group');
+            var canonical = (modal.querySelector('.club-group-canonical[data-group="' + gi + '"]') || {}).value;
+            var variants = (modal.querySelector('.club-group-variants[data-group="' + gi + '"]') || {}).value;
+            canonical = String(canonical || '').trim();
+            if (!canonical || !variants) return;
+            variants.split('||').forEach(function(v) {
+                if (v && v !== canonical && renameClubEverywhere(v, canonical) > 0) merged++;
+            });
+        });
+        saveToLocalStorage();
+        closeClubHarmonizationModal();
+        if (typeof global.updateMultisportRanking === 'function') global.updateMultisportRanking();
+        showNotification(fixed + ' nageur(s) rattaché(s) à un club, ' + merged + ' variante(s) de club fusionnée(s)', 'success');
+    }
+    global.applyClubHarmonization = applyClubHarmonization;
 
     // ============================================
     // MODALES POUR GESTION CHRONO PAR JOURNÉE

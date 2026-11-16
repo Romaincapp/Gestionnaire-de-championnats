@@ -2613,6 +2613,29 @@ var KNOWN_SWIMMING_CLUBS = [
     'Apris',
     'Jalon'
 ].sort(function(a, b) { return b.length - a.length; });
+// Exposée : « 🏛️ Harmoniser les clubs » (multisport.iife.js) y cherche les clubs collés au nom
+global.KNOWN_SWIMMING_CLUBS = KNOWN_SWIMMING_CLUBS;
+
+// Sépare un club connu du nom : en tête (« Boulaie Rogge Maxime ») ou, sinon, en fin
+// (« Rogge Maxime Boulaie »), en gardant au moins un mot de nom. Mot entier seulement
+// (« Batoulu » ne mord pas sur « Batoulux »). Sans club connu :
+// { club: '', rest: texte }. Le club en fin de ligne n'était pas reconnu : tous les
+// nageurs d'une liste « 25m Libre Nom Prénom Club 0:18.45 » restaient sans club.
+function splitKnownSwimmingClub(text) {
+    text = String(text || '').trim();
+    for (var i = 0; i < KNOWN_SWIMMING_CLUBS.length; i++) {
+        var escaped = KNOWN_SWIMMING_CLUBS[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var head = new RegExp('^' + escaped + '(?:\\s+|$)', 'i');
+        if (head.test(text)) return { club: KNOWN_SWIMMING_CLUBS[i], rest: text.replace(head, '').trim() };
+    }
+    for (var j = 0; j < KNOWN_SWIMMING_CLUBS.length; j++) {
+        var esc = KNOWN_SWIMMING_CLUBS[j].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var tail = new RegExp('\\s+' + esc + '$', 'i');
+        if (tail.test(text)) return { club: KNOWN_SWIMMING_CLUBS[j], rest: text.replace(tail, '').trim() };
+    }
+    return { club: '', rest: text };
+}
+global.splitKnownSwimmingClub = splitKnownSwimmingClub;
 
 // Ordres de couloirs partagés (le plus rapide au centre) — source unique de vérité
 // utilisée à la fois par l'aperçu et la génération, pour qu'ils ne divergent jamais.
@@ -2855,20 +2878,10 @@ function parseSwimmingEntry(rawName) {
     remaining = remaining.replace(/(^|\s)[-–—|;\/:"'’″]+(?=\s|$)/g, ' ');
     remaining = remaining.replace(/\s+/g, ' ').trim();
 
-    // Extraire le club depuis la liste connue
-    var club = '';
-    var swimmerName = remaining;
-
-    for (var i = 0; i < KNOWN_SWIMMING_CLUBS.length; i++) {
-        var c = KNOWN_SWIMMING_CLUBS[i];
-        var escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        var clubRegex = new RegExp('^' + escaped + '\\s*', 'i');
-        if (clubRegex.test(remaining)) {
-            club = c;
-            swimmerName = remaining.replace(clubRegex, '').trim();
-            break;
-        }
-    }
+    // Extraire le club depuis la liste connue (en tête ou en fin de nom)
+    var clubSplit = splitKnownSwimmingClub(remaining);
+    var club = clubSplit.club;
+    var swimmerName = clubSplit.rest;
 
     // Nettoyer le nom du nageur
     swimmerName = swimmerName.replace(/^\s*[.,]\s*/, '').replace(/\s*[.,]\s*$/, '').trim();
@@ -3772,13 +3785,9 @@ function buildSwimmingFallbackEntry(line, def) {
     var remaining = line;
     if (t.timeStr) remaining = remaining.replace(t.timeStr, ' ');
 
-    // Extraire un club connu en préfixe
-    var club = '', rest = remaining;
-    for (var i = 0; i < KNOWN_SWIMMING_CLUBS.length; i++) {
-        var escaped = KNOWN_SWIMMING_CLUBS[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        var re = new RegExp('^\\s*' + escaped + '\\s*', 'i');
-        if (re.test(remaining)) { club = KNOWN_SWIMMING_CLUBS[i]; rest = remaining.replace(re, ''); break; }
-    }
+    // Extraire un club connu (en tête ou en fin de ligne, temps déjà retiré)
+    var clubSplit = splitKnownSwimmingClub(remaining);
+    var club = clubSplit.club, rest = clubSplit.rest;
 
     // Nettoyer les résidus (séparateurs, chiffres de temps orphelins)
     rest = rest.replace(/\b\d{1,2}[:.,]\d{1,2}([:.,]\d{1,3})?\b/g, ' ')
