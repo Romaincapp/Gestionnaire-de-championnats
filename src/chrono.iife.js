@@ -2613,6 +2613,8 @@ var KNOWN_SWIMMING_CLUBS = [
     'Apris',
     'Jalon'
 ].sort(function(a, b) { return b.length - a.length; });
+// Exposée : « 🏛️ Harmoniser les clubs » (multisport.iife.js) y cherche les clubs collés au nom
+global.KNOWN_SWIMMING_CLUBS = KNOWN_SWIMMING_CLUBS;
 
 // Ordres de couloirs partagés (le plus rapide au centre) — source unique de vérité
 // utilisée à la fois par l'aperçu et la génération, pour qu'ils ne divergent jamais.

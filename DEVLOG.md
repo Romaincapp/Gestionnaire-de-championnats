@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-11-16 — Harmoniser les clubs (nageurs orphelins)
+
+- **Contexte** : classement des clubs vide pour J2 d'une compétition natation. Cause : la liste d'inscriptions J2 portait le club en fin de ligne (« 25m Libre Vervekken Jérôme Boulaie 0:18.45 ») ; `parseSwimmingEntry` ne reconnaît un club connu qu'en tête → `club: ''` pour tous, donc aucun `clubPoints` (`assignEventClubPoints` ignore les sans-club). « La Cordée », « Sari », « Aquaphiles Sra » absents de `KNOWN_SWIMMING_CLUBS` en plus.
+- **Fait** : bouton « 🏛️ Harmoniser les clubs » (onglet classement, à côté de « Harmoniser les noms ») : fenêtre listant les orphelins avec nom nettoyé + club proposés (club connu en fin/tête de nom, même nageur ailleurs, fin de nom récurrente), éditables/décochables, et fusion des variantes de club. `KNOWN_SWIMMING_CLUBS` exposée sur `window`. Vérifié sur l'export J2 réel : 69/69 orphelins avec suggestion, colonnes J2 remplies.
+- **Fichiers/modules touchés** : `src/multisport.iife.js`, `src/chrono.iife.js`, `tests/unit/clubHarmonization.test.js`, `AGENTS.md`, `CHANGELOG.md`
+- **Commit(s)** : voir branche
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
+- **Suite possible** : l'import (`parseSwimmingEntry` / `buildSwimmingFallbackEntry`) pourrait aussi reconnaître un club connu en fin de ligne, pour éviter le problème à la source.
+
 ### 2026-11-06 — Score unique : une colonne par journée au classement général
 
 - **Contexte** : demande utilisateur — voir le score de chaque journée dans le classement général en score unique.
