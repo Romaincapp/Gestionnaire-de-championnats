@@ -309,6 +309,7 @@ lors du même nettoyage.
   auto-refresh par `postMessage` toutes les 3s ; inclut la colonne
   Catégorie quand 2+ catégories sont présentes (même logique que
   `generateRaceRanking()` et `showSerieRanking()`)
+- `splitKnownSwimmingClub(text)` → `{club, rest}`, `KNOWN_SWIMMING_CLUBS` - club connu en tête ou en fin de nom (mot entier), utilisé par l'import natation (`parseSwimmingEntry`, `buildSwimmingFallbackEntry`)
 - `printChronoCompetition(dayNumber)` - Imprime les séries d'une journée
   (appelée depuis `multisport.iife.js`)
 - `displayRaceInterface(serie)` - Affiche l'interface de course live (appelée

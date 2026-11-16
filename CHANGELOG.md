@@ -22,6 +22,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
   corrige ou se décoche avant d'appliquer.
 - La même fenêtre regroupe les variantes d'un club (« Aquaphiles » / « Aquaphiles Sra »)
   pour les fusionner sous un seul nom.
+- À l'import d'une liste natation, un club connu écrit **en fin de ligne**
+  (« 25m Libre Rogge Maxime Boulaie 0:21.07 ») est maintenant reconnu, comme en tête de
+  ligne : le nageur n'arrive plus sans club.
 
 ### 📊 Score unique : colonnes par journée au classement général
 - Le classement général des journées en score unique affiche une colonne par journée

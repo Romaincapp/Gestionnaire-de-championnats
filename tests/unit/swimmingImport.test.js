@@ -293,3 +293,25 @@ describe('un seul dossard par nageur', () => {
         expect(new Set(bibs).size).toBe(2);
     });
 });
+
+describe('club connu en fin de ligne (import natation)', () => {
+    test('parseSwimmingEntry reconnaît le club en fin de nom', () => {
+        const e = parseSwimmingEntry('25m Libre Vervekken Jérôme Boulaie 0:18.45');
+        expect(e).toMatchObject({ club: 'Boulaie', swimmerName: 'Vervekken Jérôme', distance: 25, timeMs: 18450 });
+        expect(parseSwimmingEntry('50m Brasse Wathelet Jean-Philippe Gai Séjour 0:45.10'))
+            .toMatchObject({ club: 'Gai Séjour', swimmerName: 'Wathelet Jean-Philippe' });
+    });
+
+    test('club en tête : comportement inchangé', () => {
+        expect(parseSwimmingEntry('Boulaie Rogge Maxime 25m libre 0:21.07'))
+            .toMatchObject({ club: 'Boulaie', swimmerName: 'Rogge Maxime' });
+    });
+
+    test('mot entier seulement, et au moins un mot de nom', () => {
+        expect(splitKnownSwimmingClub('Batoulux Marie')).toEqual({ club: '', rest: 'Batoulux Marie' });
+        expect(splitKnownSwimmingClub('Marie Batoulux')).toEqual({ club: '', rest: 'Marie Batoulux' });
+        expect(splitKnownSwimmingClub('Colin Renards')).toEqual({ club: 'Renards', rest: 'Colin' });
+        expect(splitKnownSwimmingClub('Renards')).toEqual({ club: 'Renards', rest: '' });
+        expect(splitKnownSwimmingClub('Dupont Jean')).toEqual({ club: '', rest: 'Dupont Jean' });
+    });
+});

@@ -40,7 +40,8 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 - **Fichiers/modules touchés** : `src/multisport.iife.js`, `src/chrono.iife.js`, `tests/unit/clubHarmonization.test.js`, `AGENTS.md`, `CHANGELOG.md`
 - **Commit(s)** : voir branche
 - **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (n/a) · claude.md ❌ (n/a)
-- **Suite possible** : l'import (`parseSwimmingEntry` / `buildSwimmingFallbackEntry`) pourrait aussi reconnaître un club connu en fin de ligne, pour éviter le problème à la source.
+- **Correctif à la source** : `splitKnownSwimmingClub(text)` (`chrono.iife.js`, exposée) — club connu en tête, sinon en fin de nom, mot entier seulement (la tête mordait avant sur un mot plus long : « Sari » sur « Sarina ») ; utilisée par `parseSwimmingEntry` et `buildSwimmingFallbackEntry`. Tests dans `swimmingImport.test.js`. `npm test` 668 ✅, `npm run test:e2e` 0 problème.
+- **Suite possible** : « La Cordée », « Sari », « Aquaphiles Sra » ne sont pas dans `KNOWN_SWIMMING_CLUBS` (noms officiels à confirmer) : la fenêtre « Harmoniser les clubs » les détecte quand même.
 
 ### 2026-11-06 — Score unique : une colonne par journée au classement général
 
