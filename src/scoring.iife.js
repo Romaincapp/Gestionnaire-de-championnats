@@ -683,6 +683,40 @@
         return isNaN(n) ? null : n;
     }
 
+    /**
+     * Calcul tapé dans une case de score unique (« 120+35+42 », « 150-12 », virgules
+     * acceptées). Renvoie { value, formula } : formula = le calcul normalisé si la saisie
+     * contient une opération, sinon null. Pas d'eval : seuls chiffres, +, - et espaces.
+     * Un opérateur en fin de saisie (« 120+ ») est ignoré. Saisie non reconnue → null.
+     */
+    function evaluateSingleScoreInput(value) {
+        if (isBlank(value)) return { value: null, formula: null };
+        const raw = String(value).replace(/\s+/g, '').replace(/,/g, '.').replace(/[+-]+$/, '');
+        if (!/^[+-]?\d*\.?\d+([+-]\d*\.?\d+)*$/.test(raw)) return { value: parseSingleScore(value), formula: null };
+        const terms = raw.match(/[+-]?\d*\.?\d+/g);
+        if (terms.length < 2) return { value: parseFloat(raw), formula: null };
+        // arrondi pour éviter 0.1+0.2 = 0.30000000000000004
+        const total = Math.round(terms.reduce((sum, t) => sum + parseFloat(t), 0) * 1e6) / 1e6;
+        const formula = terms.map((t, i) => {
+            const n = String(parseFloat(t.replace(/^[+-]/, ''))).replace('.', ',');
+            if (i === 0) return t.startsWith('-') ? `-${n}` : n;
+            return `${t.startsWith('-') ? '−' : '+'} ${n}`;
+        }).join(' ');
+        return { value: total, formula };
+    }
+
+    /** Calcul mémorisé d'un joueur (« 120 + 35 + 42 ») ou null. */
+    function getSingleScoreFormula(dayNumber, division, name) {
+        const day = global.championship && global.championship.days ? global.championship.days[dayNumber] : null;
+        const div = day && day.singleScoreFormulas && day.singleScoreFormulas[division];
+        return div && div[name] ? div[name] : null;
+    }
+
+    /** Version éditable du calcul (signes ASCII) à remettre dans la case au focus. */
+    function formulaToInput(formula) {
+        return String(formula).replace(/−/g, '-').replace(/\s+/g, '');
+    }
+
     function countSingleScores(day) {
         let n = 0;
         Object.values(day && day.singleScores || {}).forEach(div => {
@@ -713,18 +747,26 @@
     function setSingleScore(dayNumber, division, name, value) {
         const day = global.championship && global.championship.days ? global.championship.days[dayNumber] : null;
         if (!day || !name) return;
-        const score = parseSingleScore(value);
+        const { value: score, formula } = evaluateSingleScoreInput(value);
         if (!day.singleScores) day.singleScores = {};
         if (!day.singleScores[division]) day.singleScores[division] = {};
         if (score === null) delete day.singleScores[division][name];
         else day.singleScores[division][name] = score;
+        // Le calcul (aperçu gris) n'est gardé que s'il y a une opération et un résultat
+        if (formula && score !== null) {
+            if (!day.singleScoreFormulas) day.singleScoreFormulas = {};
+            if (!day.singleScoreFormulas[division]) day.singleScoreFormulas[division] = {};
+            day.singleScoreFormulas[division][name] = formula;
+        } else if (day.singleScoreFormulas && day.singleScoreFormulas[division]) {
+            delete day.singleScoreFormulas[division][name];
+        }
     }
 
     /** Renomme un joueur dans les scores uniques d'une journée (toutes divisions). */
     function renameSingleScore(day, oldName, newName) {
-        if (!day || !day.singleScores || !oldName || !newName || oldName === newName) return;
+        if (!day || !oldName || !newName || oldName === newName) return;
         const oldLower = String(oldName).trim().toLowerCase();
-        Object.values(day.singleScores).forEach(div => {
+        [day.singleScores, day.singleScoreFormulas].forEach(store => Object.values(store || {}).forEach(div => {
             if (!div) return;
             Object.keys(div).forEach(key => {
                 if (key !== newName && key.trim().toLowerCase() === oldLower) {
@@ -732,7 +774,7 @@
                     delete div[key];
                 }
             });
-        });
+        }));
     }
 
     /**
@@ -760,15 +802,20 @@
         singleScoreRanking(dayNumber, division).forEach(r => { ranks[r.name] = r.rank; });
         const rows = names.map(name => {
             const score = getSingleScore(dayNumber, division, name);
+            const formula = getSingleScoreFormula(dayNumber, division, name);
             const rank = ranks[name];
+            // type="text" (et non number) pour accepter « 120+35+42 »
             return `<li class="single-score-row" data-name="${escapeHtml(name)}">
                     <span class="single-score-rank" title="Rang">${rank ? rank : ''}</span>
                     <span class="single-score-name">${escapeHtml(name)}</span>
-                    <input type="number" inputmode="decimal" step="any" class="score-input single-score-input"
+                    <span class="single-score-formula" title="Calcul">${formula ? escapeHtml(formula) : ''}</span>
+                    <input type="text" autocomplete="off" class="score-input single-score-input"
                            aria-label="Score de ${escapeHtml(name)}" placeholder="—"
-                           value="${score === null ? '' : score}"
+                           title="Score, ou un calcul : 120+35+42"
+                           value="${score === null ? '' : String(score).replace('.', ',')}"
                            data-day="${dayNumber}" data-division="${division}" data-name="${escapeHtml(name)}"
-                           onchange="onSingleScoreChange(this)" onkeydown="onSingleScoreKeydown(event)">
+                           onfocus="onSingleScoreFocus(this)" onchange="onSingleScoreChange(this)"
+                           onblur="onSingleScoreBlur(this)" onkeydown="onSingleScoreKeydown(event)">
                 </li>`;
         }).join('');
         const done = names.filter(n => getSingleScore(dayNumber, division, n) !== null).length;
@@ -807,13 +854,55 @@
         if (progress) progress.textContent = `${ranking.filter(r => r.score !== null).length}/${ranking.length} saisis`;
     }
 
+    /** Affiche dans la case le résultat (virgule décimale) et le calcul en gris à côté. */
+    function showSingleScoreResult(input) {
+        const dayNumber = parseInt(input.dataset.day);
+        const division = parseInt(input.dataset.division);
+        const score = getSingleScore(dayNumber, division, input.dataset.name);
+        input.value = score === null ? '' : String(score).replace('.', ',');
+        const formula = getSingleScoreFormula(dayNumber, division, input.dataset.name);
+        const row = input.closest ? input.closest('.single-score-row') : null;
+        const preview = row ? row.querySelector('.single-score-formula') : null;
+        if (preview) preview.textContent = formula || '';
+    }
+
     function onSingleScoreChange(input) {
         const dayNumber = parseInt(input.dataset.day);
         const division = parseInt(input.dataset.division);
+        // Le navigateur peut émettre « change » avec le résultat qu'on vient d'afficher
+        // (Entrée puis case suivante) : ne pas écraser le calcul mémorisé.
+        const formula = getSingleScoreFormula(dayNumber, division, input.dataset.name);
+        const current = getSingleScore(dayNumber, division, input.dataset.name);
+        if (formula && current !== null && input.value === String(current).replace('.', ',')) {
+            showSingleScoreResult(input);
+            return;
+        }
         setSingleScore(dayNumber, division, input.dataset.name, input.value);
         if (typeof global.saveToLocalStorage === 'function') global.saveToLocalStorage();
+        if (global.document && global.document.activeElement !== input) showSingleScoreResult(input);
         refreshSingleScoreRanks(dayNumber, division);
         if (typeof global.updateStats === 'function') global.updateStats(dayNumber);
+    }
+
+    /** Au focus, la case montre le calcul (« 120+35 ») pour pouvoir le compléter ou le corriger. */
+    function onSingleScoreFocus(input) {
+        const formula = getSingleScoreFormula(parseInt(input.dataset.day), parseInt(input.dataset.division), input.dataset.name);
+        if (formula) {
+            input.value = formulaToInput(formula);
+            if (input.select) input.select();
+        }
+    }
+
+    /** En quittant la case : enregistre si besoin, puis remet le résultat à la place du calcul. */
+    function onSingleScoreBlur(input) {
+        const dayNumber = parseInt(input.dataset.day);
+        const division = parseInt(input.dataset.division);
+        const formula = getSingleScoreFormula(dayNumber, division, input.dataset.name);
+        const score = getSingleScore(dayNumber, division, input.dataset.name);
+        const result = score === null ? '' : String(score).replace('.', ',');
+        // Déjà enregistré (calcul ou résultat affiché) → rien à sauver, juste remettre le résultat
+        if (input.value !== result && !(formula && input.value === formulaToInput(formula))) onSingleScoreChange(input);
+        showSingleScoreResult(input);
     }
 
     /** Entrée : enregistre et passe au joueur suivant (puis à la division suivante). */
@@ -822,6 +911,7 @@
         event.preventDefault();
         const input = event.target;
         onSingleScoreChange(input);
+        showSingleScoreResult(input);
         const all = Array.from(document.querySelectorAll(`.single-score-input[data-day="${input.dataset.day}"]`));
         const next = all[all.indexOf(input) + 1];
         if (next) { next.focus(); if (next.select) next.select(); }
@@ -831,6 +921,8 @@
     global.SCORING_SINGLE = SINGLE;
     global.isSingleScoreMode = isSingleScoreMode;
     global.parseSingleScore = parseSingleScore;
+    global.evaluateSingleScoreInput = evaluateSingleScoreInput;
+    global.getSingleScoreFormula = getSingleScoreFormula;
     global.countSingleScores = countSingleScores;
     global.getSingleScore = getSingleScore;
     global.setSingleScore = setSingleScore;
@@ -840,6 +932,8 @@
     global.renderSingleScoresForDay = renderSingleScoresForDay;
     global.onSingleScoreChange = onSingleScoreChange;
     global.onSingleScoreKeydown = onSingleScoreKeydown;
+    global.onSingleScoreFocus = onSingleScoreFocus;
+    global.onSingleScoreBlur = onSingleScoreBlur;
 
     global.SCORING_SIMPLE = SIMPLE;
     global.SCORING_DEFAULT_SETS = DEFAULT_SETS;

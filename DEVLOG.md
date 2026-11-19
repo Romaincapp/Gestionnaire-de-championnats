@@ -33,6 +33,15 @@ Ne pas réécrire les entrées passées — c'est un journal, pas une doc vivant
 
 ## Journal
 
+### 2026-11-19 — Score unique : additions dans la case
+
+- **Contexte** : demande utilisateur — en mode score unique, pouvoir taper une addition dans la case, voir le résultat dans la case et garder un aperçu du calcul en gris clair entre le nom et la case.
+- **Fait** : la case passe de `type="number"` à `type="text"` (le `+` n'était pas accepté). `evaluateSingleScoreInput` calcule les sommes/différences (virgules, opérateur final ignoré, pas d'eval) ; le résultat va dans `singleScores`, le calcul normalisé dans le nouveau `day.singleScoreFormulas[div][nom]` (suit `renameSingleScore`). Au focus la case remontre le calcul, au départ le résultat ; garde-fou contre le « change » que le navigateur émet avec le résultat affiché après Entrée (il effaçait le calcul — non visible dans jsdom, repéré au test Chromium).
+- **Fichiers/modules touchés** : `src/scoring.iife.js`, `styles.css`, `tests/unit/singleScore.test.js`, `AGENTS.md`, `claude.md`, `CHANGELOG.md`
+- **Commit(s)** : voir la branche `claude/single-score-addition`
+- **Doc à jour ?** : CHANGELOG ✅ · AGENTS.md ✅ · TODO.md ❌ (rien à cocher) · claude.md ✅
+- **Suite possible** : sur mobile la case ouvre le clavier texte complet (le pavé numérique n'a pas de `+`). Le calcul n'apparaît pas dans les impressions / fiches joueur.
+
 ### 2026-11-16 — Harmoniser les clubs (nageurs orphelins)
 
 - **Contexte** : classement des clubs vide pour J2 d'une compétition natation. Cause : la liste d'inscriptions J2 portait le club en fin de ligne (« 25m Libre Vervekken Jérôme Boulaie 0:18.45 ») ; `parseSwimmingEntry` ne reconnaît un club connu qu'en tête → `club: ''` pour tous, donc aucun `clubPoints` (`assignEventClubPoints` ignore les sans-club). « La Cordée », « Sari », « Aquaphiles Sra » absents de `KNOWN_SWIMMING_CLUBS` en plus.

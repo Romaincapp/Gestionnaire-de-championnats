@@ -13,6 +13,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ## [Unreleased]
 
+### ➕ Score unique : additions dans la case
+- En « Score unique », on peut taper un calcul dans la case d'un joueur (« 120+35+42 »,
+  soustractions et décimales à virgule acceptées). La case affiche le résultat (197) et le
+  calcul reste visible en gris clair entre le nom et la case.
+- En recliquant dans la case, le calcul revient pour être complété (« +10 ») ou corrigé ;
+  taper un nombre simple efface le calcul.
+
 ### 🏛️ Harmoniser les clubs
 - Nouveau bouton « 🏛️ Harmoniser les clubs » à côté de « Harmoniser les noms ». Il liste
   les nageurs sans club (ils ne marquaient aucun point au classement des clubs) et propose
