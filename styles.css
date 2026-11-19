@@ -1417,6 +1417,24 @@ body   * {
             white-space: nowrap;
         }
 
+        /* Calcul saisi (« 120 + 35 + 42 »), en gris clair entre le nom et la case */
+        .single-score-formula {
+            flex-shrink: 1;
+            min-width: 0;
+            font-size: 12px;
+            color: #9aa0a6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 40%;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .single-score-formula:empty {
+            display: none;
+        }
+
         .single-score-input.score-input {
             width: 80px;
             flex-shrink: 0;
@@ -2324,6 +2342,10 @@ body.dark-mode .player-name-title {
 /* Overview cards */
 body.dark-mode .single-score-name {
     color: #e0e0e0;
+}
+
+body.dark-mode .single-score-formula {
+    color: #7d848c;
 }
 
 body.dark-mode .overview-number {

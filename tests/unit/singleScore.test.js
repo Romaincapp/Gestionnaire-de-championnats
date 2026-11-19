@@ -204,3 +204,68 @@ describe('impressions', () => {
         expect(written).not.toContain('Chloé');
     });
 });
+
+describe('score unique : addition dans la case', () => {
+    test('evaluateSingleScoreInput additionne et garde le calcul', () => {
+        expect(evaluateSingleScoreInput('120+35+42')).toEqual({ value: 197, formula: '120 + 35 + 42' });
+        expect(evaluateSingleScoreInput(' 150 - 12 ')).toEqual({ value: 138, formula: '150 − 12' });
+        expect(evaluateSingleScoreInput('10,5+2,25')).toEqual({ value: 12.75, formula: '10,5 + 2,25' });
+        expect(evaluateSingleScoreInput('0.1+0.2').value).toBe(0.3);
+        expect(evaluateSingleScoreInput('120+')).toEqual({ value: 120, formula: null });
+        expect(evaluateSingleScoreInput('187')).toEqual({ value: 187, formula: null });
+        expect(evaluateSingleScoreInput('')).toEqual({ value: null, formula: null });
+        expect(evaluateSingleScoreInput('abc').value).toBeNull();
+    });
+
+    test('la case affiche le résultat, le calcul apparaît en gris, et revient au focus', () => {
+        updateMatchesDisplay(1);
+        const input = document.querySelectorAll('#division1-1-matches .single-score-input')[0];
+        expect(input.type).toBe('text');
+        input.focus();
+        input.value = '120+35+42';
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+        expect(championship.days[1].singleScores[1].Alice).toBe(197);
+        expect(input.value).toBe('197');
+        const preview = input.closest('.single-score-row').querySelector('.single-score-formula');
+        expect(preview.textContent).toBe('120 + 35 + 42');
+
+        // « change » émis par le navigateur avec le résultat affiché : le calcul reste
+        onSingleScoreChange(input);
+        expect(preview.textContent).toBe('120 + 35 + 42');
+
+        // Au focus, le calcul revient pour être complété
+        input.focus();
+        expect(input.value).toBe('120+35+42');
+        input.value = '120+35+42+10';
+        input.blur();
+        expect(championship.days[1].singleScores[1].Alice).toBe(207);
+        expect(input.value).toBe('207');
+        expect(preview.textContent).toBe('120 + 35 + 42 + 10');
+
+        // Quitter la case sans rien changer garde le calcul
+        input.focus();
+        input.blur();
+        expect(championship.days[1].singleScoreFormulas[1].Alice).toBe('120 + 35 + 42 + 10');
+
+        // Un nombre simple efface le calcul
+        input.focus();
+        input.value = '180';
+        input.blur();
+        expect(championship.days[1].singleScores[1].Alice).toBe(180);
+        expect(preview.textContent).toBe('');
+        expect(championship.days[1].singleScoreFormulas[1].Alice).toBeUndefined();
+    });
+
+    test('le calcul est réaffiché après un nouveau rendu et suit un renommage', () => {
+        setSingleScore(1, 1, 'Bob', '100+50');
+        updateMatchesDisplay(1);
+        const row = document.querySelector('#division1-1-matches .single-score-row[data-name="Bob"]');
+        expect(row.querySelector('.single-score-formula').textContent).toBe('100 + 50');
+        expect(row.querySelector('.single-score-input').value).toBe('150');
+
+        renameSingleScore(championship.days[1], 'Bob', 'Robert');
+        expect(championship.days[1].singleScoreFormulas[1].Robert).toBe('100 + 50');
+        expect(championship.days[1].singleScoreFormulas[1].Bob).toBeUndefined();
+    });
+});

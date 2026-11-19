@@ -220,6 +220,7 @@ completed` reste valable.
 - `gamePointsFor(match, isPlayer1)`, `gamePointsDiff(stats)` - points de jeu (départage après la différence de sets)
 - `formatScoreDetail(match)`, `setDetailSuffix(match, isPlayer1)` - affichage « 2-1 : 11-8 9-11 11-5 »
 - `migrateLegacySets(match)`, `normalizeDayScoring(day, défaut)` - reprise de l'ancien `sets[{player1Score, player2Score}]` de tennisdetable (import JSON et chargement localStorage)
+- `evaluateSingleScoreInput(texte)` → `{value, formula}` (addition/soustraction tapée dans une case de score unique, sans eval), `getSingleScoreFormula(day, div, nom)` (calcul mémorisé dans `day.singleScoreFormulas`), `onSingleScoreFocus(input)` / `onSingleScoreBlur(input)` (le calcul revient dans la case au focus, le résultat au départ)
 - `forEachDayMatch(dayData, fn)` - parcourt matchs par tours, de poule, `finalPhase` et rounds de `manualFinalPhase`
 
 ### 9. matches.iife.js (Mode Championship)

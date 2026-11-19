@@ -109,7 +109,11 @@ to new days by `addNewDay()`. Logic in `src/scoring.iife.js`.
   `score1`/`score2` hold **sets won** and are recomputed from `setScores`. No draws.
 - **single** (« Score unique », bowling…): no matches, one score per player in
   `day.singleScores[division][playerName]` (numbers; keyed by name, so any rename must call
-  `renameSingleScore(day, old, new)`). Highest wins. `updateMatchesDisplay` renders the score list
+  `renameSingleScore(day, old, new)`). Highest wins. The input is a text field that accepts a sum
+  (« 120+35+42 », `-` and decimal commas too, no eval): `evaluateSingleScoreInput` computes it, the
+  result goes in `singleScores` and the normalized calculation in
+  `day.singleScoreFormulas[division][playerName]` (shown in light grey between name and field,
+  put back in the field on focus; a plain number clears it). `updateMatchesDisplay` renders the score list
   instead of matches; `calculatePlayerStats` returns the score as `totalPoints`/`pointsWon` (so the
   general ranking sums scores); missed days add no forfeit. Match-only buttons carry
   `data-match-only` and are hidden by `refreshDayActionButtons()`. Matches kept while in single mode
